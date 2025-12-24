@@ -1,0 +1,42 @@
+appId: com.donkeyideas.dashboard
+productName: Donkey Ideas Dashboard
+directories:
+  output: dist
+  buildResources: apps/desktop/assets
+
+files:
+  - apps/desktop/main.js
+  - apps/desktop/preload.js
+  - apps/desktop/package.json
+  - apps/desktop/assets/**/*
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: apps/desktop/assets/icon.ico
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: apps/desktop/assets/icon.icns
+  category: public.app-category.business
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  icon: apps/desktop/assets/icon.png
+  category: Office
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+

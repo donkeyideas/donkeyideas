@@ -1,0 +1,581 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Use SQLite for local development
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  companies     Company[]
+  sessions      Session[]
+  activities    Activity[]
+  settings      UserSettings?
+  apiUsage      ApiUsage[]
+  chats         Chat[]
+  
+  @@map("users")
+}
+
+model UserSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  deepSeekApiKey  String?
+  openaiApiKey    String?
+  anthropicApiKey String?
+  googleApiKey     String?
+  stripeApiKey     String?
+  sendgridApiKey   String?
+  twilioApiKey     String?
+  twilioApiSecret  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_settings")
+}
+
+model ApiUsage {
+  id            String   @id @default(cuid())
+  userId        String
+  provider      String   // deepseek, openai, anthropic, etc.
+  endpoint      String   // chat, completion, etc.
+  model         String?  // deepseek-chat, gpt-4, etc.
+  promptTokens  Int?     // Input tokens
+  completionTokens Int?  // Output tokens
+  totalTokens   Int?     // Total tokens
+  cost          Decimal  @default(0) // Cost in USD
+  requestSize   Int?     // Request size in bytes
+  responseSize   Int?     // Response size in bytes
+  statusCode    Int?     // HTTP status code
+  error         String?  // Error message if any
+  metadata      String?    // Additional metadata
+  createdAt     DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@index([provider, createdAt])
+  @@map("api_usage")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+// Company Management
+model Company {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  tagline     String?
+  description String?
+  logo        String?  // URL to company logo
+  status      String   @default("active") // active, beta, paused, archived
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user               User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plStatements       PLStatement[]
+  balanceSheets      BalanceSheet[]
+  cashFlows          CashFlow[]
+  transactions       Transaction[]
+  kpis               KPI[]
+  businessProfile    BusinessProfile?
+  boards             Board[]
+  documents          Document[]
+  decks              Deck[]
+  pages              Page[]
+  teamMembers        TeamMember[]
+  investorAccess     InvestorAccess[]
+  valuations         Valuation[]
+  whitepaper         Whitepaper?
+  
+  @@map("companies")
+}
+
+// Financial Data
+model PLStatement {
+  id                  String   @id @default(cuid())
+  companyId           String
+  period              DateTime // First day of month/quarter
+  productRevenue      Decimal  @default(0)
+  serviceRevenue      Decimal  @default(0)
+  otherRevenue        Decimal  @default(0)
+  directCosts         Decimal  @default(0)
+  infrastructureCosts Decimal  @default(0)
+  salesMarketing      Decimal  @default(0)
+  rdExpenses          Decimal  @default(0)
+  adminExpenses       Decimal  @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([companyId, period])
+  @@index([companyId, period])
+  @@map("pl_statements")
+}
+
+model BalanceSheet {
+  id                   String   @id @default(cuid())
+  companyId            String
+  period               DateTime
+  cashEquivalents      Decimal  @default(0)
+  accountsReceivable   Decimal  @default(0)
+  fixedAssets          Decimal  @default(0)
+  accountsPayable       Decimal  @default(0)
+  shortTermDebt        Decimal  @default(0)
+  longTermDebt         Decimal  @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([companyId, period])
+  @@index([companyId, period])
+  @@map("balance_sheets")
+}
+
+model CashFlow {
+  id                    String   @id @default(cuid())
+  companyId             String
+  period                DateTime
+  operatingCashFlow     Decimal  @default(0)
+  investingCashFlow     Decimal  @default(0)
+  financingCashFlow     Decimal  @default(0)
+  netCashFlow           Decimal  @default(0)
+  beginningCash         Decimal  @default(0)
+  endingCash            Decimal  @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([companyId, period])
+  @@index([companyId, period])
+  @@map("cash_flows")
+}
+
+model Transaction {
+  id              String   @id @default(cuid())
+  companyId       String
+  date            DateTime
+  type            String   // revenue, expense, asset, liability, equity
+  category        String   // Detailed category (e.g., "product_revenue", "salaries", "equipment")
+  amount          Decimal
+  description     String?
+  affectsPL       Boolean  @default(false) // Does this affect P&L?
+  affectsBalance  Boolean  @default(true)   // Does this affect Balance Sheet?
+  affectsCashFlow Boolean  @default(false) // Does this affect Cash Flow?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId, date])
+  @@index([companyId, type, affectsCashFlow])
+  @@index([companyId, date, type])
+  @@map("transactions")
+}
+
+model KPI {
+  id            String   @id @default(cuid())
+  companyId     String
+  period        DateTime
+  mrr           Decimal? // Monthly Recurring Revenue
+  cac           Decimal? // Customer Acquisition Cost
+  ltv           Decimal? // Lifetime Value
+  churnRate     Decimal? // Percentage
+  nps           Int?     // Net Promoter Score
+  activeUsers   Int?
+  growthRate    Decimal? // Percentage MoM
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([companyId, period])
+  @@map("kpis")
+}
+
+// Business Profile
+model BusinessProfile {
+  id                   String   @id @default(cuid())
+  companyId            String   @unique
+  mission              String?
+  about                String?
+  targetMarket         String?
+  competitiveAdvantage String?
+  keyCompetitors       String?
+  totalCustomers       Int?
+  monthlyRevenue       Decimal?
+  momGrowth            Decimal?
+  retentionRate        Decimal?
+  teamSize             Int?
+  totalFunding         Decimal?
+  keyAchievements      String?
+  projectStatus        String?  // Production, Beta, Alpha, Development, Idea
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@map("business_profiles")
+}
+
+// Project Management
+model Board {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  createdAt DateTime @default(now())
+  
+  company Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  columns Column[]
+  
+  @@map("boards")
+}
+
+model Column {
+  id       String @id @default(cuid())
+  boardId  String
+  name     String
+  position Int
+  
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[]
+  
+  @@map("columns")
+}
+
+model Card {
+  id          String   @id @default(cuid())
+  columnId    String
+  title       String
+  description String?
+  position    Int
+  tags        String   // Comma-separated tag strings (stored as JSON string)
+  createdAt   DateTime @default(now())
+  
+  column Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  
+  @@map("cards")
+}
+
+// Document Management
+model Document {
+  id         String   @id @default(cuid())
+  companyId  String
+  filename   String
+  fileUrl    String
+  fileType   String
+  fileSize   Int      // bytes
+  version    Int      @default(1)
+  uploadedBy String
+  createdAt  DateTime @default(now())
+  
+  company  Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  versions DocumentVersion[]
+  
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id          String   @id @default(cuid())
+  documentId  String
+  version     Int
+  fileUrl     String
+  changes     String?
+  uploadedBy  String
+  createdAt   DateTime @default(now())
+  
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@map("document_versions")
+}
+
+// Team Management
+model TeamMember {
+  id          String   @id @default(cuid())
+  companyId   String
+  userId      String?  // Null if invite not accepted
+  email       String
+  role        String   // owner, admin, member, viewer
+  permissions String     // Flexible permission object (stored as JSON string)
+  status      String   @default("pending") // pending, active, inactive
+  invitedBy   String
+  createdAt   DateTime @default(now())
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([companyId, email])
+  @@map("team_members")
+}
+
+// Investor Portal
+model InvestorAccess {
+  id          String   @id @default(cuid())
+  companyId   String
+  email       String
+  accessLevel String   @default("read_only")
+  investment  String?
+  status      String   @default("pending")
+  lastLogin   DateTime?
+  createdAt   DateTime @default(now())
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  updates InvestorUpdate[]
+  
+  @@unique([companyId, email])
+  @@map("investor_access")
+}
+
+model InvestorUpdate {
+  id              String   @id @default(cuid())
+  companyId       String
+  investorId      String
+  title           String
+  content         String
+  metricsIncluded String     // Array of metric keys (stored as JSON string)
+  sentAt          DateTime @default(now())
+  openedAt        DateTime?
+  
+  investor InvestorAccess @relation(fields: [investorId], references: [id], onDelete: Cascade)
+  
+  @@map("investor_updates")
+}
+
+// Valuation
+model Valuation {
+  id         String   @id @default(cuid())
+  companyId  String
+  method     String   // revenue_multiple, dcf, market_comps
+  amount     Decimal
+  score      Int      // AI score 0-100
+  parameters String     // Method-specific params (stored as JSON string)
+  createdAt  DateTime @default(now())
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@map("valuations")
+}
+
+// Pitch Decks
+model Deck {
+  id         String   @id @default(cuid())
+  companyId  String
+  title      String
+  deckType   String   // investor, sales, partnership
+  content    String     // Array of slide objects
+  createdAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@map("decks")
+}
+
+// Whitepaper
+model Whitepaper {
+  id                  String   @id @default(cuid())
+  companyId           String   @unique
+  version             String   @default("1.0")
+  publishedDate       DateTime?
+  classification      String   @default("Public") // Public, Private, Confidential
+  
+  // Executive Summary
+  executiveSummary    String?
+  
+  // Company Overview
+  companyOverview     String?
+  mission             String?
+  vision              String?
+  coreValues          String?    // Array of value objects {title, description}
+  legalName           String?
+  founded             String?
+  headquarters        String?
+  website             String?
+  
+  // Problem & Solution
+  problemStatement    String?
+  marketOpportunity    String?
+  solution            String?
+  productDescription  String?
+  
+  // Technology
+  technologyStack     String?    // Array of tech categories
+  architecture        String?
+  technicalDetails    String?
+  
+  // Business Model
+  businessModel       String?
+  revenueStreams      String?    // Array of revenue stream objects
+  pricingStrategy     String?
+  goToMarket          String?
+  
+  // Market Analysis
+  targetMarket        String?
+  marketSize          String?
+  marketTrends       String?
+  customerSegments    String?    // Array of segment objects
+  
+  // Competitive Landscape
+  competitiveAnalysis  String?
+  competitors         String?    // Array of competitor objects
+  competitiveAdvantage String?
+  
+  // Team & Advisors
+  teamDescription     String?
+  keyTeamMembers      String?    // Array of team member objects
+  advisors            String?    // Array of advisor objects
+  partners            String?    // Array of partner objects
+  
+  // Roadmap & Milestones
+  roadmap             String?    // Array of milestone objects
+  milestones          String?    // Array of milestone objects with dates
+  
+  // Financials
+  financialProjections String?
+  fundingHistory      String?    // Array of funding rounds
+  useOfFunds          String?
+  financialHighlights String?    // Key financial metrics
+  
+  // Tokenomics / Economics (if applicable)
+  tokenomics          String?
+  tokenDistribution  String?    // Token allocation breakdown
+  economics           String?  
+  // Use Cases
+  useCases            String?    // Array of use case objects
+  caseStudies         String?    // Array of case study objects
+  
+  // Legal & Regulatory
+  legalConsiderations String?
+  regulatoryCompliance String?
+  riskFactors         String?
+  disclaimers         String?
+  
+  // Additional Content
+  appendices          String?    // Additional sections/content
+  references          String?    // References and citations
+  
+  // Metadata
+  published           Boolean  @default(false)
+  lastReviewed        DateTime?
+  reviewedBy          String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@map("whitepapers")
+}
+
+// Activity Logs
+model Activity {
+  id         String   @id @default(cuid())
+  userId     String
+  companyId  String?
+  action     String   // create, update, delete, etc.
+  entityType String   // company, financial, document, etc.
+  entityId   String?
+  changes    String?    // Before/after values
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
+  @@index([companyId, createdAt])
+  @@map("activities")
+}
+
+// Website Content (ONLY EXCEPTION FOR PRE-POPULATION)
+model WebsiteContent {
+  id        String   @id @default(cuid())
+  section   String   @unique // hero, about, services, etc.
+  content   String     // Flexible content structure
+  published Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+  
+  @@map("website_content")
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  companyId String?  // Null for main website pages
+  slug      String
+  title     String
+  content   String
+  layout    String   @default("default")
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([companyId, slug])
+  @@map("pages")
+}
+
+// Contact Submissions
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  company   String?
+  message   String
+  interest  String   // platform, services, partnership, other
+  createdAt DateTime @default(now())
+  
+  @@map("contact_submissions")
+}
+
+// AI Chat History
+model Chat {
+  id          String       @id @default(cuid())
+  userId      String
+  name        String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    ChatMessage[]
+  
+  @@index([userId, updatedAt])
+  @@map("chats")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  chatId   String
+  role     String   // 'user' or 'assistant'
+  content  String
+  createdAt DateTime @default(now())
+  
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  
+  @@index([chatId, createdAt])
+  @@map("chat_messages")
+}

@@ -1,0 +1,3353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donkey Ideas — Complete Enterprise Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #0A0A0A;
+            color: #ffffff;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #0F0F0F;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            padding: 0 1.5rem;
+            margin-bottom: 2rem;
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+        }
+
+        .sidebar-logo span {
+            font-weight: 700;
+        }
+
+        .global-company-selector {
+            margin: 0 1.5rem 2rem;
+            padding: 1rem;
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 8px;
+        }
+
+        .global-company-selector label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .global-company-selector select {
+            width: 100%;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem;
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            border-left: 2px solid #60a5fa;
+            padding-left: calc(1.5rem - 2px);
+        }
+
+        .nav-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            width: calc(100% - 280px);
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .breadcrumb span {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .auto-save-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .save-status {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .save-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .content-area {
+            padding: 2rem;
+            max-width: 1600px;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-description {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 15px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #60a5fa;
+            color: #000000;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 13px;
+        }
+
+        /* Cards */
+        .card {
+            background: #0F0F0F;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #0F0F0F;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 13px;
+        }
+
+        .stat-change.positive {
+            color: #10b981;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-beta {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #60a5fa;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            color: #60a5fa;
+            border-bottom-color: #60a5fa;
+        }
+
+        /* Layout Options */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .layout-option {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .layout-option:hover,
+        .layout-option.selected {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.05);
+        }
+
+        .layout-preview {
+            width: 100%;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .layout-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Image Upload */
+        .image-upload {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-upload:hover {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.05);
+        }
+
+        /* Valuation */
+        .valuation-header {
+            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .valuation-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .valuation-card {
+            background: #0F0F0F;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .valuation-method {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .valuation-amount {
+            font-size: 36px;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 0.5rem;
+        }
+
+        .valuation-score {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(96, 165, 250, 0.1) 100%);
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .score-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .score-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .score-bar {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #60a5fa 100%);
+        }
+
+        /* Kanban Board */
+        .kanban-board {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        .kanban-column {
+            min-width: 320px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .kanban-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .kanban-title {
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .kanban-count {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .kanban-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-height: 200px;
+        }
+
+        .kanban-card {
+            background: #0F0F0F;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 1rem;
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+
+        .kanban-card:hover {
+            border-color: #60a5fa;
+        }
+
+        .card-title-text {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-description {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0.75rem;
+        }
+
+        .card-tag {
+            padding: 0.25rem 0.5rem;
+            background: rgba(96, 165, 250, 0.2);
+            color: #60a5fa;
+            border-radius: 4px;
+            font-size: 11px;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .add-card-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+        }
+
+        /* Deck Slides */
+        .deck-preview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .slide-preview {
+            aspect-ratio: 16/9;
+            background: #0F0F0F;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slide-preview:hover {
+            border-color: #60a5fa;
+            transform: scale(1.02);
+        }
+
+        .slide-number {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Traction Metrics */
+        .traction-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .traction-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .recommendation-box {
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .recommendation-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #60a5fa;
+        }
+
+        /* SOP Styles */
+        .sop-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #60a5fa;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+        }
+
+        .sop-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #60a5fa;
+        }
+
+        .sop-content {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.8;
+        }
+
+        .sop-content ol,
+        .sop-content ul {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .sop-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Content hidden by default */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* AI Panel */
+        .ai-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            border: none;
+            border-radius: 50%;
+            color: #000000;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(96, 165, 250, 0.3);
+            z-index: 150;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                DONKEY <span>IDEAS</span>
+            </div>
+
+            <div class="global-company-selector">
+                <label>Active Company</label>
+                <select>
+                    <option value="workflow" selected>AI Workflow Engine</option>
+                    <option value="intelligence">Market Intelligence</option>
+                    <option value="voice">Voice-to-Product</option>
+                    <option value="analytics">Predictive Analytics</option>
+                </select>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <div class="nav-item active" onclick="showSection('dashboard')">
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="nav-item" onclick="showSection('analytics')">
+                        <span>Analytics & Reports</span>
+                    </div>
+                </li>
+
+                <li class="nav-section">
+                    <div class="nav-section-title">Financial</div>
+                    <div class="nav-item" onclick="showSection('financials')">
+                        <span>Financial Hub</span>
+                    </div>
+                    <div class="nav-item" onclick="showSection('valuation')">
+                        <span>Valuation Engine</span>
+                    </div>
+                </li>
+
+                <li class="nav-section">
+                    <div class="nav-section-title">Operations</div>
+                    <div class="nav-item" onclick="showSection('business-profile')">
+                        <span>Business Profile</span>
+                    </div>
+                    <div class="nav-item" onclick="showSection('project-board')">
+                        <span>Project Board</span>
+                    </div>
+                    <div class="nav-item" onclick="showSection('documents')">
+                        <span>Document Library</span>
+                    </div>
+                    <div class="nav-item" onclick="showSection('deck-builder')">
+                        <span>AI Deck Builder</span>
+                    </div>
+                </li>
+
+                <li class="nav-section">
+                    <div class="nav-section-title">Team & Access</div>
+                    <div class="nav-item" onclick="showSection('team')">
+                        <span>Team Management</span>
+                    </div>
+                    <div class="nav-item" onclick="showSection('investor-portal')">
+                        <span>Investor Portal</span>
+                    </div>
+                    <div class="nav-item" onclick="showSection('activity')">
+                        <span>Activity Logs</span>
+                    </div>
+                </li>
+
+                <li class="nav-section">
+                    <div class="nav-section-title">Content & Systems</div>
+                    <div class="nav-item" onclick="showSection('website-manager')">
+                        <span>Website Manager</span>
+                    </div>
+                    <div class="nav-item" onclick="showSection('sop')">
+                        <span>Standard Operating Procedures</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="breadcrumb">
+                    Home / <span id="currentPage">Dashboard</span>
+                </div>
+                <div class="auto-save-indicator">
+                    <div class="save-status">
+                        <div class="save-dot"></div>
+                        <span>All changes saved</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="content-section active">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Dashboard Overview</h1>
+                            <p class="page-description">AI Workflow Engine — Real-time metrics</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary">+ New Project</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Revenue</div>
+                            <div class="stat-value">$2.4M</div>
+                            <div class="stat-change positive">↑ 23.5% vs last month</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Portfolio Value</div>
+                            <div class="stat-value">$18.2M</div>
+                            <div class="stat-change positive">↑ 15% this quarter</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Active Projects</div>
+                            <div class="stat-value">12</div>
+                            <div class="stat-change positive">↑ 2 new this month</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Team Members</div>
+                            <div class="stat-value">24</div>
+                            <div class="stat-change positive">Across all ventures</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Quick Actions</h2>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                            <button class="btn btn-secondary" onclick="showSection('financials')">Update Financials</button>
+                            <button class="btn btn-secondary" onclick="showSection('deck-builder')">Generate Deck</button>
+                            <button class="btn btn-secondary" onclick="showSection('investor-portal')">Send Update</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Website Manager Section -->
+                <div id="website-manager" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Website Manager</h1>
+                            <p class="page-description">Manage your public-facing website</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Preview Site</button>
+                            <button class="btn btn-primary">Publish Changes</button>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <button class="tab active">Hero Section</button>
+                        <button class="tab">About</button>
+                        <button class="tab">Ventures</button>
+                        <button class="tab">Services</button>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Section Layout</h3>
+                        <p style="color: rgba(255,255,255,0.5); margin-bottom: 1.5rem;">Choose how this section displays</p>
+                        
+                        <div class="layout-grid">
+                            <div class="layout-option selected">
+                                <div class="layout-preview" style="background: linear-gradient(90deg, rgba(96,165,250,0.2) 50%, transparent 50%);">
+                                    50/50
+                                </div>
+                                <div class="layout-name">Text Left, Image Right</div>
+                            </div>
+                            <div class="layout-option">
+                                <div class="layout-preview" style="background: linear-gradient(90deg, transparent 50%, rgba(96,165,250,0.2) 50%);">
+                                    50/50
+                                </div>
+                                <div class="layout-name">Image Left, Text Right</div>
+                            </div>
+                            <div class="layout-option">
+                                <div class="layout-preview" style="background: rgba(96,165,250,0.2);">
+                                    Hero
+                                </div>
+                                <div class="layout-name">Full Screen Hero</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Hero Section Content</h3>
+                        <div class="form-group">
+                            <label class="form-label">Label Text</label>
+                            <input type="text" class="form-input" value="Innovation Laboratory / Venture Builder">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Main Headline</label>
+                            <textarea class="form-textarea">Transforming
+Unconventional
+Ideas Into
+Intelligent Systems</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea">We architect and deploy AI-powered products at the intersection of experimental thinking and production-grade engineering.</textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Hero Image</label>
+                            <div class="image-upload">
+                                <div style="color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">Click to upload image</div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.3);">Recommended: 1200x800px, Max 5MB</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Or Use Image URL</label>
+                            <input type="text" class="form-input" placeholder="https://example.com/image.jpg">
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Primary CTA Text</label>
+                                <input type="text" class="form-input" value="EXPLORE VENTURES">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Primary CTA Link</label>
+                                <input type="text" class="form-input" value="#ventures">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Valuation Engine Section -->
+                <div id="valuation" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Valuation Engine</h1>
+                            <p class="page-description">AI-powered company valuation analysis</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Export Report</button>
+                            <button class="btn btn-primary">Recalculate</button>
+                        </div>
+                    </div>
+
+                    <div class="valuation-header">
+                        <h2>AI Workflow Engine</h2>
+                        <p>Autonomous process orchestration for enterprise workflows</p>
+                    </div>
+
+                    <div class="valuation-grid">
+                        <div class="valuation-card">
+                            <div class="valuation-method">Revenue Multiple</div>
+                            <div class="valuation-amount">$6.4M</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.6);">7.5x ARR</div>
+                        </div>
+                        <div class="valuation-card">
+                            <div class="valuation-method">DCF Valuation</div>
+                            <div class="valuation-amount">$5.8M</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.6);">15% discount rate</div>
+                        </div>
+                        <div class="valuation-card">
+                            <div class="valuation-method">Market Comparables</div>
+                            <div class="valuation-amount">$6.9M</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.6);">Based on 8 comps</div>
+                        </div>
+                    </div>
+
+                    <div class="valuation-score">
+                        <div class="score-header">
+                            <span style="font-size: 18px; font-weight: 600;">AI Valuation Score</span>
+                            <span class="score-value">87/100</span>
+                        </div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: 87%"></div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 0.25rem;">GROWTH</div>
+                                <div style="font-size: 20px; font-weight: 700; color: #10b981;">92</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 0.25rem;">PROFITABILITY</div>
+                                <div style="font-size: 20px; font-weight: 700; color: #10b981;">88</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 0.25rem;">RETENTION</div>
+                                <div style="font-size: 20px; font-weight: 700; color: #10b981;">94</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 0.25rem;">MARKET</div>
+                                <div style="font-size: 20px; font-weight: 700; color: #eab308;">74</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-box">
+                        <div class="recommendation-title">AI Recommendation</div>
+                        <div style="color: rgba(255,255,255,0.8); line-height: 1.6;">
+                            Based on current metrics, this project is valued at <strong>$6.4M</strong> (Revenue Multiple method recommended). 
+                            Strong growth (32% MoM) and excellent retention (97.8%).
+                            <br><br>
+                            <strong>Sale Recommendation:</strong> List at $7.2M - $8.5M (1.12x - 1.33x valuation). 
+                            Target acquirers: Enterprise automation platforms, workflow management companies.
+                            <br><br>
+                            <strong>Expected time to sale:</strong> 4-6 months at optimal pricing.
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Key Valuation Metrics</h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">ARR</div>
+                                <div style="font-size: 24px; font-weight: 700;">$850K</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">MRR</div>
+                                <div style="font-size: 24px; font-weight: 700;">$71K</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">GROWTH RATE</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981;">32%</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">NET MARGIN</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981;">40%</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">LTV / CAC</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981;">20:1</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">CHURN RATE</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981;">2.2%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Profile Section -->
+                <div id="business-profile" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Business Profile</h1>
+                            <p class="page-description">Company information and traction metrics</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="showSection('deck-builder')">Generate Deck</button>
+                            <button class="btn btn-primary">Save Profile</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Company Information</h3>
+                        <div class="form-group">
+                            <label class="form-label">Company Name</label>
+                            <input type="text" class="form-input" value="AI Workflow Engine">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tagline</label>
+                            <input type="text" class="form-input" value="Autonomous process orchestration for enterprises">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">About Us</label>
+                            <textarea class="form-textarea" style="min-height: 200px;">AI Workflow Engine is an autonomous process orchestration system that revolutionizes how enterprises handle complex multi-step workflows.
+
+Our platform combines advanced AI capabilities with robust infrastructure management to deliver seamless automation across your entire organization. We've helped companies reduce operational overhead by 60% while improving accuracy and speed.
+
+Founded in 2023, we recognized that traditional workflow tools were built for a different era. Modern businesses need intelligent systems that can adapt, learn, and optimize themselves.</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mission Statement</label>
+                            <textarea class="form-textarea">To empower every organization with AI-powered workflow automation that works as intelligently as their best employees.</textarea>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Traction & Metrics</h3>
+                        <div class="traction-grid">
+                            <div class="traction-card">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">TOTAL CUSTOMERS</div>
+                                <input type="number" class="form-input" value="47" style="font-size: 24px; font-weight: 700;">
+                            </div>
+                            <div class="traction-card">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">MONTHLY REVENUE</div>
+                                <input type="text" class="form-input" value="$71,000" style="font-size: 24px; font-weight: 700;">
+                            </div>
+                            <div class="traction-card">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">MOM GROWTH</div>
+                                <input type="text" class="form-input" value="32%" style="font-size: 24px; font-weight: 700;">
+                            </div>
+                            <div class="traction-card">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">RETENTION RATE</div>
+                                <input type="text" class="form-input" value="97.8%" style="font-size: 24px; font-weight: 700;">
+                            </div>
+                            <div class="traction-card">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">TEAM SIZE</div>
+                                <input type="number" class="form-input" value="8" style="font-size: 24px; font-weight: 700;">
+                            </div>
+                            <div class="traction-card">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">TOTAL FUNDING</div>
+                                <input type="text" class="form-input" value="$0" style="font-size: 24px; font-weight: 700;">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Key Achievements</label>
+                            <textarea class="form-textarea">• Reached $850K ARR within first 18 months
+• Achieved 40% profit margin
+• Signed 3 Fortune 500 customers
+• Featured in TechCrunch and Forbes
+• 20:1 LTV/CAC ratio
+• 97.8% customer retention rate</textarea>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Market & Competition</h3>
+                        <div class="form-group">
+                            <label class="form-label">Target Market</label>
+                            <textarea class="form-textarea">Mid to large enterprises (500+ employees) in tech, finance, and healthcare sectors. TAM: $50B workflow automation market growing at 23% CAGR.</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Competitive Advantage</label>
+                            <textarea class="form-textarea">• AI-native architecture vs. retrofitted automation
+• 10x faster implementation than competitors
+• Self-optimizing workflows that improve over time
+• Enterprise-grade security with SOC2 compliance</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Key Competitors</label>
+                            <input type="text" class="form-input" value="Monday.com, Asana, ClickUp">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Board Section -->
+                <div id="project-board" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Project Board</h1>
+                            <p class="page-description">Kanban-style task management</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">+ Add Column</button>
+                            <button class="btn btn-primary">+ New Card</button>
+                        </div>
+                    </div>
+
+                    <div class="kanban-board">
+                        <div class="kanban-column">
+                            <div class="kanban-header">
+                                <span class="kanban-title">Backlog</span>
+                                <span class="kanban-count">5</span>
+                            </div>
+                            <div class="kanban-cards">
+                                <div class="kanban-card">
+                                    <div class="card-title-text">Implement OAuth 2.0</div>
+                                    <div class="card-description">Add enterprise SSO support</div>
+                                    <span class="card-tag">Feature</span>
+                                    <span class="card-tag">High Priority</span>
+                                </div>
+                                <div class="kanban-card">
+                                    <div class="card-title-text">API Rate Limiting</div>
+                                    <div class="card-description">Enterprise tier limits</div>
+                                    <span class="card-tag">Technical</span>
+                                </div>
+                                <div class="kanban-card">
+                                    <div class="card-title-text">Mobile App Design</div>
+                                    <div class="card-description">UI/UX for mobile</div>
+                                    <span class="card-tag">Design</span>
+                                </div>
+                            </div>
+                            <button class="add-card-btn">+ Add Card</button>
+                        </div>
+
+                        <div class="kanban-column">
+                            <div class="kanban-header">
+                                <span class="kanban-title">In Progress</span>
+                                <span class="kanban-count">3</span>
+                            </div>
+                            <div class="kanban-cards">
+                                <div class="kanban-card">
+                                    <div class="card-title-text">Dashboard Analytics v2</div>
+                                    <div class="card-description">Real-time data analytics</div>
+                                    <span class="card-tag">Feature</span>
+                                </div>
+                                <div class="kanban-card">
+                                    <div class="card-title-text">Performance Optimization</div>
+                                    <div class="card-description">Reduce API response time</div>
+                                    <span class="card-tag">Technical</span>
+                                </div>
+                            </div>
+                            <button class="add-card-btn">+ Add Card</button>
+                        </div>
+
+                        <div class="kanban-column">
+                            <div class="kanban-header">
+                                <span class="kanban-title">Review</span>
+                                <span class="kanban-count">2</span>
+                            </div>
+                            <div class="kanban-cards">
+                                <div class="kanban-card">
+                                    <div class="card-title-text">Email Notifications</div>
+                                    <div class="card-description">Workflow alerts</div>
+                                    <span class="card-tag">Feature</span>
+                                </div>
+                            </div>
+                            <button class="add-card-btn">+ Add Card</button>
+                        </div>
+
+                        <div class="kanban-column">
+                            <div class="kanban-header">
+                                <span class="kanban-title">Done</span>
+                                <span class="kanban-count">12</span>
+                            </div>
+                            <div class="kanban-cards">
+                                <div class="kanban-card">
+                                    <div class="card-title-text">User Authentication</div>
+                                    <div class="card-description">JWT-based auth</div>
+                                    <span class="card-tag">Complete</span>
+                                </div>
+                                <div class="kanban-card">
+                                    <div class="card-title-text">Payment Integration</div>
+                                    <div class="card-description">Stripe subscriptions</div>
+                                    <span class="card-tag">Complete</span>
+                                </div>
+                            </div>
+                            <button class="add-card-btn">+ Add Card</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Deck Builder Section -->
+                <div id="deck-builder" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">AI Deck Builder</h1>
+                            <p class="page-description">Generate world-class investor pitch decks</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Customize</button>
+                            <button class="btn btn-primary">Generate Deck</button>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-box">
+                        <div class="recommendation-title">AI-Powered Pitch Deck</div>
+                        <div style="color: rgba(255,255,255,0.8);">
+                            Our AI creates investor-ready decks using your Business Profile, Financials, and Traction data. 
+                            Following proven frameworks from successful startups.
+                        </div>
+                    </div>
+
+                    <div class="deck-preview">
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 1</div>
+                            <div class="slide-title">Cover</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Company name & tagline</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 2</div>
+                            <div class="slide-title">Problem</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Pain point we solve</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 3</div>
+                            <div class="slide-title">Solution</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Our product</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 4</div>
+                            <div class="slide-title">Market</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">TAM, SAM, SOM</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 5</div>
+                            <div class="slide-title">Product</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Features & demo</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 6</div>
+                            <div class="slide-title">Traction</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Metrics & growth</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 7</div>
+                            <div class="slide-title">Business Model</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Revenue streams</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 8</div>
+                            <div class="slide-title">Competition</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Competitive matrix</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 9</div>
+                            <div class="slide-title">Go-to-Market</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">GTM strategy</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 10</div>
+                            <div class="slide-title">Team</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Key members</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 11</div>
+                            <div class="slide-title">Financials</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Projections</div>
+                        </div>
+                        <div class="slide-preview">
+                            <div class="slide-number">Slide 12</div>
+                            <div class="slide-title">The Ask</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Funding request</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Deck Customization</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Deck Type</label>
+                                <select class="form-select">
+                                    <option>Investor Pitch (Series A)</option>
+                                    <option>Seed Round Pitch</option>
+                                    <option>Sales Deck</option>
+                                    <option>Partnership Deck</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Visual Style</label>
+                                <select class="form-select">
+                                    <option>Modern & Minimal</option>
+                                    <option>Bold & Colorful</option>
+                                    <option>Corporate Professional</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Funding Ask</label>
+                            <input type="text" class="form-input" placeholder="e.g., $5M Series A">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Use of Funds</label>
+                            <textarea class="form-textarea">• Product Development: 40%
+• Sales & Marketing: 35%
+• Team Expansion: 20%
+• Operations: 5%</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Standard Operating Procedures Section (NEW) -->
+                <div id="sop" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Standard Operating Procedures</h1>
+                            <p class="page-description">Complete development guidelines for Donkey Ideas</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Export PDF</button>
+                            <button class="btn btn-primary">+ Add Procedure</button>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">1. Dashboard Navigation Standards</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Ensure consistent navigation experience across all sections.
+                            <ol>
+                                <li>Global company selector must be visible on all pages in the sidebar</li>
+                                <li>Active section must be highlighted in blue (#60a5fa)</li>
+                                <li>Top bar must show breadcrumb navigation and auto-save status</li>
+                                <li>All changes must trigger auto-save within 1 second</li>
+                                <li>Page transitions should be instant (no loading screens for navigation)</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">2. Financial Data Management</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Maintain accuracy and consistency in financial calculations.
+                            <ol>
+                                <li>All financial inputs must auto-calculate dependent fields</li>
+                                <li>Gross Profit = Revenue - COGS (automatic)</li>
+                                <li>Net Profit = Gross Profit - Operating Expenses (automatic)</li>
+                                <li>Profit Margin = (Net Profit / Revenue) × 100 (automatic)</li>
+                                <li>All currency values must display with $ symbol and comma separators</li>
+                                <li>Negative values must display in red (#ef4444)</li>
+                                <li>Auto-save must trigger on any input change</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">3. Valuation Engine Logic</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Standardize valuation calculations across all companies.
+                            <ol>
+                                <li><strong>Revenue Multiple Method:</strong>
+                                    <ul>
+                                        <li>Valuation = ARR × Multiple</li>
+                                        <li>Multiple based on growth rate:
+                                            <ul>
+                                                <li>0-20% growth: 3-5x</li>
+                                                <li>20-40% growth: 5-8x</li>
+                                                <li>40%+ growth: 8-12x</li>
+                                            </ul>
+                                        </li>
+                                        <li>Adjust +1x for profit margin > 30%</li>
+                                        <li>Adjust +0.5x for churn rate < 2%</li>
+                                    </ul>
+                                </li>
+                                <li><strong>AI Score Calculation:</strong>
+                                    <ul>
+                                        <li>Growth Score: Normalize growth rate (0-100%+) to 0-100 points</li>
+                                        <li>Profitability Score: Normalize margin (0-50%+) to 0-100 points</li>
+                                        <li>Retention Score: Normalize retention (80-100%) to 0-100 points</li>
+                                        <li>Market Score: Normalize TAM ($100M-$10B+) to 0-100 points</li>
+                                        <li>Total Score = Average of 4 scores</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">4. Team & Permission Management</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Enforce role-based access control consistently.
+                            <ol>
+                                <li><strong>Owner Role:</strong> Full access to everything including company deletion</li>
+                                <li><strong>Admin Role:</strong> All access except company deletion</li>
+                                <li><strong>Member Role:</strong> Read/write data, no settings or team management</li>
+                                <li><strong>Viewer Role:</strong> Read-only access to all data</li>
+                                <li><strong>Investor Role:</strong> Read-only access to selected metrics only</li>
+                                <li>Permission checks must happen on both frontend and backend</li>
+                                <li>Unauthorized actions must show error message and not execute</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">5. Document Library Workflow</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Maintain document organization and version control.
+                            <ol>
+                                <li>All uploads must be scanned for viruses before storage</li>
+                                <li>Max file size: 10MB (configurable)</li>
+                                <li>Supported formats: PDF, DOCX, XLSX, PPTX, JPG, PNG, ZIP</li>
+                                <li>Every file modification creates a new version (v1, v2, v3...)</li>
+                                <li>Version history must track: user, timestamp, changes description</li>
+                                <li>Users can restore any previous version</li>
+                                <li>Files must be stored in S3 or equivalent cloud storage</li>
+                                <li>Generate thumbnails for image files automatically</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">6. Activity Logging Standards</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Create comprehensive audit trail for compliance.
+                            <ol>
+                                <li>Log all user actions: create, read, update, delete</li>
+                                <li>Store: user ID, action type, entity type, entity ID, timestamp, changes (JSON)</li>
+                                <li>Actions to always log:
+                                    <ul>
+                                        <li>Financial data changes</li>
+                                        <li>Document uploads/modifications</li>
+                                        <li>Team member additions/removals</li>
+                                        <li>Permission changes</li>
+                                        <li>Investor access grants</li>
+                                        <li>Company settings changes</li>
+                                    </ul>
+                                </li>
+                                <li>Logs must be immutable (cannot be edited or deleted)</li>
+                                <li>Retention: 7 years for compliance</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">7. AI Integration Guidelines</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Standardize AI features and API usage.
+                            <ol>
+                                <li><strong>Deck Generation:</strong>
+                                    <ul>
+                                        <li>Pull data from Business Profile, Financials, Traction</li>
+                                        <li>Use GPT-4 API for content generation</li>
+                                        <li>Template-based with AI-enhanced content</li>
+                                        <li>Allow manual editing of AI-generated content</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Financial Forecasting:</strong>
+                                    <ul>
+                                        <li>Analyze last 12 months of data</li>
+                                        <li>Generate 12-month forward projections</li>
+                                        <li>Provide confidence scores (0-100%)</li>
+                                        <li>Offer conservative/realistic/optimistic scenarios</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Cost Management:</strong>
+                                    <ul>
+                                        <li>Implement request caching to reduce API calls</li>
+                                        <li>Set per-user monthly token limits</li>
+                                        <li>Track costs per company and per user</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">8. UI/UX Design Standards</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Maintain consistent visual design across the platform.
+                            <ol>
+                                <li><strong>Colors:</strong>
+                                    <ul>
+                                        <li>Primary: #60a5fa (blue)</li>
+                                        <li>Success: #10b981 (green)</li>
+                                        <li>Warning: #eab308 (yellow)</li>
+                                        <li>Error: #ef4444 (red)</li>
+                                        <li>Background: #0A0A0A (black)</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Typography:</strong>
+                                    <ul>
+                                        <li>Font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI'</li>
+                                        <li>Page Title: 32px, weight 700</li>
+                                        <li>Card Title: 18px, weight 600</li>
+                                        <li>Body Text: 14px, weight 400</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Spacing:</strong>
+                                    <ul>
+                                        <li>Section margin: 2rem</li>
+                                        <li>Card padding: 1.5rem</li>
+                                        <li>Grid gap: 1.5rem</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Buttons:</strong>
+                                    <ul>
+                                        <li>Primary: Blue background, black text</li>
+                                        <li>Secondary: Transparent with border</li>
+                                        <li>Height: 40px (standard), 32px (small)</li>
+                                        <li>Border radius: 6px</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">9. Performance Requirements</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Ensure fast, responsive user experience.
+                            <ol>
+                                <li>API response time: < 200ms (p95)</li>
+                                <li>Page load time: < 2 seconds (p95)</li>
+                                <li>Database queries: < 100ms (p95)</li>
+                                <li>Auto-save debounce: 1 second</li>
+                                <li>Implement lazy loading for images</li>
+                                <li>Use code splitting for frontend bundles</li>
+                                <li>Cache expensive computations (Redis)</li>
+                                <li>Compress API responses (gzip)</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="sop-section">
+                        <div class="sop-title">10. Testing & Quality Assurance</div>
+                        <div class="sop-content">
+                            <strong>Purpose:</strong> Maintain code quality and prevent bugs.
+                            <ol>
+                                <li><strong>Unit Tests:</strong> 80%+ code coverage required</li>
+                                <li><strong>Integration Tests:</strong> Test all API endpoints</li>
+                                <li><strong>E2E Tests:</strong> Critical user flows must be tested</li>
+                                <li><strong>Load Testing:</strong> Support 1000 concurrent users</li>
+                                <li><strong>Security Testing:</strong> Monthly vulnerability scans</li>
+                                <li>All PRs must pass tests before merge</li>
+                                <li>Manual QA for UI changes</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simplified placeholders for other sections -->
+                <div id="financials" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Financial Hub</h1>
+                            <p class="page-description">P&L, Balance Sheet, and KPIs with auto-calculations</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Export Excel</button>
+                            <button class="btn btn-primary">Save All</button>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <button class="tab active">P&L Statement</button>
+                        <button class="tab">Balance Sheet</button>
+                        <button class="tab">KPIs & Metrics</button>
+                        <button class="tab">Consolidated View</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Profit & Loss Statement</h2>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <label style="font-size: 14px; color: rgba(255,255,255,0.6);">Period:</label>
+                                <select class="form-select" style="width: auto;">
+                                    <option>November 2024</option>
+                                    <option>October 2024</option>
+                                    <option>September 2024</option>
+                                    <option>Q4 2024</option>
+                                    <option>Q3 2024</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(96,165,250,0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(96,165,250,0.2); margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: #60a5fa;">Revenue</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Product Revenue</label>
+                                    <input type="number" class="form-input" value="850000" placeholder="0" onchange="calculatePL()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Service Revenue</label>
+                                    <input type="number" class="form-input" value="0" placeholder="0" onchange="calculatePL()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Other Revenue</label>
+                                    <input type="number" class="form-input" value="0" placeholder="0" onchange="calculatePL()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Total Revenue (Auto)</label>
+                                    <input type="text" class="form-input" value="$850,000" readonly style="background: rgba(16,185,129,0.1); border-color: #10b981; color: #10b981; font-weight: 600;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(239,68,68,0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: #ef4444;">Cost of Goods Sold</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Direct Costs</label>
+                                    <input type="number" class="form-input" value="180000" placeholder="0" onchange="calculatePL()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Infrastructure Costs</label>
+                                    <input type="number" class="form-input" value="100000" placeholder="0" onchange="calculatePL()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Other COGS</label>
+                                    <input type="number" class="form-input" value="0" placeholder="0" onchange="calculatePL()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Total COGS (Auto)</label>
+                                    <input type="text" class="form-input" value="$280,000" readonly style="background: rgba(239,68,68,0.1); border-color: #ef4444; color: #ef4444; font-weight: 600;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(16,185,129,0.1); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 18px; font-weight: 600;">Gross Profit (Auto-Calculated)</span>
+                                <span style="font-size: 36px; font-weight: 700; color: #10b981;">$570,000</span>
+                            </div>
+                            <div style="margin-top: 0.5rem; color: rgba(255,255,255,0.6);">
+                                Gross Margin: 67.1%
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(239,68,68,0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: #ef4444;">Operating Expenses</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Sales & Marketing</label>
+                                    <input type="number" class="form-input" value="120000" placeholder="0" onchange="calculatePL()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Research & Development</label>
+                                    <input type="number" class="form-input" value="80000" placeholder="0" onchange="calculatePL()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">General & Administrative</label>
+                                    <input type="number" class="form-input" value="30000" placeholder="0" onchange="calculatePL()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Total OpEx (Auto)</label>
+                                    <input type="text" class="form-input" value="$230,000" readonly style="background: rgba(239,68,68,0.1); border-color: #ef4444; color: #ef4444; font-weight: 600;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(96,165,250,0.2) 100%); padding: 2rem; border-radius: 8px; border: 2px solid #10b981;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <span style="font-size: 24px; font-weight: 700;">NET PROFIT</span>
+                                <span style="font-size: 48px; font-weight: 700; color: #10b981;">$340,000</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                                <div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">PROFIT MARGIN</div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #10b981;">40.0%</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">GROSS MARGIN</div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #10b981;">67.1%</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">OPERATING MARGIN</div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #10b981;">40.0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Balance Sheet</h2>
+                        
+                        <div style="background: rgba(16,185,129,0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(16,185,129,0.2); margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: #10b981;">Assets</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Cash & Equivalents</label>
+                                    <input type="number" class="form-input" value="500000" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Accounts Receivable</label>
+                                    <input type="number" class="form-input" value="150000" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Fixed Assets</label>
+                                    <input type="number" class="form-input" value="50000" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Total Assets (Auto)</label>
+                                    <input type="text" class="form-input" value="$700,000" readonly style="background: rgba(16,185,129,0.1); border-color: #10b981; color: #10b981; font-weight: 600;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(239,68,68,0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: #ef4444;">Liabilities</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Accounts Payable</label>
+                                    <input type="number" class="form-input" value="80000" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Short-term Debt</label>
+                                    <input type="number" class="form-input" value="0" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Long-term Debt</label>
+                                    <input type="number" class="form-input" value="100000" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Total Liabilities (Auto)</label>
+                                    <input type="text" class="form-input" value="$180,000" readonly style="background: rgba(239,68,68,0.1); border-color: #ef4444; color: #ef4444; font-weight: 600;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(96,165,250,0.1); padding: 1.5rem; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <span style="font-size: 18px; font-weight: 600;">Total Equity (Auto)</span>
+                                <span style="font-size: 36px; font-weight: 700; color: #60a5fa;">$520,000</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                                <div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">CURRENT RATIO</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #10b981;">8.13</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">DEBT-TO-EQUITY</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #10b981;">0.35</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Key Performance Indicators</h2>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">MRR (Monthly Recurring Revenue)</label>
+                                <input type="number" class="form-input" value="71000" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">ARR (Annual Recurring Revenue)</label>
+                                <input type="text" class="form-input" value="$850,000" readonly style="background: rgba(96,165,250,0.1); border-color: #60a5fa; color: #60a5fa; font-weight: 600;">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Customer Acquisition Cost (CAC)</label>
+                                <input type="number" class="form-input" value="2400" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Customer Lifetime Value (LTV)</label>
+                                <input type="number" class="form-input" value="48000" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">LTV:CAC Ratio</label>
+                                <input type="text" class="form-input" value="20:1" readonly style="background: rgba(16,185,129,0.1); border-color: #10b981; color: #10b981; font-weight: 600;">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Monthly Churn Rate (%)</label>
+                                <input type="number" class="form-input" value="2.2" placeholder="0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Net Promoter Score (NPS)</label>
+                                <input type="number" class="form-input" value="78" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Active Users</label>
+                                <input type="number" class="form-input" value="1250" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Growth Rate (MoM %)</label>
+                                <input type="number" class="form-input" value="32" placeholder="0" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                function calculatePL() {
+                    // This would have actual calculation logic in production
+                    console.log('Recalculating P&L...');
+                }
+                </script>
+
+                <div id="analytics" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Analytics & Reports</h1>
+                            <p class="page-description">Advanced insights and custom reporting</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Export All</button>
+                            <button class="btn btn-primary">+ Create Report</button>
+                        </div>
+                    </div>
+
+                    <div class="tabs">
+                        <button class="tab active">Overview</button>
+                        <button class="tab">Revenue Analytics</button>
+                        <button class="tab">Customer Metrics</button>
+                        <button class="tab">Custom Reports</button>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Revenue (YTD)</div>
+                            <div class="stat-value">$2.4M</div>
+                            <div class="stat-change positive">↑ 156% vs last year</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Customer Acquisition</div>
+                            <div class="stat-value">47</div>
+                            <div class="stat-change positive">↑ 8 new this month</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">LTV / CAC Ratio</div>
+                            <div class="stat-value">20:1</div>
+                            <div class="stat-change positive">Industry leading</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Burn Multiple</div>
+                            <div class="stat-value">0.8x</div>
+                            <div class="stat-change positive">Efficient growth</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Revenue Trends</h2>
+                            <select class="form-select" style="width: auto;">
+                                <option>Last 12 Months</option>
+                                <option>Last 6 Months</option>
+                                <option>Last 3 Months</option>
+                                <option>Year to Date</option>
+                            </select>
+                        </div>
+                        <div style="height: 300px; background: linear-gradient(180deg, rgba(96,165,250,0.1) 0%, transparent 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4);">
+                            [Revenue Growth Chart: $850K ARR, 32% MoM Growth]
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 1.5rem;">Customer Acquisition by Channel</h2>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Channel</th>
+                                        <th>Customers</th>
+                                        <th>CAC</th>
+                                        <th>Conversion</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Organic Search</strong></td>
+                                        <td>18</td>
+                                        <td>$1,200</td>
+                                        <td>4.2%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Paid Ads</strong></td>
+                                        <td>12</td>
+                                        <td>$3,800</td>
+                                        <td>2.1%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Referral</strong></td>
+                                        <td>10</td>
+                                        <td>$600</td>
+                                        <td>8.7%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Direct</strong></td>
+                                        <td>7</td>
+                                        <td>$0</td>
+                                        <td>12.3%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 1.5rem;">Cohort Retention Analysis</h2>
+                            <div style="height: 240px; background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(96,165,250,0.1) 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4);">
+                                [Cohort Retention Chart: 97.8% Month 12]
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Custom Reports</h2>
+                            <button class="btn btn-primary btn-small">+ New Report</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Report Name</th>
+                                    <th>Type</th>
+                                    <th>Schedule</th>
+                                    <th>Last Run</th>
+                                    <th>Recipients</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Monthly Financial Summary</strong></td>
+                                    <td>Financial</td>
+                                    <td>Monthly - 1st</td>
+                                    <td>2 days ago</td>
+                                    <td>5 people</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Run Now</button>
+                                        <button class="btn btn-secondary btn-small">Export PDF</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Investor Update Package</strong></td>
+                                    <td>Comprehensive</td>
+                                    <td>Monthly - 5th</td>
+                                    <td>Yesterday</td>
+                                    <td>3 investors</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Run Now</button>
+                                        <button class="btn btn-secondary btn-small">Export PDF</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Weekly KPI Dashboard</strong></td>
+                                    <td>Metrics</td>
+                                    <td>Weekly - Monday</td>
+                                    <td>2 hours ago</td>
+                                    <td>Team (12)</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Run Now</button>
+                                        <button class="btn btn-secondary btn-small">Export Excel</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Customer Health Score</strong></td>
+                                    <td>Customer</td>
+                                    <td>Weekly - Friday</td>
+                                    <td>3 days ago</td>
+                                    <td>Sales team (4)</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Run Now</button>
+                                        <button class="btn btn-secondary btn-small">Export CSV</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Key Performance Indicators</h2>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">MRR</div>
+                                <div style="font-size: 24px; font-weight: 700;">$71K</div>
+                                <div style="font-size: 13px; color: #10b981;">↑ 32% MoM</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">ARR</div>
+                                <div style="font-size: 24px; font-weight: 700;">$850K</div>
+                                <div style="font-size: 13px; color: #10b981;">↑ 156% YoY</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">CHURN RATE</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981;">2.2%</div>
+                                <div style="font-size: 13px; color: #10b981;">↓ 0.8% vs target</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">CAC</div>
+                                <div style="font-size: 24px; font-weight: 700;">$2,400</div>
+                                <div style="font-size: 13px; color: #10b981;">↓ $600 vs last Q</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">LTV</div>
+                                <div style="font-size: 24px; font-weight: 700;">$48,000</div>
+                                <div style="font-size: 13px; color: #10b981;">↑ 12% vs last Q</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 6px;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">NPS SCORE</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981;">78</div>
+                                <div style="font-size: 13px; color: #10b981;">Excellent</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="team" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Team Management</h1>
+                            <p class="page-description">Manage team members, roles, and permissions</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary">+ Invite Member</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Members</div>
+                            <div class="stat-value">24</div>
+                            <div class="stat-change positive">↑ 3 this month</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Pending Invites</div>
+                            <div class="stat-value">3</div>
+                            <div class="stat-change">Awaiting response</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Active Today</div>
+                            <div class="stat-value">18</div>
+                            <div class="stat-change positive">75% engagement</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Roles Configured</div>
+                            <div class="stat-value">4</div>
+                            <div class="stat-change">Owner, Admin, Member, Viewer</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Team Members</h2>
+                            <div style="display: flex; gap: 1rem;">
+                                <select class="form-select" style="width: auto;">
+                                    <option>All Members (24)</option>
+                                    <option>Owners (1)</option>
+                                    <option>Admins (3)</option>
+                                    <option>Members (18)</option>
+                                    <option>Viewers (2)</option>
+                                </select>
+                                <input type="text" class="form-input" placeholder="Search members..." style="width: 250px;">
+                            </div>
+                        </div>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Companies</th>
+                                    <th>Last Active</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%); display: flex; align-items: center; justify-content: center; font-weight: 700;">AC</div>
+                                            <div>
+                                                <div style="font-weight: 600;">Alain (You)</div>
+                                                <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Founder & CEO</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>alain@donkeyideas.com</td>
+                                    <td><span class="status-badge status-active">Owner</span></td>
+                                    <td>All (4)</td>
+                                    <td>Active now</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td><button class="btn btn-secondary btn-small">Settings</button></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #60a5fa 100%); display: flex; align-items: center; justify-content: center; font-weight: 700;">SC</div>
+                                            <div>
+                                                <div style="font-weight: 600;">Sarah Chen</div>
+                                                <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Head of Finance</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>sarah.chen@donkeyideas.com</td>
+                                    <td><span class="status-badge" style="background: rgba(96,165,250,0.2); color: #60a5fa;">Admin</span></td>
+                                    <td>3</td>
+                                    <td>2 min ago</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Edit</button>
+                                        <button class="btn btn-secondary btn-small">Remove</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); display: flex; align-items: center; justify-content: center; font-weight: 700;">MJ</div>
+                                            <div>
+                                                <div style="font-weight: 600;">Marcus Johnson</div>
+                                                <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Product Lead</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>marcus.j@donkeyideas.com</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">Member</span></td>
+                                    <td>2</td>
+                                    <td>15 min ago</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Edit</button>
+                                        <button class="btn btn-secondary btn-small">Remove</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ec4899 0%, #a78bfa 100%); display: flex; align-items: center; justify-content: center; font-weight: 700;">EW</div>
+                                            <div>
+                                                <div style="font-weight: 600;">Emily Wang</div>
+                                                <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Engineering Manager</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>emily.wang@donkeyideas.com</td>
+                                    <td><span class="status-badge" style="background: rgba(96,165,250,0.2); color: #60a5fa;">Admin</span></td>
+                                    <td>All (4)</td>
+                                    <td>1 hour ago</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Edit</button>
+                                        <button class="btn btn-secondary btn-small">Remove</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); display: flex; align-items: center; justify-content: center; font-weight: 700;">JD</div>
+                                            <div>
+                                                <div style="font-weight: 600;">James Davis</div>
+                                                <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Marketing Director</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>james.d@donkeyideas.com</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">Member</span></td>
+                                    <td>2</td>
+                                    <td>3 hours ago</td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Edit</button>
+                                        <button class="btn btn-secondary btn-small">Remove</button>
+                                    </td>
+                                </tr>
+                                <tr style="opacity: 0.6;">
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-weight: 700;">AR</div>
+                                            <div>
+                                                <div style="font-weight: 600;">Alex Rodriguez</div>
+                                                <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Developer</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>alex.r@example.com</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">Member</span></td>
+                                    <td>1</td>
+                                    <td>-</td>
+                                    <td><span class="status-badge status-beta">Pending</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Resend</button>
+                                        <button class="btn btn-secondary btn-small">Cancel</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Permission Matrix</h2>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
+                            <div style="display: grid; grid-template-columns: 250px repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);">
+                                <div style="padding: 1rem; font-weight: 600;">Permission</div>
+                                <div style="padding: 1rem; text-align: center; font-weight: 600;">Owner</div>
+                                <div style="padding: 1rem; text-align: center; font-weight: 600;">Admin</div>
+                                <div style="padding: 1rem; text-align: center; font-weight: 600;">Member</div>
+                                <div style="padding: 1rem; text-align: center; font-weight: 600;">Viewer</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 250px repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="padding: 1rem;">View Dashboard</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 250px repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="padding: 1rem;">Edit Financials</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 250px repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="padding: 1rem;">Upload Documents</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 250px repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="padding: 1rem;">Manage Team</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 250px repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="padding: 1rem;">Invite Investors</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 250px repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="padding: 1rem;">Export Reports</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 250px repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="padding: 1rem;">Company Settings</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 250px repeat(4, 1fr);">
+                                <div style="padding: 1rem; font-weight: 600; color: #ef4444;">Delete Company</div>
+                                <div style="padding: 1rem; text-align: center; color: #10b981; font-size: 18px;">✓</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                                <div style="padding: 1rem; text-align: center; color: rgba(255,255,255,0.3); font-size: 18px;">✗</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Invite New Member</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-input" placeholder="name@company.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Role</label>
+                                <select class="form-select">
+                                    <option>Member (Recommended)</option>
+                                    <option>Admin</option>
+                                    <option>Viewer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Assign to Companies</label>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" checked> AI Workflow Engine
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox"> Market Intelligence
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox"> Voice-to-Product
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox"> Predictive Analytics
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Personal Message (Optional)</label>
+                            <textarea class="form-textarea" placeholder="Add a welcome message..."></textarea>
+                        </div>
+                        <button class="btn btn-primary">Send Invitation</button>
+                    </div>
+                </div>
+
+                <div id="investor-portal" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Investor Portal</h1>
+                            <p class="page-description">Manage investor access and send updates</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Send Monthly Update</button>
+                            <button class="btn btn-primary">+ Invite Investor</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Investors</div>
+                            <div class="stat-value">5</div>
+                            <div class="stat-change">Across all ventures</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Active Access</div>
+                            <div class="stat-value">4</div>
+                            <div class="stat-change positive">1 pending invite</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Updates Sent</div>
+                            <div class="stat-value">12</div>
+                            <div class="stat-change">This year</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Avg. Open Rate</div>
+                            <div class="stat-value">94%</div>
+                            <div class="stat-change positive">High engagement</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Investor Access</h2>
+                            <select class="form-select" style="width: auto;">
+                                <option>All Investors (5)</option>
+                                <option>Active (4)</option>
+                                <option>Pending (1)</option>
+                            </select>
+                        </div>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Investor</th>
+                                    <th>Company</th>
+                                    <th>Investment</th>
+                                    <th>Access Level</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600;">Sequoia Capital</div>
+                                        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">partner@sequoia.com</div>
+                                    </td>
+                                    <td>AI Workflow Engine</td>
+                                    <td>$2M Series A</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">Read-Only</span></td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>2 hours ago</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Manage</button>
+                                        <button class="btn btn-secondary btn-small">Message</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600;">Andreessen Horowitz</div>
+                                        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">team@a16z.com</div>
+                                    </td>
+                                    <td>Market Intelligence</td>
+                                    <td>$1.5M Seed</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">Read-Only</span></td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>Yesterday</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Manage</button>
+                                        <button class="btn btn-secondary btn-small">Message</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600;">Y Combinator</div>
+                                        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">contact@ycombinator.com</div>
+                                    </td>
+                                    <td>Voice-to-Product</td>
+                                    <td>$500K Seed</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">Read-Only</span></td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>3 days ago</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Manage</button>
+                                        <button class="btn btn-secondary btn-small">Message</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600;">Founders Fund</div>
+                                        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">invest@foundersfund.com</div>
+                                    </td>
+                                    <td>Predictive Analytics</td>
+                                    <td>$3M Series A</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">Read-Only</span></td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>Last week</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Manage</button>
+                                        <button class="btn btn-secondary btn-small">Message</button>
+                                    </td>
+                                </tr>
+                                <tr style="opacity: 0.6;">
+                                    <td>
+                                        <div style="font-weight: 600;">Highland Capital Partners</div>
+                                        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">investor@highland.com</div>
+                                    </td>
+                                    <td>AI Workflow Engine</td>
+                                    <td>Exploring</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">Read-Only</span></td>
+                                    <td><span class="status-badge status-beta">Pending</span></td>
+                                    <td>Never</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Resend</button>
+                                        <button class="btn btn-secondary btn-small">Cancel</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Create Monthly Update</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Select Company</label>
+                            <select class="form-select">
+                                <option>AI Workflow Engine</option>
+                                <option>Market Intelligence</option>
+                                <option>Voice-to-Product</option>
+                                <option>Predictive Analytics</option>
+                                <option>All Companies (Consolidated)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Update Period</label>
+                            <select class="form-select">
+                                <option>November 2024</option>
+                                <option>October 2024</option>
+                                <option>Q4 2024</option>
+                                <option>Q3 2024</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Update Title</label>
+                            <input type="text" class="form-input" value="Strong Q4 Performance - On Track for $1M ARR" placeholder="e.g., October Update: 32% MoM Growth">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Key Highlights</label>
+                            <textarea class="form-textarea" style="min-height: 200px;" placeholder="Share key achievements, milestones, and updates...">📈 FINANCIAL HIGHLIGHTS
+• Revenue grew 32% MoM to $85K
+• ARR now at $850K, up from $650K last quarter
+• Achieved 40% profit margin
+• Extended runway to 24 months
+
+🎯 PRODUCT & CUSTOMER WINS
+• Signed 3 Fortune 500 customers (Microsoft, Salesforce, Adobe)
+• Launched AI-powered workflow builder (beta)
+• 97.8% customer retention rate
+• NPS score improved to 78
+
+🚀 TEAM & OPERATIONS
+• Hired 2 senior engineers from Google
+• Opened new office in Austin
+• Completed SOC2 Type II certification
+• Team now at 8 people
+
+📰 PRESS & RECOGNITION
+• Featured in TechCrunch Disrupt
+• Forbes 30 Under 30 (Founder)
+• Won "Best AI Startup" at Summit 2024
+
+💡 LOOKING AHEAD
+• Preparing for Series A in Q1 2025
+• Launching enterprise tier in December
+• Expanding to European market in 2025</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Metrics to Share</label>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" checked> MRR / ARR
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" checked> Customer Count
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" checked> Growth Rate
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" checked> Burn Rate
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox"> Detailed P&L
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox"> Balance Sheet
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" checked> Runway
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" checked> Customer Metrics
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox"> Team Size
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Attach Documents (Optional)</label>
+                            <div style="border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer;">
+                                <div style="color: rgba(255,255,255,0.5);">Click to attach pitch deck, financials, or other files</div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 0.5rem;">Max 10MB per file</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Recipients</label>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <div style="background: rgba(96,165,250,0.2); padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>Sequoia Capital</span>
+                                    <button style="background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; padding: 0;">×</button>
+                                </div>
+                                <div style="background: rgba(96,165,250,0.2); padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>Andreessen Horowitz</span>
+                                    <button style="background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; padding: 0;">×</button>
+                                </div>
+                                <div style="background: rgba(96,165,250,0.2); padding: 0.5rem 1rem; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>Y Combinator</span>
+                                    <button style="background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; padding: 0;">×</button>
+                                </div>
+                                <button class="btn btn-secondary btn-small">+ Add Recipients</button>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="btn btn-secondary">Save as Draft</button>
+                            <button class="btn btn-secondary">Preview</button>
+                            <button class="btn btn-primary">Send Update Now</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Recent Updates Sent</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Title</th>
+                                    <th>Company</th>
+                                    <th>Recipients</th>
+                                    <th>Open Rate</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Nov 5, 2024</td>
+                                    <td><strong>October Update: 32% MoM Growth</strong></td>
+                                    <td>AI Workflow Engine</td>
+                                    <td>3 investors</td>
+                                    <td>100%</td>
+                                    <td><button class="btn btn-secondary btn-small">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Oct 1, 2024</td>
+                                    <td><strong>Q3 Review: $650K ARR Milestone</strong></td>
+                                    <td>AI Workflow Engine</td>
+                                    <td>3 investors</td>
+                                    <td>100%</td>
+                                    <td><button class="btn btn-secondary btn-small">View</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Sep 3, 2024</td>
+                                    <td><strong>August: First Enterprise Customer</strong></td>
+                                    <td>AI Workflow Engine</td>
+                                    <td>2 investors</td>
+                                    <td>100%</td>
+                                    <td><button class="btn btn-secondary btn-small">View</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="activity" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Activity Logs</h1>
+                            <p class="page-description">Complete audit trail of all system actions</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">Export CSV</button>
+                            <button class="btn btn-primary">Filter</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Actions</div>
+                            <div class="stat-value">1,247</div>
+                            <div class="stat-change">Last 30 days</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Financial Changes</div>
+                            <div class="stat-value">42</div>
+                            <div class="stat-change">This month</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Document Updates</div>
+                            <div class="stat-value">87</div>
+                            <div class="stat-change">This month</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Most Active User</div>
+                            <div class="stat-value">Sarah Chen</div>
+                            <div class="stat-change">156 actions</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Filter Activity</h2>
+                            <div style="display: flex; gap: 1rem;">
+                                <select class="form-select" style="width: auto;">
+                                    <option>All Actions</option>
+                                    <option>Financial Changes</option>
+                                    <option>Document Updates</option>
+                                    <option>Team Changes</option>
+                                    <option>Investor Access</option>
+                                    <option>Settings Changes</option>
+                                </select>
+                                <select class="form-select" style="width: auto;">
+                                    <option>All Users</option>
+                                    <option>Alain</option>
+                                    <option>Sarah Chen</option>
+                                    <option>Marcus Johnson</option>
+                                    <option>Emily Wang</option>
+                                </select>
+                                <select class="form-select" style="width: auto;">
+                                    <option>Last 7 Days</option>
+                                    <option>Last 30 Days</option>
+                                    <option>Last 3 Months</option>
+                                    <option>All Time</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="position: relative; padding-left: 2rem; padding-top: 1rem;">
+                            <div style="position: absolute; left: 8px; top: 1rem; bottom: 0; width: 2px; background: rgba(255,255,255,0.1);"></div>
+
+                            <!-- Activity Item 1 -->
+                            <div style="position: relative; padding-bottom: 2rem;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #60a5fa; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">Sarah Chen</span> updated 
+                                            <strong>Q4 Financial Statement</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">2 minutes ago</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        Changed Revenue from $82,000 to $85,000 (+3.6%)
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>📊 Financial</span>
+                                        <span>🏢 AI Workflow Engine</span>
+                                        <span>IP: 192.168.1.1</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Item 2 -->
+                            <div style="position: relative; padding-bottom: 2rem;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">Marcus Johnson</span> uploaded 
+                                            <strong>Pitch-Deck-v3.pdf</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">15 minutes ago</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        New document added to library (2.4 MB)
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>📄 Document</span>
+                                        <span>🏢 Market Intelligence</span>
+                                        <span>IP: 192.168.1.45</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Item 3 -->
+                            <div style="position: relative; padding-bottom: 2rem;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #eab308; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">You</span> invited 
+                                            <strong>investor@highland.com</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">1 hour ago</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        Granted read-only access to AI Workflow Engine
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>👥 Investor</span>
+                                        <span>🏢 AI Workflow Engine</span>
+                                        <span>IP: 192.168.1.100</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Item 4 -->
+                            <div style="position: relative; padding-bottom: 2rem;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #60a5fa; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">Emily Wang</span> updated 
+                                            <strong>Project Board</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">2 hours ago</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        Moved "Dashboard Analytics v2" from "In Progress" to "Review"
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>📋 Project</span>
+                                        <span>🏢 AI Workflow Engine</span>
+                                        <span>IP: 192.168.1.23</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Item 5 -->
+                            <div style="position: relative; padding-bottom: 2rem;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">Sarah Chen</span> added team member 
+                                            <strong>Alex Rodriguez</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">3 hours ago</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        Role: Member • Access: AI Workflow Engine
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>👥 Team</span>
+                                        <span>🏢 AI Workflow Engine</span>
+                                        <span>IP: 192.168.1.1</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Item 6 -->
+                            <div style="position: relative; padding-bottom: 2rem;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #a78bfa; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">System</span> generated 
+                                            <strong>Monthly Investor Report</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">Yesterday at 9:00 AM</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        Sent to 3 investors • 100% delivery rate • 2 opened
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>🤖 Automated</span>
+                                        <span>🏢 AI Workflow Engine</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Item 7 -->
+                            <div style="position: relative; padding-bottom: 2rem;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #60a5fa; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">James Davis</span> updated 
+                                            <strong>Website Hero Section</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">2 days ago</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        Changed headline text and uploaded new hero image
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>🌐 Website</span>
+                                        <span>🏢 AI Workflow Engine</span>
+                                        <span>IP: 192.168.1.67</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Item 8 -->
+                            <div style="position: relative; padding-bottom: 2rem;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #ef4444; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">You</span> deleted 
+                                            <strong>Old-Pitch-Deck-v1.pdf</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">3 days ago</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        Document permanently removed from library
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>🗑️ Delete</span>
+                                        <span>🏢 Market Intelligence</span>
+                                        <span>IP: 192.168.1.100</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Item 9 -->
+                            <div style="position: relative; padding-bottom: 2rem;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">Marcus Johnson</span> generated 
+                                            <strong>AI Pitch Deck</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">Last week</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        Created 12-slide investor pitch using AI builder
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>🎨 Deck</span>
+                                        <span>🏢 Market Intelligence</span>
+                                        <span>IP: 192.168.1.45</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activity Item 10 -->
+                            <div style="position: relative; padding-bottom: 0;">
+                                <div style="position: absolute; left: -1.5rem; top: 0.25rem; width: 12px; height: 12px; border-radius: 50%; background: #60a5fa; border: 2px solid #0A0A0A;"></div>
+                                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                        <div>
+                                            <span style="font-weight: 600;">Sarah Chen</span> updated 
+                                            <strong>Company Valuation</strong>
+                                        </div>
+                                        <div style="font-size: 13px; color: rgba(255,255,255,0.5);">Last week</div>
+                                    </div>
+                                    <div style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">
+                                        Recalculated valuation: $6.4M (was $5.8M)
+                                    </div>
+                                    <div style="display: flex; gap: 1rem; font-size: 12px; color: rgba(255,255,255,0.5);">
+                                        <span>💰 Valuation</span>
+                                        <span>🏢 AI Workflow Engine</span>
+                                        <span>IP: 192.168.1.1</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.5rem; text-align: center;">
+                            <button class="btn btn-secondary">Load More Activity</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="documents" class="content-section">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Document Library</h1>
+                            <p class="page-description">Centralized storage with version control</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary">+ New Folder</button>
+                            <button class="btn btn-primary">Upload Files</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Documents</div>
+                            <div class="stat-value">147</div>
+                            <div class="stat-change positive">+12 this week</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Storage Used</div>
+                            <div class="stat-value">2.4 GB</div>
+                            <div class="stat-change">of 100 GB</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Versions Saved</div>
+                            <div class="stat-value">342</div>
+                            <div class="stat-change">Auto-versioning active</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Shared Links</div>
+                            <div class="stat-value">23</div>
+                            <div class="stat-change">Active shares</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Documents</h2>
+                            <div style="display: flex; gap: 1rem;">
+                                <select class="form-select" style="width: auto;">
+                                    <option>All Files</option>
+                                    <option>Financials</option>
+                                    <option>Pitch Decks</option>
+                                    <option>Contracts</option>
+                                    <option>Marketing</option>
+                                </select>
+                                <select class="form-select" style="width: auto;">
+                                    <option>Sort: Recent</option>
+                                    <option>Sort: Name</option>
+                                    <option>Sort: Size</option>
+                                    <option>Sort: Type</option>
+                                </select>
+                                <input type="text" class="form-input" placeholder="Search files..." style="width: 250px;">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                            <!-- Document Item 1 -->
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='#60a5fa'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                                <div style="width: 48px; height: 48px; background: rgba(16,185,129,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 0.75rem;">
+                                    📊
+                                </div>
+                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    Q4-2024-Financials.xlsx
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">
+                                    Updated 2 min ago
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">v3</span>
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">2.1 MB</span>
+                                </div>
+                            </div>
+
+                            <!-- Document Item 2 -->
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='#60a5fa'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                                <div style="width: 48px; height: 48px; background: rgba(239,68,68,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 0.75rem;">
+                                    📄
+                                </div>
+                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    Pitch-Deck-Series-A.pdf
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">
+                                    Updated 1 hour ago
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">v12</span>
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">4.8 MB</span>
+                                </div>
+                            </div>
+
+                            <!-- Document Item 3 -->
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='#60a5fa'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                                <div style="width: 48px; height: 48px; background: rgba(96,165,250,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 0.75rem;">
+                                    📝
+                                </div>
+                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    Product-Roadmap-2025.docx
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">
+                                    Updated yesterday
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">v5</span>
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">856 KB</span>
+                                </div>
+                            </div>
+
+                            <!-- Document Item 4 -->
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='#60a5fa'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                                <div style="width: 48px; height: 48px; background: rgba(234,179,8,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 0.75rem;">
+                                    🖼️
+                                </div>
+                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    Logo-Assets.zip
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">
+                                    Updated 3 days ago
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">v2</span>
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">12.3 MB</span>
+                                </div>
+                            </div>
+
+                            <!-- Document Item 5 -->
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='#60a5fa'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                                <div style="width: 48px; height: 48px; background: rgba(168,85,247,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 0.75rem;">
+                                    📋
+                                </div>
+                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    Customer-Contracts.pdf
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">
+                                    Updated last week
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">v8</span>
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">3.2 MB</span>
+                                </div>
+                            </div>
+
+                            <!-- Document Item 6 -->
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='#60a5fa'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                                <div style="width: 48px; height: 48px; background: rgba(236,72,153,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 0.75rem;">
+                                    📈
+                                </div>
+                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    Market-Analysis-2024.pptx
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">
+                                    Updated 2 weeks ago
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">v4</span>
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">8.7 MB</span>
+                                </div>
+                            </div>
+
+                            <!-- Document Item 7 -->
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='#60a5fa'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                                <div style="width: 48px; height: 48px; background: rgba(34,197,94,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 0.75rem;">
+                                    💼
+                                </div>
+                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    Employee-Handbook.pdf
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">
+                                    Updated 1 month ago
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">v2</span>
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">1.4 MB</span>
+                                </div>
+                            </div>
+
+                            <!-- Document Item 8 -->
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='#60a5fa'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                                <div style="width: 48px; height: 48px; background: rgba(59,130,246,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 0.75rem;">
+                                    📑
+                                </div>
+                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    Technical-Specs.docx
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem;">
+                                    Updated 1 month ago
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">v6</span>
+                                    <span style="font-size: 11px; color: rgba(255,255,255,0.4);">623 KB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Version History - Q4-2024-Financials.xlsx</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Version</th>
+                                    <th>Modified By</th>
+                                    <th>Changes</th>
+                                    <th>Date</th>
+                                    <th>Size</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: rgba(16,185,129,0.05);">
+                                    <td>
+                                        <strong>v3</strong> 
+                                        <span class="status-badge status-active">Current</span>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #60a5fa 100%); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">SC</div>
+                                            <span>Sarah Chen</span>
+                                        </div>
+                                    </td>
+                                    <td>Updated revenue projections, added Q4 actuals</td>
+                                    <td>2 minutes ago</td>
+                                    <td>2.1 MB</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Download</button>
+                                        <button class="btn btn-secondary btn-small">Share</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>v2</strong></td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">AC</div>
+                                            <span>You</span>
+                                        </div>
+                                    </td>
+                                    <td>Added monthly breakdowns, fixed formulas</td>
+                                    <td>Yesterday</td>
+                                    <td>2.0 MB</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Download</button>
+                                        <button class="btn btn-secondary btn-small">Restore</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>v1</strong></td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">MJ</div>
+                                            <span>Marcus Johnson</span>
+                                        </div>
+                                    </td>
+                                    <td>Initial version created</td>
+                                    <td>Last week</td>
+                                    <td>1.8 MB</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Download</button>
+                                        <button class="btn btn-secondary btn-small">Restore</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Upload New Files</h2>
+                        <div style="border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 3rem; text-align: center; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#60a5fa'; this.style.background='rgba(96,165,250,0.05)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'; this.style.background='transparent'">
+                            <div style="font-size: 48px; margin-bottom: 1rem;">📁</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 0.5rem;">Drop files here or click to browse</div>
+                            <div style="font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 1rem;">
+                                Supported: PDF, DOCX, XLSX, PPTX, JPG, PNG, ZIP
+                            </div>
+                            <div style="font-size: 12px; color: rgba(255,255,255,0.4);">
+                                Max file size: 10MB • Auto-versioning enabled
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 1.5rem;">Shared Links</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Document</th>
+                                    <th>Shared With</th>
+                                    <th>Permissions</th>
+                                    <th>Expires</th>
+                                    <th>Views</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Pitch-Deck-Series-A.pdf</strong></td>
+                                    <td>investor@sequoia.com</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">View Only</span></td>
+                                    <td>30 days</td>
+                                    <td>12 views</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Copy Link</button>
+                                        <button class="btn btn-secondary btn-small">Revoke</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Q4-2024-Financials.xlsx</strong></td>
+                                    <td>Team Members (8)</td>
+                                    <td><span class="status-badge status-active">Edit</span></td>
+                                    <td>Never</td>
+                                    <td>47 views</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Manage</button>
+                                        <button class="btn btn-secondary btn-small">Revoke</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Product-Roadmap-2025.docx</strong></td>
+                                    <td>Public link</td>
+                                    <td><span class="status-badge" style="background: rgba(234,179,8,0.2); color: #eab308;">View Only</span></td>
+                                    <td>7 days</td>
+                                    <td>234 views</td>
+                                    <td>
+                                        <button class="btn btn-secondary btn-small">Copy Link</button>
+                                        <button class="btn btn-secondary btn-small">Revoke</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="ai-toggle">✨</button>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            if (event && event.target) {
+                const nav = event.target.closest('.nav-item');
+                if (nav) nav.classList.add('active');
+            }
+            const titles = {
+                'dashboard': 'Dashboard',
+                'website-manager': 'Website Manager',
+                'valuation': 'Valuation Engine',
+                'business-profile': 'Business Profile',
+                'project-board': 'Project Board',
+                'deck-builder': 'AI Deck Builder',
+                'sop': 'Standard Operating Procedures',
+                'financials': 'Financial Hub',
+                'analytics': 'Analytics',
+                'team': 'Team Management',
+                'investor-portal': 'Investor Portal',
+                'activity': 'Activity Logs',
+                'documents': 'Document Library'
+            };
+            document.getElementById('currentPage').textContent = titles[sectionId] || sectionId;
+        }
+    </script>
+</body>
+</html>

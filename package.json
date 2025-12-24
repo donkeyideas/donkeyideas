@@ -1,0 +1,36 @@
+{
+  "name": "donkey-ideas",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"turbo run dev --filter=@donkey-ideas/dashboard\" \"npm run desktop:dev\" --names \"WEB,DESKTOP\" --prefix-colors \"blue,green\"",
+    "dev:web": "turbo run dev --filter=@donkey-ideas/dashboard",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "turbo run db:migrate",
+    "db:studio": "turbo run db:studio",
+    "desktop:dev": "cd apps/desktop && npm run dev",
+    "desktop:start": "cd apps/desktop && npm start",
+    "desktop:build": "cd apps/desktop && npm run build",
+    "desktop:build:win": "cd apps/desktop && npm run build:win"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/xlsx": "^0.0.35",
+    "concurrently": "^9.2.1",
+    "turbo": "^1.10.16",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Production
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables (IMPORTANT - contains passwords!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database files (local SQLite)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+packages/database/prisma/dev.db
+packages/database/prisma/*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build outputs
+*.tsbuildinfo
+.turbo/
+
+# Uploads (user-uploaded files)
+apps/dashboard/public/uploads/
+apps/dashboard/public/uploads/**/*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Package manager locks (optional - some teams commit these)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+

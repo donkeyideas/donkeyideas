@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donkey Ideas — AI Innovation Laboratory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #0A0A0A;
+            color: #ffffff;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Placeholder Image Styles */
+        .placeholder-image {
+            background: linear-gradient(135deg, #1e3a8a 0%, #6366f1 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+            letter-spacing: 0.1em;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 90px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 300;
+            letter-spacing: 0.15em;
+        }
+
+        .logo span {
+            font-weight: 700;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 3rem;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 13px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 180px 2rem 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            right: 20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .hero-label {
+            font-size: 11px;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 2rem;
+            letter-spacing: -0.02em;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+            margin-bottom: 3rem;
+            max-width: 550px;
+        }
+
+        .hero-image {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 600px;
+        }
+
+        .hero-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(10, 10, 10, 0.8) 100%);
+        }
+
+        .btn-primary {
+            padding: 1rem 2rem;
+            background: #ffffff;
+            color: #000000;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            margin-right: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            padding: 1rem 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 6rem 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stats-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 56px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Section Styles */
+        section {
+            padding: 8rem 2rem;
+        }
+
+        .section-label {
+            font-size: 11px;
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-subtitle {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 4rem;
+        }
+
+        /* Philosophy Section */
+        .philosophy-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            align-items: center;
+        }
+
+        .philosophy-image {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 500px;
+        }
+
+        .philosophy-text {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+        }
+
+        .philosophy-text p {
+            margin-bottom: 1.5rem;
+        }
+
+        .philosophy-text strong {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        /* Ventures Section */
+        .ventures {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ventures-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .venture-card {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #0A0A0A;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .venture-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .venture-image {
+            position: relative;
+            height: 280px;
+            overflow: hidden;
+        }
+
+        .venture-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(10, 10, 10, 0.9) 100%);
+        }
+
+        .venture-status {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            z-index: 1;
+        }
+
+        .status-production {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-beta {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .venture-content {
+            padding: 2rem;
+        }
+
+        .venture-category {
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .venture-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .venture-description {
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tech-tag {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Services Section */
+        .service-card {
+            max-width: 1400px;
+            margin: 0 auto 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .service-content {
+            padding: 3rem;
+        }
+
+        .service-number {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            font-family: 'Courier New', monospace;
+            margin-bottom: 1rem;
+        }
+
+        .service-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-description {
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+            margin-bottom: 2rem;
+        }
+
+        .service-image {
+            position: relative;
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .service-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(10, 10, 10, 0.8) 0%, transparent 100%);
+        }
+
+        /* Process Section */
+        .process-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .process-step {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+        }
+
+        .process-step:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .step-number {
+            font-size: 64px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .process-step:hover .step-number {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .step-description {
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+        }
+
+        /* CTA Section */
+        .cta {
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .cta-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .cta-text {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+            margin-bottom: 3rem;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 5rem 2rem;
+        }
+
+        .footer-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            margin-bottom: 4rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .footer-description {
+            color: rgba(255, 255, 255, 0.5);
+            max-width: 400px;
+            margin-top: 1rem;
+        }
+
+        .footer-section h4 {
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #ffffff;
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-grid,
+            .philosophy-grid,
+            .ventures-grid,
+            .service-card,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .process-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            nav ul {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo">
+                DONKEY <span>IDEAS</span>
+            </div>
+            <ul>
+                <li><a href="#ventures">VENTURES</a></li>
+                <li><a href="#services">SERVICES</a></li>
+                <li><a href="#approach">APPROACH</a></li>
+                <li><a href="#contact">CONTACT</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-grid">
+            <div>
+                <div class="hero-label">Innovation Laboratory / Venture Builder</div>
+                <h1>
+                    Transforming<br>
+                    Unconventional<br>
+                    Ideas Into<br>
+                    <span class="gradient-text">Intelligent Systems</span>
+                </h1>
+                <p class="hero-description">
+                    We architect and deploy AI-powered products at the intersection of 
+                    experimental thinking and production-grade engineering.
+                </p>
+                <div>
+                    <a href="#ventures" class="btn-primary">EXPLORE VENTURES</a>
+                    <a href="#contact" class="btn-secondary">START A PROJECT</a>
+                </div>
+            </div>
+            <div class="hero-image placeholder-image" style="background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);">
+                AI TECHNOLOGY
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stats-grid">
+            <div>
+                <div class="stat-number">12+</div>
+                <div class="stat-label">Active Ventures</div>
+            </div>
+            <div>
+                <div class="stat-number">100%</div>
+                <div class="stat-label">AI-Powered</div>
+            </div>
+            <div>
+                <div class="stat-number">30+</div>
+                <div class="stat-label">Prototypes Shipped</div>
+            </div>
+            <div>
+                <div class="stat-number">2.3M</div>
+                <div class="stat-label">Daily Predictions</div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="philosophy-grid">
+            <div class="philosophy-image placeholder-image" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);">
+                INNOVATION PROCESS
+            </div>
+            <div>
+                <div class="section-label">Philosophy</div>
+                <h2>
+                    Building The<br>
+                    <span style="color: rgba(255,255,255,0.4)">Unbuildable</span>
+                </h2>
+                <div class="philosophy-text">
+                    <p>
+                        Innovation rarely arrives polished. It begins as a raw, unstructured concept — 
+                        what we call a <strong>donkey idea</strong>.
+                    </p>
+                    <p>
+                        We exist at the intersection of experimental research and production engineering. 
+                        Our methodology transforms chaotic concepts into structured, AI-powered systems 
+                        through rigorous technical execution and strategic business architecture.
+                    </p>
+                    <p>
+                        We operate as hybrid R&D laboratory, product studio, and venture builder — 
+                        developing internal ventures while partnering with organizations to build 
+                        breakthrough technologies.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="ventures" class="ventures">
+        <div class="container">
+            <div class="section-label">Portfolio</div>
+            <h2>Active Ventures</h2>
+            <p class="section-subtitle">
+                Production systems generating measurable impact
+            </p>
+        </div>
+
+        <div class="ventures-grid">
+            <div class="venture-card">
+                <div class="venture-image placeholder-image" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">
+                    <div class="venture-status status-production">PRODUCTION</div>
+                </div>
+                <div class="venture-content">
+                    <div class="venture-category">Enterprise Platform</div>
+                    <h3 class="venture-title">AI Workflow Engine</h3>
+                    <p class="venture-description">
+                        Autonomous process orchestration system handling complex multi-step workflows across enterprise infrastructure.
+                    </p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Custom LLM</span>
+                        <span class="tech-tag">Distributed Systems</span>
+                        <span class="tech-tag">Real-time Processing</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="venture-card">
+                <div class="venture-image placeholder-image" style="background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);">
+                    <div class="venture-status status-production">PRODUCTION</div>
+                </div>
+                <div class="venture-content">
+                    <div class="venture-category">Data Analytics</div>
+                    <h3 class="venture-title">Market Intelligence Platform</h3>
+                    <p class="venture-description">
+                        Real-time competitive intelligence aggregation and analysis platform for strategic decision-making.
+                    </p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Neural Networks</span>
+                        <span class="tech-tag">Data Pipeline</span>
+                        <span class="tech-tag">Predictive Models</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="venture-card">
+                <div class="venture-image placeholder-image" style="background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);">
+                    <div class="venture-status status-beta">BETA</div>
+                </div>
+                <div class="venture-content">
+                    <div class="venture-category">Rapid Prototyping</div>
+                    <h3 class="venture-title">Voice-to-Product System</h3>
+                    <p class="venture-description">
+                        Natural language to functional prototype conversion system leveraging multi-modal AI architecture.
+                    </p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Whisper API</span>
+                        <span class="tech-tag">GPT-4</span>
+                        <span class="tech-tag">Code Generation</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="venture-card">
+                <div class="venture-image placeholder-image" style="background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);">
+                    <div class="venture-status status-production">PRODUCTION</div>
+                </div>
+                <div class="venture-content">
+                    <div class="venture-category">Internal Infrastructure</div>
+                    <h3 class="venture-title">Predictive Analytics Framework</h3>
+                    <p class="venture-description">
+                        Proprietary framework for building and deploying machine learning models at scale across ventures.
+                    </p>
+                    <div class="tech-tags">
+                        <span class="tech-tag">TensorFlow</span>
+                        <span class="tech-tag">Kubernetes</span>
+                        <span class="tech-tag">Custom Architecture</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="services">
+        <div class="container">
+            <div class="section-label">Capabilities</div>
+            <h2>How We Work</h2>
+            <p class="section-subtitle">
+                Comprehensive services for bringing intelligent products to life
+            </p>
+        </div>
+
+        <div class="service-card">
+            <div class="service-content">
+                <div class="service-number">01</div>
+                <h3 class="service-title">AI Systems Architecture</h3>
+                <p class="service-description">
+                    Design and implementation of enterprise-grade AI systems. From LLM integration to custom model development, we build intelligent infrastructure that scales.
+                </p>
+            </div>
+            <div class="service-image placeholder-image" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+                AI SYSTEMS
+            </div>
+        </div>
+
+        <div class="service-card">
+            <div class="service-content">
+                <div class="service-number">02</div>
+                <h3 class="service-title">Venture Development</h3>
+                <p class="service-description">
+                    Full-spectrum company building from concept validation through market launch. Technical execution, business strategy, and operational frameworks.
+                </p>
+            </div>
+            <div class="service-image placeholder-image" style="background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);">
+                VENTURE DEVELOPMENT
+            </div>
+        </div>
+
+        <div class="service-card">
+            <div class="service-content">
+                <div class="service-number">03</div>
+                <h3 class="service-title">Innovation R&D</h3>
+                <p class="service-description">
+                    Experimental prototyping and breakthrough research for organizations pushing technical boundaries. We explore what others consider impossible.
+                </p>
+            </div>
+            <div class="service-image placeholder-image" style="background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);">
+                INNOVATION R&D
+            </div>
+        </div>
+
+        <div class="service-card">
+            <div class="service-content">
+                <div class="service-number">04</div>
+                <h3 class="service-title">Software Engineering</h3>
+                <p class="service-description">
+                    Production-grade development of complex systems. Full-stack platforms, distributed architectures, and high-performance applications.
+                </p>
+            </div>
+            <div class="service-image placeholder-image" style="background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);">
+                SOFTWARE ENGINEERING
+            </div>
+        </div>
+    </section>
+
+    <section id="approach" class="ventures">
+        <div class="container">
+            <div class="section-label">Methodology</div>
+            <h2>Development Process</h2>
+            <p class="section-subtitle">
+                From chaos to company in six structured phases
+            </p>
+        </div>
+
+        <div class="process-grid">
+            <div class="process-step">
+                <div class="step-number">01</div>
+                <h3 class="step-title">Discovery & Analysis</h3>
+                <p class="step-description">
+                    Problem definition, market research, technical feasibility assessment, and opportunity validation.
+                </p>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number">02</div>
+                <h3 class="step-title">Architecture & Prototyping</h3>
+                <p class="step-description">
+                    System design, proof-of-concept development, AI model selection, and technical validation.
+                </p>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number">03</div>
+                <h3 class="step-title">Development & Testing</h3>
+                <p class="step-description">
+                    Full-stack implementation, AI integration, performance optimization, and quality assurance.
+                </p>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number">04</div>
+                <h3 class="step-title">Deployment & Monitoring</h3>
+                <p class="step-description">
+                    Production launch, infrastructure setup, performance tracking, and continuous optimization.
+                </p>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number">05</div>
+                <h3 class="step-title">Scale & Iteration</h3>
+                <p class="step-description">
+                    Feature expansion, growth implementation, system optimization, and market adaptation.
+                </p>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number">06</div>
+                <h3 class="step-title">Long-term Partnership</h3>
+                <p class="step-description">
+                    Ongoing support, strategic guidance, technical evolution, and continued innovation.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="cta">
+        <div class="cta-content container">
+            <h2>
+                Have an idea worth<br>
+                exploring?
+            </h2>
+            <p class="cta-text">
+                We partner with founders and organizations to build breakthrough technologies. 
+                Whether you need technical execution, strategic guidance, or a complete venture 
+                build — let's discuss what's possible.
+            </p>
+            <div>
+                <a href="mailto:hello@donkeyideas.com" class="btn-primary">START A CONVERSATION</a>
+                <a href="#ventures" class="btn-secondary">VIEW CASE STUDIES</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-grid">
+            <div>
+                <div class="logo">
+                    DONKEY <span>IDEAS</span>
+                </div>
+                <p class="footer-description">
+                    Innovation laboratory transforming unconventional concepts into intelligent, 
+                    production-grade systems.
+                </p>
+            </div>
+            <div class="footer-section">
+                <h4>Navigation</h4>
+                <ul class="footer-links">
+                    <li><a href="#ventures">Ventures</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#approach">Approach</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <ul class="footer-links">
+                    <li><a href="#">LinkedIn</a></li>
+                    <li><a href="#">Twitter</a></li>
+                    <li><a href="#">GitHub</a></li>
+                    <li><a href="mailto:hello@donkeyideas.com">hello@donkeyideas.com</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>© 2025 Donkey Ideas. All rights reserved.</div>
+            <div style="display: flex; gap: 2rem;">
+                <a href="#" style="color: rgba(255,255,255,0.4); text-decoration: none;">Privacy Policy</a>
+                <a href="#" style="color: rgba(255,255,255,0.4); text-decoration: none;">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
