@@ -33,8 +33,10 @@ dist/
 **/dev.db
 **/*.db
 packages/database/prisma/dev.db
-packages/database/prisma/prisma/dev.db
+packages/database/prisma/prisma/
 packages/database/prisma/**/*.db
+**/prisma/dev.db
+**/prisma/*.db
 
 # IDE
 .vscode/
