@@ -46,7 +46,7 @@ export async function GET(
       orderBy: { period: 'desc' },
     });
     
-    const flows = cashFlows.map((flow) => ({
+    const flows = cashFlows.map((flow: any) => ({
       ...flow,
       operatingCashFlow: flow.operatingCashFlow.toNumber(),
       investingCashFlow: flow.investingCashFlow.toNumber(),
