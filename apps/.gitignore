@@ -25,18 +25,17 @@ dist/
 .env.test.local
 .env.production.local
 
-# Database files (local SQLite)
+# Database files (local SQLite) - MUST be ignored
 *.db
 *.db-journal
 *.sqlite
 *.sqlite3
-**/dev.db
 **/*.db
-packages/database/prisma/dev.db
-packages/database/prisma/prisma/
+**/*.db-journal
+packages/database/prisma/*.db
 packages/database/prisma/**/*.db
-**/prisma/dev.db
-**/prisma/*.db
+packages/database/prisma/prisma/
+packages/database/prisma/dev.db
 
 # IDE
 .vscode/
@@ -67,4 +66,3 @@ apps/dashboard/public/uploads/**/*
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
-
