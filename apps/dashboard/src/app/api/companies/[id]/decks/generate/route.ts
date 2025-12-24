@@ -81,8 +81,8 @@ export async function POST(
 // Simplified deck generation (would use OpenAI in production)
 function generateDeckSlides(company: any, transactions: any[]) {
   // Calculate financial metrics from transactions
-  const revenueTransactions = transactions.filter(tx => tx.type === 'revenue' && tx.affectsPL);
-  const expenseTransactions = transactions.filter(tx => tx.type === 'expense' && tx.affectsPL);
+  const revenueTransactions = transactions.filter((tx: any) => tx.type === 'revenue' && tx.affectsPL);
+  const expenseTransactions = transactions.filter((tx: any) => tx.type === 'expense' && tx.affectsPL);
   
   const totalRevenue = revenueTransactions.reduce((sum: number, tx: any) => sum + Math.abs(tx.amount.toNumber()), 0);
   const totalExpenses = expenseTransactions.reduce((sum: number, tx: any) => sum + Math.abs(tx.amount.toNumber()), 0);
@@ -93,11 +93,11 @@ function generateDeckSlides(company: any, transactions: any[]) {
   const lastMonth = currentMonth - 1;
   
   const currentMonthRevenue = revenueTransactions
-    .filter(tx => new Date(tx.date).getMonth() === currentMonth)
+    .filter((tx: any) => new Date(tx.date).getMonth() === currentMonth)
     .reduce((sum: number, tx: any) => sum + Math.abs(tx.amount.toNumber()), 0);
   
   const lastMonthRevenue = revenueTransactions
-    .filter(tx => new Date(tx.date).getMonth() === lastMonth)
+    .filter((tx: any) => new Date(tx.date).getMonth() === lastMonth)
     .reduce((sum: number, tx: any) => sum + Math.abs(tx.amount.toNumber()), 0);
   
   const growthRate = lastMonthRevenue > 0 
