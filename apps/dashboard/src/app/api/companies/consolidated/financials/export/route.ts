@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       ['Company', 'Revenue', 'Expenses', 'Profit', 'Valuation'].join(','),
     ];
     
-    companies.forEach((company) => {
+    companies.forEach((company: any) => {
       const latestPL = company.plStatements[0];
       const latestValuation = company.valuations[0];
       
@@ -71,13 +71,13 @@ export async function GET(request: NextRequest) {
     });
     
     // Add totals row
-    const totalRevenue = companies.reduce((sum, c) => {
+    const totalRevenue = companies.reduce((sum: number, c: any) => {
       const pl = c.plStatements[0];
       return pl
         ? sum + Number(pl.productRevenue) + Number(pl.serviceRevenue) + Number(pl.otherRevenue)
         : sum;
     }, 0);
-    const totalExpenses = companies.reduce((sum, c) => {
+    const totalExpenses = companies.reduce((sum: number, c: any) => {
       const pl = c.plStatements[0];
       return pl
         ? sum +
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     }, 0);
     const totalProfit = totalRevenue - totalExpenses;
     const totalValuation = companies.reduce(
-      (sum, c) => sum + (c.valuations[0] ? Number(c.valuations[0].amount) : 0),
+      (sum: number, c: any) => sum + (c.valuations[0] ? Number(c.valuations[0].amount) : 0),
       0
     );
     

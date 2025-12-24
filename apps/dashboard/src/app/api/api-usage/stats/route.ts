@@ -141,12 +141,12 @@ export async function GET(request: NextRequest) {
 
     // Calculate totals
     const totalCalls = usage.length;
-    const totalCost = usage.reduce((sum, u) => sum + Number(u.cost), 0);
-    const totalTokens = usage.reduce((sum, u) => sum + (u.totalTokens || 0), 0);
+    const totalCost = usage.reduce((sum: number, u: any) => sum + Number(u.cost), 0);
+    const totalTokens = usage.reduce((sum: number, u: any) => sum + (u.totalTokens || 0), 0);
 
     // Group by provider
     const byProviderMap = new Map<string, { calls: number; cost: number; tokens: number }>();
-    usage.forEach((u) => {
+    usage.forEach((u: any) => {
       const existing = byProviderMap.get(u.provider) || { calls: 0, cost: 0, tokens: 0 };
       byProviderMap.set(u.provider, {
         calls: existing.calls + 1,
@@ -155,13 +155,13 @@ export async function GET(request: NextRequest) {
       });
     });
 
-    const byProvider = Array.from(byProviderMap.entries()).map(([provider, data]) => ({
+    const byProvider = Array.from(byProviderMap.entries()).map(([provider, data]: [string, any]) => ({
       provider,
       ...data,
     }));
 
     // Get recent calls (last 50)
-    const recentCalls = usage.slice(0, 50).map((u) => ({
+    const recentCalls = usage.slice(0, 50).map((u: any) => ({
       id: u.id,
       provider: u.provider,
       model: u.model || 'N/A',
@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
 
     // Daily stats
     const dailyMap = new Map<string, { calls: number; cost: number; tokens: number }>();
-    usage.forEach((u) => {
+    usage.forEach((u: any) => {
       const date = u.createdAt.toISOString().split('T')[0];
       const existing = dailyMap.get(date) || { calls: 0, cost: 0, tokens: 0 };
       dailyMap.set(date, {
@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
     });
 
     const dailyStats = Array.from(dailyMap.entries())
-      .map(([date, data]) => ({ date, ...data }))
+      .map(([date, data]: [string, any]) => ({ date, ...data }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
     return NextResponse.json({

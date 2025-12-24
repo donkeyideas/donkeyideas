@@ -352,7 +352,7 @@ export async function POST(
     }
 
     // Format response
-    const formattedTransactions = createdTransactions.map((t) => ({
+    const formattedTransactions = createdTransactions.map((t: any) => ({
       ...t,
       amount: t.amount.toNumber(),
     }));

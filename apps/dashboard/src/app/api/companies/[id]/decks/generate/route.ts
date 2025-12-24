@@ -84,8 +84,8 @@ function generateDeckSlides(company: any, transactions: any[]) {
   const revenueTransactions = transactions.filter(tx => tx.type === 'revenue' && tx.affectsPL);
   const expenseTransactions = transactions.filter(tx => tx.type === 'expense' && tx.affectsPL);
   
-  const totalRevenue = revenueTransactions.reduce((sum, tx) => sum + Math.abs(tx.amount.toNumber()), 0);
-  const totalExpenses = expenseTransactions.reduce((sum, tx) => sum + Math.abs(tx.amount.toNumber()), 0);
+  const totalRevenue = revenueTransactions.reduce((sum: number, tx: any) => sum + Math.abs(tx.amount.toNumber()), 0);
+  const totalExpenses = expenseTransactions.reduce((sum: number, tx: any) => sum + Math.abs(tx.amount.toNumber()), 0);
   const netProfit = totalRevenue - totalExpenses;
   
   // Calculate monthly growth (simplified)
@@ -94,11 +94,11 @@ function generateDeckSlides(company: any, transactions: any[]) {
   
   const currentMonthRevenue = revenueTransactions
     .filter(tx => new Date(tx.date).getMonth() === currentMonth)
-    .reduce((sum, tx) => sum + Math.abs(tx.amount.toNumber()), 0);
+    .reduce((sum: number, tx: any) => sum + Math.abs(tx.amount.toNumber()), 0);
   
   const lastMonthRevenue = revenueTransactions
     .filter(tx => new Date(tx.date).getMonth() === lastMonth)
-    .reduce((sum, tx) => sum + Math.abs(tx.amount.toNumber()), 0);
+    .reduce((sum: number, tx: any) => sum + Math.abs(tx.amount.toNumber()), 0);
   
   const growthRate = lastMonthRevenue > 0 
     ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 

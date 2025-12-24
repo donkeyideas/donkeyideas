@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       let cogs = 0;
       let operatingExpenses = 0;
       
-      transactions.forEach((tx) => {
+      transactions.forEach((tx: any) => {
         if (tx.affectsPL === false) return;
         
         const amount = Math.abs(Number(tx.amount));

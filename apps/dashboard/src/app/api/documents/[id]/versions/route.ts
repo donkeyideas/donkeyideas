@@ -64,7 +64,7 @@ export async function GET(
         changes: 'Initial version',
         createdAt: document.createdAt,
       },
-      ...versions.map((v) => ({
+      ...versions.map((v: any) => ({
         id: v.id,
         version: v.version,
         fileUrl: v.fileUrl,

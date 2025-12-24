@@ -69,7 +69,7 @@ export async function POST(
         },
       });
       
-      const existingTotal = existingTransactions.reduce((sum, t) => {
+      const existingTotal = existingTransactions.reduce((sum: number, t: any) => {
         if (t.type === 'expense') {
           return sum + Number(t.amount);
         }

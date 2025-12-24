@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     
     // Prepare messages for Deep Seek API
     const messages = [
-      ...conversationHistory.map((msg) => ({
+      ...conversationHistory.map((msg: any) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,
       })),

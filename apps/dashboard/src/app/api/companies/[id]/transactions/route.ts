@@ -60,7 +60,7 @@ export async function GET(
     });
     
     
-    const formattedTransactions = transactions.map((t) => ({
+    const formattedTransactions = transactions.map((t: any) => ({
       ...t,
       amount: t.amount.toNumber(),
     }));

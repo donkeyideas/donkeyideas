@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     let totalValuation = 0;
     let totalTeamMembers = 0;
     
-    companies.forEach((company) => {
+    companies.forEach((company: any) => {
       const latestPL = company.plStatements[0];
       const latestValuation = company.valuations[0];
       
