@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
-import { writeFile, mkdir, unlink } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { put, del } from '@vercel/blob';
 
 // POST /api/companies/:id/logo - Upload company logo
 export async function POST(
@@ -73,25 +71,20 @@ export async function POST(
       );
     }
     
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'logos');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-    
     // Generate unique filename
     const timestamp = Date.now();
     const fileExtension = file.name.split('.').pop() || 'png';
-    const filename = `${company.id}-${timestamp}.${fileExtension}`;
-    const filepath = join(uploadsDir, filename);
+    const filename = `logos/${company.id}-${timestamp}.${fileExtension}`;
     
-    // Convert file to buffer and save
+    // Upload to Vercel Blob Storage
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filepath, buffer);
+    const blob = await put(filename, bytes, {
+      access: 'public',
+      contentType: file.type,
+    });
     
-    // Generate URL (relative to public folder)
-    const logoUrl = `/uploads/logos/${filename}`;
+    // Use the blob URL
+    const logoUrl = blob.url;
     
     // Update company with logo URL
     const updatedCompany = await prisma.company.update({
@@ -151,20 +144,16 @@ export async function DELETE(
       );
     }
     
-    // Delete the physical file if it exists
+    // Delete the blob from Vercel Blob Storage if it exists
     if (company.logo) {
       try {
-        // Extract filename from URL (e.g., /uploads/logos/filename.png)
-        const filename = company.logo.split('/').pop();
-        if (filename) {
-          const filepath = join(process.cwd(), 'public', 'uploads', 'logos', filename);
-          if (existsSync(filepath)) {
-            await unlink(filepath);
-          }
+        // Check if it's a Vercel Blob URL
+        if (company.logo.startsWith('https://') && company.logo.includes('blob.vercel-storage.com')) {
+          await del(company.logo);
         }
       } catch (fileError) {
-        // Log error but don't fail the request if file doesn't exist
-        console.warn('Failed to delete logo file:', fileError);
+        // Log error but don't fail the request if blob doesn't exist
+        console.warn('Failed to delete logo blob:', fileError);
       }
     }
     
