@@ -157,7 +157,7 @@ export async function GET(
     });
     
     // Convert Decimal to number
-    const kpiList = kpis.map((kpi) => ({
+    const kpiList = kpis.map((kpi: any) => ({
       ...kpi,
       mrr: kpi.mrr?.toNumber() ?? null,
       cac: kpi.cac?.toNumber() ?? null,
