@@ -56,7 +56,7 @@ export async function POST(
     });
     
     // Convert transactions to financial data
-    const transactionData = transactions.map(tx => ({
+    const transactionData = transactions.map((tx: any) => ({
       date: tx.date,
       type: tx.type,
       category: tx.category,
