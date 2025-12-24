@@ -7,7 +7,7 @@ async function getWebsiteContent() {
       where: { published: true },
       orderBy: { section: 'asc' },
     });
-    return content.reduce((acc, item) => {
+    return content.reduce((acc: Record<string, any>, item: any) => {
       acc[item.section] = item.content;
       return acc;
     }, {} as Record<string, any>);

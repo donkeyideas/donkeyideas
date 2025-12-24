@@ -62,7 +62,7 @@ export async function POST(
         title: validated.title,
         description: validated.description || null,
         position: validated.position,
-        tags: validated.tags,
+        tags: validated.tags && validated.tags.length > 0 ? JSON.stringify(validated.tags) : JSON.stringify([]),
       },
     });
     

@@ -65,7 +65,7 @@ export async function POST(
         companyId: params.id,
         title: `${company.name} - Investor Deck`,
         deckType: 'investor',
-        content: slides,
+        content: JSON.stringify(slides),
       },
     });
     

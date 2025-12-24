@@ -128,7 +128,7 @@ export async function POST(
         role: validated.role,
         invitedBy: user.id,
         status: 'pending',
-        permissions: {},
+        permissions: JSON.stringify({}),
       },
     });
     

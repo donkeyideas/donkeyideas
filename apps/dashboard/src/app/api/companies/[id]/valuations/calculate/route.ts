@@ -78,7 +78,7 @@ export async function POST(
         method: valuation.recommendation.method,
         amount: valuation.recommendation.amount,
         score: valuation.aiScore,
-        parameters: valuation.recommendation.parameters || {},
+        parameters: JSON.stringify(valuation.recommendation.parameters || {}),
       },
     });
     
