@@ -208,10 +208,10 @@ export async function POST(request: NextRequest) {
             totalTokens: totalTokens,
             cost: cost,
             statusCode: deepSeekResponse.status,
-            metadata: {
+            metadata: JSON.stringify({
               requestSize: JSON.stringify(messages).length,
               responseSize: JSON.stringify(response).length,
-            },
+            }),
           },
         });
       }
