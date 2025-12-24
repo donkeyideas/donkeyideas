@@ -162,7 +162,7 @@ export async function GET(
     });
     
     // Convert Decimal to number for JSON
-    const statements = plStatements.map((stmt) => ({
+    const statements = plStatements.map((stmt: any) => ({
       ...stmt,
       productRevenue: stmt.productRevenue.toNumber(),
       serviceRevenue: stmt.serviceRevenue.toNumber(),
