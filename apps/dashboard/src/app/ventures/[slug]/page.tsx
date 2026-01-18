@@ -62,7 +62,7 @@ async function getVentureBySlug(slug: string) {
       ventures = pageContent.ventures || pageContent.sections || defaultVentures;
     }
   } catch (error) {
-    console.error('Failed to load venture from database, using defaults:', error.message);
+    console.error('Failed to load venture from database, using defaults:', error instanceof Error ? error.message : 'Unknown error');
     // Continue with default ventures
   }
   
