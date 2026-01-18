@@ -7,8 +7,8 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // Create admin user
-  const adminEmail = 'admin@donkeyideas.com';
-  const adminPassword = 'Admin123!';
+  const adminEmail = 'info@donkeyideas.com';
+  const adminPassword = 'Donkey2026!';
 
   // Check if admin already exists
   const existingAdmin = await prisma.user.findUnique({

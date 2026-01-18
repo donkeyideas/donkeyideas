@@ -45,16 +45,16 @@ export function EditContentModal({
       } else if (section.key === 'stats') {
         setFormData(section.content || {
           items: [
-            { value: '10+', label: 'Active Ventures' },
-            { value: '$50M+', label: 'Capital Deployed' },
-            { value: '15+', label: 'Team Members' },
-            { value: '5+', label: 'Years Experience' },
+            { value: '87%', label: 'Ventures Reach Market Fit' },
+            { value: '6-12 weeks', label: 'Average Time to MVP' },
+            { value: '$45M+', label: 'Collective Portfolio Valuation' },
+            { value: '23', label: 'AI Systems in Production' },
           ],
         });
       } else if (section.key === 'about') {
         setFormData(section.content || {
-          title: '',
-          text: '',
+          title: 'Where Bold Ideas Meet Rigorous Engineering',
+          text: 'At Donkey Ideas, we believe the best ventures emerge from the intersection of unconventional thinking and disciplined execution. While others chase trends, we build foundational technologies that create lasting value. Our AI-powered approach combines cutting-edge machine learning, battle-tested engineering practices, and deep market understanding to transform raw concepts into revenue-generating businesses.\n\nWe\'re not a traditional incubator or consultancy. We\'re builders who get our hands dirty with code, data, and customer conversations. Every venture in our portfolio represents a commitment to excellence—meticulously crafted systems designed to scale, adapt, and dominate their markets. We take calculated risks on ideas others overlook, because we know that world-changing innovations often sound absurd at first.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that reduce time-to-market by 70% while increasing success probability. Whether you\'re a first-time founder with a napkin sketch or an enterprise looking to spin out innovation, we provide the technical firepower and strategic guidance to win.',
         });
       } else if (section.key === 'services') {
         setFormData(section.content || {
@@ -79,48 +79,48 @@ export function EditContentModal({
       } else if (section.key === 'ventures-page') {
         setFormData(section.content || {
           hero: {
-            subtitle: 'Production systems generating measurable impact',
+            subtitle: 'Each product in our portfolio represents a bold bet on unconventional ideas backed by rigorous engineering',
           },
           ventures: [
             {
               status: 'PRODUCTION',
               statusColor: 'teal',
-              category: 'ENTERPRISE PLATFORM',
-              title: 'AI Workflow Engine',
-              description: 'Autonomous process orchestration system handling complex multi-step workflows across enterprise infrastructure.',
-              tags: ['Custom LLM', 'Distributed Systems', 'Real-time Processing'],
+              category: 'ENTERPRISE AI PLATFORM',
+              title: 'Automated Decision Intelligence for Fortune 500',
+              description: 'AI-powered decision support system analyzing millions of data points in real-time for C-suite executives. Reduced strategic planning cycles from months to days, increased forecast accuracy by 43%. Secured contracts with 7 Fortune 500 companies, achieving $12M ARR within 8 months.',
+              tags: ['Real-time Analytics', 'C-Suite Intelligence', 'Strategic Planning'],
               gradient: 'from-blue-950/40 to-blue-900/30',
-              imageUrl: '',
+              imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
             },
             {
               status: 'PRODUCTION',
               statusColor: 'purple',
-              category: 'DATA ANALYTICS',
-              title: 'Market Intelligence Platform',
-              description: 'Real-time competitive intelligence aggregation and analysis platform for strategic decision-making.',
-              tags: ['Neural Networks', 'Data Pipeline', 'Predictive Models'],
+              category: 'CONSUMER AI APPLICATION',
+              title: 'Personalized Learning Platform - 500K Active Users',
+              description: 'From concept to product-market fit in 10 weeks. Adaptive learning system using reinforcement learning for personalized curricula. Achieved viral growth reaching 500K users organically within 6 months and secured Series A funding from top-tier VCs.',
+              tags: ['Reinforcement Learning', 'Ed-Tech', 'Viral Growth'],
               gradient: 'from-purple-950/40 to-pink-950/30',
-              imageUrl: '',
+              imageUrl: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=2074&auto=format&fit=crop',
             },
             {
-              status: 'BETA',
-              statusColor: 'yellow',
-              category: 'RAPID PROTOTYPING',
-              title: 'Voice-to-Product System',
-              description: 'Natural language interface for rapid product development and deployment.',
-              tags: ['NLP', 'Voice AI', 'Rapid Development'],
+              status: 'PRODUCTION',
+              statusColor: 'green',
+              category: 'B2B SAAS INNOVATION',
+              title: 'Supply Chain Optimization Saving $50M Annually',
+              description: 'Intelligent logistics platform leveraging computer vision and predictive analytics. Predicts demand with 94% accuracy, reduces waste by 38%, cuts operational costs by $2.3M annually per client. Expanding internationally across 12 countries.',
+              tags: ['Computer Vision', 'Predictive Analytics', 'Logistics'],
               gradient: 'from-teal-950/40 to-cyan-950/30',
-              imageUrl: '',
+              imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop',
             },
             {
               status: 'PRODUCTION',
               statusColor: 'purple',
-              category: 'INTERNAL INFRASTRUCTURE',
-              title: 'Predictive Analytics Framework',
-              description: 'Advanced analytics framework for forecasting and strategic planning.',
-              tags: ['Machine Learning', 'Forecasting', 'Analytics'],
+              category: 'HEALTHCARE AI SYSTEM',
+              title: 'Clinical Decision Support - 31% Better Outcomes',
+              description: 'AI diagnostic assistant analyzing patient data, medical literature, and clinical guidelines. Processed over 2 million patient cases, identifies rare conditions 67% faster, measurably improved patient outcomes across partner hospitals.',
+              tags: ['Medical AI', 'Diagnostic Support', 'Healthcare'],
               gradient: 'from-blue-950/40 to-purple-950/30',
-              imageUrl: '',
+              imageUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=2070&auto=format&fit=crop',
             },
           ],
         });
@@ -796,7 +796,7 @@ export function EditContentModal({
                             description: '',
                             tags: [],
                             gradient: 'from-blue-950/40 to-blue-900/30',
-                            imageUrl: '',
+                            imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
                           },
                         ],
                       });

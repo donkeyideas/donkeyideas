@@ -1,15 +1,61 @@
 'use client';
 
+import { useTheme } from '@/contexts/theme-context';
+
 export function TopBar() {
+  const { theme, setTheme } = useTheme();
+
+  const themes = [
+    { id: 'dark' as const, label: 'Dark', icon: '🌙' },
+    { id: 'light' as const, label: 'Light', icon: '☀️' },
+    { id: 'blue' as const, label: 'Blue', icon: '🌊' },
+  ];
+
+  // Theme-specific styles
+  const bgClass = theme === 'dark' 
+    ? 'bg-[#0A0A0A]/95' 
+    : theme === 'light' 
+    ? 'bg-[#F5F5DC]/95' 
+    : 'bg-slate-900/95';
+  
+  const borderClass = theme === 'light' ? 'border-slate-300' : 'border-white/10';
+  const textClass = theme === 'light' ? 'text-slate-600' : 'text-white/60';
+  const activeTextClass = theme === 'light' ? 'text-slate-900' : 'text-white';
+
   return (
-    <div className="sticky top-0 z-50 bg-[#0A0A0A]/95 backdrop-blur-lg border-b border-white/10 px-8 py-4 flex justify-between items-center">
-      <div className="flex items-center gap-2 text-sm text-white/60">
+    <div className={`sticky top-0 z-50 ${bgClass} backdrop-blur-lg border-b ${borderClass} px-8 py-4 flex justify-between items-center`}>
+      <div className={`flex items-center gap-2 text-sm ${textClass}`}>
         <span>Home</span>
         <span>/</span>
-        <span className="text-white font-semibold">Dashboard</span>
+        <span className={`${activeTextClass} font-semibold`}>Dashboard</span>
       </div>
-      <div className="flex items-center gap-2 text-sm text-white/60">
-        <div className="flex items-center gap-2">
+      
+      <div className="flex items-center gap-6">
+        {/* Theme Toggle */}
+        <div className="flex items-center gap-1 bg-black/10 dark:bg-white/5 rounded-lg p-1">
+          {themes.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTheme(t.id)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                theme === t.id
+                  ? theme === 'light'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'bg-white/10 text-white'
+                  : theme === 'light'
+                  ? 'text-slate-600 hover:bg-white/50'
+                  : 'text-white/60 hover:bg-white/5'
+              }`}
+              title={t.label}
+            >
+              <span className="mr-1">{t.icon}</span>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Save Status */}
+        <div className={`flex items-center gap-2 text-sm ${textClass}`}>
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           <span>All changes saved</span>
         </div>

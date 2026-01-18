@@ -3,13 +3,13 @@ const prisma = new PrismaClient();
 
 async function transferCompanies() {
   try {
-    // Get the target user (admin@donkeyideas.com)
+    // Get the target user (info@donkeyideas.com)
     const targetUser = await prisma.user.findUnique({
-      where: { email: 'admin@donkeyideas.com' },
+      where: { email: 'info@donkeyideas.com' },
     });
 
     if (!targetUser) {
-      console.error('Target user admin@donkeyideas.com not found!');
+      console.error('Target user info@donkeyideas.com not found!');
       process.exit(1);
     }
 
@@ -41,10 +41,10 @@ async function transferCompanies() {
     }
 
     console.log(`\n✅ Transfer complete! ${transferred} companies transferred.`);
-    console.log(`\nNow all ${companies.length} companies belong to admin@donkeyideas.com`);
+    console.log(`\nNow all ${companies.length} companies belong to info@donkeyideas.com`);
     console.log('\nLogin with:');
-    console.log('  Email: admin@donkeyideas.com');
-    console.log('  Password: Admin123! (or any password in dev mode)');
+    console.log('  Email: info@donkeyideas.com');
+    console.log('  Password: Donkey2026! (or any password in dev mode)');
 
   } catch (error) {
     console.error('Error transferring companies:', error.message);
@@ -55,4 +55,5 @@ async function transferCompanies() {
 }
 
 transferCompanies();
+
 

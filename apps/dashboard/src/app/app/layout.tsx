@@ -4,16 +4,25 @@ import { useState } from 'react';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { TopBar } from '@/components/dashboard/top-bar';
 import { AIAssistant } from '@/components/ai/ai-assistant';
+import { ThemeProvider, useTheme } from '@/contexts/theme-context';
 
-export default function AppLayout({
+function AppLayoutContent({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const { theme } = useTheme();
+
+  // Theme classes
+  const themeClasses = {
+    dark: 'bg-[#0A0A0A] text-white',
+    light: 'bg-[#F5F5DC] text-slate-900',
+    blue: 'bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white',
+  };
 
   return (
-    <div className="flex min-h-screen">
+    <div className={`flex min-h-screen ${themeClasses[theme]}`}>
       <Sidebar />
       <div className="flex-1 ml-70">
         <TopBar />
@@ -45,6 +54,18 @@ export default function AppLayout({
       
       <AIAssistant isOpen={showAIAssistant} onClose={() => setShowAIAssistant(false)} />
     </div>
+  );
+}
+
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <ThemeProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </ThemeProvider>
   );
 }
 

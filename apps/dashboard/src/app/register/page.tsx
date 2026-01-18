@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@donkey-ideas/ui';
 import api from '@/lib/api-client';
+import ScrollHeader from '../home/scroll-header';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -33,79 +35,118 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A]">
-      <div className="w-full max-w-md p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-light tracking-wider mb-2">
-            DONKEY <span className="font-bold">IDEAS</span>
-          </h1>
-          <p className="text-white/60">Create your account</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col">
+      {/* Navigation */}
+      <ScrollHeader />
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-md text-red-400 text-sm">
-              {error}
+      {/* Register Form */}
+      <div className="flex-1 flex items-center justify-center px-8 pt-32 pb-24">
+        <div className="w-full max-w-md">
+          {/* Glass Card */}
+          <div className="bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+            <div className="mb-8 text-center">
+              <h1 className="text-3xl font-light tracking-wider mb-2">
+                <span className="font-light">DONKEY</span> <span className="font-bold">IDEAS</span>
+              </h1>
+              <p className="text-slate-400">Create your account</p>
             </div>
-          )}
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
-              placeholder="Your name"
-            />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-slate-300">Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  placeholder="Your name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-slate-300">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-slate-300">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  placeholder="••••••••"
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  At least 8 characters, 1 uppercase, 1 number, 1 special character
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-8 py-3 bg-white text-slate-900 rounded-full hover:bg-white/90 transition-all text-base font-medium shadow-xl hover:shadow-2xl hover:scale-105 transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                {loading ? 'Creating account...' : 'Create Account'}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center text-sm text-slate-400">
+              Already have an account?{' '}
+              <a href="/login" className="text-blue-400 hover:text-blue-300 transition-colors">
+                Sign in
+              </a>
+            </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
-              placeholder="••••••••"
-            />
-            <p className="mt-1 text-xs text-white/40">
-              At least 8 characters, 1 uppercase, 1 number, 1 special character
-            </p>
-          </div>
-
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? 'Creating account...' : 'Create Account'}
-          </Button>
-        </form>
-
-        <div className="mt-6 text-center text-sm text-white/60">
-          Already have an account?{' '}
-          <a href="/login" className="text-blue-400 hover:text-blue-300">
-            Sign in
-          </a>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="py-16 px-8 border-t border-slate-800">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="text-xl font-semibold tracking-tight">
+              <span className="font-light">DONKEY</span> IDEAS
+            </div>
+            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+              <Link href="/ventures" className="hover:text-white transition-colors">
+                Ventures
+              </Link>
+              <Link href="/services" className="hover:text-white transition-colors">
+                Services
+              </Link>
+              <Link href="/process" className="hover:text-white transition-colors">
+                Approach
+              </Link>
+              <Link href="/about" className="hover:text-white transition-colors">
+                About
+              </Link>
+              <Link href="/login" className="hover:text-white transition-colors">
+                Login
+              </Link>
+            </div>
+            <div className="text-slate-500 text-sm">
+              © {new Date().getFullYear()} Donkey Ideas
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

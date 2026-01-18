@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { useCompanies } from '@/lib/hooks/use-companies';
+import { useTheme } from '@/contexts/theme-context';
 
 // Donkey Ideas - Global/Consolidated features
 const donkeyIdeasNavigation = [
@@ -66,6 +67,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { companies: companiesFromStore, currentCompany, setCurrentCompany, setCompanies } = useAppStore();
   const { data: companiesData, isLoading: companiesLoading } = useCompanies();
+  const { theme } = useTheme();
   
   // Use companies from React Query if available, fallback to store
   // Ensure companies is always an array
@@ -85,10 +87,28 @@ export function Sidebar() {
     }
   }, [companiesData, setCompanies, setCurrentCompany, currentCompany]);
 
+  // Theme-specific styles
+  const bgClass = theme === 'dark' 
+    ? 'bg-[#0F0F0F]' 
+    : theme === 'light' 
+    ? 'bg-[#FAF8F3]' 
+    : 'bg-slate-900/95';
+  
+  const borderClass = theme === 'light' ? 'border-slate-300' : 'border-white/10';
+  const textClass = theme === 'light' ? 'text-slate-900' : 'text-white';
+  const mutedTextClass = theme === 'light' ? 'text-slate-600' : 'text-white/60';
+  const sectionTextClass = theme === 'light' ? 'text-slate-500' : 'text-white/40';
+  const activeClasses = theme === 'light'
+    ? 'bg-blue-500/20 text-blue-600 border-l-2 border-blue-600'
+    : 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500';
+  const hoverClasses = theme === 'light'
+    ? 'hover:bg-slate-200 hover:text-slate-900'
+    : 'hover:bg-white/5 hover:text-white';
+
   return (
-    <div className="w-70 fixed left-0 top-0 h-screen bg-[#0F0F0F] border-r border-white/10 p-6 overflow-y-auto">
+    <div className={`w-70 fixed left-0 top-0 h-screen ${bgClass} border-r ${borderClass} p-6 overflow-y-auto`}>
       <div className="mb-6">
-        <div className="text-xl font-light tracking-wider">
+        <div className={`text-xl font-light tracking-wider ${textClass}`}>
           DONKEY <span className="font-bold">IDEAS</span>
         </div>
       </div>
@@ -97,7 +117,7 @@ export function Sidebar() {
       <nav className="mb-8">
         {donkeyIdeasNavigation.map((section) => (
           <div key={section.section} className="mb-6">
-            <div className="text-xs text-white/40 uppercase tracking-wider px-4 mb-2">
+            <div className={`text-xs ${sectionTextClass} uppercase tracking-wider px-4 mb-2`}>
               {section.section}
             </div>
             {section.items.map((item) => {
@@ -108,8 +128,8 @@ export function Sidebar() {
                   href={item.href}
                   className={`flex items-center justify-between px-4 py-2 mb-1 rounded transition-colors ${
                     isActive
-                      ? 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500'
-                      : 'text-white/60 hover:bg-white/5 hover:text-white'
+                      ? activeClasses
+                      : `${mutedTextClass} ${hoverClasses}`
                   }`}
                 >
                   <span className="text-sm">{item.name}</span>
@@ -121,8 +141,8 @@ export function Sidebar() {
       </nav>
 
       {/* Active Company Selector */}
-      <div className="mb-6 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-        <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">
+      <div className={`mb-6 p-3 ${theme === 'light' ? 'bg-blue-100 border-blue-300' : 'bg-blue-500/10 border-blue-500/30'} border rounded-lg`}>
+        <label className={`text-xs ${theme === 'light' ? 'text-slate-600' : 'text-white/50'} uppercase tracking-wider block mb-2`}>
           Active Company
         </label>
         <select
@@ -131,17 +151,17 @@ export function Sidebar() {
             const company = companies.find((c) => c.id === e.target.value);
             setCurrentCompany(company || null);
           }}
-          className="w-full p-2 bg-black/30 border border-white/20 rounded text-sm font-semibold text-white [&>option]:bg-[#0F0F0F] [&>option]:text-white"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            color: 'white',
-          }}
+          className={`w-full p-2 ${
+            theme === 'light' 
+              ? 'bg-white border-slate-300 text-slate-900 [&>option]:bg-white [&>option]:text-slate-900' 
+              : 'bg-black/30 border-white/20 text-white [&>option]:bg-[#0F0F0F] [&>option]:text-white'
+          } border rounded text-sm font-semibold`}
         >
           {companies.length === 0 ? (
-            <option value="" style={{ backgroundColor: '#0F0F0F', color: 'white' }}>No companies</option>
+            <option value="">No companies</option>
           ) : (
             companies.map((company) => (
-              <option key={company.id} value={company.id} style={{ backgroundColor: '#0F0F0F', color: 'white' }}>
+              <option key={company.id} value={company.id}>
                 {company.name}
               </option>
             ))
@@ -154,7 +174,7 @@ export function Sidebar() {
         <nav>
           {activeCompanyNavigation.map((section) => (
             <div key={section.section} className="mb-6">
-              <div className="text-xs text-white/40 uppercase tracking-wider px-4 mb-2">
+              <div className={`text-xs ${sectionTextClass} uppercase tracking-wider px-4 mb-2`}>
                 {section.section}
               </div>
               {section.items.map((item) => {
@@ -165,8 +185,8 @@ export function Sidebar() {
                     href={item.href}
                     className={`flex items-center justify-between px-4 py-2 mb-1 rounded transition-colors ${
                       isActive
-                        ? 'bg-blue-500/10 text-blue-400 border-l-2 border-blue-500'
-                        : 'text-white/60 hover:bg-white/5 hover:text-white'
+                        ? activeClasses
+                        : `${mutedTextClass} ${hoverClasses}`
                     }`}
                   >
                     <span className="text-sm">{item.name}</span>

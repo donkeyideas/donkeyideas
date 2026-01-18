@@ -37,8 +37,8 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
     Write-Host "Login Credentials:" -ForegroundColor Yellow
-    Write-Host "  Email: admin@donkeyideas.com" -ForegroundColor White
-    Write-Host "  Password: Admin123!" -ForegroundColor White
+    Write-Host "  Email: info@donkeyideas.com" -ForegroundColor White
+    Write-Host "  Password: Donkey2026!" -ForegroundColor White
     Write-Host ""
     Write-Host "⚠️  IMPORTANT: Change this password after first login!" -ForegroundColor Red
 } else {

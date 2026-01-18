@@ -27,8 +27,8 @@ async function checkUsers() {
 
     console.log('\n📝 Login Credentials:');
     console.log('Based on seed file, default admin credentials are:');
-    console.log('  Email: admin@donkeyideas.com');
-    console.log('  Password: Admin123!');
+    console.log('  Email: info@donkeyideas.com');
+    console.log('  Password: Donkey2026!');
     console.log('\nOr try:');
     console.log('  Email: admin@example.com');
     console.log('  Password: (any password - dev mode will auto-create/update)');
@@ -45,4 +45,5 @@ async function checkUsers() {
 }
 
 checkUsers();
+
 

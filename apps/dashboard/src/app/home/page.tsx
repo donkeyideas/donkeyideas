@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@donkey-ideas/database';
+import ScrollHeader from './scroll-header';
 
 async function getWebsiteContent() {
   try {
@@ -17,7 +18,7 @@ async function getWebsiteContent() {
   }
 }
 
-export default async function PublicHomePage() {
+export default async function HomePage() {
   const content = await getWebsiteContent();
   
   // Default content if not in database
@@ -32,257 +33,245 @@ export default async function PublicHomePage() {
   };
 
   const aboutContent = content.about || {
-    title: 'Who We Are',
-    text: 'Donkey Ideas is an AI-powered innovation lab that transforms unconventional concepts into intelligent, production-grade systems. We combine experimental thinking with rigorous engineering to build ventures that matter.',
+    title: 'Where Bold Ideas Meet Rigorous Engineering',
+    text: 'At Donkey Ideas, we believe the best ventures emerge from the intersection of unconventional thinking and disciplined execution. While others chase trends, we build foundational technologies that create lasting value. Our AI-powered approach combines cutting-edge machine learning, battle-tested engineering practices, and deep market understanding to transform raw concepts into revenue-generating businesses.\n\nWe\'re not a traditional incubator or consultancy. We\'re builders who get our hands dirty with code, data, and customer conversations. Every venture in our portfolio represents a commitment to excellence—meticulously crafted systems designed to scale, adapt, and dominate their markets. We take calculated risks on ideas others overlook, because we know that world-changing innovations often sound absurd at first.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that reduce time-to-market by 70% while increasing success probability. Whether you\'re a first-time founder with a napkin sketch or an enterprise looking to spin out innovation, we provide the technical firepower and strategic guidance to win.',
   };
 
   const statsContent = content.stats || {
     items: [
-      { value: '10+', label: 'Active Ventures' },
-      { value: '$50M+', label: 'Capital Deployed' },
-      { value: '15+', label: 'Team Members' },
-      { value: '5+', label: 'Years Experience' },
+      { value: '87%', label: 'Ventures Reach Market Fit' },
+      { value: '6-12 weeks', label: 'Average Time to MVP' },
+      { value: '$45M+', label: 'Collective Portfolio Valuation' },
+      { value: '23', label: 'AI Systems in Production' },
     ],
   };
 
-  const venturesContent = content.ventures || {
-    title: 'Current Ventures',
-    subtitle: 'Our Portfolio',
-    items: [
-      { title: 'Venture Name 1', description: 'Brief description of the venture and its impact.', imageUrl: '', link: '/register' },
-      { title: 'Venture Name 2', description: 'Brief description of the venture and its impact.', imageUrl: '', link: '/register' },
-      { title: 'Venture Name 3', description: 'Brief description of the venture and its impact.', imageUrl: '', link: '/register' },
-    ],
-  };
-
-  const servicesContent = content.services || {
-    title: 'Services',
-    subtitle: 'What We Offer',
-    items: [
-      { title: 'Venture Operating System', description: 'Complete platform for managing your venture\'s financials, operations, and growth metrics.' },
-      { title: 'Venture Building', description: 'From concept to launch, we build and scale innovative AI-powered products.' },
-      { title: 'Innovation Laboratory', description: 'Experimental R&D to test and validate unconventional ideas before full-scale deployment.' },
-    ],
-  };
-
-  const processContent = content.process || {
-    title: 'Our Process',
-    subtitle: 'How We Work',
-    steps: [
-      { step: '01', title: 'Ideate', desc: 'Unconventional thinking' },
-      { step: '02', title: 'Validate', desc: 'Rapid experimentation' },
-      { step: '03', title: 'Build', desc: 'Production-grade systems' },
-      { step: '04', title: 'Scale', desc: 'Growth & optimization' },
-    ],
-  };
-
-  const ctaContent = content.cta || {
-    title: 'Ready to Transform Your Ideas?',
-    description: 'Join us in building the next generation of intelligent systems.',
-    buttonText: 'Get Started',
-    buttonLink: '/register',
-  };
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-[#0A0A0A]/95 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-8 h-[90px] flex items-center justify-between">
-          <div className="text-xl font-light tracking-wider">
-            DONKEY <span className="font-bold">IDEAS</span>
-          </div>
-          <ul className="flex gap-12 list-none">
-            <li>
-              <Link href="/ventures" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                Ventures
-              </Link>
-            </li>
-            <li>
-              <Link href="/services" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                Services
-              </Link>
-            </li>
-            <li>
-              <Link href="/process" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                Approach
-              </Link>
-            </li>
-            <li>
-              <Link href="/about" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                About Donkey
-              </Link>
-            </li>
-            <li>
-              <Link href="/login" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                Login
-              </Link>
-            </li>
-            <li>
-              <Link href="/register" className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm uppercase tracking-wider">
-                Get Started
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      {/* Navigation - Giga.ai style with scroll behavior */}
+      <ScrollHeader />
 
-      {/* Hero Section */}
-      <section className="pt-[180px] pb-[120px] px-8 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative z-10">
-            <div className="text-sm uppercase tracking-widest text-blue-400 mb-6">
+      {/* Hero Section - Giga.ai inspired with background image */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop')`,
+            }}
+          />
+          {/* Gradient overlays for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/40 to-slate-900/80" />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-5xl mx-auto px-8 text-center">
+          {/* Label Badge */}
+          <div className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+            <span className="text-xs uppercase tracking-widest text-white/90 font-medium">
               {heroContent.label}
-            </div>
-            <h1 className="text-7xl font-light leading-tight mb-8 whitespace-pre-line">
-              {heroContent.headline}
-            </h1>
-            <p className="text-xl text-white/70 max-w-2xl mb-10 leading-relaxed">
-              {heroContent.description}
-            </p>
-            <div className="flex gap-4">
-              <Link
-                href={heroContent.cta?.primary?.link || '/ventures'}
-                className="px-8 py-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm font-medium"
-              >
-                {heroContent.cta?.primary?.text || 'Explore Ventures'}
-              </Link>
-              <Link
-                href={heroContent.cta?.secondary?.link || '/services'}
-                className="px-8 py-4 border border-white/20 text-white rounded hover:border-white/40 hover:bg-white/5 transition-colors uppercase tracking-wider text-sm font-medium"
-              >
-                {heroContent.cta?.secondary?.text || 'View Services'}
-              </Link>
-            </div>
+            </span>
+          </div>
+
+          {/* Main Headline - Giga.ai style */}
+          <h1 className="text-6xl md:text-7xl lg:text-8xl font-light leading-[1.1] mb-8 tracking-tight">
+            {heroContent.headline.split('\n').map((line: string, i: number) => (
+              <div key={i}>{line}</div>
+            ))}
+          </h1>
+
+          {/* Subheadline */}
+          <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+            {heroContent.description}
+          </p>
+
+          {/* CTA Button - Giga.ai style */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              href={heroContent.cta?.primary?.link || '/contact'}
+              className="px-10 py-4 bg-white text-slate-900 rounded-full hover:bg-white/90 transition-all text-base font-medium shadow-xl hover:shadow-2xl hover:scale-105 transform"
+            >
+              Talk to us
+            </Link>
           </div>
         </div>
-        <div className="absolute top-[20%] right-[20%] w-[600px] h-[600px] bg-blue-500/15 rounded-full blur-3xl" />
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-2">
+            <div className="w-1 h-3 bg-white/50 rounded-full" />
+          </div>
+        </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 px-8 border-t border-white/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-4 gap-8">
+      <section className="py-24 px-8">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
             {statsContent.items?.map((stat: any, index: number) => (
-              <div key={index}>
-                <div className="text-5xl font-light mb-2">{stat.value}</div>
-                <div className="text-white/60 uppercase text-xs tracking-wider">{stat.label}</div>
+              <div key={index} className="text-center">
+                <div className="text-5xl md:text-6xl font-light mb-3 text-white">
+                  {stat.value}
+                </div>
+                <div className="text-slate-400 uppercase text-xs tracking-widest font-medium">
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Philosophy Section */}
+      {/* Philosophy Section - cleaner layout */}
       <section id="about" className="py-32 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-sm uppercase tracking-widest text-blue-400 mb-4">Our Philosophy</div>
-          <h2 className="text-5xl font-light mb-8">{aboutContent.title}</h2>
-          <p className="text-xl text-white/70 max-w-3xl leading-relaxed">
-            {aboutContent.text}
-          </p>
-        </div>
-      </section>
-
-      {/* Ventures Section */}
-      <section id="ventures" className="py-32 px-8 border-t border-white/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-sm uppercase tracking-widest text-blue-400 mb-4">
-            {venturesContent.subtitle || 'Our Portfolio'}
-          </div>
-          <h2 className="text-5xl font-light mb-16">{venturesContent.title || 'Current Ventures'}</h2>
-          <div className="grid grid-cols-3 gap-8">
-            {venturesContent.items?.map((venture: any, index: number) => (
-              <div key={index} className="border border-white/10 rounded-lg p-8 hover:border-blue-500/50 transition-colors">
-                {venture.imageUrl ? (
-                  <div className="w-full h-48 rounded mb-6 overflow-hidden">
-                    <img
-                      src={venture.imageUrl}
-                      alt={venture.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded mb-6 flex items-center justify-center text-white/30 text-sm">
-                    {venture.title || `Venture ${index + 1}`}
-                  </div>
-                )}
-                <h3 className="text-2xl font-light mb-4">{venture.title || `Venture Name ${index + 1}`}</h3>
-                <p className="text-white/60 mb-6">
-                  {venture.description || 'Brief description of the venture and its impact.'}
-                </p>
-                <Link
-                  href={venture.link || '/register'}
-                  className="text-blue-400 hover:text-blue-300 text-sm uppercase tracking-wider"
-                >
-                  Learn More →
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section id="services" className="py-32 px-8 border-t border-white/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-sm uppercase tracking-widest text-blue-400 mb-4">
-            {servicesContent.subtitle || 'What We Offer'}
-          </div>
-          <h2 className="text-5xl font-light mb-16">{servicesContent.title || 'Services'}</h2>
-          <div className="grid grid-cols-3 gap-8">
-            {servicesContent.items?.map((service: any, index: number) => (
-              <div key={index} className="border border-white/10 rounded-lg p-8">
-                <h3 className="text-2xl font-light mb-4">{service.title}</h3>
-                <p className="text-white/60">{service.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Process Section */}
-      <section id="process" className="py-32 px-8 border-t border-white/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-sm uppercase tracking-widest text-blue-400 mb-4">
-            {processContent.subtitle || 'How We Work'}
-          </div>
-          <h2 className="text-5xl font-light mb-16">{processContent.title || 'Our Process'}</h2>
-          <div className="grid grid-cols-4 gap-8">
-            {processContent.steps?.map((item: any) => (
-              <div key={item.step}>
-                <div className="text-6xl font-light text-blue-400/30 mb-4">{item.step}</div>
-                <h3 className="text-2xl font-light mb-2">{item.title}</h3>
-                <p className="text-white/60">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-32 px-8 border-t border-white/10">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl font-light mb-8">{ctaContent.title || 'Ready to Transform Your Ideas?'}</h2>
-          <p className="text-xl text-white/70 mb-10">
-            {ctaContent.description || 'Join us in building the next generation of intelligent systems.'}
-          </p>
-          <Link
-            href={ctaContent.buttonLink || '/register'}
-            className="inline-block px-10 py-5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors uppercase tracking-wider text-sm font-medium"
-          >
-            {ctaContent.buttonText || 'Get Started'}
-          </Link>
+          <div className="text-xs uppercase tracking-widest text-blue-400 mb-6 font-medium">
+            Our Philosophy
+          </div>
+          <h2 className="text-5xl md:text-6xl font-light mb-8 leading-tight text-white">
+            {aboutContent.title}
+          </h2>
+          <div className="space-y-6 text-lg text-slate-300 leading-relaxed font-light text-left">
+            {aboutContent.text.split('\n\n').map((paragraph: string, index: number) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Engage with Excellence Section - Giga.ai Voice style */}
+      <section className="py-32 px-8">
+        <div className="max-w-[1400px] mx-auto">
+          {/* Top Section - Title and Features */}
+          <div className="grid md:grid-cols-2 gap-20 items-start mb-24">
+            {/* Left - Title */}
+            <div>
+              <div className="inline-flex items-center gap-2 mb-8 px-3 py-1.5 rounded-full bg-yellow-500/10">
+                <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
+                <span className="text-xs uppercase tracking-widest text-yellow-400 font-medium">
+                  Innovation First
+                </span>
+              </div>
+              <h2 className="text-5xl md:text-6xl font-light leading-tight text-white">
+                Engage with
+                <br />
+                excellence
+              </h2>
+            </div>
+
+            {/* Right - Feature Cards */}
+            <div className="grid grid-cols-3 gap-8">
+              <div>
+                <div className="w-12 h-12 rounded-lg bg-slate-800/50 flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-medium mb-2 text-white">AI-First Development</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Every venture leverages AI frameworks giving you an unfair advantage
+                </p>
+              </div>
+
+              <div>
+                <div className="w-12 h-12 rounded-lg bg-slate-800/50 flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-medium mb-2 text-white">Venture Operating System</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Battle-tested platform powered by AI insights
+                </p>
+              </div>
+
+              <div>
+                <div className="w-12 h-12 rounded-lg bg-slate-800/50 flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-medium mb-2 text-white">Full-Stack Partnership</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Co-builders providing hands-on expertise across every dimension
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Section - Venture Canvas with Image */}
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            {/* Left - Description */}
+            <div>
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-medium text-white">Venture Canvas</h3>
+              </div>
+              
+              <p className="text-slate-300 text-lg leading-relaxed mb-8">
+                Ready to transform your idea into a market-dominating venture? Our team of AI engineers, product strategists, and growth experts is standing by to evaluate your concept.
+              </p>
+
+              <p className="text-slate-400 leading-relaxed mb-10">
+                We move fast—most partnerships begin within 48 hours of first contact. From writing code and designing systems to acquiring customers and raising capital, we provide hands-on expertise across every dimension of venture building. Let's build something extraordinary together.
+              </p>
+
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-all text-sm font-medium"
+              >
+                Explore Venture Canvas
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+
+            {/* Right - Large Image */}
+            <div className="relative rounded-2xl overflow-hidden">
+              <img
+                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop"
+                alt="Venture Canvas Platform"
+                className="w-full h-auto"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-white/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center">
-            <div className="text-xl font-light tracking-wider">
-              DONKEY <span className="font-bold">IDEAS</span>
+      <footer className="py-16 px-8 border-t border-slate-800">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="text-xl font-semibold tracking-tight">
+              <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="text-white/60 text-sm">
-              © {new Date().getFullYear()} Donkey Ideas. All rights reserved.
+            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+              <Link href="/ventures" className="hover:text-white transition-colors">
+                Ventures
+              </Link>
+              <Link href="/services" className="hover:text-white transition-colors">
+                Services
+              </Link>
+              <Link href="/process" className="hover:text-white transition-colors">
+                Approach
+              </Link>
+              <Link href="/about" className="hover:text-white transition-colors">
+                About
+              </Link>
+              <Link href="/login" className="hover:text-white transition-colors">
+                Login
+              </Link>
+            </div>
+            <div className="text-slate-500 text-sm">
+              © {new Date().getFullYear()} Donkey Ideas
             </div>
           </div>
         </div>

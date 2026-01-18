@@ -21,7 +21,7 @@ async function checkLogin() {
       console.log('\nIn development mode, you can use ANY email/password.');
       console.log('The system will automatically create the user on first login.');
       console.log('\nRecommended:');
-      console.log('  Email: admin@donkeyideas.com');
+      console.log('  Email: info@donkeyideas.com');
       console.log('  Password: (any password)');
     } else {
       users.forEach((user, index) => {
@@ -38,7 +38,7 @@ async function checkLogin() {
       console.log('  - If password is wrong, it will be updated to match');
       console.log('');
       console.log('Recommended login:');
-      console.log('  Email: admin@donkeyideas.com');
+      console.log('  Email: info@donkeyideas.com');
       console.log('  Password: (any password you want)');
     }
 
@@ -50,4 +50,5 @@ async function checkLogin() {
 }
 
 checkLogin();
+
 

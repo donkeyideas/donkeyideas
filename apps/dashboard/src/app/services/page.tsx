@@ -1,5 +1,6 @@
 import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
+import ScrollHeader from '../home/scroll-header';
 
 async function getPageContent() {
   try {
@@ -50,121 +51,271 @@ export default async function ServicesPage() {
     : defaultContent) as typeof defaultContent;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-[#0A0A0A]/95 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-8 h-[90px] flex items-center justify-between">
-          <Link href="/home" className="text-xl font-light tracking-wider">
-            DONKEY <span className="font-bold">IDEAS</span>
-          </Link>
-          <ul className="flex gap-12 list-none">
-            <li>
-              <Link href="/home#ventures" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                Ventures
-              </Link>
-            </li>
-            <li>
-              <Link href="/services" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                Services
-              </Link>
-            </li>
-            <li>
-              <Link href="/process" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                Approach
-              </Link>
-            </li>
-            <li>
-              <Link href="/about" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                Contact
-              </Link>
-            </li>
-            <li>
-              <Link href="/login" className="text-white/60 hover:text-white text-sm uppercase tracking-wider transition-colors">
-                Login
-              </Link>
-            </li>
-            <li>
-              <Link href="/register" className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm uppercase tracking-wider">
-                Get Started
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      {/* Navigation with scroll effect */}
+      <ScrollHeader />
 
-      {/* Hero Section */}
-      <section className="pt-[180px] pb-[120px] px-8 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative z-10">
-            <div className="text-sm uppercase tracking-widest text-blue-400 mb-6">
-              {pageContent.hero?.subtitle || 'What We Offer'}
+      {/* Hero Section - Giga Insights Style */}
+      <section className="pt-32 pb-16 px-8">
+        <div className="max-w-[1400px] mx-auto text-center">
+          <h1 className="text-6xl md:text-7xl font-light leading-tight mb-8">
+            The more ventures you build,
+            <br />
+            the better you become
+          </h1>
+          <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-12">
+            Go beyond traditional consulting with our AI-powered venture building platform. Track portfolio performance, leverage intelligent insights, and get custom recommendations to accelerate any venture metric.
+          </p>
+          
+          {/* Key Features Grid */}
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">
+                AI-Powered Insights
+              </div>
+              <p className="text-slate-400 text-sm">
+                Machine learning recommendations based on real portfolio data
+              </p>
             </div>
-            <h1 className="text-7xl font-light leading-tight mb-8">
-              {pageContent.hero?.title || 'Our Services'}
-            </h1>
-            <p className="text-xl text-white/70 max-w-2xl mb-10 leading-relaxed">
-              {pageContent.hero?.description || 'Comprehensive solutions for building and scaling innovative ventures.'}
-            </p>
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">
+                Accelerate Any Metric
+              </div>
+              <p className="text-slate-400 text-sm">
+                Set goals and continuously improve time-to-market
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">
+                Actionable Intelligence
+              </div>
+              <p className="text-slate-400 text-sm">
+                Implement and measure improvements instantly
+              </p>
+            </div>
           </div>
         </div>
-        <div className="absolute top-[20%] right-[20%] w-[600px] h-[600px] bg-blue-500/15 rounded-full blur-3xl" />
       </section>
 
-      {/* Services Sections */}
-      <section className="py-32 px-8 border-t border-white/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="space-y-32">
-            {pageContent.sections?.map((section: any, index: number) => (
-              <div
-                key={index}
-                className={`flex gap-16 items-center ${index % 2 === 1 ? 'flex-row-reverse' : ''}`}
-              >
-                <div className="flex-1">
-                  {section.imageUrl ? (
-                    <div className="w-full h-96 rounded-lg overflow-hidden">
-                      <img
-                        src={section.imageUrl}
-                        alt={section.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full h-96 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center text-white/30 text-lg">
-                      {section.title || `Service ${index + 1}`}
-                    </div>
-                  )}
+      {/* Large Dashboard Preview */}
+      <section className="py-16 px-8">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
+            <div className="aspect-video bg-gradient-to-br from-slate-800 via-slate-900 to-black flex items-center justify-center">
+              <img
+                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
+                alt="Venture Operating System Dashboard"
+                className="w-full h-full object-cover opacity-80"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Section 1 - Rapid Deployment */}
+      <section className="py-32 px-8">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-blue-500/10">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                <span className="text-xs uppercase tracking-widest text-blue-400 font-medium">
+                  Rapid Deployment
+                </span>
+              </div>
+              <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+                Quickly validate
+                <br />
+                and launch
+              </h2>
+              <p className="text-xl text-slate-300 mb-8 leading-relaxed">
+                Catch market opportunities and implement solutions before they become missed chances. Our AI-powered platform helps you move from concept to production in weeks, not months.
+              </p>
+              
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                <div>
+                  <div className="text-3xl font-light text-white mb-2">6-12 weeks</div>
+                  <div className="text-sm text-slate-400">Average time to MVP</div>
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-5xl font-light mb-6">{section.title || `Service ${index + 1}`}</h2>
-                  <p className="text-xl text-white/70 mb-6 leading-relaxed">
-                    {section.description}
-                  </p>
-                  {section.features && section.features.length > 0 && (
-                    <ul className="space-y-3">
-                      {section.features.map((feature: string, idx: number) => (
-                        <li key={idx} className="flex items-center gap-3 text-white/60">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                <div>
+                  <div className="text-3xl font-light text-white mb-2">70% faster</div>
+                  <div className="text-sm text-slate-400">Than traditional methods</div>
                 </div>
               </div>
-            ))}
+            </div>
+            
+            <div className="relative">
+              <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
+                <div className="aspect-[4/3] bg-gradient-to-br from-blue-900/20 to-purple-900/20 flex items-center justify-center">
+                  <img
+                    src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop"
+                    alt="Analytics Dashboard"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Section 2 - Smart Insights */}
+      <section className="py-32 px-8">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="order-2 md:order-1 relative">
+              <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
+                <div className="aspect-[4/3] bg-gradient-to-br from-teal-900/20 to-cyan-900/20 flex items-center justify-center">
+                  <img
+                    src="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
+                    alt="AI Insights"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="order-1 md:order-2">
+              <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-purple-500/10">
+                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                <span className="text-xs uppercase tracking-widest text-purple-400 font-medium">
+                  Intelligent Platform
+                </span>
+              </div>
+              <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+                AI-powered
+                <br />
+                recommendations
+              </h2>
+              <p className="text-xl text-slate-300 mb-8 leading-relaxed">
+                Get intelligent suggestions to reduce development time, boost product-market fit, and streamline operations based on real portfolio data and market trends.
+              </p>
+              
+              {/* Feature List */}
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center flex-shrink-0 mt-1">
+                    <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium mb-1 text-white">Real-time Portfolio Analytics</h3>
+                    <p className="text-slate-400 text-sm">Track KPIs across all ventures with unified dashboards</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center flex-shrink-0 mt-1">
+                    <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium mb-1 text-white">Predictive Market Intelligence</h3>
+                    <p className="text-slate-400 text-sm">AI-driven insights for strategic decision making</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center flex-shrink-0 mt-1">
+                    <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium mb-1 text-white">Automated Optimization</h3>
+                    <p className="text-slate-400 text-sm">Continuous improvement recommendations you can implement instantly</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Section 3 - Implementation */}
+      <section className="py-32 px-8">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-green-500/10">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                <span className="text-xs uppercase tracking-widest text-green-400 font-medium">
+                  Seamless Integration
+                </span>
+              </div>
+              <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+                Prioritize what
+                <br />
+                matters most
+              </h2>
+              <p className="text-xl text-slate-300 mb-8 leading-relaxed">
+                See projected outcomes for strategic initiatives so you can focus on the developments that will make the biggest impact on your business goals.
+              </p>
+              
+              {/* Insight Cards */}
+              <div className="space-y-4">
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm text-slate-400">Technical Architecture</div>
+                    <div className="text-green-400 text-sm font-medium">+23% efficiency</div>
+                  </div>
+                  <div className="text-lg font-medium mb-2">Implement microservices architecture</div>
+                  <div className="text-sm text-slate-400">Reduce deployment time and increase system resilience</div>
+                </div>
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm text-slate-400">Go-to-Market Strategy</div>
+                    <div className="text-green-400 text-sm font-medium">+15% conversion</div>
+                  </div>
+                  <div className="text-lg font-medium mb-2">Add PLG motion to enterprise sales</div>
+                  <div className="text-sm text-slate-400">Accelerate customer acquisition and reduce CAC</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
+                <div className="aspect-[4/3] bg-gradient-to-br from-green-900/20 to-emerald-900/20 flex items-center justify-center">
+                  <img
+                    src="https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop"
+                    alt="Implementation Dashboard"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-white/10">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center">
-            <div className="text-xl font-light tracking-wider">
-              DONKEY <span className="font-bold">IDEAS</span>
+      <footer className="py-16 px-8 border-t border-slate-800">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="text-xl font-semibold tracking-tight">
+              <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="text-white/60 text-sm">
-              © {new Date().getFullYear()} Donkey Ideas. All rights reserved.
+            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+              <Link href="/ventures" className="hover:text-white transition-colors">
+                Ventures
+              </Link>
+              <Link href="/services" className="hover:text-white transition-colors">
+                Services
+              </Link>
+              <Link href="/process" className="hover:text-white transition-colors">
+                Approach
+              </Link>
+              <Link href="/about" className="hover:text-white transition-colors">
+                About
+              </Link>
+              <Link href="/login" className="hover:text-white transition-colors">
+                Login
+              </Link>
+            </div>
+            <div className="text-slate-500 text-sm">
+              © {new Date().getFullYear()} Donkey Ideas
             </div>
           </div>
         </div>

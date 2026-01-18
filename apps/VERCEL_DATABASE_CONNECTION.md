@@ -48,3 +48,4 @@ Go to **Deployments** → Click the three dots (⋯) → **Redeploy**
 
 Your app should now connect to Vercel Postgres successfully!
 
+
