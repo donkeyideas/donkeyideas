@@ -44,9 +44,11 @@ export default function FinancialsPage() {
   const calculatePLFromTransactions = (transactions: any[]) => {
     let revenue = 0;
     let cogs = 0;
-    let expenses = 0;
+    let operatingExpenses = 0;
 
     transactions.forEach((tx) => {
+      // Include ALL expense transactions by default unless explicitly excluded
+      // Only skip if affectsPL is explicitly set to false
       if (tx.affectsPL === false) return;
 
       const amount = Math.abs(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount);
@@ -59,16 +61,19 @@ export default function FinancialsPage() {
             category === 'direct costs' || category === 'infrastructure costs') {
           cogs += amount;
         } else {
-          expenses += amount;
+          operatingExpenses += amount;
         }
       }
     });
 
+    // FIXED: Total Expenses = COGS + Operating Expenses (was just operatingExpenses before)
+    const totalExpenses = cogs + operatingExpenses;
+
     return {
       totalRevenue: revenue,
       cogs,
-      totalExpenses: expenses,
-      netProfit: revenue - cogs - expenses,
+      totalExpenses, // Now correctly includes COGS + Operating Expenses
+      netProfit: revenue - totalExpenses,
     };
   };
 

@@ -11,9 +11,9 @@ const createTransactionSchema = z.object({
   category: z.string(),
   amount: z.number().min(0),
   description: z.string().optional(),
-  affectsPL: z.boolean().default(false),
+  affectsPL: z.boolean().default(true), // ✅ Revenue/Expense transactions SHOULD affect P&L by default
   affectsBalance: z.boolean().default(true),
-  affectsCashFlow: z.boolean().default(false),
+  affectsCashFlow: z.boolean().default(true), // ✅ Most transactions are cash transactions by default
 });
 
 // GET /api/companies/:id/transactions
