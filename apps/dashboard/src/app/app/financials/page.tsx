@@ -688,12 +688,19 @@ export default function FinancialsPage() {
             variant="secondary" 
             onClick={async () => {
               if (!currentCompany) return;
+              if (!confirm('This will rebuild the balance sheet and cash flow from all transactions. Continue?')) return;
               try {
-                const response = await api.post(`/companies/${currentCompany.id}/transactions/fix-flags`);
+                setNotification({
+                  isOpen: true,
+                  title: 'Processing',
+                  message: 'Rebuilding balance sheet and cash flow...',
+                  type: 'info',
+                });
+                const response = await api.post(`/companies/${currentCompany.id}/balance-sheet/rebuild`);
                 setNotification({
                   isOpen: true,
                   title: 'Success',
-                  message: response.data.message || 'Transaction flags fixed successfully',
+                  message: response.data.message || 'Balance sheet rebuilt successfully',
                   type: 'success',
                 });
                 loadFinancials();
@@ -701,14 +708,14 @@ export default function FinancialsPage() {
                 setNotification({
                   isOpen: true,
                   title: 'Error',
-                  message: error.response?.data?.error?.message || 'Failed to fix transaction flags',
+                  message: error.response?.data?.error?.message || 'Failed to rebuild balance sheet',
                   type: 'error',
                 });
               }
             }}
             className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30"
           >
-            Fix Transaction Flags
+            Rebuild Balance Sheet
           </Button>
           <Button 
             variant="secondary" 
