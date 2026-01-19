@@ -14,6 +14,7 @@ import Link from 'next/link';
 interface ConsolidatedData {
   totalRevenue: number;
   totalCOGS: number;
+  totalOperatingExpenses: number;
   totalExpenses: number;
   netProfit: number;
   totalAssets: number;
