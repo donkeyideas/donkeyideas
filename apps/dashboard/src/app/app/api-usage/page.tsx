@@ -117,12 +117,12 @@ export default function ApiUsagePage() {
   };
 
   if (loading) {
-    return <div className="text-white/60">Loading API usage statistics...</div>;
+    return <div className="text-white/60 [.light_&]:text-slate-600">Loading API usage statistics...</div>;
   }
 
   if (!stats) {
     return (
-      <div className="text-white/60">
+      <div className="text-white/60 [.light_&]:text-slate-600">
         No API usage data available. Start using the AI Assistant to see usage statistics.
       </div>
     );
@@ -132,8 +132,8 @@ export default function ApiUsagePage() {
     <div>
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold mb-2">API Usage & Costs</h1>
-          <p className="text-white/60">
+          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">API Usage & Costs</h1>
+          <p className="text-white/60 [.light_&]:text-slate-600">
             Track API calls and costs across all services
           </p>
         </div>
@@ -163,7 +163,7 @@ export default function ApiUsagePage() {
               Total API Calls
             </div>
             <div className="text-3xl font-bold mb-1">{formatNumber(stats.totalCalls)}</div>
-            <div className="text-sm text-white/60">Across all providers</div>
+            <div className="text-sm text-white/60 [.light_&]:text-slate-600">Across all providers</div>
           </CardContent>
         </Card>
         <Card>
@@ -174,7 +174,7 @@ export default function ApiUsagePage() {
             <div className="text-3xl font-bold mb-1 text-green-500">
               {formatCurrency(stats.totalCost)}
             </div>
-            <div className="text-sm text-white/60">Cumulative spending</div>
+            <div className="text-sm text-white/60 [.light_&]:text-slate-600">Cumulative spending</div>
           </CardContent>
         </Card>
         <Card>
@@ -183,7 +183,7 @@ export default function ApiUsagePage() {
               Total Tokens
             </div>
             <div className="text-3xl font-bold mb-1">{formatNumber(stats.totalTokens)}</div>
-            <div className="text-sm text-white/60">Input + Output</div>
+            <div className="text-sm text-white/60 [.light_&]:text-slate-600">Input + Output</div>
           </CardContent>
         </Card>
       </div>
@@ -202,7 +202,7 @@ export default function ApiUsagePage() {
               >
                 <div>
                   <div className="font-semibold capitalize">{provider.provider}</div>
-                  <div className="text-sm text-white/60">
+                  <div className="text-sm text-white/60 [.light_&]:text-slate-600">
                     {formatNumber(provider.calls)} calls • {formatNumber(provider.tokens)} tokens
                   </div>
                 </div>
@@ -210,7 +210,7 @@ export default function ApiUsagePage() {
                   <div className="text-xl font-bold text-green-500">
                     {formatCurrency(provider.cost)}
                   </div>
-                  <div className="text-xs text-white/60">
+                  <div className="text-xs text-white/60 [.light_&]:text-slate-600">
                     {provider.calls > 0
                       ? formatCurrency(provider.cost / provider.calls)
                       : '$0.0000'}{' '}

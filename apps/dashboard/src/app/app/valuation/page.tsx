@@ -57,7 +57,7 @@ export default function ValuationPage() {
   if (!currentCompany) {
     return (
       <EmptyState
-        icon="🏢"
+        icon={<svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
         title="No company selected"
         description="Select a company from the sidebar to view valuation"
       />
@@ -65,15 +65,15 @@ export default function ValuationPage() {
   }
 
   if (loading) {
-    return <div className="text-white/60">Loading...</div>;
+    return <div className="text-white/60 [.light_&]:text-slate-600">Loading...</div>;
   }
 
   return (
     <div>
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Valuation Engine</h1>
-          <p className="text-white/60">
+          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Valuation Engine</h1>
+          <p className="text-white/60 [.light_&]:text-slate-600">
             {currentCompany.name} — AI-powered company valuation analysis
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function ValuationPage() {
 
       {!valuation ? (
         <EmptyState
-          icon="📊"
+          icon={<svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
           title="No valuation calculated yet"
           description="Calculate your company valuation using multiple methods and AI scoring"
           action={
@@ -101,7 +101,7 @@ export default function ValuationPage() {
         <>
           {/* Valuation Header */}
           <div className="mb-6 p-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
-            <h2 className="text-2xl font-bold mb-2">{currentCompany.name}</h2>
+            <h2 className="text-2xl font-bold mb-2 text-white [.light_&]:text-slate-900">{currentCompany.name}</h2>
             <p className="text-white/90">{currentCompany.tagline || 'Company description'}</p>
           </div>
 
@@ -116,7 +116,7 @@ export default function ValuationPage() {
                   ${valuation.revenueMultiple?.amount?.toLocaleString() || '$0'}
                 </div>
                 {valuation.revenueMultiple?.multiple && (
-                  <div className="text-sm text-white/60">
+                  <div className="text-sm text-white/60 [.light_&]:text-slate-600">
                     {valuation.revenueMultiple.multiple.toFixed(1)}x ARR
                   </div>
                 )}
@@ -132,7 +132,7 @@ export default function ValuationPage() {
                   ${valuation.dcf?.amount?.toLocaleString() || '$0'}
                 </div>
                 {valuation.dcf?.parameters?.discountRate && (
-                  <div className="text-sm text-white/60">
+                  <div className="text-sm text-white/60 [.light_&]:text-slate-600">
                     {valuation.dcf.parameters.discountRate}% discount rate
                   </div>
                 )}
@@ -148,7 +148,7 @@ export default function ValuationPage() {
                   ${valuation.marketComps?.amount?.toLocaleString() || '$0'}
                 </div>
                 {valuation.marketComps?.multiple && (
-                  <div className="text-sm text-white/60">
+                  <div className="text-sm text-white/60 [.light_&]:text-slate-600">
                     {valuation.marketComps.multiple.toFixed(1)}x multiple
                   </div>
                 )}

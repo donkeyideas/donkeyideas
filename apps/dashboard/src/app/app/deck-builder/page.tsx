@@ -210,7 +210,7 @@ export default function DeckBuilderPage() {
   if (!currentCompany) {
     return (
       <EmptyState
-        icon="🏢"
+        icon={<svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
         title="No company selected"
         description="Select a company from the sidebar to generate a deck"
       />
@@ -221,8 +221,8 @@ export default function DeckBuilderPage() {
     <div>
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold mb-2">AI Deck Builder</h1>
-          <p className="text-white/60">
+          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">AI Deck Builder</h1>
+          <p className="text-white/60 [.light_&]:text-slate-600">
             {currentCompany.name} — Generate world-class investor pitch decks
           </p>
         </div>
@@ -315,7 +315,7 @@ export default function DeckBuilderPage() {
                 <CardContent className="p-4">
                   <div className="text-xs text-white/40 mb-2">Slide {slide.number}</div>
                   <div className="font-semibold mb-2">{slide.title}</div>
-                  <div className="text-xs text-white/60">
+                  <div className="text-xs text-white/60 [.light_&]:text-slate-600">
                     {slide.content[0] || 'Content preview'}
                   </div>
                 </CardContent>
@@ -504,7 +504,7 @@ export default function DeckBuilderPage() {
                               <span className="text-xs text-white/40">Slide {slide.number}</span>
                               <h4 className="font-semibold">{slide.title}</h4>
                             </div>
-                            <div className="text-sm text-white/60">
+                            <div className="text-sm text-white/60 [.light_&]:text-slate-600">
                               {slide.content.slice(0, 2).map((item: string, index: number) => (
                                 <div key={index} className="truncate">
                                   {item}

@@ -51,7 +51,7 @@ export default function ActivityPage() {
     return (
       <div>
         <EmptyState
-          icon="📝"
+          icon={<svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>}
           title="No company selected"
           description="Select a company to view activity logs"
         />
@@ -62,8 +62,8 @@ export default function ActivityPage() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-3xl font-bold mb-8">Activity Logs</h1>
-        <div className="text-white/60">Loading activities...</div>
+        <h1 className="text-3xl font-bold mb-8 text-white [.light_&]:text-slate-900">Activity Logs</h1>
+        <div className="text-white/60 [.light_&]:text-slate-600">Loading activities...</div>
       </div>
     );
   }
@@ -206,15 +206,15 @@ export default function ActivityPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Activity Logs</h1>
-        <p className="text-white/60">
+        <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Activity Logs</h1>
+        <p className="text-white/60 [.light_&]:text-slate-600">
           {currentCompany.name} — Complete audit trail of all changes
         </p>
       </div>
 
       {activities.length === 0 ? (
         <EmptyState
-          icon="📝"
+          icon={<svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>}
           title="No activity yet"
           description="Activity logs will appear here as you make changes to your company data"
         />

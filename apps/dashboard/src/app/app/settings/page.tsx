@@ -103,14 +103,14 @@ export default function SettingsPage() {
   };
 
   if (loading) {
-    return <div className="text-white/60">Loading settings...</div>;
+    return <div className="text-white/60 [.light_&]:text-slate-600">Loading settings...</div>;
   }
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-white/60">Manage your API keys and configuration</p>
+        <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Settings</h1>
+        <p className="text-white/60 [.light_&]:text-slate-600">Manage your API keys and configuration</p>
       </div>
 
       <Card className="mb-6">
@@ -268,7 +268,7 @@ export default function SettingsPage() {
           <CardTitle>Application Settings</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-white/60">More settings coming soon...</p>
+          <p className="text-white/60 [.light_&]:text-slate-600">More settings coming soon...</p>
         </CardContent>
       </Card>
 

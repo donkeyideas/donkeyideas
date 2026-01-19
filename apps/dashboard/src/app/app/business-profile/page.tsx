@@ -340,7 +340,7 @@ export default function BusinessProfilePage() {
   if (!currentCompany) {
     return (
       <EmptyState
-        icon="🏢"
+        icon={<svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
         title="No company selected"
         description="Select a company from the sidebar to edit business profile"
       />
@@ -348,15 +348,15 @@ export default function BusinessProfilePage() {
   }
 
   if (loading) {
-    return <div className="text-white/60">Loading...</div>;
+    return <div className="text-white/60 [.light_&]:text-slate-600">Loading...</div>;
   }
 
   return (
     <div>
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Business Profile</h1>
-          <p className="text-white/60">
+          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Business Profile</h1>
+          <p className="text-white/60 [.light_&]:text-slate-600">
             {currentCompany.name} — Company information and traction metrics
           </p>
         </div>
