@@ -6,6 +6,7 @@ const nextConfig = {
     '@donkey-ideas/ui',
     '@donkey-ideas/auth',
     '@donkey-ideas/config',
+    '@donkey-ideas/financial-engine',
   ],
   eslint: {
     // Warning: This allows production builds to successfully complete even if
