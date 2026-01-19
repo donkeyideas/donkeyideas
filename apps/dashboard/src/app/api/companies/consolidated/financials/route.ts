@@ -135,30 +135,22 @@ export async function GET(request: NextRequest) {
       
       // Use Balance Sheet cash from database (single source of truth)
       // The balance sheet is kept up-to-date by the transaction route's updateCashFlow function
-      let cashBalance = latestBS ? Number(latestBS.cashEquivalents || 0) : 0;
+      const cashBalance = latestBS ? Number(latestBS.cashEquivalents || 0) : 0;
       
-      // IMPORTANT FIX: Don't show negative assets if there's no initial capital or debt
-      // If cash is negative but there are no liabilities, it means expenses were recorded without equity injection
-      // For better UX, floor cash and assets at $0 (showing $0 instead of negative is more intuitive)
-      const hasLiabilities = liabilities > 0;
-      const hasEquityInjections = transactions.some((tx: any) => tx.type === 'equity' || tx.type === 'liability');
-      
-      if (cashBalance < 0 && !hasLiabilities && !hasEquityInjections) {
-        // No funding source recorded, floor at $0 for better UX
-        cashBalance = 0;
-      }
-      
-      // Recalculate assets with the corrected cash balance
-      const correctedAssets = Math.max(0, cashBalance + Number(latestBS?.accountsReceivable || 0) + Number(latestBS?.fixedAssets || 0));
+      // PROPER ACCOUNTING: Show true financial position, even if negative
+      // If cash is negative, assets will be negative, and equity will be negative
+      // This correctly shows a deficit/retained loss position
+      // Assets = Liabilities + Equity MUST balance!
+      const totalAssetsForCompany = cashBalance + Number(latestBS?.accountsReceivable || 0) + Number(latestBS?.fixedAssets || 0);
       
       const valuation = latestValuation ? Number(latestValuation.amount || 0) : 0;
       
       totalRevenue += revenue;
       totalCOGS += cogs;
       totalExpenses += expenses;
-      totalAssets += correctedAssets; // Use corrected assets
+      totalAssets += totalAssetsForCompany; // Show true asset position (can be negative)
       totalLiabilities += liabilities;
-      totalCashBalance += cashBalance; // Use corrected cash balance
+      totalCashBalance += cashBalance; // Show true cash balance (can be negative)
       totalValuation += valuation;
       
       return {
