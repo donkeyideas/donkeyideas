@@ -400,6 +400,7 @@ export default function FinancialsPage() {
       setSummary({
         totalRevenue: plMetrics.totalRevenue,
         cogs: plMetrics.cogs,
+        operatingExpenses: plMetrics.operatingExpenses,
         totalExpenses: plMetrics.totalExpenses,
         netProfit: plMetrics.netProfit,
         totalAssets: 0,
@@ -435,6 +436,7 @@ export default function FinancialsPage() {
       setSummary({
         totalRevenue: plMetrics.totalRevenue,
         cogs: plMetrics.cogs,
+        operatingExpenses: plMetrics.operatingExpenses,
         totalExpenses: plMetrics.totalExpenses,
         netProfit: plMetrics.netProfit,
         totalAssets,
@@ -477,6 +479,7 @@ export default function FinancialsPage() {
       setSummary({
         totalRevenue: 0,
         cogs: 0,
+        operatingExpenses: 0,
         totalExpenses: 0,
         netProfit: 0,
         totalAssets: 0,
