@@ -10,6 +10,7 @@
     "dev": "concurrently \"turbo run dev --filter=@donkey-ideas/dashboard\" \"npm run desktop:dev\" --names \"WEB,DESKTOP\" --prefix-colors \"blue,green\"",
     "dev:web": "turbo run dev --filter=@donkey-ideas/dashboard",
     "build": "turbo run build",
+    "vercel-build": "cd packages/financial-engine && npm run build && cd ../.. && turbo run build --filter=@donkey-ideas/dashboard",
     "lint": "turbo run lint",
     "clean": "turbo run clean",
     "db:generate": "turbo run db:generate",
