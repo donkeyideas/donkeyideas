@@ -204,18 +204,18 @@ export default async function VenturesPage() {
 
                 {/* Image/Visual Side */}
                 <div className={index % 2 === 1 ? 'md:order-1' : ''}>
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-700/50">
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 aspect-video bg-slate-800/50">
                     {venture.imageUrl ? (
                       <>
                         <img
                           src={venture.imageUrl}
                           alt={venture.title}
-                          className="w-full h-auto"
+                          className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
                       </>
                     ) : (
-                      <div className={`relative w-full h-96 bg-gradient-to-br ${gradients[gradient]} backdrop-blur-sm flex items-center justify-center`}>
+                      <div className={`relative w-full h-full bg-gradient-to-br ${gradients[gradient]} backdrop-blur-sm flex items-center justify-center`}>
                         <div className="text-8xl font-light text-white/10">
                           {(index + 1).toString().padStart(2, '0')}
                         </div>

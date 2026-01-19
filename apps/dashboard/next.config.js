@@ -12,6 +12,21 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  // Increase body size limit for image uploads (50MB)
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
+  // Allow external images from any domain
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+  },
 };
 
 module.exports = nextConfig;

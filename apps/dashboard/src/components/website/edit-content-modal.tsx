@@ -678,83 +678,16 @@ export function EditContentModal({
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Image</label>
-                        <div className="space-y-2">
-                          <input
-                            type="file"
-                            accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                // Validate file type
-                                const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
-                                if (!validTypes.includes(file.type)) {
-                                  setError('Invalid file type. Please upload PNG, JPEG, GIF, WebP, or SVG.');
-                                  return;
-                                }
-                                
-                                // Validate file size (max 5MB)
-                                if (file.size > 5 * 1024 * 1024) {
-                                  setError('File size too large. Maximum size is 5MB.');
-                                  return;
-                                }
-                                
-                                // Convert to base64 for storage
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  const base64String = reader.result as string;
-                                  const newItems = [...formData.items];
-                                  newItems[index] = { ...newItems[index], imageUrl: base64String };
-                                  setFormData({ ...formData, items: newItems });
-                                };
-                                reader.onerror = () => {
-                                  setError('Failed to read file. Please try again.');
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                            className="hidden"
-                            id={`venture-image-${index}`}
-                          />
-                          <label
-                            htmlFor={`venture-image-${index}`}
-                            className="block w-full p-3 bg-black/30 border border-white/20 rounded text-white cursor-pointer hover:border-blue-500 transition-colors text-center"
-                          >
-                            {item.imageUrl ? 'Change Image' : 'Upload Image'}
-                          </label>
-                          <div className="text-xs text-white/60">
-                            Accepted formats: PNG, JPEG, GIF, WebP, SVG (Max 5MB)
-                          </div>
-                        </div>
-                        {item.imageUrl && (
-                          <div className="mt-2">
-                            <img
-                              src={item.imageUrl}
-                              alt="Preview"
-                              className="w-full h-48 object-cover rounded border border-white/10"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="mt-2 w-full"
-                              onClick={() => {
-                                const newItems = [...formData.items];
-                                newItems[index] = { ...newItems[index], imageUrl: '' };
-                                setFormData({ ...formData, items: newItems });
-                                // Reset file input
-                                const fileInput = document.getElementById(`venture-image-${index}`) as HTMLInputElement;
-                                if (fileInput) fileInput.value = '';
-                              }}
-                            >
-                              Remove Image
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+                      <ImageUploadField
+                        label="Image (Optional - gradient will be used if no image)"
+                        value={item.imageUrl || ''}
+                        onChange={(url) => {
+                          const newItems = [...formData.items];
+                          newItems[index] = { ...newItems[index], imageUrl: url };
+                          setFormData({ ...formData, items: newItems });
+                        }}
+                        id={`venture-home-image-${index}`}
+                      />
                       <div>
                         <label className="block text-sm font-medium mb-2">Venture Title</label>
                         <input
@@ -1543,6 +1476,56 @@ function ImageUploadField({
   id: string;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Compress and optimize image before upload
+  const compressImage = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Create canvas for compression
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Failed to get canvas context'));
+            return;
+          }
+
+          // Calculate new dimensions (max 1920px width, maintain aspect ratio)
+          const maxWidth = 1920;
+          const maxHeight = 1080;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Convert to JPEG with 80% quality for better compression
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          resolve(compressedBase64);
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
 
   return (
     <div>
@@ -1550,50 +1533,52 @@ function ImageUploadField({
       <div className="space-y-2">
         <input
           type="file"
-          accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
-          onChange={(e) => {
+          accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+          onChange={async (e) => {
             const file = e.target.files?.[0];
             if (file) {
-              const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml'];
+              const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
               if (!validTypes.includes(file.type)) {
-                setError('Invalid file type. Please upload PNG, JPEG, GIF, WebP, or SVG.');
+                setError('Invalid file type. Please upload PNG, JPEG, GIF, or WebP.');
                 return;
               }
               
-              if (file.size > 5 * 1024 * 1024) {
-                setError('File size too large. Maximum size is 5MB.');
+              // Allow any file size - we'll compress it
+              if (file.size > 50 * 1024 * 1024) {
+                setError('File size too large. Maximum size is 50MB.');
                 return;
               }
               
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                const base64String = reader.result as string;
-                onChange(base64String);
+              try {
+                setUploading(true);
                 setError(null);
-              };
-              reader.onerror = () => {
-                setError('Failed to read file. Please try again.');
-              };
-              reader.readAsDataURL(file);
+                const compressedBase64 = await compressImage(file);
+                onChange(compressedBase64);
+              } catch (err: any) {
+                setError(err.message || 'Failed to process image. Please try again.');
+              } finally {
+                setUploading(false);
+              }
             }
           }}
           className="hidden"
           id={id}
+          disabled={uploading}
         />
         <label
           htmlFor={id}
           className="block w-full p-3 bg-black/30 border border-white/20 rounded text-white cursor-pointer hover:border-blue-500 transition-colors text-center"
         >
-          {value ? 'Change Image' : 'Upload Image'}
+          {uploading ? 'Optimizing image...' : value ? 'Change Image' : 'Upload Image'}
         </label>
         <div className="text-xs text-white/60">
-          Accepted formats: PNG, JPEG, GIF, WebP, SVG (Max 5MB)
+          Any size accepted - images are automatically optimized. Best results with 1920x1080px or similar.
         </div>
         {error && (
           <div className="text-xs text-red-400">{error}</div>
         )}
       </div>
-      {value && (
+      {value && !uploading && (
         <div className="mt-2">
           <img
             src={value}
