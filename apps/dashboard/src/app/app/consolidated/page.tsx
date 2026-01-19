@@ -348,7 +348,7 @@ export default function ConsolidatedViewPage() {
                       {formatCurrency(company.cogs || 0)}
                     </td>
                     <td className="py-3 px-4 text-right text-red-400">
-                      {formatCurrency(company.expenses)}
+                      {formatCurrency(company.operatingExpenses || 0)}
                     </td>
                     <td className={`py-3 px-4 text-right ${company.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                       {formatCurrency(company.profit)}
