@@ -403,12 +403,25 @@ export default function FinancialsPage() {
       });
 
       // Create statement records from clean engine data for display
+      // Use field names that match what the UI components expect
       const currentPeriod = new Date().toISOString();
       
-      // P&L Statement
+      // P&L Statement - Charts expect specific revenue/expense breakdown fields
       const plStatement = {
         id: 'current',
         period: currentPeriod,
+        // For charts - split revenue into categories (use total for now)
+        productRevenue: statements.pl.revenue,
+        serviceRevenue: 0,
+        otherRevenue: 0,
+        // For charts - split COGS into categories
+        directCosts: statements.pl.cogs,
+        infrastructureCosts: 0,
+        // For charts - split OpEx into categories
+        salesMarketing: 0,
+        rdExpenses: 0,
+        adminExpenses: statements.pl.operatingExpenses,
+        // For table display
         revenue: statements.pl.revenue,
         cogs: statements.pl.cogs,
         grossProfit: statements.pl.revenue - statements.pl.cogs,
@@ -417,7 +430,7 @@ export default function FinancialsPage() {
         createdAt: currentPeriod,
       };
       
-      // Balance Sheet
+      // Balance Sheet - These field names match the table component
       const balanceSheet = {
         id: 'current',
         period: currentPeriod,
@@ -434,13 +447,13 @@ export default function FinancialsPage() {
         createdAt: currentPeriod,
       };
       
-      // Cash Flow Statement
+      // Cash Flow Statement - Use field names the table component expects
       const cashFlowStatement = {
         id: 'current',
         period: currentPeriod,
-        operatingActivities: statements.cashFlow.operatingCashFlow,
-        investingActivities: statements.cashFlow.investingCashFlow,
-        financingActivities: statements.cashFlow.financingCashFlow,
+        operatingCashFlow: statements.cashFlow.operatingCashFlow,
+        investingCashFlow: statements.cashFlow.investingCashFlow,
+        financingCashFlow: statements.cashFlow.financingCashFlow,
         netCashFlow: statements.cashFlow.netCashFlow,
         beginningCash: statements.cashFlow.beginningCash,
         endingCash: statements.cashFlow.endingCash,
