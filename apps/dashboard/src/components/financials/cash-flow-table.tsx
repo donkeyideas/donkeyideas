@@ -23,7 +23,7 @@ export function CashFlowTable({ cashFlows }: CashFlowTableProps) {
       </CardHeader>
       <CardContent>
         {cashFlows.length === 0 ? (
-          <div className="p-8 text-center text-white/60">
+          <div className="p-8 text-center text-white/60 [.light_&]:text-slate-600">
             No cash flow data yet. Add transactions to see cash flow updates.
           </div>
         ) : (
@@ -31,12 +31,12 @@ export function CashFlowTable({ cashFlows }: CashFlowTableProps) {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="text-left p-4 text-xs text-white/60 uppercase">Period</th>
-                  <th className="text-right p-4 text-xs text-white/60 uppercase">Operating</th>
-                  <th className="text-right p-4 text-xs text-white/60 uppercase">Investing</th>
-                  <th className="text-right p-4 text-xs text-white/60 uppercase">Financing</th>
-                  <th className="text-right p-4 text-xs text-white/60 uppercase">Net Cash Flow</th>
-                  <th className="text-right p-4 text-xs text-white/60 uppercase">Ending Cash</th>
+                  <th className="text-left p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Period</th>
+                  <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Operating</th>
+                  <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Investing</th>
+                  <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Financing</th>
+                  <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Net Cash Flow</th>
+                  <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Ending Cash</th>
                 </tr>
               </thead>
               <tbody>

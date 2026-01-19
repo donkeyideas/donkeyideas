@@ -57,9 +57,10 @@ export function PLCharts({ plStatements }: PLChartsProps) {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#0F0F0F',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  backgroundColor: tooltipBg,
+                  border: `1px solid ${tooltipBorder}`,
                   borderRadius: '8px',
+                  color: theme === 'light' ? '#0f172a' : '#ffffff',
                 }}
                 formatter={(value: number) => `$${value.toLocaleString()}`}
               />

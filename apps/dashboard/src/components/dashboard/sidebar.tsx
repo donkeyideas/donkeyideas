@@ -200,13 +200,13 @@ export function Sidebar() {
 
       {/* Show message if no company selected */}
       {!currentCompany && companies.length > 0 && (
-        <div className="text-xs text-white/40 px-4 py-2 italic">
+        <div className={`text-xs px-4 py-2 italic ${theme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>
           Select a company to view company-specific features
         </div>
       )}
 
       {/* Logout Button */}
-      <div className="mt-8 pt-4 border-t border-white/10">
+      <div className={`mt-8 pt-4 border-t ${theme === 'light' ? 'border-slate-300' : 'border-white/10'}`}>
         <Link
           href="/api/auth/logout"
           className={`flex items-center gap-2 px-4 py-3 rounded transition-colors ${

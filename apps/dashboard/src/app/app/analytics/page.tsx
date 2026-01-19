@@ -425,7 +425,7 @@ export default function AnalyticsPage() {
               {formatCurrency(analytics.kpis.ltv)}
             </div>
             {analytics.kpis.cac > 0 && (
-              <div className="text-xs text-white/60 mt-1">
+              <div className="text-xs text-white/60 [.light_&]:text-slate-600 mt-1">
                 LTV:CAC = {(analytics.kpis.ltv / analytics.kpis.cac).toFixed(1)}x
               </div>
             )}
@@ -509,13 +509,13 @@ export default function AnalyticsPage() {
                         }}
                         title={`${point.period}: $${point.value.toLocaleString()}`}
                       />
-                      <div className="text-xs text-white/60 mt-2 text-center">
+                      <div className="text-xs text-white/60 [.light_&]:text-slate-600 mt-2 text-center">
                         {point.period}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-white/40 text-sm">No revenue data available</div>
+                  <div className="text-white/40 [.light_&]:text-slate-500 text-sm">No revenue data available</div>
                 )}
               </div>
             </div>
@@ -544,13 +544,13 @@ export default function AnalyticsPage() {
                         }}
                         title={`${point.period}: $${point.value.toLocaleString()}`}
                       />
-                      <div className="text-xs text-white/60 mt-2 text-center">
+                      <div className="text-xs text-white/60 [.light_&]:text-slate-600 mt-2 text-center">
                         {point.period}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-white/40 text-sm">No COGS data available</div>
+                  <div className="text-white/40 [.light_&]:text-slate-500 text-sm">No COGS data available</div>
                 )}
               </div>
             </div>
@@ -612,7 +612,7 @@ export default function AnalyticsPage() {
                           minHeight: '4px',
                         }}
                       />
-                      <div className="text-xs text-white/60 mt-2 text-center">
+                      <div className="text-xs text-white/60 [.light_&]:text-slate-600 mt-2 text-center">
                         {point.period}
                       </div>
                     </div>

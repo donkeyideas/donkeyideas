@@ -645,7 +645,7 @@ export default function FinancialsPage() {
   }
 
   if (loading) {
-    return <div className="text-white/60">Loading financial data...</div>;
+    return <div className="text-white/60 [.light_&]:text-slate-600">Loading financial data...</div>;
   }
 
   return (
@@ -771,7 +771,7 @@ export default function FinancialsPage() {
                         <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Revenue</th>
                         <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">COGS</th>
                         <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">OPEX</th>
-                        <th className="text-right p-4 text-xs text-white/60 uppercase">Net Profit</th>
+                        <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Net Profit</th>
                       </tr>
                     </thead>
                     <tbody>

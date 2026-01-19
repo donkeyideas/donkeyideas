@@ -442,14 +442,14 @@ export default function ConsolidatedViewPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-white/60">Company</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-white/60">Status</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60">Revenue</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60">COGS</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60">Expenses</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60">Profit</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60">Cash</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60">Valuation</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Company</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Status</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Revenue</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">COGS</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Expenses</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Profit</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Cash</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Valuation</th>
                 </tr>
               </thead>
               <tbody>
@@ -467,7 +467,7 @@ export default function ConsolidatedViewPage() {
                             }}
                           />
                         ) : (
-                          <div className="w-8 h-8 rounded border border-white/10 bg-white/5 flex items-center justify-center text-xs text-white/40">
+                          <div className="w-8 h-8 rounded border border-white/10 bg-white/5 flex items-center justify-center text-xs text-white/40 [.light_&]:text-slate-500">
                             {company.name.charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -480,7 +480,7 @@ export default function ConsolidatedViewPage() {
                           {company.projectStatus}
                         </span>
                       ) : (
-                        <span className="text-white/40 text-sm">—</span>
+                        <span className="text-white/40 [.light_&]:text-slate-500 text-sm">—</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-right">{formatCurrency(company.revenue)}</td>
