@@ -319,28 +319,32 @@ export default function FinancialsPage() {
     return cashFlows.sort((a, b) => new Date(b.period).getTime() - new Date(a.period).getTime());
   };
 
-  // Calculate cash balance from transactions
+  // Calculate cash balance from transactions - FIXED LOGIC
   const calculateCashFromTransactions = (transactions: any[]) => {
     let cash = 0;
 
     transactions.forEach((tx) => {
+      // Skip if explicitly marked as non-cash
       if (tx.affectsCashFlow === false) return;
 
       const amount = typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount;
 
-      if (tx.type === 'asset' && tx.category === 'cash') {
+      // Handle different transaction types
+      if (tx.type === 'revenue') {
+        // Revenue increases cash
+        cash += Math.abs(amount);
+      } else if (tx.type === 'expense') {
+        // Expenses decrease cash
+        cash -= Math.abs(amount);
+      } else if (tx.type === 'asset') {
+        // Asset transactions affect cash based on the sign
+        // Positive = cash in (selling asset), Negative = cash out (buying asset)
         cash += amount;
-      } else if (tx.type === 'revenue' && tx.affectsCashFlow === true) {
-        cash += Math.abs(amount);
-      } else if (tx.type === 'expense' && tx.affectsCashFlow === true) {
-        cash -= Math.abs(amount);
+      } else if (tx.type === 'liability') {
+        // Taking on liability = cash in, Paying off liability = cash out
+        cash += amount;
       } else if (tx.type === 'equity') {
-        // Equity transactions (capital contributions) increase cash
-        cash += Math.abs(amount);
-      } else if (tx.description?.includes('[INTERCOMPANY CASH OUTFLOW]') || 
-                 tx.description?.includes('[CASH OUTFLOW')) {
-        cash -= Math.abs(amount);
-      } else if (tx.description?.includes('[INTERCOMPANY') && tx.type === 'asset' && tx.category === 'cash') {
+        // Equity contributions = cash in
         cash += Math.abs(amount);
       }
     });

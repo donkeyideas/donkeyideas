@@ -94,20 +94,17 @@ export default function ConsolidatedViewPage() {
                 }
               }
               
-              // Calculate cash balance
+              // Calculate cash balance - FIXED LOGIC
               if (tx.affectsCashFlow !== false) {
                 const cashAmount = typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount;
-                if (tx.type === 'asset' && tx.category === 'cash') {
+                
+                if (tx.type === 'revenue') {
+                  cashBalance += Math.abs(cashAmount);
+                } else if (tx.type === 'expense') {
+                  cashBalance -= Math.abs(cashAmount);
+                } else if (tx.type === 'asset' || tx.type === 'liability' || tx.type === 'equity') {
+                  // Asset/Liability/Equity transactions use signed amounts
                   cashBalance += cashAmount;
-                } else if (tx.type === 'revenue' && tx.affectsCashFlow) {
-                  cashBalance += Math.abs(cashAmount);
-                } else if (tx.type === 'expense' && tx.affectsCashFlow) {
-                  cashBalance -= Math.abs(cashAmount);
-                } else if (tx.description?.includes('[INTERCOMPANY CASH OUTFLOW]') || 
-                           tx.description?.includes('[CASH OUTFLOW')) {
-                  cashBalance -= Math.abs(cashAmount);
-                } else if (tx.description?.includes('[INTERCOMPANY') && tx.type === 'asset' && tx.category === 'cash') {
-                  cashBalance += Math.abs(cashAmount);
                 }
               }
             });

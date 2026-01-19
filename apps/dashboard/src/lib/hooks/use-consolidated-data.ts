@@ -77,28 +77,18 @@ export function useConsolidatedData(monthFilter?: string) {
                 }
               }
               
-              // Calculate cash balance and balance sheet items
+              // Calculate cash balance - FIXED LOGIC
               if (tx.affectsCashFlow !== false) {
-                if (tx.type === 'asset' && category === 'cash') {
+                if (tx.type === 'revenue') {
+                  cashBalance += Math.abs(amount);
+                  cash += Math.abs(amount);
+                } else if (tx.type === 'expense') {
+                  cashBalance -= Math.abs(amount);
+                  cash -= Math.abs(amount);
+                } else if (tx.type === 'asset' || tx.type === 'liability' || tx.type === 'equity') {
+                  // Asset/Liability/Equity transactions use signed amounts
                   cashBalance += amount;
                   cash += amount;
-                } else if (tx.type === 'revenue' && tx.affectsCashFlow) {
-                  cashBalance += Math.abs(amount);
-                  cash += Math.abs(amount);
-                } else if (tx.type === 'expense' && tx.affectsCashFlow) {
-                  cashBalance -= Math.abs(amount);
-                  cash -= Math.abs(amount);
-                } else if (tx.description?.includes('[INTERCOMPANY CASH OUTFLOW]') || 
-                           tx.description?.includes('[CASH OUTFLOW')) {
-                  cashBalance -= Math.abs(amount);
-                  cash -= Math.abs(amount);
-                } else if (tx.description?.includes('[INTERCOMPANY') && tx.type === 'asset' && category === 'cash') {
-                  cashBalance += Math.abs(amount);
-                  cash += Math.abs(amount);
-                } else if (tx.type === 'equity') {
-                  // Equity transactions increase cash (capital contributions)
-                  cashBalance += Math.abs(amount);
-                  cash += Math.abs(amount);
                 }
               }
               
