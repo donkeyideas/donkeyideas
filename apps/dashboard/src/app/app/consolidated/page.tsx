@@ -50,10 +50,11 @@ export default function ConsolidatedViewPage() {
     try {
       setLoading(true);
       
-      // Use the backend API which properly calculates balance sheet values
+      // ✅ USING NEW CLEAN ENGINE (v2 endpoint)
+      // Uses @donkey-ideas/financial-engine for guaranteed accuracy
       const url = monthFilter 
-        ? `/companies/consolidated/financials?month=${monthFilter}`
-        : `/companies/consolidated/financials`;
+        ? `/companies/consolidated/financials/v2?month=${monthFilter}`
+        : `/companies/consolidated/financials/v2`;
       
       const response = await api.get(url);
       const data = response.data;

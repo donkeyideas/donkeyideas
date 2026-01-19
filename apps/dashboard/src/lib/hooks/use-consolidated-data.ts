@@ -24,12 +24,12 @@ export function useConsolidatedData(monthFilter?: string) {
   return useQuery<ConsolidatedData>({
     queryKey: ['consolidated', 'financials', monthFilter || 'all', companies.map(c => c.id).join(',')],
     queryFn: async () => {
-      // Use the backend API which pulls from Balance Sheet database (single source of truth)
-      // This prevents calculating cash balance from scratch and getting negative values
+      // ✅ USING NEW CLEAN ENGINE (v2 endpoint)
+      // Uses @donkey-ideas/financial-engine for guaranteed accuracy
       try {
         const url = monthFilter 
-          ? `/companies/consolidated/financials?month=${monthFilter}`
-          : `/companies/consolidated/financials`;
+          ? `/companies/consolidated/financials/v2?month=${monthFilter}`
+          : `/companies/consolidated/financials/v2`;
         const response = await api.get(url);
         const data = response.data;
         

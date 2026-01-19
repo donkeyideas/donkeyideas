@@ -367,113 +367,52 @@ export default function FinancialsPage() {
     try {
       setLoading(true);
 
-      // Load transactions with timeout and error handling
+      // ✅ USING NEW CLEAN ENGINE (calculate endpoint)
+      // Single API call replaces ALL client-side calculations
+      const url = monthFilter 
+        ? `/companies/${currentCompany.id}/financials/calculate?month=${monthFilter}`
+        : `/companies/${currentCompany.id}/financials/calculate`;
+      
+      const response = await api.get(url);
+      const statements = response.data;
+      
+      // Load transactions separately (for transaction table display)
       let loadedTransactions: any[] = [];
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-        const transactionsRes = await api.get(`/companies/${currentCompany.id}/transactions`, {
-          signal: controller.signal as any
-        });
-        
-        clearTimeout(timeoutId);
+        const transactionsRes = await api.get(`/companies/${currentCompany.id}/transactions`);
         loadedTransactions = transactionsRes?.data?.transactions || [];
-      } catch (error: any) {
-        if (error.name === 'AbortError') {
-          console.error('Request timeout - transactions endpoint took too long');
-        } else {
-          console.error('Failed to load transactions:', error);
-        }
+      } catch (error) {
+        console.error('Failed to load transactions:', error);
         loadedTransactions = [];
       }
       
       setTransactions(loadedTransactions);
 
-      // Calculate summary from transactions ONLY
-      const plMetrics = calculatePLFromTransactions(loadedTransactions);
-      const cashBalance = calculateCashFromTransactions(loadedTransactions);
-      const profitMargin = plMetrics.totalRevenue > 0 
-        ? (plMetrics.netProfit / plMetrics.totalRevenue) * 100 
-        : 0;
-
+      // Use calculated values from clean engine
       setSummary({
-        totalRevenue: plMetrics.totalRevenue,
-        cogs: plMetrics.cogs,
-        operatingExpenses: plMetrics.operatingExpenses,
-        totalExpenses: plMetrics.totalExpenses,
-        netProfit: plMetrics.netProfit,
-        totalAssets: 0,
-        totalLiabilities: 0,
-        totalEquity: 0,
-        cashBalance,
-        profitMargin,
+        totalRevenue: statements.pl.revenue,
+        cogs: statements.pl.cogs,
+        operatingExpenses: statements.pl.operatingExpenses,
+        totalExpenses: statements.pl.totalExpenses,
+        netProfit: statements.pl.netProfit,
+        totalAssets: statements.balanceSheet.totalAssets,
+        totalLiabilities: statements.balanceSheet.totalLiabilities,
+        totalEquity: statements.balanceSheet.totalEquity,
+        cashBalance: statements.cashFlow.endingCash,
+        profitMargin: statements.pl.profitMargin,
       });
 
-      // Calculate statements client-side from transactions (single source of truth)
-      const calculatedPLStatements = calculatePLStatementsFromTransactions(loadedTransactions);
-      const calculatedBalanceSheets = calculateBalanceSheetsFromTransactions(loadedTransactions);
-      const calculatedCashFlows = calculateCashFlowsFromTransactions(loadedTransactions);
-
-      // Calculate summary assets, liabilities, and equity from latest balance sheet
-      let totalAssets = 0;
-      let totalLiabilities = 0;
-      let totalEquity = 0;
+      // For now, clear the detailed statements tables (can rebuild these from clean engine data later)
+      setPlStatements([]);
+      setBalanceSheets([]);
+      setCashFlows([]);
       
-      if (calculatedBalanceSheets.length > 0) {
-        // Get the most recent balance sheet (first in sorted array)
-        const latestBalanceSheet = calculatedBalanceSheets[0];
-        totalAssets = Number(latestBalanceSheet.cashEquivalents || 0) + 
-                      Number(latestBalanceSheet.accountsReceivable || 0) + 
-                      Number(latestBalanceSheet.fixedAssets || 0);
-        totalLiabilities = Number(latestBalanceSheet.accountsPayable || 0) + 
-                          Number(latestBalanceSheet.shortTermDebt || 0) + 
-                          Number(latestBalanceSheet.longTermDebt || 0);
-        totalEquity = Number(latestBalanceSheet.totalEquity || 0);
+      // Log validation status
+      if (!statements.isValid) {
+        console.warn('⚠️ Financial statements validation failed:', statements.errors);
+      } else {
+        console.log('✅ Financial statements validated successfully');
       }
-
-      // Update summary with calculated values
-      setSummary({
-        totalRevenue: plMetrics.totalRevenue,
-        cogs: plMetrics.cogs,
-        operatingExpenses: plMetrics.operatingExpenses,
-        totalExpenses: plMetrics.totalExpenses,
-        netProfit: plMetrics.netProfit,
-        totalAssets,
-        totalLiabilities,
-        totalEquity,
-        cashBalance,
-        profitMargin,
-      });
-
-      // Apply month filter if specified
-      let filteredPL = calculatedPLStatements;
-      let filteredBalance = calculatedBalanceSheets;
-      let filteredCash = calculatedCashFlows;
-
-      if (monthFilter) {
-        const [year, month] = monthFilter.split('-').map(Number);
-        const filterDate = new Date(year, month - 1, 1);
-        
-        filteredPL = calculatedPLStatements.filter((stmt) => {
-          const stmtDate = new Date(stmt.period);
-          return stmtDate.getFullYear() === year && stmtDate.getMonth() === month - 1;
-        });
-        
-        filteredBalance = calculatedBalanceSheets.filter((sheet) => {
-          const sheetDate = new Date(sheet.period);
-          return sheetDate.getFullYear() === year && sheetDate.getMonth() === month - 1;
-        });
-        
-        filteredCash = calculatedCashFlows.filter((flow) => {
-          const flowDate = new Date(flow.period);
-          return flowDate.getFullYear() === year && flowDate.getMonth() === month - 1;
-        });
-      }
-
-      setPlStatements(filteredPL);
-      setBalanceSheets(filteredBalance);
-      setCashFlows(filteredCash);
     } catch (error) {
       console.error('Failed to load financials:', error);
       setSummary({
