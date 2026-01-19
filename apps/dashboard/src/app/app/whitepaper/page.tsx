@@ -463,7 +463,7 @@ export default function WhitepaperPage() {
                 type="text"
                 value={formData.version || '1.0'}
                 onChange={(e) => updateField('version', e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
                 placeholder="1.0"
               />
             </div>
@@ -472,7 +472,7 @@ export default function WhitepaperPage() {
               <select
                 value={formData.classification || 'Public'}
                 onChange={(e) => updateField('classification', e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               >
                 <option value="Public">Public</option>
                 <option value="Private">Private</option>
@@ -485,7 +485,7 @@ export default function WhitepaperPage() {
                 type="date"
                 value={formData.publishedDate ? new Date(formData.publishedDate).toISOString().split('T')[0] : ''}
                 onChange={(e) => updateField('publishedDate', e.target.value ? new Date(e.target.value).toISOString() : null)}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               />
             </div>
           </div>
@@ -506,7 +506,7 @@ export default function WhitepaperPage() {
             value={formData.executiveSummary || ''}
             onChange={(e) => updateField('executiveSummary', e.target.value)}
             rows={8}
-            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
             placeholder="Provide a compelling executive summary that captures the essence of your company, the problem you solve, your solution, and key value propositions..."
           />
           <SectionImageUpload
@@ -534,7 +534,7 @@ export default function WhitepaperPage() {
               value={formData.companyOverview || ''}
               onChange={(e) => updateField('companyOverview', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Describe your company's background, history, and positioning..."
             />
           </div>
@@ -545,7 +545,7 @@ export default function WhitepaperPage() {
                 type="text"
                 value={formData.legalName || ''}
                 onChange={(e) => updateField('legalName', e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
                 placeholder="Company Legal Name"
               />
             </div>
@@ -555,7 +555,7 @@ export default function WhitepaperPage() {
                 type="text"
                 value={formData.founded || ''}
                 onChange={(e) => updateField('founded', e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
                 placeholder="2023"
               />
             </div>
@@ -565,7 +565,7 @@ export default function WhitepaperPage() {
                 type="text"
                 value={formData.headquarters || ''}
                 onChange={(e) => updateField('headquarters', e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
                 placeholder="City, State/Country"
               />
             </div>
@@ -575,7 +575,7 @@ export default function WhitepaperPage() {
                 type="url"
                 value={formData.website || ''}
                 onChange={(e) => updateField('website', e.target.value)}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
                 placeholder="https://example.com"
               />
             </div>
@@ -586,7 +586,7 @@ export default function WhitepaperPage() {
               value={formData.mission || ''}
               onChange={(e) => updateField('mission', e.target.value)}
               rows={3}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Your company's mission statement..."
             />
           </div>
@@ -596,7 +596,7 @@ export default function WhitepaperPage() {
               value={formData.vision || ''}
               onChange={(e) => updateField('vision', e.target.value)}
               rows={3}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Your company's vision for the future..."
             />
           </div>
@@ -625,7 +625,7 @@ export default function WhitepaperPage() {
               value={formData.problemStatement || ''}
               onChange={(e) => updateField('problemStatement', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Clearly articulate the problem your company addresses. Who has this problem? How significant is it? What are the current pain points?"
             />
           </div>
@@ -635,7 +635,7 @@ export default function WhitepaperPage() {
               value={formData.marketOpportunity || ''}
               onChange={(e) => updateField('marketOpportunity', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Describe the market opportunity. Include market size (TAM, SAM, SOM), growth trends, and why now is the right time..."
             />
           </div>
@@ -645,7 +645,7 @@ export default function WhitepaperPage() {
               value={formData.solution || ''}
               onChange={(e) => updateField('solution', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Explain your solution. How does it solve the problem? What makes it unique? What are the key features and benefits?"
             />
           </div>
@@ -655,7 +655,7 @@ export default function WhitepaperPage() {
               value={formData.productDescription || ''}
               onChange={(e) => updateField('productDescription', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Provide detailed product description, features, functionality, and how it works..."
             />
           </div>
@@ -684,7 +684,7 @@ export default function WhitepaperPage() {
               value={formData.architecture || ''}
               onChange={(e) => updateField('architecture', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Describe your system architecture, infrastructure, scalability approach..."
             />
           </div>
@@ -694,7 +694,7 @@ export default function WhitepaperPage() {
               value={formData.technicalDetails || ''}
               onChange={(e) => updateField('technicalDetails', e.target.value)}
               rows={8}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Provide technical details, algorithms, protocols, security measures, performance metrics..."
             />
           </div>
@@ -723,7 +723,7 @@ export default function WhitepaperPage() {
               value={formData.businessModel || ''}
               onChange={(e) => updateField('businessModel', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Explain your business model. How do you make money? What are your revenue streams?"
             />
           </div>
@@ -733,7 +733,7 @@ export default function WhitepaperPage() {
               value={formData.pricingStrategy || ''}
               onChange={(e) => updateField('pricingStrategy', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Describe your pricing strategy, pricing tiers, and value proposition at each tier..."
             />
           </div>
@@ -743,7 +743,7 @@ export default function WhitepaperPage() {
               value={formData.goToMarket || ''}
               onChange={(e) => updateField('goToMarket', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Explain your go-to-market strategy, customer acquisition channels, sales process..."
             />
           </div>
@@ -772,7 +772,7 @@ export default function WhitepaperPage() {
               value={formData.targetMarket || ''}
               onChange={(e) => updateField('targetMarket', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Define your target market, ideal customer profile, and market segments..."
             />
           </div>
@@ -782,7 +782,7 @@ export default function WhitepaperPage() {
               value={formData.marketSize || ''}
               onChange={(e) => updateField('marketSize', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Include TAM (Total Addressable Market), SAM (Serviceable Addressable Market), SOM (Serviceable Obtainable Market) with numbers..."
             />
           </div>
@@ -792,7 +792,7 @@ export default function WhitepaperPage() {
               value={formData.marketTrends || ''}
               onChange={(e) => updateField('marketTrends', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Describe relevant market trends, industry dynamics, and why now is the right time..."
             />
           </div>
@@ -821,7 +821,7 @@ export default function WhitepaperPage() {
               value={formData.competitiveAnalysis || ''}
               onChange={(e) => updateField('competitiveAnalysis', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Analyze your competitors, their strengths and weaknesses, market positioning..."
             />
           </div>
@@ -831,7 +831,7 @@ export default function WhitepaperPage() {
               value={formData.competitiveAdvantage || ''}
               onChange={(e) => updateField('competitiveAdvantage', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Explain your competitive advantages, moats, unique differentiators, and why you'll win..."
             />
           </div>
@@ -860,7 +860,7 @@ export default function WhitepaperPage() {
               value={formData.teamDescription || ''}
               onChange={(e) => updateField('teamDescription', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Describe your team, culture, and why your team is uniquely qualified to execute..."
             />
           </div>
@@ -933,7 +933,7 @@ export default function WhitepaperPage() {
                   type="text"
                   id="new-roadmap-quarter"
                   placeholder="e.g., Q1 2024, Q2 2024, or H1 2024"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
                 />
               </div>
               <div>
@@ -942,7 +942,7 @@ export default function WhitepaperPage() {
                   type="text"
                   id="new-roadmap-description"
                   placeholder="Brief description of this period"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
                 />
               </div>
               <div>
@@ -951,7 +951,7 @@ export default function WhitepaperPage() {
                   id="new-roadmap-milestones"
                   rows={4}
                   placeholder="Launch MVP&#10;First 100 users&#10;Reach $10K MRR"
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
                 />
                 <p className="text-xs text-white/40 mt-1">Enter each milestone on a new line</p>
               </div>
@@ -1022,7 +1022,7 @@ export default function WhitepaperPage() {
               value={formData.financialProjections || ''}
               onChange={(e) => updateField('financialProjections', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Provide financial projections, revenue forecasts, growth assumptions, unit economics..."
             />
           </div>
@@ -1032,7 +1032,7 @@ export default function WhitepaperPage() {
               value={formData.useOfFunds || ''}
               onChange={(e) => updateField('useOfFunds', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="If raising funds, explain how you'll use the capital (e.g., 40% product development, 30% marketing, 20% team, 10% operations)..."
             />
           </div>
@@ -1061,7 +1061,7 @@ export default function WhitepaperPage() {
               value={formData.tokenomics || ''}
               onChange={(e) => updateField('tokenomics', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="If applicable, describe tokenomics, token distribution, utility, staking mechanisms, governance..."
             />
           </div>
@@ -1071,7 +1071,7 @@ export default function WhitepaperPage() {
               value={formData.economics || ''}
               onChange={(e) => updateField('economics', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Describe your economic model, value creation, value capture, network effects..."
             />
           </div>
@@ -1100,7 +1100,7 @@ export default function WhitepaperPage() {
               value={formData.legalConsiderations || ''}
               onChange={(e) => updateField('legalConsiderations', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Describe legal structure, intellectual property, licenses, contracts..."
             />
           </div>
@@ -1110,7 +1110,7 @@ export default function WhitepaperPage() {
               value={formData.regulatoryCompliance || ''}
               onChange={(e) => updateField('regulatoryCompliance', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Describe regulatory requirements, compliance measures, certifications..."
             />
           </div>
@@ -1120,7 +1120,7 @@ export default function WhitepaperPage() {
               value={formData.riskFactors || ''}
               onChange={(e) => updateField('riskFactors', e.target.value)}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Identify and describe key risk factors (market risks, technical risks, regulatory risks, competition risks)..."
             />
           </div>
@@ -1130,7 +1130,7 @@ export default function WhitepaperPage() {
               value={formData.disclaimers || ''}
               onChange={(e) => updateField('disclaimers', e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Include necessary disclaimers, forward-looking statements notice, investment disclaimers..."
             />
           </div>
@@ -1159,7 +1159,7 @@ export default function WhitepaperPage() {
               value={formData.conclusion || ''}
               onChange={(e) => updateField('conclusion', e.target.value)}
               rows={8}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Summarize the key points of your whitepaper, reinforce your value proposition, and provide a clear call to action for readers..."
             />
           </div>

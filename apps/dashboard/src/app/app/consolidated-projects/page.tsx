@@ -550,7 +550,7 @@ function ColumnModal({
               onChange={(e) => setName(e.target.value)}
               required
               autoFocus
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="e.g., To Do, In Progress"
             />
           </div>
@@ -763,7 +763,7 @@ function ViewCardModal({
           {card.description && (
             <div>
               <label className="block text-sm font-medium mb-2 text-white/60">Description</label>
-              <div className="bg-white/5 border border-white/10 rounded-md p-4 text-white whitespace-pre-wrap font-mono text-sm">
+              <div className="bg-white/5 border border-white/10 rounded-md p-4 text-white whitespace-pre-wrap font-mono text-sm placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500">
                 {card.description}
               </div>
             </div>
@@ -835,7 +835,7 @@ function CardModal({
               onChange={(e) => setTitle(e.target.value)}
               required
               autoFocus
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 text-lg"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 text-lg placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Enter card title"
             />
           </div>
@@ -845,7 +845,7 @@ function CardModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={12}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 resize-none font-mono text-sm"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 resize-none font-mono text-sm placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Enter card description"
             />
           </div>

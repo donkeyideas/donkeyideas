@@ -581,7 +581,7 @@ function EditDocumentModal({
               type="text"
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Enter file name"
             />
           </div>

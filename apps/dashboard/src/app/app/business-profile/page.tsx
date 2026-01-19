@@ -546,7 +546,7 @@ export default function BusinessProfilePage() {
               type="text"
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Company name..."
             />
           </div>
@@ -556,7 +556,7 @@ export default function BusinessProfilePage() {
               value={formData.mission}
               onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
               rows={3}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Company mission..."
             />
           </div>
@@ -566,7 +566,7 @@ export default function BusinessProfilePage() {
               value={formData.about}
               onChange={(e) => setFormData({ ...formData, about: e.target.value })}
               rows={6}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Company description..."
             />
           </div>
@@ -575,7 +575,7 @@ export default function BusinessProfilePage() {
             <select
               value={formData.projectStatus}
               onChange={(e) => setFormData({ ...formData, projectStatus: e.target.value })}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
             >
               <option value="">Select status...</option>
               <option value="Production">Production</option>
@@ -603,7 +603,7 @@ export default function BusinessProfilePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, totalCustomers: parseInt(e.target.value) || 0 })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               />
             </div>
             <div>
@@ -615,7 +615,7 @@ export default function BusinessProfilePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, monthlyRevenue: parseFloat(e.target.value) || 0 })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               />
             </div>
             <div>
@@ -627,7 +627,7 @@ export default function BusinessProfilePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, momGrowth: parseFloat(e.target.value) || 0 })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               />
             </div>
             <div>
@@ -639,7 +639,7 @@ export default function BusinessProfilePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, retentionRate: parseFloat(e.target.value) || 0 })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               />
             </div>
             <div>
@@ -650,7 +650,7 @@ export default function BusinessProfilePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, teamSize: parseInt(e.target.value) || 0 })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               />
             </div>
             <div>
@@ -662,7 +662,7 @@ export default function BusinessProfilePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, totalFunding: parseFloat(e.target.value) || 0 })
                 }
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               />
             </div>
           </div>
@@ -674,7 +674,7 @@ export default function BusinessProfilePage() {
                 setFormData({ ...formData, keyAchievements: e.target.value })
               }
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="• Achievement 1&#10;• Achievement 2"
             />
           </div>
@@ -693,7 +693,7 @@ export default function BusinessProfilePage() {
               value={formData.targetMarket}
               onChange={(e) => setFormData({ ...formData, targetMarket: e.target.value })}
               rows={3}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Target market description..."
             />
           </div>
@@ -705,7 +705,7 @@ export default function BusinessProfilePage() {
                 setFormData({ ...formData, competitiveAdvantage: e.target.value })
               }
               rows={4}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="• Advantage 1&#10;• Advantage 2"
             />
           </div>
@@ -715,7 +715,7 @@ export default function BusinessProfilePage() {
               type="text"
               value={formData.keyCompetitors}
               onChange={(e) => setFormData({ ...formData, keyCompetitors: e.target.value })}
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Competitor 1, Competitor 2, Competitor 3"
             />
           </div>
