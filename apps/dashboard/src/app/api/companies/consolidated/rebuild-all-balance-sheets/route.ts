@@ -43,7 +43,21 @@ export async function POST(request: NextRequest) {
     // Process each company
     for (const company of companies) {
       try {
-        // Delete all existing balance sheets and cash flows for this company
+        // STEP 1: Fix transaction flags for revenue/expense transactions
+        // This ensures all revenue/expense transactions have correct flags before rebuilding
+        await prisma.transaction.updateMany({
+          where: {
+            companyId: company.id,
+            type: { in: ['revenue', 'expense'] },
+          },
+          data: {
+            affectsPL: true,
+            affectsCashFlow: true,
+            affectsBalance: true,
+          },
+        });
+        
+        // STEP 2: Delete all existing balance sheets and cash flows for this company
         await prisma.balanceSheet.deleteMany({
           where: { companyId: company.id },
         });
@@ -52,7 +66,7 @@ export async function POST(request: NextRequest) {
           where: { companyId: company.id },
         });
         
-        // Get all transactions sorted by date
+        // STEP 3: Get all transactions sorted by date
         const transactions = await prisma.transaction.findMany({
           where: { companyId: company.id },
           orderBy: { date: 'asc' },
