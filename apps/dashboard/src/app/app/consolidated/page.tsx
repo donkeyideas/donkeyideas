@@ -247,13 +247,17 @@ export default function ConsolidatedViewPage() {
   };
 
   if (loading) {
-    return <div className="text-white/60">Loading consolidated financials...</div>;
+    return <div className="text-white/60 [.light_&]:text-slate-600">Loading consolidated financials...</div>;
   }
 
   if (!financials) {
     return (
       <EmptyState
-        icon="📊"
+        icon={
+          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        }
         title="No financial data available"
         description="Add financial data to your companies to see consolidated reports"
       />
@@ -264,18 +268,18 @@ export default function ConsolidatedViewPage() {
     <div>
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Consolidated Financials</h1>
-          <p className="text-white/60">
+          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Consolidated Financials</h1>
+          <p className="text-white/60 [.light_&]:text-slate-600">
             Donkey Ideas — Combined financial overview of all companies
           </p>
         </div>
         <div className="flex gap-3 items-center">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-white/60">Filter by Month:</label>
+            <label className="text-sm text-white/60 [.light_&]:text-slate-600">Filter by Month:</label>
             <select
               value={monthFilter}
               onChange={(e) => setMonthFilter(e.target.value)}
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white"
+              className="px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&_option]:bg-white [.light_&_option]:text-slate-900"
             >
               <option value="">All Time</option>
               {getAvailableMonths().map((month) => {
@@ -322,7 +326,7 @@ export default function ConsolidatedViewPage() {
           <CardContent className="space-y-4">
             <div>
               <div className="text-sm text-white/60 mb-1">Total Revenue</div>
-              <div className="text-2xl font-bold">{formatCurrency(financials.totalRevenue)}</div>
+              <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">{formatCurrency(financials.totalRevenue)}</div>
             </div>
             <div>
               <div className="text-sm text-white/60 mb-1">COGS</div>
@@ -355,7 +359,7 @@ export default function ConsolidatedViewPage() {
           <CardContent className="space-y-4">
             <div>
               <div className="text-sm text-white/60 mb-1">Total Assets</div>
-              <div className="text-2xl font-bold">{formatCurrency(financials.totalAssets)}</div>
+              <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">{formatCurrency(financials.totalAssets)}</div>
             </div>
             <div>
               <div className="text-sm text-white/60 mb-1">Total Liabilities</div>

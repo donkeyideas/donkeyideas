@@ -648,16 +648,16 @@ export default function FinancialsPage() {
     <div>
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Financial Hub</h1>
-          <p className="text-white/60">{currentCompany.name} — Financial data</p>
+        <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Financial Hub</h1>
+        <p className="text-white/60 [.light_&]:text-slate-600">{currentCompany.name} — Financial data</p>
         </div>
         <div className="flex gap-3 items-center">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-white/60">Filter by Month:</label>
+            <label className="text-sm text-white/60 [.light_&]:text-slate-600">Filter by Month:</label>
             <select
               value={monthFilter}
               onChange={(e) => setMonthFilter(e.target.value)}
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white"
+              className="px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&_option]:bg-white [.light_&_option]:text-slate-900 focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white"
             >
               <option value="">All Time</option>
               {getAvailableMonths().map((month) => {

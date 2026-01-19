@@ -208,8 +208,8 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-3xl font-bold mb-8">Analytics & Reports</h1>
-        <div className="text-white/60">Loading analytics...</div>
+        <h1 className="text-3xl font-bold mb-8 text-white [.light_&]:text-slate-900">Analytics & Reports</h1>
+        <div className="text-white/60 [.light_&]:text-slate-600">Loading analytics...</div>
       </div>
     );
   }
@@ -219,17 +219,17 @@ export default function AnalyticsPage() {
       <div>
         <div className="mb-8 flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Analytics & Reports</h1>
-            <p className="text-white/60">
+            <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Analytics & Reports</h1>
+            <p className="text-white/60 [.light_&]:text-slate-600">
               Donkey Ideas — Consolidated analytics across all companies
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm text-white/60">Filter by Month:</label>
+            <label className="text-sm text-white/60 [.light_&]:text-slate-600">Filter by Month:</label>
             <select
               value={monthFilter}
               onChange={(e) => setMonthFilter(e.target.value)}
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white"
+              className="px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&_option]:bg-white [.light_&_option]:text-slate-900"
             >
               <option value="">All Time</option>
               {getAvailableMonths().map((month) => {
@@ -246,7 +246,11 @@ export default function AnalyticsPage() {
           </div>
         </div>
         <EmptyState
-          icon="📈"
+          icon={
+            <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          }
           title="No data available"
           description="Add financial data and KPIs to see analytics"
           action={
@@ -276,18 +280,18 @@ export default function AnalyticsPage() {
     <div>
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Analytics & Reports</h1>
-          <p className="text-white/60">
+          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Analytics & Reports</h1>
+          <p className="text-white/60 [.light_&]:text-slate-600">
             Donkey Ideas — Consolidated analytics across all companies
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-white/60">Filter by Month:</label>
+            <label className="text-sm text-white/60 [.light_&]:text-slate-600">Filter by Month:</label>
             <select
               value={monthFilter}
               onChange={(e) => setMonthFilter(e.target.value)}
-              className="px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white"
+              className="px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&_option]:bg-white [.light_&_option]:text-slate-900"
             >
               <option value="">All Time</option>
               {getAvailableMonths().map((month) => {
@@ -323,13 +327,13 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">Total Revenue</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-400">
+            <div className="text-3xl font-bold text-green-400 [.light_&]:text-green-600">
               {formatCurrency(analytics.financial.totalRevenue)}
             </div>
-            <div className="text-sm text-white/60 mt-2">
+            <div className="text-sm text-white/60 [.light_&]:text-slate-600 mt-2">
               Growth: {formatPercent(analytics.financial.revenueGrowth)}
             </div>
           </CardContent>
@@ -337,10 +341,10 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">COGS</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">COGS</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-orange-400">
+            <div className="text-3xl font-bold text-orange-400 [.light_&]:text-orange-600">
               {formatCurrency(analytics.financial.totalCOGS || 0)}
             </div>
           </CardContent>
@@ -348,13 +352,13 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">Total Expenses</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Total Expenses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-400">
+            <div className="text-3xl font-bold text-red-400 [.light_&]:text-red-600">
               {formatCurrency(analytics.financial.totalExpenses)}
             </div>
-            <div className="text-sm text-white/60 mt-2">
+            <div className="text-sm text-white/60 [.light_&]:text-slate-600 mt-2">
               Growth: {formatPercent(analytics.financial.expenseGrowth)}
             </div>
           </CardContent>
@@ -362,19 +366,19 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">Net Profit</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Net Profit</CardTitle>
           </CardHeader>
           <CardContent>
             <div
               className={`text-3xl font-bold ${
                 analytics.financial.netProfit >= 0
-                  ? 'text-green-400'
-                  : 'text-red-400'
+                  ? 'text-green-400 [.light_&]:text-green-600'
+                  : 'text-red-400 [.light_&]:text-red-600'
               }`}
             >
               {formatCurrency(analytics.financial.netProfit)}
             </div>
-            <div className="text-sm text-white/60 mt-2">
+            <div className="text-sm text-white/60 [.light_&]:text-slate-600 mt-2">
               Margin:{' '}
               {analytics.financial.totalRevenue > 0
                 ? formatPercent(
@@ -392,10 +396,10 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">MRR</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">MRR</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">
               {formatCurrency(analytics.kpis.mrr)}
             </div>
           </CardContent>
@@ -403,10 +407,10 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">CAC</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">CAC</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">
               {formatCurrency(analytics.kpis.cac)}
             </div>
           </CardContent>
@@ -414,10 +418,10 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">LTV</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">LTV</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">
               {formatCurrency(analytics.kpis.ltv)}
             </div>
             {analytics.kpis.cac > 0 && (
@@ -430,10 +434,10 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">Churn Rate</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Churn Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">
               {analytics.kpis.churnRate.toFixed(1)}%
             </div>
           </CardContent>
@@ -444,19 +448,19 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">NPS</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">NPS</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.kpis.nps}</div>
+            <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">{analytics.kpis.nps}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">Active Users</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Active Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">
               {analytics.kpis.activeUsers.toLocaleString()}
             </div>
           </CardContent>
@@ -464,7 +468,7 @@ export default function AnalyticsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-white/60">Growth Rate</CardTitle>
+            <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Growth Rate</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-400">
