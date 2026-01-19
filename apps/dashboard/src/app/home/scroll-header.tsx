@@ -66,7 +66,7 @@ export default function ScrollHeader() {
 
         {/* Right Card - Sign in + Talk to us */}
         <div
-          className={`flex items-center gap-6 px-6 h-14 transition-all duration-300 ${
+          className={`flex items-center gap-4 px-6 h-14 transition-all duration-300 ${
             isScrolled
               ? 'bg-white/10 backdrop-blur-xl shadow-xl rounded-full border border-white/10'
               : 'bg-transparent'
@@ -74,16 +74,20 @@ export default function ScrollHeader() {
         >
           <Link
             href="/login"
-            className="text-sm text-white/90 hover:text-white transition-colors"
+            className={`text-sm transition-all ${
+              isScrolled
+                ? 'text-white/90 hover:text-white'
+                : 'px-4 py-2 border border-white/20 rounded-full text-white/90 hover:text-white hover:border-white/40'
+            }`}
           >
             Sign in
           </Link>
-                 <Link
-                    href="/contact"
-                    className="px-5 py-2 bg-white text-slate-900 rounded-full hover:bg-white/90 transition-all text-sm font-medium"
-                  >
-                    Talk to us
-                  </Link>
+          <Link
+            href="/contact"
+            className="px-5 py-2 bg-white text-slate-900 rounded-full hover:bg-white/90 transition-all text-sm font-medium"
+          >
+            Talk to us
+          </Link>
         </div>
       </div>
     </nav>

@@ -90,18 +90,11 @@ export default async function HomePage() {
           {/* CTA Button - Giga.ai style */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
-              href={heroContent.cta?.primary?.link || '/contact'}
+              href="/contact"
               className="px-10 py-4 bg-white text-slate-900 rounded-full hover:bg-white/90 transition-all text-base font-medium shadow-xl hover:shadow-2xl hover:scale-105 transform"
             >
               Talk to us
             </Link>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-2">
-            <div className="w-1 h-3 bg-white/50 rounded-full" />
           </div>
         </div>
       </section>

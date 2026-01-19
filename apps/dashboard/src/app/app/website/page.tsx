@@ -21,7 +21,7 @@ export default function WebsitePage() {
   const { currentCompany } = useAppStore();
   const [content, setContent] = useState<WebsiteContent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'home' | 'ventures' | 'services' | 'process' | 'about'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'ventures' | 'services' | 'process' | 'about' | 'privacy'>('home');
   const [editingSection, setEditingSection] = useState<{
     key: string;
     name: string;
@@ -99,6 +99,9 @@ export default function WebsitePage() {
     ],
     about: [
       { key: 'about-page', name: 'About Page' },
+    ],
+    privacy: [
+      { key: 'privacy-page', name: 'Privacy Policy' },
     ],
   };
 
@@ -185,6 +188,16 @@ export default function WebsitePage() {
             }`}
           >
             About Page
+          </button>
+          <button
+            onClick={() => setActiveTab('privacy')}
+            className={`px-6 py-3 font-medium transition-colors ${
+              activeTab === 'privacy'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            Privacy Page
           </button>
         </div>
       </div>

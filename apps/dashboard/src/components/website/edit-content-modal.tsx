@@ -159,6 +159,49 @@ export function EditContentModal({
             email: 'hello@donkeyideas.com',
           },
         });
+      } else if (section.key === 'privacy-page') {
+        setFormData(section.content || {
+          title: 'Privacy Policy',
+          lastUpdated: 'January 2026',
+          sections: [
+            {
+              heading: 'Introduction',
+              content: 'At Donkey Ideas, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our services.',
+            },
+            {
+              heading: 'Information We Collect',
+              content: 'We collect information that you provide directly to us, including:\n\n• Name and contact information\n• Company information\n• Email address\n• Information about your business needs\n• Any other information you choose to provide',
+            },
+            {
+              heading: 'How We Use Your Information',
+              content: 'We use the information we collect to:\n\n• Provide, maintain, and improve our services\n• Communicate with you about our services\n• Respond to your inquiries and support requests\n• Send you updates and marketing communications (with your consent)\n• Protect against fraudulent or illegal activity',
+            },
+            {
+              heading: 'Information Sharing',
+              content: 'We do not sell, trade, or rent your personal information to third parties. We may share your information only in the following circumstances:\n\n• With your consent\n• To comply with legal obligations\n• To protect our rights and safety\n• With service providers who assist us in operating our business',
+            },
+            {
+              heading: 'Data Security',
+              content: 'We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the internet is 100% secure.',
+            },
+            {
+              heading: 'Your Rights',
+              content: 'You have the right to:\n\n• Access your personal information\n• Correct inaccurate information\n• Request deletion of your information\n• Opt-out of marketing communications\n• File a complaint with a supervisory authority',
+            },
+            {
+              heading: 'Cookies and Tracking',
+              content: 'We use cookies and similar tracking technologies to improve your experience on our website. You can control cookie settings through your browser preferences.',
+            },
+            {
+              heading: 'Changes to This Policy',
+              content: 'We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.',
+            },
+            {
+              heading: 'Contact Us',
+              content: 'If you have any questions about this Privacy Policy, please contact us at:\n\nEmail: info@donkeyideas.com\nLocation: New York & Miami',
+            },
+          ],
+        });
       } else if (section.key === 'services-page') {
         setFormData(section.content || {
           hero: {
@@ -1366,6 +1409,100 @@ export function EditContentModal({
                     className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {section.key === 'privacy-page' && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Page Title</label>
+                  <input
+                    type="text"
+                    value={formData.title || ''}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Last Updated</label>
+                  <input
+                    type="text"
+                    value={formData.lastUpdated || ''}
+                    onChange={(e) => setFormData({ ...formData, lastUpdated: e.target.value })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    placeholder="e.g., January 2026"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Privacy Policy Sections</h3>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        sections: [...(formData.sections || []), { heading: '', content: '' }],
+                      });
+                    }}
+                  >
+                    + Add Section
+                  </Button>
+                </div>
+                {formData.sections?.map((section: any, index: number) => (
+                  <Card key={index}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Section {index + 1}</CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const newSections = formData.sections.filter((_: any, i: number) => i !== index);
+                            setFormData({ ...formData, sections: newSections });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Heading</label>
+                          <input
+                            type="text"
+                            value={section.heading || ''}
+                            onChange={(e) => {
+                              const newSections = [...formData.sections];
+                              newSections[index] = { ...section, heading: e.target.value };
+                              setFormData({ ...formData, sections: newSections });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Content</label>
+                          <textarea
+                            value={section.content || ''}
+                            onChange={(e) => {
+                              const newSections = [...formData.sections];
+                              newSections[index] = { ...section, content: e.target.value };
+                              setFormData({ ...formData, sections: newSections });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                            rows={6}
+                            placeholder="Use bullet points with • or numbered lists"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
