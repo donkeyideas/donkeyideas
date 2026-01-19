@@ -131,7 +131,7 @@ export default function WebsitePage() {
             Manage content for your public marketing website
           </p>
         </div>
-        <Link href="/home" target="_blank">
+        <Link href="/" target="_blank">
           <Button variant="primary">Preview Website</Button>
         </Link>
       </div>

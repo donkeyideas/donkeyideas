@@ -22,7 +22,7 @@ function AppLayoutContent({
   };
 
   return (
-    <div className={`flex min-h-screen ${themeClasses[theme]}`}>
+    <div className={`${theme} flex min-h-screen ${themeClasses[theme]}`}>
       <Sidebar />
       <div className="flex-1 ml-70">
         <TopBar />

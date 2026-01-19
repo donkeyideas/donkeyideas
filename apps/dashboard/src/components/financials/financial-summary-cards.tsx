@@ -45,40 +45,40 @@ export function FinancialSummaryCards({ summary }: FinancialSummaryCardsProps) {
     <div className="grid grid-cols-5 gap-4 mb-6">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-white/60">Total Revenue</CardTitle>
+          <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Total Revenue</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(safeSummary.totalRevenue)}</div>
+          <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">{formatCurrency(safeSummary.totalRevenue)}</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-white/60">COGS</CardTitle>
+          <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">COGS</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-orange-400">{formatCurrency(safeSummary.cogs || 0)}</div>
+          <div className="text-2xl font-bold text-orange-400 [.light_&]:text-orange-600">{formatCurrency(safeSummary.cogs || 0)}</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-white/60">Total Expenses</CardTitle>
+          <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Total Expenses</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-red-400">{formatCurrency(safeSummary.totalExpenses)}</div>
+          <div className="text-2xl font-bold text-red-400 [.light_&]:text-red-600">{formatCurrency(safeSummary.totalExpenses)}</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-white/60">Net Profit</CardTitle>
+          <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Net Profit</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`text-2xl font-bold ${safeSummary.netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+          <div className={`text-2xl font-bold ${safeSummary.netProfit >= 0 ? 'text-green-500 [.light_&]:text-green-600' : 'text-red-500 [.light_&]:text-red-600'}`}>
             {formatCurrency(safeSummary.netProfit)}
           </div>
-          <div className="text-xs text-white/60 mt-1">
+          <div className="text-xs text-white/60 [.light_&]:text-slate-600 mt-1">
             Margin: {safeSummary.profitMargin.toFixed(1)}%
           </div>
         </CardContent>
@@ -86,10 +86,10 @@ export function FinancialSummaryCards({ summary }: FinancialSummaryCardsProps) {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-white/60">Cash Balance</CardTitle>
+          <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Cash Balance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-400">{formatCurrency(safeSummary.cashBalance)}</div>
+          <div className="text-2xl font-bold text-blue-400 [.light_&]:text-blue-600">{formatCurrency(safeSummary.cashBalance)}</div>
         </CardContent>
       </Card>
     </div>

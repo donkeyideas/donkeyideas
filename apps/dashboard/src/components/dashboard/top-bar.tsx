@@ -6,9 +6,9 @@ export function TopBar() {
   const { theme, setTheme } = useTheme();
 
   const themes = [
-    { id: 'dark' as const, label: 'Dark', icon: '🌙' },
-    { id: 'light' as const, label: 'Light', icon: '☀️' },
-    { id: 'blue' as const, label: 'Blue', icon: '🌊' },
+    { id: 'dark' as const, label: 'Dark' },
+    { id: 'light' as const, label: 'Light' },
+    { id: 'blue' as const, label: 'Blue' },
   ];
 
   // Theme-specific styles
@@ -48,7 +48,6 @@ export function TopBar() {
               }`}
               title={t.label}
             >
-              <span className="mr-1">{t.icon}</span>
               {t.label}
             </button>
           ))}
