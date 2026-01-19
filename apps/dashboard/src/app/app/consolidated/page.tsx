@@ -156,16 +156,18 @@ export default function ConsolidatedViewPage() {
           <Button 
             variant="secondary" 
             onClick={async () => {
+              if (!confirm('This will rebuild balance sheets and cash flow for ALL companies. Continue?')) return;
               try {
-                await api.post('/companies/consolidated/rebuild-cashflow');
+                const response = await api.post('/companies/consolidated/rebuild-all-balance-sheets');
                 loadConsolidatedFinancials();
-                alert('Cash flow statements rebuilt successfully for all companies');
+                alert(response.data.message || 'Balance sheets rebuilt successfully for all companies');
               } catch (error: any) {
-                alert(error.response?.data?.error?.message || 'Failed to rebuild cash flow');
+                alert(error.response?.data?.error?.message || 'Failed to rebuild balance sheets');
               }
             }}
+            className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30"
           >
-            Rebuild Cash Flow
+            Rebuild All Balance Sheets
           </Button>
           <Button variant="secondary" onClick={loadConsolidatedFinancials}>
             Refresh
