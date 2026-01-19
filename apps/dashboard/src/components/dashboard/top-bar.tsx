@@ -13,13 +13,11 @@ export function TopBar() {
   // Theme-specific styles
   const bgClass = theme === 'dark' 
     ? 'bg-[#0A0A0A]/95' 
-    : theme === 'light' 
-    ? 'bg-[#F5F5DC]/95' 
     : 'bg-slate-900/95';
   
-  const borderClass = theme === 'light' ? 'border-slate-300' : 'border-white/10';
-  const textClass = theme === 'light' ? 'text-slate-600' : 'text-white/60';
-  const activeTextClass = theme === 'light' ? 'text-slate-900' : 'text-white';
+  const borderClass = 'border-white/10';
+  const textClass = 'text-white/60';
+  const activeTextClass = 'text-white';
 
   return (
     <div className={`sticky top-0 z-50 ${bgClass} backdrop-blur-lg border-b ${borderClass} px-8 py-4 flex justify-between items-center`}>
@@ -38,11 +36,7 @@ export function TopBar() {
               onClick={() => setTheme(t.id)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 theme === t.id
-                  ? theme === 'light'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'bg-white/10 text-white'
-                  : theme === 'light'
-                  ? 'text-slate-600 hover:bg-white/50'
+                  ? 'bg-white/10 text-white'
                   : 'text-white/60 hover:bg-white/5'
               }`}
               title={t.label}
