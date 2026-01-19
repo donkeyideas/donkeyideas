@@ -686,6 +686,32 @@ export default function FinancialsPage() {
           </Button>
           <Button 
             variant="secondary" 
+            onClick={async () => {
+              if (!currentCompany) return;
+              try {
+                const response = await api.post(`/companies/${currentCompany.id}/transactions/fix-flags`);
+                setNotification({
+                  isOpen: true,
+                  title: 'Success',
+                  message: response.data.message || 'Transaction flags fixed successfully',
+                  type: 'success',
+                });
+                loadFinancials();
+              } catch (error: any) {
+                setNotification({
+                  isOpen: true,
+                  title: 'Error',
+                  message: error.response?.data?.error?.message || 'Failed to fix transaction flags',
+                  type: 'error',
+                });
+              }
+            }}
+            className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30"
+          >
+            Fix Transaction Flags
+          </Button>
+          <Button 
+            variant="secondary" 
             onClick={handleDeleteAllTransactions}
             className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border-red-500/30"
           >
