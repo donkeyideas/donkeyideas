@@ -6,7 +6,8 @@ import { useAppStore } from '@/lib/store';
 interface ConsolidatedData {
   totalRevenue: number;
   totalCOGS: number;
-  totalExpenses: number;
+  totalOperatingExpenses: number;
+  totalExpenses: number; // Keep for backward compatibility (COGS + OpEx)
   netProfit: number;
   totalAssets: number;
   totalEquity: number;
@@ -43,6 +44,7 @@ export function useConsolidatedData(monthFilter?: string) {
         return {
           totalRevenue: data.totalRevenue || 0,
           totalCOGS: data.totalCOGS || 0,
+          totalOperatingExpenses: data.totalOperatingExpenses || 0,
           totalExpenses: data.totalExpenses || 0,
           netProfit: data.netProfit || 0,
           totalAssets: data.totalAssets || 0,
@@ -58,6 +60,7 @@ export function useConsolidatedData(monthFilter?: string) {
         return {
           totalRevenue: 0,
           totalCOGS: 0,
+          totalOperatingExpenses: 0,
           totalExpenses: 0,
           netProfit: 0,
           totalAssets: 0,

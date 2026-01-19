@@ -168,6 +168,7 @@ export async function GET(request: NextRequest) {
         projectStatus: company.businessProfile?.projectStatus || null,
         revenue,
         cogs,
+        operatingExpenses,
         expenses,
         profit,
         cashBalance,
@@ -175,6 +176,8 @@ export async function GET(request: NextRequest) {
       };
     }));
     
+    // Calculate totals
+    const totalOperatingExpenses = companyBreakdown.reduce((sum, c) => sum + c.operatingExpenses, 0);
     const netProfit = totalRevenue - totalExpenses;
     const totalEquity = totalAssets - totalLiabilities;
     const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
@@ -182,7 +185,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       totalRevenue,
       totalCOGS,
-      totalExpenses,
+      totalOperatingExpenses, // Add separate operating expenses
+      totalExpenses, // Keep for backward compatibility (COGS + OpEx)
       netProfit,
       profitMargin,
       totalAssets,

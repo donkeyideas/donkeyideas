@@ -225,9 +225,9 @@ export default function DashboardPage() {
               <div className="text-xl font-semibold text-orange-400 [.light_&]:text-orange-600 mb-4">
                 {formatCurrency(consolidatedData?.totalCOGS || 0)}
               </div>
-              <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Total Expenses</div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Operating Expenses</div>
               <div className="text-xl font-semibold text-red-400 [.light_&]:text-red-600 mb-4">
-                {formatCurrency(consolidatedData?.totalExpenses || 0)}
+                {formatCurrency(consolidatedData?.totalOperatingExpenses || 0)}
               </div>
               <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Net Profit</div>
               <div className={`text-xl font-semibold ${(consolidatedData?.netProfit || 0) >= 0 ? 'text-green-500 [.light_&]:text-green-600' : 'text-red-500 [.light_&]:text-red-600'}`}>
