@@ -1,0 +1,28 @@
+{
+  "name": "@donkey-ideas/financial-engine",
+  "version": "1.0.0",
+  "description": "Clean financial calculation engine - single source of truth",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "keywords": [
+    "financial",
+    "accounting",
+    "calculation",
+    "balance-sheet"
+  ],
+  "author": "Donkey Ideas",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "type": "commonjs"
+}
