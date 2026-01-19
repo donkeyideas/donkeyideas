@@ -202,13 +202,14 @@ export async function GET(request: NextRequest) {
       }
     });
     
-    // Eliminate matched intercompany balances from consolidated totals
-    // The net difference (if any) remains, indicating an imbalance that needs investigation
+    // Eliminate ONLY matched intercompany balances from consolidated totals
+    // Only eliminate the portion that matches between receivables and payables
+    // Any unmatched amount remains on the balance sheet as an indicator of missing transactions
     const intercompanyElimination = Math.min(intercompanyReceivables, intercompanyPayables);
     
-    // Adjust consolidated totals by removing intercompany balances
-    totalAssets -= intercompanyReceivables; // Remove all intercompany receivables
-    totalLiabilities -= intercompanyPayables; // Remove all intercompany payables
+    // Adjust consolidated totals by removing ONLY the matched intercompany balances
+    totalAssets -= intercompanyElimination; // Only eliminate matched amount
+    totalLiabilities -= intercompanyElimination; // Only eliminate matched amount
     
     // Calculate totals
     const totalOperatingExpenses = companyBreakdown.reduce((sum, c) => sum + c.operatingExpenses, 0);
