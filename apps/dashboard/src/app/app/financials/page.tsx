@@ -402,67 +402,171 @@ export default function FinancialsPage() {
         profitMargin: statements.pl.profitMargin,
       });
 
-      // Create statement records from clean engine data for display
-      // Use field names that match what the UI components expect
-      const currentPeriod = new Date().toISOString();
+      // Group transactions by month to create monthly statements
+      // This is what the charts and tables need - monthly breakdowns, not just one aggregate
+      const monthlyData = new Map<string, any>();
       
-      // P&L Statement - Charts expect specific revenue/expense breakdown fields
-      const plStatement = {
-        id: 'current',
-        period: currentPeriod,
-        // For charts - split revenue into categories (use total for now)
-        productRevenue: statements.pl.revenue,
-        serviceRevenue: 0,
-        otherRevenue: 0,
-        // For charts - split COGS into categories
-        directCosts: statements.pl.cogs,
-        infrastructureCosts: 0,
-        // For charts - split OpEx into categories
-        salesMarketing: 0,
-        rdExpenses: 0,
-        adminExpenses: statements.pl.operatingExpenses,
-        // For table display
-        revenue: statements.pl.revenue,
-        cogs: statements.pl.cogs,
-        grossProfit: statements.pl.revenue - statements.pl.cogs,
-        operatingExpenses: statements.pl.operatingExpenses,
-        netIncome: statements.pl.netProfit,
-        createdAt: currentPeriod,
-      };
+      loadedTransactions.forEach(tx => {
+        const txDate = new Date(tx.date);
+        const monthKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (!monthlyData.has(monthKey)) {
+          monthlyData.set(monthKey, {
+            period: new Date(txDate.getFullYear(), txDate.getMonth(), 1).toISOString(),
+            revenue: 0,
+            cogs: 0,
+            operatingExpenses: 0,
+            cash: 0,
+            accountsReceivable: 0,
+            inventory: 0,
+            fixedAssets: 0,
+            accountsPayable: 0,
+            shortTermDebt: 0,
+            longTermDebt: 0,
+            operatingCashFlow: 0,
+            investingCashFlow: 0,
+            financingCashFlow: 0,
+          });
+        }
+        
+        const monthData = monthlyData.get(monthKey);
+        const amount = Math.abs(Number(tx.amount));
+        
+        // P&L data
+        if (tx.type === 'revenue' && tx.affectsPL) {
+          monthData.revenue += amount;
+        } else if (tx.type === 'expense' && tx.affectsPL) {
+          const category = (tx.category || '').toLowerCase();
+          if (category.includes('direct') || category.includes('infrastructure') || category.includes('cogs')) {
+            monthData.cogs += amount;
+          } else {
+            monthData.operatingExpenses += amount;
+          }
+        }
+        
+        // Cash Flow data
+        if (tx.affectsCashFlow) {
+          if (tx.type === 'revenue') {
+            monthData.operatingCashFlow += amount;
+          } else if (tx.type === 'expense') {
+            monthData.operatingCashFlow -= amount;
+          } else if (tx.type === 'asset') {
+            monthData.investingCashFlow -= amount;
+          } else if (tx.type === 'equity' || tx.type === 'liability') {
+            monthData.financingCashFlow += amount;
+          }
+        }
+        
+        // Balance Sheet data (cumulative)
+        if (tx.affectsBalance) {
+          if (tx.type === 'asset') {
+            const category = (tx.category || '').toLowerCase();
+            if (category.includes('receivable')) {
+              monthData.accountsReceivable += amount;
+            } else if (category.includes('inventory')) {
+              monthData.inventory += amount;
+            } else if (category.includes('equipment') || category.includes('fixed')) {
+              monthData.fixedAssets += amount;
+            }
+          } else if (tx.type === 'liability') {
+            const category = (tx.category || '').toLowerCase();
+            if (category.includes('payable')) {
+              monthData.accountsPayable += amount;
+            } else if (category.includes('short') && category.includes('debt')) {
+              monthData.shortTermDebt += amount;
+            } else if (category.includes('long') && category.includes('debt')) {
+              monthData.longTermDebt += amount;
+            }
+          }
+        }
+      });
       
-      // Balance Sheet - These field names match the table component
-      const balanceSheet = {
-        id: 'current',
-        period: currentPeriod,
-        cashEquivalents: statements.balanceSheet.cash,
-        accountsReceivable: statements.balanceSheet.accountsReceivable,
-        inventory: statements.balanceSheet.inventory,
-        fixedAssets: statements.balanceSheet.fixedAssets,
-        totalAssets: statements.balanceSheet.totalAssets,
-        accountsPayable: statements.balanceSheet.accountsPayable,
-        shortTermDebt: statements.balanceSheet.shortTermDebt,
-        longTermDebt: statements.balanceSheet.longTermDebt,
-        totalLiabilities: statements.balanceSheet.totalLiabilities,
-        totalEquity: statements.balanceSheet.totalEquity,
-        createdAt: currentPeriod,
-      };
+      // Convert to arrays sorted by date (oldest first for cumulative calculations)
+      const sortedMonths = Array.from(monthlyData.entries())
+        .sort(([a], [b]) => a.localeCompare(b));
       
-      // Cash Flow Statement - Use field names the table component expects
-      const cashFlowStatement = {
-        id: 'current',
-        period: currentPeriod,
-        operatingCashFlow: statements.cashFlow.operatingCashFlow,
-        investingCashFlow: statements.cashFlow.investingCashFlow,
-        financingCashFlow: statements.cashFlow.financingCashFlow,
-        netCashFlow: statements.cashFlow.netCashFlow,
-        beginningCash: statements.cashFlow.beginningCash,
-        endingCash: statements.cashFlow.endingCash,
-        createdAt: currentPeriod,
-      };
+      // Calculate cumulative values for balance sheet and cash
+      let cumulativeCash = 0;
+      let cumulativeAR = 0;
+      let cumulativeInventory = 0;
+      let cumulativeFixedAssets = 0;
+      let cumulativeAP = 0;
+      let cumulativeSTDebt = 0;
+      let cumulativeLTDebt = 0;
       
-      setPlStatements([plStatement]);
-      setBalanceSheets([balanceSheet]);
-      setCashFlows([cashFlowStatement]);
+      const plStatementsArray: any[] = [];
+      const balanceSheetsArray: any[] = [];
+      const cashFlowsArray: any[] = [];
+      
+      sortedMonths.forEach(([monthKey, data]) => {
+        // Update cumulative values
+        cumulativeCash += data.operatingCashFlow + data.investingCashFlow + data.financingCashFlow;
+        cumulativeAR += data.accountsReceivable;
+        cumulativeInventory += data.inventory;
+        cumulativeFixedAssets += data.fixedAssets;
+        cumulativeAP += data.accountsPayable;
+        cumulativeSTDebt += data.shortTermDebt;
+        cumulativeLTDebt += data.longTermDebt;
+        
+        // P&L Statement for this month
+        plStatementsArray.push({
+          id: monthKey,
+          period: data.period,
+          productRevenue: data.revenue,
+          serviceRevenue: 0,
+          otherRevenue: 0,
+          directCosts: data.cogs,
+          infrastructureCosts: 0,
+          salesMarketing: 0,
+          rdExpenses: 0,
+          adminExpenses: data.operatingExpenses,
+          revenue: data.revenue,
+          cogs: data.cogs,
+          grossProfit: data.revenue - data.cogs,
+          operatingExpenses: data.operatingExpenses,
+          netIncome: data.revenue - data.cogs - data.operatingExpenses,
+          createdAt: data.period,
+        });
+        
+        // Balance Sheet for this month (cumulative)
+        const totalAssets = cumulativeCash + cumulativeAR + cumulativeInventory + cumulativeFixedAssets;
+        const totalLiabilities = cumulativeAP + cumulativeSTDebt + cumulativeLTDebt;
+        const totalEquity = totalAssets - totalLiabilities;
+        
+        balanceSheetsArray.push({
+          id: monthKey,
+          period: data.period,
+          cashEquivalents: cumulativeCash,
+          accountsReceivable: cumulativeAR,
+          inventory: cumulativeInventory,
+          fixedAssets: cumulativeFixedAssets,
+          totalAssets,
+          accountsPayable: cumulativeAP,
+          shortTermDebt: cumulativeSTDebt,
+          longTermDebt: cumulativeLTDebt,
+          totalLiabilities,
+          totalEquity,
+          createdAt: data.period,
+        });
+        
+        // Cash Flow for this month
+        const netCashFlow = data.operatingCashFlow + data.investingCashFlow + data.financingCashFlow;
+        cashFlowsArray.push({
+          id: monthKey,
+          period: data.period,
+          operatingCashFlow: data.operatingCashFlow,
+          investingCashFlow: data.investingCashFlow,
+          financingCashFlow: data.financingCashFlow,
+          netCashFlow,
+          beginningCash: cumulativeCash - netCashFlow,
+          endingCash: cumulativeCash,
+          createdAt: data.period,
+        });
+      });
+      
+      setPlStatements(plStatementsArray);
+      setBalanceSheets(balanceSheetsArray);
+      setCashFlows(cashFlowsArray);
       
       // Log validation status
       if (!statements.isValid) {
