@@ -10,6 +10,7 @@ interface ConsolidatedData {
   totalExpenses: number; // Keep for backward compatibility (COGS + OpEx)
   netProfit: number;
   totalAssets: number;
+  totalLiabilities: number;
   totalEquity: number;
   totalCashBalance: number;
   totalValuation: number;
@@ -48,6 +49,7 @@ export function useConsolidatedData(monthFilter?: string) {
           totalExpenses: data.totalExpenses || 0,
           netProfit: data.netProfit || 0,
           totalAssets: data.totalAssets || 0,
+          totalLiabilities: data.totalLiabilities || 0,
           totalEquity: data.totalEquity || 0,
           totalCashBalance: data.totalCashBalance || 0,
           totalValuation: data.totalValuation || 0,
@@ -64,6 +66,7 @@ export function useConsolidatedData(monthFilter?: string) {
           totalExpenses: 0,
           netProfit: 0,
           totalAssets: 0,
+          totalLiabilities: 0,
           totalEquity: 0,
           totalCashBalance: 0,
           totalValuation: 0,

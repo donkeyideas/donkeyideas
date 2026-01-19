@@ -18,6 +18,7 @@ interface ConsolidatedData {
   totalExpenses: number;
   netProfit: number;
   totalAssets: number;
+  totalLiabilities: number;
   totalEquity: number;
   totalCashBalance: number;
   totalValuation: number;
@@ -239,6 +240,10 @@ export default function DashboardPage() {
               <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Total Assets</div>
               <div className="text-2xl font-bold mb-4 text-white [.light_&]:text-slate-900">
                 {formatCurrency(consolidatedData?.totalAssets || 0)}
+              </div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Total Liabilities</div>
+              <div className="text-xl font-semibold text-red-400 [.light_&]:text-red-600 mb-4">
+                {formatCurrency(consolidatedData?.totalLiabilities || 0)}
               </div>
               <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Cash Balance</div>
               <div className="text-xl font-semibold text-blue-400 [.light_&]:text-blue-600 mb-4">
