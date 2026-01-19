@@ -322,27 +322,27 @@ export default function ConsolidatedViewPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <div className="text-sm text-white/60 mb-1">Total Revenue</div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Revenue</div>
               <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">{formatCurrency(financials.totalRevenue)}</div>
             </div>
             <div>
-              <div className="text-sm text-white/60 mb-1">COGS</div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">COGS</div>
               <div className="text-2xl font-bold text-orange-400">
                 {formatCurrency(financials.totalCOGS || 0)}
               </div>
             </div>
             <div>
-              <div className="text-sm text-white/60 mb-1">Total Expenses</div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Expenses</div>
               <div className="text-2xl font-bold text-red-400">
                 {formatCurrency(financials.totalExpenses)}
               </div>
             </div>
             <div className="pt-4 border-t border-white/10">
-              <div className="text-sm text-white/60 mb-1">Net Profit</div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Net Profit</div>
               <div className={`text-2xl font-bold ${financials.netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {formatCurrency(financials.netProfit)}
               </div>
-              <div className="text-xs text-white/60 mt-1">
+              <div className="text-xs text-white/60 [.light_&]:text-slate-600 mt-1">
                 Margin: {financials.profitMargin?.toFixed(1) || '0.0'}%
               </div>
             </div>
@@ -355,23 +355,23 @@ export default function ConsolidatedViewPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <div className="text-sm text-white/60 mb-1">Total Assets</div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Assets</div>
               <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">{formatCurrency(financials.totalAssets)}</div>
             </div>
             <div>
-              <div className="text-sm text-white/60 mb-1">Total Liabilities</div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Liabilities</div>
               <div className="text-2xl font-bold text-red-400">
                 {formatCurrency(financials.totalLiabilities)}
               </div>
             </div>
             <div>
-              <div className="text-sm text-white/60 mb-1">Cash Balance</div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Cash Balance</div>
               <div className="text-2xl font-bold text-blue-400">
                 {formatCurrency(financials.totalCashBalance || 0)}
               </div>
             </div>
             <div className="pt-4 border-t border-white/10">
-              <div className="text-sm text-white/60 mb-1">Total Equity</div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Equity</div>
               <div className="text-2xl font-bold text-green-500">
                 {formatCurrency(financials.totalEquity)}
               </div>
@@ -389,11 +389,11 @@ export default function ConsolidatedViewPage() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <div className="text-sm text-white/60 mb-1">Active Companies</div>
-                <div className="text-3xl font-bold">{financials.activeCompanies}</div>
+                <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Active Companies</div>
+                <div className="text-3xl font-bold text-white [.light_&]:text-slate-900">{financials.activeCompanies}</div>
               </div>
               <div>
-                <div className="text-sm text-white/60 mb-1">Total Portfolio Valuation</div>
+                <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Portfolio Valuation</div>
                 <div className="text-3xl font-bold text-blue-400">
                   {formatCurrency(financials.totalValuation)}
                 </div>
@@ -409,8 +409,8 @@ export default function ConsolidatedViewPage() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <div className="text-sm text-white/60 mb-1">Profit Margin</div>
-                <div className="text-3xl font-bold">
+                <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Profit Margin</div>
+                <div className="text-3xl font-bold text-white [.light_&]:text-slate-900">
                   {financials.profitMargin?.toFixed(1) || (financials.totalRevenue > 0
                     ? ((financials.netProfit / financials.totalRevenue) * 100).toFixed(1)
                     : '0.0')}
@@ -418,8 +418,8 @@ export default function ConsolidatedViewPage() {
                 </div>
               </div>
               <div>
-                <div className="text-sm text-white/60 mb-1">Average Company Valuation</div>
-                <div className="text-3xl font-bold">
+                <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Average Company Valuation</div>
+                <div className="text-3xl font-bold text-white [.light_&]:text-slate-900">
                   {formatCurrency(
                     financials.activeCompanies > 0
                       ? financials.totalValuation / financials.activeCompanies
