@@ -48,162 +48,19 @@ export default function ConsolidatedViewPage() {
     try {
       setLoading(true);
       
-      // Calculate from actual transactions for each company - NO backend API call
-      // This ensures no hardcoded/mock data
-      const companyFinancials = await Promise.all(
-        companies.map(async (company) => {
-          try {
-            // Get transactions for this company (with month filter if provided)
-            const transactionsUrl = monthFilter 
-              ? `/companies/${company.id}/transactions?month=${monthFilter}`
-              : `/companies/${company.id}/transactions`;
-            const transactionsRes = await api.get(transactionsUrl).catch(() => ({ data: { transactions: [] } }));
-            let transactions = transactionsRes.data.transactions || [];
-            
-            // If month filter is provided, also filter transactions client-side as backup
-            if (monthFilter) {
-              const [year, month] = monthFilter.split('-').map(Number);
-              const startDate = new Date(year, month - 1, 1);
-              const endDate = new Date(year, month, 0, 23, 59, 59);
-              transactions = transactions.filter((tx: any) => {
-                const txDate = new Date(tx.date);
-                return txDate >= startDate && txDate <= endDate;
-              });
-            }
-            
-            // Calculate metrics from transactions
-            let revenue = 0;
-            let cogs = 0;
-            let operatingExpenses = 0;
-            let cashBalance = 0;
-            
-            transactions.forEach((tx: any) => {
-              const amount = Math.abs(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount);
-              const signedAmount = typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount;
-              
-              // P&L Calculation
-              if (tx.affectsPL !== false) {
-                if (tx.type === 'revenue') {
-                  revenue += amount;
-                } else if (tx.type === 'expense') {
-                  const category = (tx.category || '').toLowerCase().trim();
-                  if (category === 'direct_costs' || category === 'infrastructure' || 
-                      category === 'direct costs' || category === 'infrastructure costs') {
-                    cogs += amount;
-                  } else {
-                    operatingExpenses += amount;
-                  }
-                }
-              }
-              
-              // Cash Flow Calculation (single pass - no double counting!)
-              if (tx.affectsCashFlow !== false) {
-                if (tx.type === 'revenue') {
-                  cashBalance += amount;
-                } else if (tx.type === 'expense') {
-                  cashBalance -= amount;
-                } else if (tx.type === 'asset' || tx.type === 'liability') {
-                  // Asset/Liability transactions use signed amounts
-                  cashBalance += signedAmount;
-                } else if (tx.type === 'equity') {
-                  // Equity contributions increase cash
-                  cashBalance += amount;
-                }
-              }
-            });
-            
-            // Total expenses = COGS + Operating Expenses
-            const totalExpenses = cogs + operatingExpenses;
-            const profit = revenue - totalExpenses;
-            
-            // Get logo from multiple sources: store, then localStorage
-            let logoUrl = company.logo || null;
-            if (!logoUrl && typeof window !== 'undefined') {
-              const storedLogo = localStorage.getItem(`company-logo-${company.id}`);
-              if (storedLogo) {
-                logoUrl = storedLogo;
-              }
-            }
-            
-            return {
-              id: company.id,
-              name: company.name,
-              logo: logoUrl,
-              projectStatus: null, // TODO: Get from company profile if needed
-              revenue,
-              cogs,
-              expenses: totalExpenses,
-              profit,
-              cashBalance,
-              valuation: 0, // TODO: Calculate from valuation engine if needed
-            };
-          } catch (error) {
-            console.error(`Failed to load financials for ${company.name}:`, error);
-            // Return zeros if we can't load
-            // Get logo from multiple sources: store, then localStorage
-            let logoUrl = company.logo || null;
-            if (!logoUrl && typeof window !== 'undefined') {
-              const storedLogo = localStorage.getItem(`company-logo-${company.id}`);
-              if (storedLogo) {
-                logoUrl = storedLogo;
-              }
-            }
-            
-            return {
-              id: company.id,
-              name: company.name,
-              logo: logoUrl,
-              projectStatus: null,
-              revenue: 0,
-              cogs: 0,
-              expenses: 0,
-              profit: 0,
-              cashBalance: 0,
-              valuation: 0,
-            };
-          }
-        })
-      );
+      // Use the backend API which properly calculates balance sheet values
+      const url = monthFilter 
+        ? `/companies/consolidated/financials?month=${monthFilter}`
+        : `/companies/consolidated/financials`;
       
-      // Calculate consolidated totals
-      const totalRevenue = companyFinancials.reduce((sum, c) => sum + c.revenue, 0);
-      const totalCOGS = companyFinancials.reduce((sum, c) => sum + c.cogs, 0);
-      const totalExpenses = companyFinancials.reduce((sum, c) => sum + c.expenses, 0);
-      const netProfit = totalRevenue - totalExpenses;
-      const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-      const totalCashBalance = companyFinancials.reduce((sum, c) => sum + c.cashBalance, 0);
+      const response = await api.get(url);
+      const data = response.data;
       
-      // Calculate assets, liabilities, equity (for now set to 0 or calculate from balance sheet if needed)
-      const totalAssets = 0; // TODO: Calculate from balance sheet transactions
-      const totalLiabilities = 0; // TODO: Calculate from balance sheet transactions
-      const totalEquity = totalAssets - totalLiabilities;
-      const totalValuation = companyFinancials.reduce((sum, c) => sum + c.valuation, 0);
-      
-      const consolidated: ConsolidatedFinancials = {
-        totalRevenue,
-        totalCOGS,
-        totalExpenses,
-        netProfit,
-        profitMargin,
-        totalAssets,
-        totalLiabilities,
-        totalEquity,
-        totalCashBalance,
-        activeCompanies: companies.length,
-        totalValuation,
-        companies: companyFinancials,
-      };
-      
-      // Log summary only if there are transactions
-      const companiesWithTransactions = companyFinancials.filter(c => c.revenue > 0 || c.expenses > 0 || c.cashBalance !== 0);
-      if (companiesWithTransactions.length > 0) {
-        console.log(`[Consolidated] ${companies.length} companies, ${companiesWithTransactions.length} with transactions`);
-      }
-      
-      setFinancials(consolidated);
+      setFinancials(data);
+      setLoading(false);
     } catch (error) {
       console.error('Failed to load consolidated financials:', error);
-    } finally {
+      setFinancials(null);
       setLoading(false);
     }
   };
