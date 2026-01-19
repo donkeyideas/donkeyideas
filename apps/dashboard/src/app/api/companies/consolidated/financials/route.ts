@@ -181,10 +181,7 @@ export async function GET(request: NextRequest) {
             ],
           },
         });
-        return intercompanyTxs.map(tx => ({
-          companyId: company.id,
-          ...tx,
-        }));
+        return intercompanyTxs;
       })
     );
     
