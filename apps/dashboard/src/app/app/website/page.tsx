@@ -138,13 +138,13 @@ export default function WebsitePage() {
 
       {/* Tabs */}
       <div className="mb-6">
-        <div className="flex gap-2 border-b border-white/10">
+        <div className="flex gap-2 border-b border-white/10 [.light_&]:border-slate-300">
           <button
             onClick={() => setActiveTab('home')}
             className={`px-6 py-3 font-medium transition-colors ${
               activeTab === 'home'
-                ? 'border-b-2 border-blue-500 text-blue-400'
-                : 'text-white/60 hover:text-white'
+                ? 'border-b-2 border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             Home Page
@@ -153,8 +153,8 @@ export default function WebsitePage() {
             onClick={() => setActiveTab('ventures')}
             className={`px-6 py-3 font-medium transition-colors ${
               activeTab === 'ventures'
-                ? 'border-b-2 border-blue-500 text-blue-400'
-                : 'text-white/60 hover:text-white'
+                ? 'border-b-2 border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             Ventures Page
@@ -163,8 +163,8 @@ export default function WebsitePage() {
             onClick={() => setActiveTab('services')}
             className={`px-6 py-3 font-medium transition-colors ${
               activeTab === 'services'
-                ? 'border-b-2 border-blue-500 text-blue-400'
-                : 'text-white/60 hover:text-white'
+                ? 'border-b-2 border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             Services Page
@@ -173,8 +173,8 @@ export default function WebsitePage() {
             onClick={() => setActiveTab('process')}
             className={`px-6 py-3 font-medium transition-colors ${
               activeTab === 'process'
-                ? 'border-b-2 border-blue-500 text-blue-400'
-                : 'text-white/60 hover:text-white'
+                ? 'border-b-2 border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             Process Page
@@ -183,8 +183,8 @@ export default function WebsitePage() {
             onClick={() => setActiveTab('about')}
             className={`px-6 py-3 font-medium transition-colors ${
               activeTab === 'about'
-                ? 'border-b-2 border-blue-500 text-blue-400'
-                : 'text-white/60 hover:text-white'
+                ? 'border-b-2 border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             About Page
@@ -193,8 +193,8 @@ export default function WebsitePage() {
             onClick={() => setActiveTab('privacy')}
             className={`px-6 py-3 font-medium transition-colors ${
               activeTab === 'privacy'
-                ? 'border-b-2 border-blue-500 text-blue-400'
-                : 'text-white/60 hover:text-white'
+                ? 'border-b-2 border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             Privacy Page
@@ -210,7 +210,7 @@ export default function WebsitePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-white/60 mb-4">
+            <p className="text-white/60 [.light_&]:text-slate-600 mb-4">
               Edit the content for each section of your {activeTab === 'home' ? 'home' : activeTab} page. Changes
               are saved automatically.
             </p>
@@ -225,11 +225,11 @@ export default function WebsitePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-semibold mb-1">{section.name}</div>
-                  <div className="text-sm text-white/60 mb-2">
+                  <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">
                     {section.key}
                   </div>
                   {section.updatedAt && (
-                    <div className="text-xs text-white/40">
+                    <div className="text-xs text-white/40 [.light_&]:text-slate-500">
                       Updated: {new Date(section.updatedAt).toLocaleDateString()}
                     </div>
                   )}

@@ -690,7 +690,7 @@ export default function FinancialsPage() {
               variant="secondary" 
               onClick={() => setShowUploadModal(true)}
             >
-              📊 Upload Excel
+              Upload Excel
             </Button>
           </div>
         </div>
@@ -700,14 +700,14 @@ export default function FinancialsPage() {
       {summary && <FinancialSummaryCards summary={summary} />}
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-white/10">
+      <div className="mb-6 border-b border-white/10 [.light_&]:border-slate-300">
         <div className="flex gap-6">
           <button
             onClick={() => setActiveTab('pl')}
             className={`pb-4 px-1 border-b-2 transition-colors ${
               activeTab === 'pl'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-white/60 hover:text-white'
+                ? 'border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'border-transparent text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             P&L Statements
@@ -716,8 +716,8 @@ export default function FinancialsPage() {
             onClick={() => setActiveTab('balance')}
             className={`pb-4 px-1 border-b-2 transition-colors ${
               activeTab === 'balance'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-white/60 hover:text-white'
+                ? 'border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'border-transparent text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             Balance Sheet
@@ -726,8 +726,8 @@ export default function FinancialsPage() {
             onClick={() => setActiveTab('cashflow')}
             className={`pb-4 px-1 border-b-2 transition-colors ${
               activeTab === 'cashflow'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-white/60 hover:text-white'
+                ? 'border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'border-transparent text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             Cash Flow
@@ -736,8 +736,8 @@ export default function FinancialsPage() {
             onClick={() => setActiveTab('transactions')}
             className={`pb-4 px-1 border-b-2 transition-colors ${
               activeTab === 'transactions'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-white/60 hover:text-white'
+                ? 'border-blue-500 text-blue-400 [.light_&]:text-blue-600'
+                : 'border-transparent text-white/60 hover:text-white [.light_&]:text-slate-600 [.light_&]:hover:text-slate-900'
             }`}
           >
             Transactions
@@ -755,7 +755,7 @@ export default function FinancialsPage() {
             </CardHeader>
             <CardContent>
               {plStatements.length === 0 ? (
-                <div className="p-8 text-center text-white/60">
+                <div className="p-8 text-center text-white/60 [.light_&]:text-slate-600">
                   No P&L data yet. Add transactions to see P&L statements.
                 </div>
               ) : (
@@ -763,10 +763,10 @@ export default function FinancialsPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left p-4 text-xs text-white/60 uppercase">Period</th>
-                        <th className="text-right p-4 text-xs text-white/60 uppercase">Revenue</th>
-                        <th className="text-right p-4 text-xs text-white/60 uppercase">COGS</th>
-                        <th className="text-right p-4 text-xs text-white/60 uppercase">OPEX</th>
+                        <th className="text-left p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Period</th>
+                        <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">Revenue</th>
+                        <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">COGS</th>
+                        <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase">OPEX</th>
                         <th className="text-right p-4 text-xs text-white/60 uppercase">Net Profit</th>
                       </tr>
                     </thead>

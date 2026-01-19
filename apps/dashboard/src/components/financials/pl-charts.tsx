@@ -2,12 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@donkey-ideas/ui';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useTheme } from '@/contexts/theme-context';
 
 interface PLChartsProps {
   plStatements: any[];
 }
 
 export function PLCharts({ plStatements }: PLChartsProps) {
+  const { theme } = useTheme();
   const chartData = plStatements
     .map((stmt) => {
       const revenue = Number(stmt.productRevenue) + Number(stmt.serviceRevenue) + Number(stmt.otherRevenue);
@@ -25,6 +27,12 @@ export function PLCharts({ plStatements }: PLChartsProps) {
     })
     .reverse();
 
+  // Theme-aware colors
+  const axisColor = theme === 'light' ? '#64748b' : '#ffffff60';
+  const gridColor = theme === 'light' ? '#e2e8f0' : '#ffffff10';
+  const tooltipBg = theme === 'light' ? '#ffffff' : '#0F0F0F';
+  const tooltipBorder = theme === 'light' ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)';
+
   return (
     <div className="grid grid-cols-2 gap-6">
       <Card>
@@ -34,10 +42,10 @@ export function PLCharts({ plStatements }: PLChartsProps) {
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-              <XAxis dataKey="period" stroke="#ffffff60" />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <XAxis dataKey="period" stroke={axisColor} />
               <YAxis 
-                stroke="#ffffff60"
+                stroke={axisColor}
                 tickFormatter={(value) => {
                   const absValue = Math.abs(value);
                   if (absValue >= 1000) {
@@ -74,10 +82,10 @@ export function PLCharts({ plStatements }: PLChartsProps) {
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-              <XAxis dataKey="period" stroke="#ffffff60" />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <XAxis dataKey="period" stroke={axisColor} />
               <YAxis 
-                stroke="#ffffff60"
+                stroke={axisColor}
                 tickFormatter={(value) => {
                   const absValue = Math.abs(value);
                   if (absValue >= 1000) {
@@ -89,9 +97,10 @@ export function PLCharts({ plStatements }: PLChartsProps) {
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#0F0F0F',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  backgroundColor: tooltipBg,
+                  border: `1px solid ${tooltipBorder}`,
                   borderRadius: '8px',
+                  color: theme === 'light' ? '#0f172a' : '#ffffff',
                 }}
                 formatter={(value: number) => `$${value.toLocaleString()}`}
               />

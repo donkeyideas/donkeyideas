@@ -128,7 +128,7 @@ export default function SettingsPage() {
               value={apiConfig.deepSeekApiKey}
               onChange={(e) => handleChange('deepSeekApiKey', e.target.value)}
               placeholder="sk-..."
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
             />
             <p className="text-xs text-white/50 mt-1">
               Required for AI Assistant functionality. Get your key from{' '}
@@ -146,7 +146,7 @@ export default function SettingsPage() {
               value={apiConfig.openaiApiKey}
               onChange={(e) => handleChange('openaiApiKey', e.target.value)}
               placeholder="sk-..."
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
             />
             <p className="text-xs text-white/50 mt-1">
               Optional: Alternative AI provider. Get your key from{' '}
@@ -164,7 +164,7 @@ export default function SettingsPage() {
               value={apiConfig.anthropicApiKey}
               onChange={(e) => handleChange('anthropicApiKey', e.target.value)}
               placeholder="sk-ant-..."
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
             />
             <p className="text-xs text-white/50 mt-1">
               Optional: Alternative AI provider. Get your key from{' '}
@@ -182,7 +182,7 @@ export default function SettingsPage() {
               value={apiConfig.googleApiKey}
               onChange={(e) => handleChange('googleApiKey', e.target.value)}
               placeholder="AIza..."
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
             />
             <p className="text-xs text-white/50 mt-1">
               Optional: For Google services integration (Maps, Analytics, etc.)
@@ -197,7 +197,7 @@ export default function SettingsPage() {
               value={apiConfig.stripeApiKey}
               onChange={(e) => handleChange('stripeApiKey', e.target.value)}
               placeholder="sk_live_..."
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
             />
             <p className="text-xs text-white/50 mt-1">
               Optional: For payment processing. Get your key from{' '}
@@ -215,7 +215,7 @@ export default function SettingsPage() {
               value={apiConfig.sendgridApiKey}
               onChange={(e) => handleChange('sendgridApiKey', e.target.value)}
               placeholder="SG..."
-              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
             />
             <p className="text-xs text-white/50 mt-1">
               Optional: For email notifications. Get your key from{' '}
@@ -234,7 +234,7 @@ export default function SettingsPage() {
                 value={apiConfig.twilioApiKey}
                 onChange={(e) => handleChange('twilioApiKey', e.target.value)}
                 placeholder="AC..."
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               />
             </div>
             <div>
@@ -244,7 +244,7 @@ export default function SettingsPage() {
                 value={apiConfig.twilioApiSecret}
                 onChange={(e) => handleChange('twilioApiSecret', e.target.value)}
                 placeholder="..."
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               />
             </div>
           </div>
