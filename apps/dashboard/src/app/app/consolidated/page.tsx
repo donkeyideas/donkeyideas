@@ -9,6 +9,7 @@ import { useAppStore } from '@/lib/store';
 interface ConsolidatedFinancials {
   totalRevenue: number;
   totalCOGS: number;
+  totalOperatingExpenses: number;
   totalExpenses: number;
   netProfit: number;
   profitMargin: number;
@@ -25,6 +26,7 @@ interface ConsolidatedFinancials {
     projectStatus: string | null;
     revenue: number;
     cogs: number;
+    operatingExpenses: number;
     expenses: number;
     profit: number;
     cashBalance: number;
