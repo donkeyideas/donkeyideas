@@ -7,7 +7,6 @@ export function TopBar() {
 
   const themes = [
     { id: 'dark' as const, label: 'Dark' },
-    { id: 'light' as const, label: 'Light' },
     { id: 'blue' as const, label: 'Blue' },
   ];
 
