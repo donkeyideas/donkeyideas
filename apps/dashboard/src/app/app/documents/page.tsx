@@ -115,7 +115,11 @@ export default function DocumentsPage() {
   if (!currentCompany) {
     return (
       <EmptyState
-        icon="🏢"
+        icon={
+          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        }
         title="No company selected"
         description="Select a company from the sidebar to view documents"
       />
@@ -123,15 +127,15 @@ export default function DocumentsPage() {
   }
 
   if (loading) {
-    return <div className="text-white/60">Loading...</div>;
+    return <div className="text-white/60 [.light_&]:text-slate-600">Loading...</div>;
   }
 
   return (
     <div>
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Document Library</h1>
-          <p className="text-white/60">
+          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Document Library</h1>
+          <p className="text-white/60 [.light_&]:text-slate-600">
             {currentCompany.name} — Document management with version control
           </p>
         </div>
@@ -142,7 +146,11 @@ export default function DocumentsPage() {
 
       {documents.length === 0 ? (
         <EmptyState
-          icon="📁"
+          icon={
+            <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+          }
           title="No documents yet"
           description="Upload your first file to get started"
           action={

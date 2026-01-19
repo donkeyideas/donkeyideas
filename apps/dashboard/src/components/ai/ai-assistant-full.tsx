@@ -229,12 +229,12 @@ export function AIAssistantFull() {
     <div className="flex gap-4 h-[calc(100vh-300px)] min-h-[600px]">
       {/* Chat History Sidebar */}
       {showChatList && (
-        <div className="w-64 bg-[#1A1A1A] border border-white/10 rounded-lg p-4 flex flex-col">
+        <div className="w-64 bg-[#1A1A1A] [.light_&]:bg-white [.light_&]:border-slate-200 [.blue_&]:bg-slate-800/50 border border-white/10 rounded-lg p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold">Chat History</h3>
+            <h3 className="text-sm font-semibold text-white [.light_&]:text-slate-900">Chat History</h3>
             <button
               onClick={() => setShowChatList(false)}
-              className="text-xs text-white/60 hover:text-white"
+              className="text-xs text-white/60 [.light_&]:text-slate-600 hover:text-white [.light_&]:hover:text-slate-900"
             >
               ✕
             </button>
@@ -275,7 +275,7 @@ export function AIAssistantFull() {
               </div>
             ))}
             {chats.length === 0 && (
-              <div className="text-xs text-white/40 text-center py-4">
+              <div className="text-xs text-white/40 [.light_&]:text-slate-600 text-center py-4">
                 No chats yet. Create a new chat to get started.
               </div>
             )}
@@ -284,30 +284,30 @@ export function AIAssistantFull() {
       )}
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-[#1A1A1A] border border-white/10 rounded-lg shadow-xl">
+      <div className="flex-1 flex flex-col bg-[#1A1A1A] [.light_&]:bg-white [.light_&]:border-slate-200 [.blue_&]:bg-slate-800/50 border border-white/10 rounded-lg shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <div className="flex items-center justify-between p-4 border-b border-white/10 [.light_&]:border-slate-200">
           <div className="flex items-center gap-3">
             {!showChatList && (
               <button
                 onClick={() => setShowChatList(true)}
-                className="text-sm text-white/60 hover:text-white"
+                className="text-sm text-white/60 [.light_&]:text-slate-600 hover:text-white [.light_&]:hover:text-slate-900"
               >
                 ☰
               </button>
             )}
             <div>
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-lg font-semibold text-white [.light_&]:text-slate-900">
                 {currentChatId
                   ? chats.find((c) => c.id === currentChatId)?.name || 'AI Assistant'
                   : 'AI Assistant'}
               </h3>
-              <p className="text-xs text-white/60">Powered by Deep Seek AI</p>
+              <p className="text-xs text-white/60 [.light_&]:text-slate-600">Powered by Deep Seek AI</p>
             </div>
           </div>
           <button
             onClick={clearChat}
-            className="text-sm text-white/60 hover:text-white transition-colors px-3 py-1 hover:bg-white/5 rounded"
+            className="text-sm text-white/60 [.light_&]:text-slate-600 hover:text-white [.light_&]:hover:text-slate-900 transition-colors px-3 py-1 hover:bg-white/5 [.light_&]:hover:bg-slate-100 rounded"
           >
             New Chat
           </button>
@@ -324,7 +324,7 @@ export function AIAssistantFull() {
                 className={`max-w-[70%] rounded-lg px-4 py-3 ${
                   message.role === 'user'
                     ? 'bg-blue-500 text-white'
-                    : 'bg-white/5 text-white'
+                    : 'bg-white/5 text-white [.light_&]:bg-slate-100 [.light_&]:text-slate-900'
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
@@ -333,11 +333,11 @@ export function AIAssistantFull() {
           ))}
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-white/5 rounded-lg px-4 py-3">
+              <div className="bg-white/5 [.light_&]:bg-slate-100 rounded-lg px-4 py-3">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <div className="w-2 h-2 bg-white/60 [.light_&]:bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-white/60 [.light_&]:bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-white/60 [.light_&]:bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
               </div>
             </div>
@@ -346,7 +346,7 @@ export function AIAssistantFull() {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 [.light_&]:border-slate-200">
           <div className="flex gap-3">
             <input
               type="text"
@@ -354,14 +354,14 @@ export function AIAssistantFull() {
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask me anything..."
-              className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 text-sm"
+              className="flex-1 px-4 py-3 bg-white/5 [.light_&]:bg-white border border-white/10 [.light_&]:border-slate-300 rounded-md text-white [.light_&]:text-slate-900 focus:outline-none focus:border-blue-500 text-sm placeholder:text-white/40 [.light_&]:placeholder:text-slate-400"
               disabled={loading}
             />
             <Button variant="primary" onClick={handleSend} disabled={loading || !input.trim()}>
               Send
             </Button>
           </div>
-          <p className="text-xs text-white/40 mt-2">
+          <p className="text-xs text-white/40 [.light_&]:text-slate-600 mt-2">
             Press Enter to send, Shift+Enter for new line
           </p>
         </div>
