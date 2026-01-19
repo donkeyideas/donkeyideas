@@ -250,20 +250,26 @@ async function updateBalanceSheet(
   const updateData: any = {};
   
   if (type === 'asset') {
-    if (category === 'cash') {
+    const categoryLower = category.toLowerCase().trim().replace(/[_\s]+/g, '_');
+    
+    if (categoryLower === 'cash') {
       // Direct cash asset transactions
       updateData.cashEquivalents = { increment: new Decimal(amount) };
-    } else if (category === 'accounts_receivable') {
+    } else if (categoryLower === 'accounts_receivable' || categoryLower === 'intercompany_receivable') {
+      // Intercompany receivables are treated as accounts receivable on individual balance sheets
       updateData.accountsReceivable = { increment: new Decimal(amount) };
-    } else if (category === 'equipment' || category === 'inventory') {
+    } else if (categoryLower === 'equipment' || categoryLower === 'inventory') {
       updateData.fixedAssets = { increment: new Decimal(amount) };
     }
   } else if (type === 'liability') {
-    if (category === 'accounts_payable') {
+    const categoryLower = category.toLowerCase().trim().replace(/[_\s]+/g, '_');
+    
+    if (categoryLower === 'accounts_payable' || categoryLower === 'intercompany_payable') {
+      // Intercompany payables are treated as accounts payable on individual balance sheets
       updateData.accountsPayable = { increment: new Decimal(amount) };
-    } else if (category === 'short_term_debt') {
+    } else if (categoryLower === 'short_term_debt') {
       updateData.shortTermDebt = { increment: new Decimal(amount) };
-    } else if (category === 'long_term_debt') {
+    } else if (categoryLower === 'long_term_debt') {
       updateData.longTermDebt = { increment: new Decimal(amount) };
     }
   }
