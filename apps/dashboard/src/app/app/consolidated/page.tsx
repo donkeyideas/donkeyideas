@@ -79,7 +79,9 @@ export default function ConsolidatedViewPage() {
             
             transactions.forEach((tx: any) => {
               const amount = Math.abs(typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount);
+              const signedAmount = typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount;
               
+              // P&L Calculation
               if (tx.affectsPL !== false) {
                 if (tx.type === 'revenue') {
                   revenue += amount;
@@ -94,17 +96,18 @@ export default function ConsolidatedViewPage() {
                 }
               }
               
-              // Calculate cash balance - FIXED LOGIC
+              // Cash Flow Calculation (single pass - no double counting!)
               if (tx.affectsCashFlow !== false) {
-                const cashAmount = typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount;
-                
                 if (tx.type === 'revenue') {
-                  cashBalance += Math.abs(cashAmount);
+                  cashBalance += amount;
                 } else if (tx.type === 'expense') {
-                  cashBalance -= Math.abs(cashAmount);
-                } else if (tx.type === 'asset' || tx.type === 'liability' || tx.type === 'equity') {
-                  // Asset/Liability/Equity transactions use signed amounts
-                  cashBalance += cashAmount;
+                  cashBalance -= amount;
+                } else if (tx.type === 'asset' || tx.type === 'liability') {
+                  // Asset/Liability transactions use signed amounts
+                  cashBalance += signedAmount;
+                } else if (tx.type === 'equity') {
+                  // Equity contributions increase cash
+                  cashBalance += amount;
                 }
               }
             });

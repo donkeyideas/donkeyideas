@@ -53,7 +53,6 @@ export function useConsolidatedData(monthFilter?: string) {
             let cashBalance = 0;
             
             // Balance sheet calculations
-            let cash = 0;
             let accountsReceivable = 0;
             let fixedAssets = 0;
             let accountsPayable = 0;
@@ -64,6 +63,7 @@ export function useConsolidatedData(monthFilter?: string) {
               const amount = typeof tx.amount === 'string' ? parseFloat(tx.amount) : tx.amount;
               const category = (tx.category || '').toLowerCase().trim();
               
+              // P&L Calculation
               if (tx.affectsPL !== false) {
                 if (tx.type === 'revenue') {
                   revenue += Math.abs(amount);
@@ -77,31 +77,33 @@ export function useConsolidatedData(monthFilter?: string) {
                 }
               }
               
-              // Calculate cash balance - FIXED LOGIC
+              // Cash Flow Calculation (single pass - no double counting!)
               if (tx.affectsCashFlow !== false) {
                 if (tx.type === 'revenue') {
                   cashBalance += Math.abs(amount);
-                  cash += Math.abs(amount);
                 } else if (tx.type === 'expense') {
                   cashBalance -= Math.abs(amount);
-                  cash -= Math.abs(amount);
-                } else if (tx.type === 'asset' || tx.type === 'liability' || tx.type === 'equity') {
-                  // Asset/Liability/Equity transactions use signed amounts
+                } else if (tx.type === 'asset') {
+                  // Asset purchases reduce cash (negative), asset sales increase cash (positive)
                   cashBalance += amount;
-                  cash += amount;
+                } else if (tx.type === 'liability') {
+                  // Taking on debt increases cash (positive), paying off debt reduces cash (negative)
+                  cashBalance += amount;
+                } else if (tx.type === 'equity') {
+                  // Equity contributions increase cash
+                  cashBalance += Math.abs(amount);
                 }
               }
               
-              // Balance sheet items
+              // Balance Sheet Positions (separate from cash flow)
               if (tx.affectsBalance !== false) {
                 if (tx.type === 'asset') {
-                  if (category === 'cash') {
-                    cash += amount;
-                  } else if (category === 'accounts_receivable' || category === 'accounts receivable') {
+                  if (category === 'accounts_receivable' || category === 'accounts receivable') {
                     accountsReceivable += amount;
-                  } else if (category === 'equipment' || category === 'inventory' || category === 'fixed_assets') {
+                  } else if (category === 'equipment' || category === 'inventory' || category === 'fixed_assets' || category === 'fixed assets') {
                     fixedAssets += amount;
                   }
+                  // Note: Cash transactions are handled above in cashBalance
                 } else if (tx.type === 'liability') {
                   if (category === 'accounts_payable' || category === 'accounts payable') {
                     accountsPayable += amount;
@@ -110,19 +112,12 @@ export function useConsolidatedData(monthFilter?: string) {
                   } else if (category === 'long_term_debt' || category === 'long term debt') {
                     longTermDebt += amount;
                   }
-                } else if (tx.type === 'revenue' && !tx.affectsCashFlow) {
+                } else if (tx.type === 'revenue' && tx.affectsCashFlow === false) {
+                  // Accrual revenue increases A/R
                   accountsReceivable += Math.abs(amount);
-                } else if (tx.type === 'expense' && !tx.affectsCashFlow) {
+                } else if (tx.type === 'expense' && tx.affectsCashFlow === false) {
+                  // Accrual expense increases A/P
                   accountsPayable += Math.abs(amount);
-                } else if (tx.type === 'revenue' && tx.affectsCashFlow) {
-                  cash += Math.abs(amount);
-                } else if (tx.type === 'expense' && tx.affectsCashFlow) {
-                  cash -= Math.abs(amount);
-                } else if (tx.type === 'equity') {
-                  // Equity transactions increase cash
-                  if (tx.affectsCashFlow) {
-                    cash += Math.abs(amount);
-                  }
                 }
               }
             });
@@ -131,7 +126,8 @@ export function useConsolidatedData(monthFilter?: string) {
             const totalExpenses = cogs + operatingExpenses;
             
             // Calculate balance sheet totals
-            const totalAssets = cash + accountsReceivable + fixedAssets;
+            // Cash Balance from cash flow is already calculated above
+            const totalAssets = cashBalance + accountsReceivable + fixedAssets;
             const totalLiabilities = accountsPayable + shortTermDebt + longTermDebt;
             const totalEquity = totalAssets - totalLiabilities;
             
