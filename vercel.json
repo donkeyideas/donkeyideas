@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd ../../packages/database && npx prisma generate && cd ../../apps/dashboard && npm run build",
-  "outputDirectory": ".next",
+  "buildCommand": "cd packages/database && npx prisma generate && cd ../financial-engine && npm run build && cd ../../apps/dashboard && npm run build",
+  "outputDirectory": "apps/dashboard/.next",
   "installCommand": "npm install",
   "framework": "nextjs"
 }
