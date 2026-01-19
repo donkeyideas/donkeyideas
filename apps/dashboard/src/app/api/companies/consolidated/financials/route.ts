@@ -168,6 +168,51 @@ export async function GET(request: NextRequest) {
       };
     }));
     
+    // Calculate intercompany eliminations
+    // Get all intercompany transactions across all companies
+    const allIntercompanyTransactions = await Promise.all(
+      companies.map(async (company: any) => {
+        const intercompanyTxs = await prisma.transaction.findMany({
+          where: {
+            companyId: company.id,
+            OR: [
+              { category: { contains: 'intercompany', mode: 'insensitive' } },
+              { description: { contains: 'INTERCOMPANY', mode: 'insensitive' } },
+            ],
+          },
+        });
+        return intercompanyTxs.map(tx => ({
+          companyId: company.id,
+          ...tx,
+        }));
+      })
+    );
+    
+    const flatIntercompanyTxs = allIntercompanyTransactions.flat();
+    
+    // Calculate total intercompany receivables and payables
+    let intercompanyReceivables = 0;
+    let intercompanyPayables = 0;
+    
+    flatIntercompanyTxs.forEach(tx => {
+      const amount = Math.abs(Number(tx.amount));
+      const categoryLower = (tx.category || '').toLowerCase().trim();
+      
+      if (tx.type === 'asset' && categoryLower.includes('intercompany')) {
+        intercompanyReceivables += amount;
+      } else if (tx.type === 'liability' && categoryLower.includes('intercompany')) {
+        intercompanyPayables += amount;
+      }
+    });
+    
+    // Eliminate matched intercompany balances from consolidated totals
+    // The net difference (if any) remains, indicating an imbalance that needs investigation
+    const intercompanyElimination = Math.min(intercompanyReceivables, intercompanyPayables);
+    
+    // Adjust consolidated totals by removing intercompany balances
+    totalAssets -= intercompanyReceivables; // Remove all intercompany receivables
+    totalLiabilities -= intercompanyPayables; // Remove all intercompany payables
+    
     // Calculate totals
     const totalOperatingExpenses = companyBreakdown.reduce((sum, c) => sum + c.operatingExpenses, 0);
     const netProfit = totalRevenue - totalExpenses;
