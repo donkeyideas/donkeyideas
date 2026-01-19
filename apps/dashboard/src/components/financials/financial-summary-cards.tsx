@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@donkey-ideas/ui';
 interface FinancialSummary {
   totalRevenue: number;
   cogs: number;
-  totalExpenses: number;
+  operatingExpenses: number; // Changed from totalExpenses
+  totalExpenses: number; // Keep for backward compatibility (COGS + OpEx)
   netProfit: number;
   totalAssets: number;
   totalLiabilities: number;
@@ -32,6 +33,7 @@ export function FinancialSummaryCards({ summary }: FinancialSummaryCardsProps) {
   const safeSummary: FinancialSummary = summary || {
     totalRevenue: 0,
     cogs: 0,
+    operatingExpenses: 0,
     totalExpenses: 0,
     netProfit: 0,
     totalAssets: 0,
@@ -63,10 +65,10 @@ export function FinancialSummaryCards({ summary }: FinancialSummaryCardsProps) {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Total Expenses</CardTitle>
+          <CardTitle className="text-sm text-white/60 [.light_&]:text-slate-600">Operating Expenses</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-red-400 [.light_&]:text-red-600">{formatCurrency(safeSummary.totalExpenses)}</div>
+          <div className="text-2xl font-bold text-red-400 [.light_&]:text-red-600">{formatCurrency(safeSummary.operatingExpenses)}</div>
         </CardContent>
       </Card>
 

@@ -66,13 +66,14 @@ export default function FinancialsPage() {
       }
     });
 
-    // FIXED: Total Expenses = COGS + Operating Expenses (was just operatingExpenses before)
+    // Total Expenses = COGS + Operating Expenses
     const totalExpenses = cogs + operatingExpenses;
 
     return {
       totalRevenue: revenue,
       cogs,
-      totalExpenses, // Now correctly includes COGS + Operating Expenses
+      operatingExpenses, // Show separately for clarity
+      totalExpenses, // Keep for backward compatibility (COGS + OpEx)
       netProfit: revenue - totalExpenses,
     };
   };
