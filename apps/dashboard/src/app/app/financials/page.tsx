@@ -592,30 +592,14 @@ export default function FinancialsPage() {
   const handleDeleteAllTransactions = async () => {
     if (!currentCompany) return;
 
-    if (!confirm('Are you sure you want to delete ALL transactions? This will also clear all financial statements. This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to delete ALL transactions? This will also clear all financial statements (P&L, Balance Sheets, Cash Flow). This action cannot be undone.')) {
       return;
     }
 
     try {
-      // Delete all transactions
-      const allTransactions = (await api.get(`/companies/${currentCompany.id}/transactions`)).data.transactions || [];
+      // Use efficient backend endpoint to delete ALL data at once
+      const response = await api.delete(`/companies/${currentCompany.id}/transactions/delete-all`);
       
-      for (const tx of allTransactions) {
-        try {
-          await api.delete(`/companies/${currentCompany.id}/transactions/${tx.id}`);
-        } catch (e) {
-          // Ignore individual errors
-        }
-      }
-
-      // Delete all financial statements
-      try {
-        await api.delete(`/companies/${currentCompany.id}/financials/statements`);
-      } catch (e) {
-        // Ignore if endpoint doesn't exist yet
-        console.warn('Could not delete financial statements:', e);
-      }
-
       loadFinancials();
       setNotification({
         isOpen: true,
