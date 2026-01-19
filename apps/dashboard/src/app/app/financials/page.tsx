@@ -402,10 +402,54 @@ export default function FinancialsPage() {
         profitMargin: statements.pl.profitMargin,
       });
 
-      // For now, clear the detailed statements tables (can rebuild these from clean engine data later)
-      setPlStatements([]);
-      setBalanceSheets([]);
-      setCashFlows([]);
+      // Create statement records from clean engine data for display
+      const currentPeriod = new Date().toISOString();
+      
+      // P&L Statement
+      const plStatement = {
+        id: 'current',
+        period: currentPeriod,
+        revenue: statements.pl.revenue,
+        cogs: statements.pl.cogs,
+        grossProfit: statements.pl.revenue - statements.pl.cogs,
+        operatingExpenses: statements.pl.operatingExpenses,
+        netIncome: statements.pl.netProfit,
+        createdAt: currentPeriod,
+      };
+      
+      // Balance Sheet
+      const balanceSheet = {
+        id: 'current',
+        period: currentPeriod,
+        cashEquivalents: statements.balanceSheet.cash,
+        accountsReceivable: statements.balanceSheet.accountsReceivable,
+        inventory: statements.balanceSheet.inventory,
+        fixedAssets: statements.balanceSheet.fixedAssets,
+        totalAssets: statements.balanceSheet.totalAssets,
+        accountsPayable: statements.balanceSheet.accountsPayable,
+        shortTermDebt: statements.balanceSheet.shortTermDebt,
+        longTermDebt: statements.balanceSheet.longTermDebt,
+        totalLiabilities: statements.balanceSheet.totalLiabilities,
+        totalEquity: statements.balanceSheet.totalEquity,
+        createdAt: currentPeriod,
+      };
+      
+      // Cash Flow Statement
+      const cashFlowStatement = {
+        id: 'current',
+        period: currentPeriod,
+        operatingActivities: statements.cashFlow.operatingCashFlow,
+        investingActivities: statements.cashFlow.investingCashFlow,
+        financingActivities: statements.cashFlow.financingCashFlow,
+        netCashFlow: statements.cashFlow.netCashFlow,
+        beginningCash: statements.cashFlow.beginningCash,
+        endingCash: statements.cashFlow.endingCash,
+        createdAt: currentPeriod,
+      };
+      
+      setPlStatements([plStatement]);
+      setBalanceSheets([balanceSheet]);
+      setCashFlows([cashFlowStatement]);
       
       // Log validation status
       if (!statements.isValid) {
