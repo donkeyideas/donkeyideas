@@ -133,73 +133,32 @@ export async function GET(request: NextRequest) {
         ? Number(latestBS.accountsPayable || 0) + Number(latestBS.shortTermDebt || 0) + Number(latestBS.longTermDebt || 0)
         : 0;
       
-      // Calculate cash balance from transactions (single source of truth)
-      let cashBalance = 0;
+      // Use Balance Sheet cash from database (single source of truth)
+      // The balance sheet is kept up-to-date by the transaction route's updateCashFlow function
+      let cashBalance = latestBS ? Number(latestBS.cashEquivalents || 0) : 0;
       
-      // Get all transactions that affect cash flow (for accurate calculation)
-      const allCashTransactions = await prisma.transaction.findMany({
-        where: {
-          companyId: company.id,
-          affectsCashFlow: true,
-        },
-        orderBy: { date: 'asc' },
-      });
+      // IMPORTANT FIX: Don't show negative assets if there's no initial capital or debt
+      // If cash is negative but there are no liabilities, it means expenses were recorded without equity injection
+      // For better UX, floor cash and assets at $0 (showing $0 instead of negative is more intuitive)
+      const hasLiabilities = liabilities > 0;
+      const hasEquityInjections = transactions.some((tx: any) => tx.type === 'equity' || tx.type === 'liability');
       
-      // Calculate running cash balance from transactions
-      allCashTransactions.forEach((tx: any) => {
-        const amount = Number(tx.amount);
-        const category = (tx.category || '').toLowerCase().trim();
-        
-        if (tx.type === 'asset' && category === 'cash') {
-          cashBalance += amount;
-        } else if (tx.type === 'revenue' && tx.affectsCashFlow === true) {
-          cashBalance += Math.abs(amount);
-        } else if (tx.type === 'expense' && tx.affectsCashFlow === true) {
-          cashBalance -= Math.abs(amount);
-        } else if (tx.description?.includes('[INTERCOMPANY CASH OUTFLOW]') || 
-                   tx.description?.includes('[CASH OUTFLOW')) {
-          cashBalance -= Math.abs(amount);
-        } else if (tx.description?.includes('[INTERCOMPANY') && tx.type === 'asset' && category === 'cash') {
-          cashBalance += Math.abs(amount);
-        }
-      });
-      
-      // If month filter is applied, calculate cash balance up to that month
-      if (monthFilter) {
-        const [year, month] = monthFilter.split('-').map(Number);
-        const monthEnd = new Date(year, month, 0, 23, 59, 59);
-        
-        // Reset and recalculate up to the end of the filtered month
+      if (cashBalance < 0 && !hasLiabilities && !hasEquityInjections) {
+        // No funding source recorded, floor at $0 for better UX
         cashBalance = 0;
-        allCashTransactions
-          .filter((tx: any) => new Date(tx.date) <= monthEnd)
-          .forEach((tx: any) => {
-            const amount = Number(tx.amount);
-            const category = (tx.category || '').toLowerCase().trim();
-            
-            if (tx.type === 'asset' && category === 'cash') {
-              cashBalance += amount;
-            } else if (tx.type === 'revenue' && tx.affectsCashFlow === true) {
-              cashBalance += Math.abs(amount);
-            } else if (tx.type === 'expense' && tx.affectsCashFlow === true) {
-              cashBalance -= Math.abs(amount);
-            } else if (tx.description?.includes('[INTERCOMPANY CASH OUTFLOW]') || 
-                       tx.description?.includes('[CASH OUTFLOW')) {
-              cashBalance -= Math.abs(amount);
-            } else if (tx.description?.includes('[INTERCOMPANY') && tx.type === 'asset' && category === 'cash') {
-              cashBalance += Math.abs(amount);
-            }
-          });
       }
+      
+      // Recalculate assets with the corrected cash balance
+      const correctedAssets = Math.max(0, cashBalance + Number(latestBS?.accountsReceivable || 0) + Number(latestBS?.fixedAssets || 0));
       
       const valuation = latestValuation ? Number(latestValuation.amount || 0) : 0;
       
       totalRevenue += revenue;
       totalCOGS += cogs;
       totalExpenses += expenses;
-      totalAssets += assets;
+      totalAssets += correctedAssets; // Use corrected assets
       totalLiabilities += liabilities;
-      totalCashBalance += cashBalance;
+      totalCashBalance += cashBalance; // Use corrected cash balance
       totalValuation += valuation;
       
       return {
