@@ -250,6 +250,11 @@ export function EditContentModal({
           hero: {
             title: 'The more ventures you build, the better you become',
             description: 'Go beyond traditional consulting with our AI-powered venture building platform. Track portfolio performance, leverage intelligent insights, and get custom recommendations to accelerate any venture metric.',
+            features: [
+              { title: 'AI-Powered Insights', description: 'Machine learning recommendations based on real portfolio data' },
+              { title: 'Accelerate Any Metric', description: 'Set goals and continuously improve time-to-market' },
+              { title: 'Actionable Intelligence', description: 'Implement and measure improvements instantly' },
+            ],
           },
           dashboardImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
           sections: [
@@ -258,6 +263,10 @@ export function EditContentModal({
               title: 'Quickly validate and launch',
               description: 'Catch market opportunities and implement solutions before they become missed chances. Our AI-powered platform helps you move from concept to production in weeks, not months.',
               imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
+              stats: [
+                { value: '6-12 weeks', label: 'Average time to MVP' },
+                { value: '70% faster', label: 'Than traditional methods' },
+              ],
             },
             {
               badge: 'Intelligent Platform',
