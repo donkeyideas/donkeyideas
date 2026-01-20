@@ -248,6 +248,7 @@ export default async function AboutPage() {
                   <div className="text-sm text-green-400">Result: Validated venture ready for scale</div>
                 </div>
               </div>
+              )}
             </div>
             
             <div className="order-1 md:order-2">
