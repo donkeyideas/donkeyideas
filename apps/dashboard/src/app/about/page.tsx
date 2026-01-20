@@ -19,36 +19,55 @@ export default async function AboutPage() {
   
   const defaultContent = {
     hero: {
-      title: 'About Us',
-      subtitle: 'Who We Are',
-      description: 'We transform unconventional ideas into intelligent, production-grade systems.',
+      title: 'Building the future of\nintelligent ventures',
+      description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering to build ventures that matter. Each product represents a bold bet on ideas others overlook.',
     },
+    stats: [
+      { value: '87%', label: 'Ventures reach market fit' },
+      { value: '$45M+', label: 'Portfolio valuation' },
+      { value: '23', label: 'AI systems in production' },
+      { value: '6-12 weeks', label: 'Average time to MVP' },
+    ],
     mission: {
-      title: 'Our Mission',
-      description: 'To bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.',
+      badge: 'Our Mission',
+      title: 'Where bold ideas\nbecome reality',
+      description: 'We bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.',
+      extendedDescription: 'Our mission is to transform unconventional concepts that traditional VCs overlook into revenue-generating businesses. We take calculated risks on ideas that sound absurd at first, because we know world-changing innovations often do.',
+      imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
     },
     values: [
       {
         title: 'Innovation',
-        description: 'We push boundaries and explore unconventional approaches to problem-solving.',
+        description: 'We push boundaries and explore unconventional approaches. While others chase trends, we build foundational technologies that create lasting value.',
+        icon: 'lightning',
       },
       {
         title: 'Excellence',
-        description: 'We maintain the highest standards in engineering and product development.',
+        description: 'We maintain the highest standards in engineering and product development. Every venture represents a commitment to meticulously crafted systems.',
+        icon: 'check',
       },
       {
         title: 'Impact',
-        description: 'We focus on building solutions that create real, measurable value.',
+        description: 'We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.',
+        icon: 'chart',
       },
     ],
-    team: {
-      title: 'Our Team',
-      description: 'A diverse group of engineers, designers, and strategists working together to build the future.',
+    approach: {
+      badge: 'Our Approach',
+      title: 'AI-powered venture\nmethodology',
+      description: 'We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.',
+      extendedDescription: 'Our Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.',
     },
-    contact: {
-      title: 'Get in Touch',
-      description: 'Interested in working with us? We\'d love to hear from you.',
-      email: 'hello@donkeyideas.com',
+    team: {
+      badge: 'Our Team',
+      title: 'Builders, engineers\n& strategists',
+      description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.',
+      extendedDescription: 'We\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
+      imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
+      stats: [
+        { value: '15+', label: 'Team members' },
+        { value: '50+', label: 'Years combined experience' },
+      ],
     },
   };
 
@@ -62,45 +81,35 @@ export default async function AboutPage() {
       {/* Navigation with scroll effect */}
       <ScrollHeader />
 
-      {/* Hero Section - Ventures Style */}
+      {/* Hero Section */}
       <section className="pt-32 pb-16 px-8">
         <div className="max-w-[1400px] mx-auto text-center">
           <h1 className="text-6xl md:text-7xl font-light leading-tight mb-8">
-            Building the future of
-            <br />
-            intelligent ventures
+            {pageContent.hero?.title?.split('\n').map((line: string, i: number) => (
+              <span key={i}>{line}<br /></span>
+            )) || 'About Us'}
           </h1>
           <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            We're an AI-powered innovation lab combining unconventional thinking with rigorous engineering to build ventures that matter. Each product represents a bold bet on ideas others overlook.
+            {pageContent.hero?.description || ''}
           </p>
         </div>
       </section>
 
-      {/* Stats Section - Services Style */}
+      {/* Stats Section */}
       <section className="py-16 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">87%</div>
-              <div className="text-sm text-slate-400">Ventures reach market fit</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">$45M+</div>
-              <div className="text-sm text-slate-400">Portfolio valuation</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">23</div>
-              <div className="text-sm text-slate-400">AI systems in production</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">6-12 weeks</div>
-              <div className="text-sm text-slate-400">Average time to MVP</div>
-            </div>
+            {pageContent.stats?.map((stat: any, index: number) => (
+              <div key={index} className="text-center">
+                <div className="text-4xl font-light text-white mb-2">{stat.value}</div>
+                <div className="text-sm text-slate-400">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Mission Section with Image - Ventures Showcase Style */}
+      {/* Mission Section */}
       <section className="py-32 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -108,19 +117,19 @@ export default async function AboutPage() {
               <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-blue-500/10">
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
                 <span className="text-xs uppercase tracking-widest text-blue-400 font-medium">
-                  Our Mission
+                  {pageContent.mission?.badge || 'Our Mission'}
                 </span>
               </div>
               <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
-                Where bold ideas
-                <br />
-                become reality
+                {pageContent.mission?.title?.split('\n').map((line: string, i: number) => (
+                  <span key={i}>{line}<br /></span>
+                )) || 'Our Mission'}
               </h2>
               <p className="text-xl text-slate-300 mb-6 leading-relaxed">
-                We bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.
+                {pageContent.mission?.description || ''}
               </p>
               <p className="text-lg text-slate-400 leading-relaxed">
-                Our mission is to transform unconventional concepts that traditional VCs overlook into revenue-generating businesses. We take calculated risks on ideas that sound absurd at first, because we know world-changing innovations often do.
+                {pageContent.mission?.extendedDescription || ''}
               </p>
             </div>
             
@@ -128,7 +137,7 @@ export default async function AboutPage() {
               <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
                 <div className="aspect-[4/3] bg-gradient-to-br from-blue-900/20 to-purple-900/20">
                   <img
-                    src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop"
+                    src={pageContent.mission?.imageUrl || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop'}
                     alt="Team Collaboration"
                     className="w-full h-full object-cover"
                   />
@@ -139,7 +148,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Values Section - Services Feature Grid */}
+      {/* Values Section */}
       <section className="py-32 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center mb-16">
@@ -150,46 +159,30 @@ export default async function AboutPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
-              <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-medium mb-4 text-white">Innovation</h3>
-              <p className="text-slate-400 leading-relaxed">
-                We push boundaries and explore unconventional approaches. While others chase trends, we build foundational technologies that create lasting value.
-              </p>
-            </div>
-
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
-              <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-medium mb-4 text-white">Excellence</h3>
-              <p className="text-slate-400 leading-relaxed">
-                We maintain the highest standards in engineering and product development. Every venture represents a commitment to meticulously crafted systems.
-              </p>
-            </div>
-
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
-              <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center mb-6">
-                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-medium mb-4 text-white">Impact</h3>
-              <p className="text-slate-400 leading-relaxed">
-                We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.
-              </p>
-            </div>
+            {pageContent.values?.map((value: any, index: number) => {
+              const iconColors = ['blue', 'purple', 'green'];
+              const color = iconColors[index] || 'blue';
+              return (
+                <div key={index} className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
+                  <div className={`w-12 h-12 rounded-lg bg-${color}-500/10 flex items-center justify-center mb-6`}>
+                    <svg className={`w-6 h-6 text-${color}-400`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {value.icon === 'lightning' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />}
+                      {value.icon === 'check' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                      {value.icon === 'chart' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />}
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-medium mb-4 text-white">{value.title}</h3>
+                  <p className="text-slate-400 leading-relaxed">
+                    {value.description}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* How We Work - Approach Style with Demo */}
+      {/* Approach Section */}
       <section className="py-32 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -242,26 +235,26 @@ export default async function AboutPage() {
               <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-purple-500/10">
                 <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
                 <span className="text-xs uppercase tracking-widest text-purple-400 font-medium">
-                  Our Approach
+                  {pageContent.approach?.badge || 'Our Approach'}
                 </span>
               </div>
               <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
-                AI-powered venture
-                <br />
-                methodology
+                {pageContent.approach?.title?.split('\n').map((line: string, i: number) => (
+                  <span key={i}>{line}<br /></span>
+                )) || 'Our Approach'}
               </h2>
               <p className="text-xl text-slate-300 mb-6 leading-relaxed">
-                We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.
+                {pageContent.approach?.description || ''}
               </p>
               <p className="text-lg text-slate-400 leading-relaxed">
-                Our Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We're builders who get our hands dirty with code, data, and customer conversations.
+                {pageContent.approach?.extendedDescription || ''}
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Team Section - Ventures Alternating Layout */}
+      {/* Team Section */}
       <section className="py-32 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -269,7 +262,7 @@ export default async function AboutPage() {
               <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
                 <div className="aspect-[4/3] bg-gradient-to-br from-teal-900/20 to-cyan-900/20">
                   <img
-                    src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop"
+                    src={pageContent.team?.imageUrl || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop'}
                     alt="Our Team"
                     className="w-full h-full object-cover"
                   />
@@ -281,30 +274,28 @@ export default async function AboutPage() {
               <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-teal-500/10">
                 <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
                 <span className="text-xs uppercase tracking-widest text-teal-400 font-medium">
-                  Our Team
+                  {pageContent.team?.badge || 'Our Team'}
                 </span>
               </div>
               <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
-                Builders, engineers
-                <br />
-                & strategists
+                {pageContent.team?.title?.split('\n').map((line: string, i: number) => (
+                  <span key={i}>{line}<br /></span>
+                )) || 'Our Team'}
               </h2>
               <p className="text-xl text-slate-300 mb-6 leading-relaxed">
-                A diverse group of AI engineers, product designers, and venture strategists working together to build the future.
+                {pageContent.team?.description || ''}
               </p>
               <p className="text-lg text-slate-400 leading-relaxed mb-8">
-                We're not traditional consultants. We're technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.
+                {pageContent.team?.extendedDescription || ''}
               </p>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
-                  <div className="text-2xl font-light text-white mb-1">15+</div>
-                  <div className="text-sm text-slate-400">Team members</div>
-                </div>
-                <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
-                  <div className="text-2xl font-light text-white mb-1">50+</div>
-                  <div className="text-sm text-slate-400">Years combined experience</div>
-                </div>
+                {pageContent.team?.stats?.map((stat: any, index: number) => (
+                  <div key={index} className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
+                    <div className="text-2xl font-light text-white mb-1">{stat.value}</div>
+                    <div className="text-sm text-slate-400">{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

@@ -154,36 +154,43 @@ export function EditContentModal({
       } else if (section.key === 'about-page') {
         setFormData(section.content || {
           hero: {
-            title: 'About Us',
-            subtitle: 'Who We Are',
-            description: 'We transform unconventional ideas into intelligent, production-grade systems.',
+            title: 'Building the future of\nintelligent ventures',
+            description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering.',
           },
+          stats: [
+            { value: '87%', label: 'Ventures reach market fit' },
+            { value: '$45M+', label: 'Portfolio valuation' },
+            { value: '23', label: 'AI systems in production' },
+            { value: '6-12 weeks', label: 'Average time to MVP' },
+          ],
           mission: {
-            title: 'Our Mission',
-            description: 'To bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.',
+            badge: 'Our Mission',
+            title: 'Where bold ideas\nbecome reality',
+            description: '',
+            extendedDescription: '',
+            imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
           },
           values: [
-            {
-              title: 'Innovation',
-              description: 'We push boundaries and explore unconventional approaches to problem-solving.',
-            },
-            {
-              title: 'Excellence',
-              description: 'We maintain the highest standards in engineering and product development.',
-            },
-            {
-              title: 'Impact',
-              description: 'We focus on building solutions that create real, measurable value.',
-            },
+            { title: 'Innovation', description: '', icon: 'lightning' },
+            { title: 'Excellence', description: '', icon: 'check' },
+            { title: 'Impact', description: '', icon: 'chart' },
           ],
-          team: {
-            title: 'Our Team',
-            description: 'A diverse group of engineers, designers, and strategists working together to build the future.',
+          approach: {
+            badge: 'Our Approach',
+            title: 'AI-powered venture\nmethodology',
+            description: '',
+            extendedDescription: '',
           },
-          contact: {
-            title: 'Get in Touch',
-            description: 'Interested in working with us? We\'d love to hear from you.',
-            email: 'hello@donkeyideas.com',
+          team: {
+            badge: 'Our Team',
+            title: 'Builders, engineers\n& strategists',
+            description: '',
+            extendedDescription: '',
+            imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
+            stats: [
+              { value: '15+', label: 'Team members' },
+              { value: '50+', label: 'Years combined experience' },
+            ],
           },
         });
       } else if (section.key === 'privacy-page') {
@@ -279,15 +286,39 @@ export function EditContentModal({
       } else if (section.key === 'process-page') {
         setFormData(section.content || {
           hero: {
-            title: 'Our Process',
-            subtitle: 'How We Work',
-            description: 'A systematic approach to transforming ideas into intelligent systems.',
+            title: 'Meet your market with precision\nat every turn',
+            description: 'Designed to make every venture launch feel inevitable. Our AI-powered approach allows us to navigate rapid market shifts, validate product-market fit, and detect opportunities with precision.',
+            features: [
+              { title: 'Tailored Strategies', description: 'Customized to match your unique vision and market' },
+              { title: 'Dynamic Pivots', description: 'Adapted to changing markets and customer feedback' },
+              { title: 'Ultra-Fast Execution', description: 'Industry-leading time from concept to production' },
+            ],
           },
           sections: [
-            { step: '01', title: '', description: '', imageUrl: '', details: '' },
-            { step: '02', title: '', description: '', imageUrl: '', details: '' },
-            { step: '03', title: '', description: '', imageUrl: '', details: '' },
-            { step: '04', title: '', description: '', imageUrl: '', details: '' },
+            {
+              badge: 'Autonomous Discovery',
+              title: 'AI-driven validation\nin real-time',
+              description: '',
+              imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+            },
+            {
+              badge: 'Global Reach',
+              title: 'Launch in any\nmarket',
+              description: '',
+              imageUrl: 'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=2006&auto=format&fit=crop',
+              markets: [
+                'North America - Tech & SaaS ecosystems',
+                'Europe - Enterprise & B2B markets',
+                'Asia-Pacific - Consumer & mobile-first',
+                'Latin America - Emerging tech hubs',
+              ],
+            },
+            {
+              badge: 'Venture Execution',
+              title: 'Strike the right\nbalance',
+              description: '',
+              imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
+            },
           ],
         });
       } else if (section.key === 'process') {

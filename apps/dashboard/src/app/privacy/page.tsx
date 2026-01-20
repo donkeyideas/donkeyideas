@@ -18,7 +18,7 @@ export default async function PrivacyPage() {
   const content = await getPrivacyContent();
   
   // Default content if not in database
-  const privacyContent = content?.content || {
+  const defaultContent = {
     title: 'Privacy Policy',
     lastUpdated: 'January 2026',
     sections: [
@@ -61,6 +61,7 @@ export default async function PrivacyPage() {
     ],
   };
 
+  const privacyContent = content?.content || defaultContent;
   const pageContent = typeof privacyContent === 'string' 
     ? JSON.parse(privacyContent) 
     : privacyContent;
