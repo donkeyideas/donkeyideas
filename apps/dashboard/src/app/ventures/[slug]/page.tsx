@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
 
@@ -150,10 +151,14 @@ export default async function VenturePage({ params }: { params: { slug: string }
           <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
             {venture.imageUrl ? (
               <>
-                <img
+                <Image
                   src={venture.imageUrl}
                   alt={venture.title}
+                  width={1920}
+                  height={1080}
                   className="w-full h-auto max-h-[400px] object-cover"
+                  quality={95}
+                  priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
               </>
