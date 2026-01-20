@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { z } from 'zod';
@@ -74,6 +75,34 @@ export async function PUT(
         published: validated.published ?? true,
       },
     });
+
+    // Revalidate the affected pages so changes show immediately
+    // Map section names to public page paths
+    const pageMap: Record<string, string[]> = {
+      'hero': ['/home', '/'],
+      'stats': ['/home', '/'],
+      'about': ['/home', '/'],
+      'ventures': ['/home', '/'],
+      'services': ['/home', '/'],
+      'process': ['/home', '/'],
+      'cta': ['/home', '/'],
+      'ventures-page': ['/ventures'],
+      'services-page': ['/services'],
+      'process-page': ['/process'],
+      'about-page': ['/about'],
+      'privacy-page': ['/privacy'],
+    };
+
+    // Revalidate all related pages
+    const pagesToRevalidate = pageMap[params.section] || [];
+    for (const path of pagesToRevalidate) {
+      try {
+        revalidatePath(path);
+        console.log(`✅ Revalidated page: ${path}`);
+      } catch (error) {
+        console.error(`Failed to revalidate ${path}:`, error);
+      }
+    }
 
     return NextResponse.json({ content });
   } catch (error: any) {
