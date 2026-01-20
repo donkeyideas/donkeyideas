@@ -78,7 +78,7 @@ export function EditContentModal({
           ventureCanvas: {
             title: 'Venture Canvas',
             text1: 'Ready to transform your idea into a market-dominating venture? Our team of AI engineers, product strategists, and growth experts is standing by to evaluate your concept.',
-            text2: 'We move fast—most partnerships begin within 48 hours of first contact. From writing code and designing systems to acquiring customers and raising capital, we provide hands-on expertise across every dimension of venture building. Let's build something extraordinary together.',
+            text2: 'We move fast—most partnerships begin within 48 hours of first contact. From writing code and designing systems to acquiring customers and raising capital, we provide hands-on expertise across every dimension of venture building. Let\'s build something extraordinary together.',
             ctaText: 'Explore Venture Canvas',
             imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
           },
