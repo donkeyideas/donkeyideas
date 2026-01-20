@@ -21,6 +21,11 @@ export default async function ServicesPage() {
     hero: {
       title: 'The more ventures you build, the better you become',
       description: 'Go beyond traditional consulting with our AI-powered venture building platform. Track portfolio performance, leverage intelligent insights, and get custom recommendations to accelerate any venture metric.',
+      features: [
+        { title: 'AI-Powered Insights', description: 'Machine learning recommendations based on real portfolio data' },
+        { title: 'Accelerate Any Metric', description: 'Set goals and continuously improve time-to-market' },
+        { title: 'Actionable Intelligence', description: 'Implement and measure improvements instantly' },
+      ],
     },
     dashboardImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
     sections: [
@@ -29,18 +34,31 @@ export default async function ServicesPage() {
         title: 'Quickly validate and launch',
         description: 'Catch market opportunities and implement solutions before they become missed chances. Our AI-powered platform helps you move from concept to production in weeks, not months.',
         imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
+        stats: [
+          { value: '6-12 weeks', label: 'Average time to MVP' },
+          { value: '70% faster', label: 'Than traditional methods' },
+        ],
       },
       {
         badge: 'Intelligent Platform',
         title: 'AI-powered recommendations',
         description: 'Get intelligent suggestions to reduce development time, boost product-market fit, and streamline operations based on real portfolio data and market trends.',
         imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop',
+        features: [
+          { title: 'Real-time Portfolio Analytics', description: 'Track KPIs across all ventures with unified dashboards' },
+          { title: 'Predictive Market Intelligence', description: 'AI-driven insights for strategic decision making' },
+          { title: 'Automated Optimization', description: 'Continuous improvement recommendations you can implement instantly' },
+        ],
       },
       {
         badge: 'Seamless Integration',
         title: 'Prioritize what matters most',
         description: 'See projected outcomes for strategic initiatives so you can focus on the developments that will make the biggest impact on your business goals.',
         imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop',
+        insights: [
+          { category: 'Technical Architecture', impact: '+23% efficiency', title: 'Implement microservices architecture', description: 'Reduce deployment time and increase system resilience' },
+          { category: 'Go-to-Market Strategy', impact: '+15% conversion', title: 'Add PLG motion to enterprise sales', description: 'Accelerate customer acquisition and reduce CAC' },
+        ],
       },
     ],
   };
@@ -67,20 +85,14 @@ export default async function ServicesPage() {
             {pageContent.hero?.description || ''}
           </p>
           
-          {/* Key Features Grid - HARDCODED for design consistency */}
+          {/* Key Features Grid */}
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">AI-Powered Insights</div>
-              <p className="text-slate-400 text-sm">Machine learning recommendations based on real portfolio data</p>
-            </div>
-            <div className="text-center">
-              <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">Accelerate Any Metric</div>
-              <p className="text-slate-400 text-sm">Set goals and continuously improve time-to-market</p>
-            </div>
-            <div className="text-center">
-              <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">Actionable Intelligence</div>
-              <p className="text-slate-400 text-sm">Implement and measure improvements instantly</p>
-            </div>
+            {pageContent.hero?.features?.map((feature: any, index: number) => (
+              <div key={index} className="text-center">
+                <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">{feature.title}</div>
+                <p className="text-slate-400 text-sm">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -121,18 +133,19 @@ export default async function ServicesPage() {
                 <p className="text-xl text-slate-300 mb-8 leading-relaxed">
                   {pageContent.sections[0].description}
                 </p>
+
                 
-                {/* Stats - HARDCODED */}
-                <div className="grid grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <div className="text-3xl font-light text-white mb-2">6-12 weeks</div>
-                    <div className="text-sm text-slate-400">Average time to MVP</div>
+                {/* Stats */}
+                {pageContent.sections[0].stats && (
+                  <div className="grid grid-cols-2 gap-6 mb-8">
+                    {pageContent.sections[0].stats.map((stat: any, index: number) => (
+                      <div key={index}>
+                        <div className="text-3xl font-light text-white mb-2">{stat.value}</div>
+                        <div className="text-sm text-slate-400">{stat.label}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <div className="text-3xl font-light text-white mb-2">70% faster</div>
-                    <div className="text-sm text-slate-400">Than traditional methods</div>
-                  </div>
-                </div>
+                )}
               </div>
               
               <div className="relative">
@@ -183,43 +196,28 @@ export default async function ServicesPage() {
                 <p className="text-xl text-slate-300 mb-8 leading-relaxed">
                   {pageContent.sections[1].description}
                 </p>
+
                 
-                {/* Feature List - HARDCODED */}
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center flex-shrink-0 mt-1">
-                      <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium mb-1 text-white">Real-time Portfolio Analytics</h3>
-                      <p className="text-slate-400 text-sm">Track KPIs across all ventures with unified dashboards</p>
-                    </div>
+                {/* Feature List */}
+                {pageContent.sections[1].features && (
+                  <div className="space-y-4">
+                    {pageContent.sections[1].features.map((feature: any, index: number) => (
+                      <div key={index} className="flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center flex-shrink-0 mt-1">
+                          <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {index === 0 && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />}
+                            {index === 1 && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />}
+                            {index === 2 && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-medium mb-1 text-white">{feature.title}</h3>
+                          <p className="text-slate-400 text-sm">{feature.description}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center flex-shrink-0 mt-1">
-                      <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium mb-1 text-white">Predictive Market Intelligence</h3>
-                      <p className="text-slate-400 text-sm">AI-driven insights for strategic decision making</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center flex-shrink-0 mt-1">
-                      <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium mb-1 text-white">Automated Optimization</h3>
-                      <p className="text-slate-400 text-sm">Continuous improvement recommendations you can implement instantly</p>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -246,26 +244,23 @@ export default async function ServicesPage() {
                 <p className="text-xl text-slate-300 mb-8 leading-relaxed">
                   {pageContent.sections[2].description}
                 </p>
+
                 
-                {/* Insight Cards - HARDCODED */}
-                <div className="space-y-4">
-                  <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="text-sm text-slate-400">Technical Architecture</div>
-                      <div className="text-green-400 text-sm font-medium">+23% efficiency</div>
-                    </div>
-                    <div className="text-lg font-medium mb-2">Implement microservices architecture</div>
-                    <div className="text-sm text-slate-400">Reduce deployment time and increase system resilience</div>
+                {/* Insight Cards */}
+                {pageContent.sections[2].insights && (
+                  <div className="space-y-4">
+                    {pageContent.sections[2].insights.map((insight: any, index: number) => (
+                      <div key={index} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="text-sm text-slate-400">{insight.category}</div>
+                          <div className="text-green-400 text-sm font-medium">{insight.impact}</div>
+                        </div>
+                        <div className="text-lg font-medium mb-2">{insight.title}</div>
+                        <div className="text-sm text-slate-400">{insight.description}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="text-sm text-slate-400">Go-to-Market Strategy</div>
-                      <div className="text-green-400 text-sm font-medium">+15% conversion</div>
-                    </div>
-                    <div className="text-lg font-medium mb-2">Add PLG motion to enterprise sales</div>
-                    <div className="text-sm text-slate-400">Accelerate customer acquisition and reduce CAC</div>
-                  </div>
-                </div>
+                )}
               </div>
               
               <div className="relative">

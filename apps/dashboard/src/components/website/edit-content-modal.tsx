@@ -246,6 +246,11 @@ export function EditContentModal({
           hero: {
             title: 'The more ventures you build, the better you become',
             description: 'Go beyond traditional consulting with our AI-powered venture building platform. Track portfolio performance, leverage intelligent insights, and get custom recommendations to accelerate any venture metric.',
+            features: [
+              { title: 'AI-Powered Insights', description: 'Machine learning recommendations based on real portfolio data' },
+              { title: 'Accelerate Any Metric', description: 'Set goals and continuously improve time-to-market' },
+              { title: 'Actionable Intelligence', description: 'Implement and measure improvements instantly' },
+            ],
           },
           dashboardImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
           sections: [
@@ -254,18 +259,31 @@ export function EditContentModal({
               title: 'Quickly validate and launch',
               description: 'Catch market opportunities and implement solutions before they become missed chances. Our AI-powered platform helps you move from concept to production in weeks, not months.',
               imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
+              stats: [
+                { value: '6-12 weeks', label: 'Average time to MVP' },
+                { value: '70% faster', label: 'Than traditional methods' },
+              ],
             },
             {
               badge: 'Intelligent Platform',
               title: 'AI-powered recommendations',
               description: 'Get intelligent suggestions to reduce development time, boost product-market fit, and streamline operations based on real portfolio data and market trends.',
               imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop',
+              features: [
+                { title: 'Real-time Portfolio Analytics', description: 'Track KPIs across all ventures with unified dashboards' },
+                { title: 'Predictive Market Intelligence', description: 'AI-driven insights for strategic decision making' },
+                { title: 'Automated Optimization', description: 'Continuous improvement recommendations you can implement instantly' },
+              ],
             },
             {
               badge: 'Seamless Integration',
               title: 'Prioritize what matters most',
               description: 'See projected outcomes for strategic initiatives so you can focus on the developments that will make the biggest impact on your business goals.',
               imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop',
+              insights: [
+                { category: 'Technical Architecture', impact: '+23% efficiency', title: 'Implement microservices architecture', description: 'Reduce deployment time and increase system resilience' },
+                { category: 'Go-to-Market Strategy', impact: '+15% conversion', title: 'Add PLG motion to enterprise sales', description: 'Accelerate customer acquisition and reduce CAC' },
+              ],
             },
           ],
         });
@@ -1225,7 +1243,62 @@ export function EditContentModal({
                     rows={3}
                   />
                 </div>
+
+                {/* Hero Features */}
+                <div className="space-y-4">
+                  <h4 className="text-md font-semibold">Hero Features (3 cards below title)</h4>
+                  {formData.hero?.features?.map((feature: any, idx: number) => (
+                    <Card key={idx}>
+                      <CardHeader>
+                        <CardTitle className="text-sm">Feature {idx + 1}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Title</label>
+                          <input
+                            type="text"
+                            value={feature.title || ''}
+                            onChange={(e) => {
+                              const newFeatures = [...(formData.hero?.features || [])];
+                              newFeatures[idx] = { ...newFeatures[idx], title: e.target.value };
+                              setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Description</label>
+                          <input
+                            type="text"
+                            value={feature.description || ''}
+                            onChange={(e) => {
+                              const newFeatures = [...(formData.hero?.features || [])];
+                              newFeatures[idx] = { ...newFeatures[idx], description: e.target.value };
+                              setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Dashboard Image (below hero features)</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Dashboard Image URL</label>
+                  <input
+                    type="text"
+                    value={formData.dashboardImage || ''}
+                    onChange={(e) => setFormData({ ...formData, dashboardImage: e.target.value })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                </div>
+              </div>
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Service Sections</h3>
