@@ -1370,20 +1370,175 @@ export function EditContentModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Features (one per line)</label>
-                        <textarea
-                          value={(sectionItem.features || []).join('\n')}
+                        <label className="block text-sm font-medium mb-2">Badge Text</label>
+                        <input
+                          type="text"
+                          value={sectionItem.badge || ''}
                           onChange={(e) => {
-                            const features = e.target.value.split('\n').filter(f => f.trim());
                             const newSections = [...formData.sections];
-                            newSections[index] = { ...newSections[index], features };
+                            newSections[index] = { ...newSections[index], badge: e.target.value };
                             setFormData({ ...formData, sections: newSections });
                           }}
                           className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          rows={4}
-                          placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Image URL</label>
+                        <input
+                          type="text"
+                          value={sectionItem.imageUrl || ''}
+                          onChange={(e) => {
+                            const newSections = [...formData.sections];
+                            newSections[index] = { ...newSections[index], imageUrl: e.target.value };
+                            setFormData({ ...formData, sections: newSections });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="https://images.unsplash.com/..."
+                        />
+                      </div>
+
+                      {/* Stats for Section 1 (Rapid Deployment) */}
+                      {index === 0 && (
+                        <div className="space-y-2 border-t border-white/10 pt-4">
+                          <h4 className="text-sm font-semibold">Stats (6-12 weeks, 70% faster)</h4>
+                          {sectionItem.stats?.map((stat: any, statIdx: number) => (
+                            <div key={statIdx} className="grid grid-cols-2 gap-3">
+                              <input
+                                type="text"
+                                value={stat.value}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  const newStats = [...(newSections[index].stats || [])];
+                                  newStats[statIdx] = { ...newStats[statIdx], value: e.target.value };
+                                  newSections[index] = { ...newSections[index], stats: newStats };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                placeholder="Value"
+                              />
+                              <input
+                                type="text"
+                                value={stat.label}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  const newStats = [...(newSections[index].stats || [])];
+                                  newStats[statIdx] = { ...newStats[statIdx], label: e.target.value };
+                                  newSections[index] = { ...newSections[index], stats: newStats };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                placeholder="Label"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Features for Section 2 (Intelligent Platform) */}
+                      {index === 1 && (
+                        <div className="space-y-2 border-t border-white/10 pt-4">
+                          <h4 className="text-sm font-semibold">Features (Real-time, Predictive, Automated)</h4>
+                          {sectionItem.features?.map((feat: any, featIdx: number) => (
+                            <Card key={featIdx} className="bg-black/20">
+                              <CardContent className="pt-4 space-y-2">
+                                <input
+                                  type="text"
+                                  value={feat.title}
+                                  onChange={(e) => {
+                                    const newSections = [...formData.sections];
+                                    const newFeatures = [...(newSections[index].features || [])];
+                                    newFeatures[featIdx] = { ...newFeatures[featIdx], title: e.target.value };
+                                    newSections[index] = { ...newSections[index], features: newFeatures };
+                                    setFormData({ ...formData, sections: newSections });
+                                  }}
+                                  className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                  placeholder="Feature Title"
+                                />
+                                <input
+                                  type="text"
+                                  value={feat.description}
+                                  onChange={(e) => {
+                                    const newSections = [...formData.sections];
+                                    const newFeatures = [...(newSections[index].features || [])];
+                                    newFeatures[featIdx] = { ...newFeatures[featIdx], description: e.target.value };
+                                    newSections[index] = { ...newSections[index], features: newFeatures };
+                                    setFormData({ ...formData, sections: newSections });
+                                  }}
+                                  className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                  placeholder="Description"
+                                />
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Insights for Section 3 (Seamless Integration) */}
+                      {index === 2 && (
+                        <div className="space-y-2 border-t border-white/10 pt-4">
+                          <h4 className="text-sm font-semibold">Insights (Technical Architecture, Go-to-Market)</h4>
+                          {sectionItem.insights?.map((insight: any, insightIdx: number) => (
+                            <Card key={insightIdx} className="bg-black/20">
+                              <CardContent className="pt-4 space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <input
+                                    type="text"
+                                    value={insight.category}
+                                    onChange={(e) => {
+                                      const newSections = [...formData.sections];
+                                      const newInsights = [...(newSections[index].insights || [])];
+                                      newInsights[insightIdx] = { ...newInsights[insightIdx], category: e.target.value };
+                                      newSections[index] = { ...newSections[index], insights: newInsights };
+                                      setFormData({ ...formData, sections: newSections });
+                                    }}
+                                    className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                    placeholder="Category"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={insight.impact}
+                                    onChange={(e) => {
+                                      const newSections = [...formData.sections];
+                                      const newInsights = [...(newSections[index].insights || [])];
+                                      newInsights[insightIdx] = { ...newInsights[insightIdx], impact: e.target.value };
+                                      newSections[index] = { ...newSections[index], insights: newInsights };
+                                      setFormData({ ...formData, sections: newSections });
+                                    }}
+                                    className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                    placeholder="+23% efficiency"
+                                  />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={insight.title}
+                                  onChange={(e) => {
+                                    const newSections = [...formData.sections];
+                                    const newInsights = [...(newSections[index].insights || [])];
+                                    newInsights[insightIdx] = { ...newInsights[insightIdx], title: e.target.value };
+                                    newSections[index] = { ...newSections[index], insights: newInsights };
+                                    setFormData({ ...formData, sections: newSections });
+                                  }}
+                                  className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                  placeholder="Main Action"
+                                />
+                                <input
+                                  type="text"
+                                  value={insight.description}
+                                  onChange={(e) => {
+                                    const newSections = [...formData.sections];
+                                    const newInsights = [...(newSections[index].insights || [])];
+                                    newInsights[insightIdx] = { ...newInsights[insightIdx], description: e.target.value };
+                                    newSections[index] = { ...newSections[index], insights: newInsights };
+                                    setFormData({ ...formData, sections: newSections });
+                                  }}
+                                  className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                  placeholder="Description"
+                                />
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
