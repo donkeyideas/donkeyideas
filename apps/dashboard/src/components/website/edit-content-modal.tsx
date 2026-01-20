@@ -157,12 +157,6 @@ export function EditContentModal({
             title: 'Building the future of intelligent ventures',
             description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering to build ventures that matter. Each product represents a bold bet on ideas others overlook.',
           },
-          stats: [
-            { value: '87%', label: 'Ventures reach market fit' },
-            { value: '$45M+', label: 'Portfolio valuation' },
-            { value: '23', label: 'AI systems in production' },
-            { value: '6-12 weeks', label: 'Average time to MVP' },
-          ],
           mission: {
             title: 'Where bold ideas become reality',
             description: 'We bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.\n\nOur mission is to transform unconventional concepts that traditional VCs overlook into revenue-generating businesses. We take calculated risks on ideas that sound absurd at first, because we know world-changing innovations often do.',
@@ -173,29 +167,6 @@ export function EditContentModal({
             { title: 'Excellence', description: 'We maintain the highest standards in engineering and product development. Every venture represents a commitment to meticulously crafted systems.' },
             { title: 'Impact', description: 'We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.' },
           ],
-          approach: {
-            title: 'AI-powered venture methodology',
-            description: 'We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.',
-            process: {
-              steps: [
-                {
-                  number: '1',
-                  title: 'Unconventional idea submitted',
-                  subtitle: 'AI scans market for validation signals',
-                  badge: 'Market gap identified',
-                  items: ['Technical architecture designed', 'MVP built in 6-12 weeks', 'Product-market fit validated'],
-                },
-                {
-                  number: '2',
-                  title: 'Production launch & scaling',
-                  subtitle: 'AI optimizes growth loops automatically',
-                  badge: 'Revenue generating',
-                  items: [],
-                },
-              ],
-              result: 'Result: Validated venture ready for scale',
-            },
-          },
           team: {
             title: 'Builders, engineers & strategists',
             description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.\n\nWe\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
@@ -250,11 +221,6 @@ export function EditContentModal({
           hero: {
             title: 'The more ventures you build, the better you become',
             description: 'Go beyond traditional consulting with our AI-powered venture building platform. Track portfolio performance, leverage intelligent insights, and get custom recommendations to accelerate any venture metric.',
-            features: [
-              { title: 'AI-Powered Insights', description: 'Machine learning recommendations based on real portfolio data' },
-              { title: 'Accelerate Any Metric', description: 'Set goals and continuously improve time-to-market' },
-              { title: 'Actionable Intelligence', description: 'Implement and measure improvements instantly' },
-            ],
           },
           dashboardImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
           sections: [
@@ -263,10 +229,6 @@ export function EditContentModal({
               title: 'Quickly validate and launch',
               description: 'Catch market opportunities and implement solutions before they become missed chances. Our AI-powered platform helps you move from concept to production in weeks, not months.',
               imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
-              stats: [
-                { value: '6-12 weeks', label: 'Average time to MVP' },
-                { value: '70% faster', label: 'Than traditional methods' },
-              ],
             },
             {
               badge: 'Intelligent Platform',
@@ -319,18 +281,12 @@ export function EditContentModal({
               description: 'A venture approach that understands founder intent and meets it with contextually relevant strategies. This includes natural iteration cycles, adaptive pivots, and strategic decision-making at the right moments.',
               imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
               founderInput: {
-                title: 'Founder Input',
-                tag: 'Strategic',
                 quote: '"We need to pivot our B2B strategy"',
-                description: 'Market conditions suggest enterprise focus',
+                context: 'Market conditions suggest enterprise focus',
               },
               aiResponse: {
-                title: 'AI Response',
-                tag: 'Adaptive',
-                points: [
-                  'Identified 3 enterprise segments with immediate demand',
-                  'Realigned roadmap, adjusted messaging, prioritized features',
-                ],
+                result: 'Identified 3 enterprise segments with immediate demand',
+                actions: 'Realigned roadmap, adjusted messaging, prioritized features',
               },
             },
           ],
@@ -338,10 +294,10 @@ export function EditContentModal({
             title: 'Data-driven venture building',
             description: 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.',
             marketSignal: {
-              title: 'Market Signal Detected',
               signal: 'Customer acquisition cost rising beyond sustainable levels',
-              badges: ['Urgency indicator detected', 'Budget threshold exceeded'],
-              responses: [
+              urgency: 'Urgency indicator detected',
+              threshold: 'Budget threshold exceeded',
+              response: [
                 'Triggered product-led growth strategy',
                 'Shifted 40% budget to content marketing',
                 'Implemented referral program with AI optimization',
@@ -1236,44 +1192,6 @@ export function EditContentModal({
                     rows={3}
                   />
                 </div>
-                <div className="space-y-4">
-                  <h4 className="text-md font-semibold">Hero Features</h4>
-                  {formData.hero?.features?.map((feature: any, index: number) => (
-                    <Card key={index}>
-                      <CardHeader>
-                        <CardTitle className="text-sm">Feature {index + 1}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Title</label>
-                          <input
-                            type="text"
-                            value={feature.title || ''}
-                            onChange={(e) => {
-                              const newFeatures = [...formData.hero.features];
-                              newFeatures[index] = { ...newFeatures[index], title: e.target.value };
-                              setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
-                            }}
-                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Description</label>
-                          <input
-                            type="text"
-                            value={feature.description || ''}
-                            onChange={(e) => {
-                              const newFeatures = [...formData.hero.features];
-                              newFeatures[index] = { ...newFeatures[index], description: e.target.value };
-                              setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
-                            }}
-                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -1346,65 +1264,20 @@ export function EditContentModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Badge Text</label>
-                        <input
-                          type="text"
-                          value={sectionItem.badge || ''}
+                        <label className="block text-sm font-medium mb-2">Features (one per line)</label>
+                        <textarea
+                          value={(sectionItem.features || []).join('\n')}
                           onChange={(e) => {
+                            const features = e.target.value.split('\n').filter(f => f.trim());
                             const newSections = [...formData.sections];
-                            newSections[index] = { ...newSections[index], badge: e.target.value };
+                            newSections[index] = { ...newSections[index], features };
                             setFormData({ ...formData, sections: newSections });
                           }}
                           className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="Rapid Deployment"
+                          rows={4}
+                          placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
                         />
                       </div>
-                      {index === 0 && (
-                        <div className="space-y-3">
-                          <h4 className="text-sm font-semibold">Stats (Section 1 only)</h4>
-                          {sectionItem.stats?.map((stat: any, statIndex: number) => (
-                            <Card key={statIndex}>
-                              <CardHeader>
-                                <CardTitle className="text-xs">Stat {statIndex + 1}</CardTitle>
-                              </CardHeader>
-                              <CardContent className="space-y-2">
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">Value</label>
-                                  <input
-                                    type="text"
-                                    value={stat.value || ''}
-                                    onChange={(e) => {
-                                      const newSections = [...formData.sections];
-                                      const newStats = [...(newSections[0].stats || [])];
-                                      newStats[statIndex] = { ...newStats[statIndex], value: e.target.value };
-                                      newSections[0] = { ...newSections[0], stats: newStats };
-                                      setFormData({ ...formData, sections: newSections });
-                                    }}
-                                    className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
-                                    placeholder="6-12 weeks"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">Label</label>
-                                  <input
-                                    type="text"
-                                    value={stat.label || ''}
-                                    onChange={(e) => {
-                                      const newSections = [...formData.sections];
-                                      const newStats = [...(newSections[0].stats || [])];
-                                      newStats[statIndex] = { ...newStats[statIndex], label: e.target.value };
-                                      newSections[0] = { ...newSections[0], stats: newStats };
-                                      setFormData({ ...formData, sections: newSections });
-                                    }}
-                                    className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
-                                    placeholder="Average time to MVP"
-                                  />
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -1435,12 +1308,16 @@ export function EditContentModal({
                     rows={3}
                   />
                 </div>
+                
+                {/* Hero Features */}
                 <div className="space-y-4">
-                  <h4 className="text-md font-semibold">Hero Features</h4>
-                  {formData.hero?.features?.map((feature: any, index: number) => (
-                    <Card key={index}>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-md font-semibold">Hero Features (3 cards below title)</h4>
+                  </div>
+                  {formData.hero?.features?.map((feature: any, idx: number) => (
+                    <Card key={idx}>
                       <CardHeader>
-                        <CardTitle className="text-sm">Feature {index + 1}</CardTitle>
+                        <CardTitle className="text-sm">Feature {idx + 1}</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <div>
@@ -1449,8 +1326,8 @@ export function EditContentModal({
                             type="text"
                             value={feature.title || ''}
                             onChange={(e) => {
-                              const newFeatures = [...formData.hero.features];
-                              newFeatures[index] = { ...newFeatures[index], title: e.target.value };
+                              const newFeatures = [...(formData.hero?.features || [])];
+                              newFeatures[idx] = { ...newFeatures[idx], title: e.target.value };
                               setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
                             }}
                             className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
@@ -1462,8 +1339,8 @@ export function EditContentModal({
                             type="text"
                             value={feature.description || ''}
                             onChange={(e) => {
-                              const newFeatures = [...formData.hero.features];
-                              newFeatures[index] = { ...newFeatures[index], description: e.target.value };
+                              const newFeatures = [...(formData.hero?.features || [])];
+                              newFeatures[idx] = { ...newFeatures[idx], description: e.target.value };
                               setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
                             }}
                             className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
@@ -1550,112 +1427,100 @@ export function EditContentModal({
                           placeholder="https://images.unsplash.com/..."
                         />
                       </div>
+
+                      {/* Markets array for Section 2 (Global Reach) */}
                       {index === 1 && (
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Markets List (Section 2 only, one per line)</label>
-                          <textarea
-                            value={(sectionItem.markets || []).join('\n')}
-                            onChange={(e) => {
-                              const newSections = [...formData.sections];
-                              newSections[1] = { ...newSections[1], markets: e.target.value.split('\n').filter(Boolean) };
-                              setFormData({ ...formData, sections: newSections });
-                            }}
-                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                            rows={4}
-                            placeholder="North America - Tech & SaaS ecosystems&#10;Europe - Enterprise & B2B markets"
-                          />
+                        <div className="space-y-2 border-t border-white/10 pt-4">
+                          <h4 className="text-sm font-semibold">Markets List</h4>
+                          {sectionItem.markets?.map((market: string, marketIdx: number) => (
+                            <input
+                              key={marketIdx}
+                              type="text"
+                              value={market}
+                              onChange={(e) => {
+                                const newSections = [...formData.sections];
+                                const newMarkets = [...(newSections[index].markets || [])];
+                                newMarkets[marketIdx] = e.target.value;
+                                newSections[index] = { ...newSections[index], markets: newMarkets };
+                                setFormData({ ...formData, sections: newSections });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                              placeholder="Region - Description"
+                            />
+                          ))}
                         </div>
                       )}
+
+                      {/* Founder Input & AI Response for Section 3 (Venture Execution) */}
                       {index === 2 && (
-                        <div className="space-y-4">
-                          <h4 className="text-sm font-semibold">Founder Input & AI Response (Section 3 only)</h4>
-                          <Card>
-                            <CardHeader><CardTitle className="text-xs">Founder Input</CardTitle></CardHeader>
-                            <CardContent className="space-y-2">
-                              <input
-                                type="text"
-                                value={sectionItem.founderInput?.title || ''}
-                                onChange={(e) => {
-                                  const newSections = [...formData.sections];
-                                  newSections[2] = { ...newSections[2], founderInput: { ...(newSections[2].founderInput || {}), title: e.target.value } };
-                                  setFormData({ ...formData, sections: newSections });
-                                }}
-                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
-                                placeholder="Founder Input"
-                              />
-                              <input
-                                type="text"
-                                value={sectionItem.founderInput?.tag || ''}
-                                onChange={(e) => {
-                                  const newSections = [...formData.sections];
-                                  newSections[2] = { ...newSections[2], founderInput: { ...(newSections[2].founderInput || {}), tag: e.target.value } };
-                                  setFormData({ ...formData, sections: newSections });
-                                }}
-                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
-                                placeholder="Strategic"
-                              />
-                              <input
-                                type="text"
-                                value={sectionItem.founderInput?.quote || ''}
-                                onChange={(e) => {
-                                  const newSections = [...formData.sections];
-                                  newSections[2] = { ...newSections[2], founderInput: { ...(newSections[2].founderInput || {}), quote: e.target.value } };
-                                  setFormData({ ...formData, sections: newSections });
-                                }}
-                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
-                                placeholder='"We need to pivot our B2B strategy"'
-                              />
-                              <input
-                                type="text"
-                                value={sectionItem.founderInput?.description || ''}
-                                onChange={(e) => {
-                                  const newSections = [...formData.sections];
-                                  newSections[2] = { ...newSections[2], founderInput: { ...(newSections[2].founderInput || {}), description: e.target.value } };
-                                  setFormData({ ...formData, sections: newSections });
-                                }}
-                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
-                                placeholder="Market conditions suggest enterprise focus"
-                              />
-                            </CardContent>
-                          </Card>
-                          <Card>
-                            <CardHeader><CardTitle className="text-xs">AI Response</CardTitle></CardHeader>
-                            <CardContent className="space-y-2">
-                              <input
-                                type="text"
-                                value={sectionItem.aiResponse?.title || ''}
-                                onChange={(e) => {
-                                  const newSections = [...formData.sections];
-                                  newSections[2] = { ...newSections[2], aiResponse: { ...(newSections[2].aiResponse || {}), title: e.target.value } };
-                                  setFormData({ ...formData, sections: newSections });
-                                }}
-                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
-                                placeholder="AI Response"
-                              />
-                              <input
-                                type="text"
-                                value={sectionItem.aiResponse?.tag || ''}
-                                onChange={(e) => {
-                                  const newSections = [...formData.sections];
-                                  newSections[2] = { ...newSections[2], aiResponse: { ...(newSections[2].aiResponse || {}), tag: e.target.value } };
-                                  setFormData({ ...formData, sections: newSections });
-                                }}
-                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
-                                placeholder="Adaptive"
-                              />
-                              <textarea
-                                value={(sectionItem.aiResponse?.points || []).join('\n')}
-                                onChange={(e) => {
-                                  const newSections = [...formData.sections];
-                                  newSections[2] = { ...newSections[2], aiResponse: { ...(newSections[2].aiResponse || {}), points: e.target.value.split('\n').filter(Boolean) } };
-                                  setFormData({ ...formData, sections: newSections });
-                                }}
-                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
-                                rows={3}
-                                placeholder="Point 1&#10;Point 2"
-                              />
-                            </CardContent>
-                          </Card>
+                        <div className="space-y-4 border-t border-white/10 pt-4">
+                          <h4 className="text-sm font-semibold">Founder Input Card</h4>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Quote</label>
+                            <input
+                              type="text"
+                              value={sectionItem.founderInput?.quote || ''}
+                              onChange={(e) => {
+                                const newSections = [...formData.sections];
+                                newSections[index] = {
+                                  ...newSections[index],
+                                  founderInput: { ...newSections[index].founderInput, quote: e.target.value }
+                                };
+                                setFormData({ ...formData, sections: newSections });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Context</label>
+                            <input
+                              type="text"
+                              value={sectionItem.founderInput?.context || ''}
+                              onChange={(e) => {
+                                const newSections = [...formData.sections];
+                                newSections[index] = {
+                                  ...newSections[index],
+                                  founderInput: { ...newSections[index].founderInput, context: e.target.value }
+                                };
+                                setFormData({ ...formData, sections: newSections });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                            />
+                          </div>
+
+                          <h4 className="text-sm font-semibold mt-4">AI Response Card</h4>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Result</label>
+                            <input
+                              type="text"
+                              value={sectionItem.aiResponse?.result || ''}
+                              onChange={(e) => {
+                                const newSections = [...formData.sections];
+                                newSections[index] = {
+                                  ...newSections[index],
+                                  aiResponse: { ...newSections[index].aiResponse, result: e.target.value }
+                                };
+                                setFormData({ ...formData, sections: newSections });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Actions</label>
+                            <input
+                              type="text"
+                              value={sectionItem.aiResponse?.actions || ''}
+                              onChange={(e) => {
+                                const newSections = [...formData.sections];
+                                newSections[index] = {
+                                  ...newSections[index],
+                                  aiResponse: { ...newSections[index].aiResponse, actions: e.target.value }
+                                };
+                                setFormData({ ...formData, sections: newSections });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                            />
+                          </div>
                         </div>
                       )}
                     </CardContent>
@@ -1683,93 +1548,94 @@ export function EditContentModal({
                     rows={3}
                   />
                 </div>
-                <div className="space-y-4">
-                  <h4 className="text-md font-semibold">Market Signal Detected</h4>
-                  <Card>
-                    <CardHeader><CardTitle className="text-sm">Signal Details</CardTitle></CardHeader>
-                    <CardContent className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Title</label>
-                        <input
-                          type="text"
-                          value={formData.howItWorks?.marketSignal?.title || ''}
-                          onChange={(e) => setFormData({ 
+
+                {/* Market Signal Section */}
+                <div className="space-y-4 border-t border-white/10 pt-4">
+                  <h4 className="text-md font-semibold">Market Signal Card</h4>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Signal</label>
+                    <input
+                      type="text"
+                      value={formData.howItWorks?.marketSignal?.signal || ''}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        howItWorks: { 
+                          ...formData.howItWorks, 
+                          marketSignal: { ...formData.howItWorks?.marketSignal, signal: e.target.value }
+                        }
+                      })}
+                      className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Urgency Badge</label>
+                      <input
+                        type="text"
+                        value={formData.howItWorks?.marketSignal?.urgency || ''}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          howItWorks: { 
+                            ...formData.howItWorks, 
+                            marketSignal: { ...formData.howItWorks?.marketSignal, urgency: e.target.value }
+                          }
+                        })}
+                        className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Threshold Badge</label>
+                      <input
+                        type="text"
+                        value={formData.howItWorks?.marketSignal?.threshold || ''}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          howItWorks: { 
+                            ...formData.howItWorks, 
+                            marketSignal: { ...formData.howItWorks?.marketSignal, threshold: e.target.value }
+                          }
+                        })}
+                        className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Response Actions (3 bullet points)</label>
+                    {formData.howItWorks?.marketSignal?.response?.map((resp: string, respIdx: number) => (
+                      <input
+                        key={respIdx}
+                        type="text"
+                        value={resp}
+                        onChange={(e) => {
+                          const newResponse = [...(formData.howItWorks?.marketSignal?.response || [])];
+                          newResponse[respIdx] = e.target.value;
+                          setFormData({ 
                             ...formData, 
                             howItWorks: { 
                               ...formData.howItWorks, 
-                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), title: e.target.value }
-                            } 
-                          })}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="Market Signal Detected"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Signal</label>
-                        <input
-                          type="text"
-                          value={formData.howItWorks?.marketSignal?.signal || ''}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            howItWorks: { 
-                              ...formData.howItWorks, 
-                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), signal: e.target.value }
-                            } 
-                          })}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="Customer acquisition cost rising beyond sustainable levels"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Badges (one per line)</label>
-                        <textarea
-                          value={(formData.howItWorks?.marketSignal?.badges || []).join('\n')}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            howItWorks: { 
-                              ...formData.howItWorks, 
-                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), badges: e.target.value.split('\n').filter(Boolean) }
-                            } 
-                          })}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          rows={2}
-                          placeholder="Urgency indicator detected&#10;Budget threshold exceeded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Automated Responses (one per line)</label>
-                        <textarea
-                          value={(formData.howItWorks?.marketSignal?.responses || []).join('\n')}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            howItWorks: { 
-                              ...formData.howItWorks, 
-                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), responses: e.target.value.split('\n').filter(Boolean) }
-                            } 
-                          })}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          rows={3}
-                          placeholder="Triggered product-led growth strategy&#10;Shifted 40% budget to content marketing"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Result</label>
-                        <input
-                          type="text"
-                          value={formData.howItWorks?.marketSignal?.result || ''}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            howItWorks: { 
-                              ...formData.howItWorks, 
-                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), result: e.target.value }
-                            } 
-                          })}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="CAC reduced by 62% within 8 weeks"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
+                              marketSignal: { ...formData.howItWorks?.marketSignal, response: newResponse }
+                            }
+                          });
+                        }}
+                        className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm mb-2"
+                      />
+                    ))}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Result</label>
+                    <input
+                      type="text"
+                      value={formData.howItWorks?.marketSignal?.result || ''}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        howItWorks: { 
+                          ...formData.howItWorks, 
+                          marketSignal: { ...formData.howItWorks?.marketSignal, result: e.target.value }
+                        }
+                      })}
+                      className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1808,74 +1674,6 @@ export function EditContentModal({
                   />
                 </div>
               </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Stats Section</h3>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setFormData({
-                        ...formData,
-                        stats: [...(formData.stats || []), { value: '', label: '' }],
-                      });
-                    }}
-                  >
-                    + Add Stat
-                  </Button>
-                </div>
-                {formData.stats?.map((stat: any, index: number) => (
-                  <Card key={index}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">Stat {index + 1}</CardTitle>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const newStats = formData.stats.filter((_: any, i: number) => i !== index);
-                            setFormData({ ...formData, stats: newStats });
-                          }}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Value</label>
-                        <input
-                          type="text"
-                          value={stat.value || ''}
-                          onChange={(e) => {
-                            const newStats = [...formData.stats];
-                            newStats[index] = { ...newStats[index], value: e.target.value };
-                            setFormData({ ...formData, stats: newStats });
-                          }}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="87%"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Label</label>
-                        <input
-                          type="text"
-                          value={stat.label || ''}
-                          onChange={(e) => {
-                            const newStats = [...formData.stats];
-                            newStats[index] = { ...newStats[index], label: e.target.value };
-                            setFormData({ ...formData, stats: newStats });
-                          }}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="Ventures reach market fit"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Mission Section</h3>
                 <div>
@@ -1972,196 +1770,6 @@ export function EditContentModal({
                   </Card>
                 ))}
               </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Our Approach Section</h3>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Title</label>
-                  <input
-                    type="text"
-                    value={formData.approach?.title || ''}
-                    onChange={(e) => setFormData({ ...formData, approach: { ...formData.approach, title: e.target.value } })}
-                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                    placeholder="AI-powered venture methodology"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
-                  <textarea
-                    value={formData.approach?.description || ''}
-                    onChange={(e) => setFormData({ ...formData, approach: { ...formData.approach, description: e.target.value } })}
-                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                    rows={4}
-                    placeholder="Use \n\n to separate paragraphs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Process Result Text</label>
-                  <input
-                    type="text"
-                    value={formData.approach?.process?.result || ''}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      approach: { 
-                        ...formData.approach, 
-                        process: { ...(formData.approach?.process || {}), result: e.target.value }
-                      } 
-                    })}
-                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                    placeholder="Result: Validated venture ready for scale"
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <h4 className="text-md font-semibold">Process Steps (Numbered Sections)</h4>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      const currentSteps = formData.approach?.process?.steps || [];
-                      setFormData({
-                        ...formData,
-                        approach: {
-                          ...formData.approach,
-                          process: {
-                            ...(formData.approach?.process || {}),
-                            steps: [...currentSteps, { number: String(currentSteps.length + 1), title: '', subtitle: '', badge: '', items: [] }],
-                          },
-                        },
-                      });
-                    }}
-                  >
-                    + Add Step
-                  </Button>
-                </div>
-                {formData.approach?.process?.steps?.map((step: any, index: number) => (
-                  <Card key={index}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">Step {step.number}</CardTitle>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const newSteps = formData.approach.process.steps.filter((_: any, i: number) => i !== index);
-                            setFormData({
-                              ...formData,
-                              approach: {
-                                ...formData.approach,
-                                process: { ...formData.approach.process, steps: newSteps },
-                              },
-                            });
-                          }}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Step Number</label>
-                        <input
-                          type="text"
-                          value={step.number || ''}
-                          onChange={(e) => {
-                            const newSteps = [...formData.approach.process.steps];
-                            newSteps[index] = { ...newSteps[index], number: e.target.value };
-                            setFormData({
-                              ...formData,
-                              approach: {
-                                ...formData.approach,
-                                process: { ...formData.approach.process, steps: newSteps },
-                              },
-                            });
-                          }}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="1"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Step Title</label>
-                        <input
-                          type="text"
-                          value={step.title || ''}
-                          onChange={(e) => {
-                            const newSteps = [...formData.approach.process.steps];
-                            newSteps[index] = { ...newSteps[index], title: e.target.value };
-                            setFormData({
-                              ...formData,
-                              approach: {
-                                ...formData.approach,
-                                process: { ...formData.approach.process, steps: newSteps },
-                              },
-                            });
-                          }}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="Unconventional idea submitted"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Step Subtitle</label>
-                        <input
-                          type="text"
-                          value={step.subtitle || ''}
-                          onChange={(e) => {
-                            const newSteps = [...formData.approach.process.steps];
-                            newSteps[index] = { ...newSteps[index], subtitle: e.target.value };
-                            setFormData({
-                              ...formData,
-                              approach: {
-                                ...formData.approach,
-                                process: { ...formData.approach.process, steps: newSteps },
-                              },
-                            });
-                          }}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="AI scans market for validation signals"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Badge Text</label>
-                        <input
-                          type="text"
-                          value={step.badge || ''}
-                          onChange={(e) => {
-                            const newSteps = [...formData.approach.process.steps];
-                            newSteps[index] = { ...newSteps[index], badge: e.target.value };
-                            setFormData({
-                              ...formData,
-                              approach: {
-                                ...formData.approach,
-                                process: { ...formData.approach.process, steps: newSteps },
-                              },
-                            });
-                          }}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="Market gap identified"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Sub-items (one per line, arrow will be added)</label>
-                        <textarea
-                          value={step.items?.join('\n') || ''}
-                          onChange={(e) => {
-                            const newSteps = [...formData.approach.process.steps];
-                            newSteps[index] = { ...newSteps[index], items: e.target.value.split('\n').filter(Boolean) };
-                            setFormData({
-                              ...formData,
-                              approach: {
-                                ...formData.approach,
-                                process: { ...formData.approach.process, steps: newSteps },
-                              },
-                            });
-                          }}
-                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          rows={3}
-                          placeholder="Technical architecture designed&#10;MVP built in 6-12 weeks&#10;Product-market fit validated"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Team Section</h3>
                 <div>

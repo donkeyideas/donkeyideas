@@ -21,11 +21,6 @@ export default async function ServicesPage() {
     hero: {
       title: 'The more ventures you build, the better you become',
       description: 'Go beyond traditional consulting with our AI-powered venture building platform. Track portfolio performance, leverage intelligent insights, and get custom recommendations to accelerate any venture metric.',
-      features: [
-        { title: 'AI-Powered Insights', description: 'Machine learning recommendations based on real portfolio data' },
-        { title: 'Accelerate Any Metric', description: 'Set goals and continuously improve time-to-market' },
-        { title: 'Actionable Intelligence', description: 'Implement and measure improvements instantly' },
-      ],
     },
     dashboardImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
     sections: [
@@ -34,10 +29,6 @@ export default async function ServicesPage() {
         title: 'Quickly validate and launch',
         description: 'Catch market opportunities and implement solutions before they become missed chances. Our AI-powered platform helps you move from concept to production in weeks, not months.',
         imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
-        stats: [
-          { value: '6-12 weeks', label: 'Average time to MVP' },
-          { value: '70% faster', label: 'Than traditional methods' },
-        ],
       },
       {
         badge: 'Intelligent Platform',
@@ -76,14 +67,20 @@ export default async function ServicesPage() {
             {pageContent.hero?.description || ''}
           </p>
           
-          {/* Key Features Grid */}
+          {/* Key Features Grid - HARDCODED for design consistency */}
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {pageContent.hero?.features?.map((feature: any, index: number) => (
-              <div key={index} className="text-center">
-                <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">{feature.title}</div>
-                <p className="text-slate-400 text-sm">{feature.description}</p>
-              </div>
-            ))}
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">AI-Powered Insights</div>
+              <p className="text-slate-400 text-sm">Machine learning recommendations based on real portfolio data</p>
+            </div>
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">Accelerate Any Metric</div>
+              <p className="text-slate-400 text-sm">Set goals and continuously improve time-to-market</p>
+            </div>
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-widest text-blue-400 mb-2 font-medium">Actionable Intelligence</div>
+              <p className="text-slate-400 text-sm">Implement and measure improvements instantly</p>
+            </div>
           </div>
         </div>
       </section>
@@ -125,17 +122,17 @@ export default async function ServicesPage() {
                   {pageContent.sections[0].description}
                 </p>
                 
-                {/* Stats */}
-                {pageContent.sections?.[0]?.stats && (
-                  <div className="grid grid-cols-2 gap-6 mb-8">
-                    {pageContent.sections[0].stats.map((stat: any, index: number) => (
-                      <div key={index}>
-                        <div className="text-3xl font-light text-white mb-2">{stat.value}</div>
-                        <div className="text-sm text-slate-400">{stat.label}</div>
-                      </div>
-                    ))}
+                {/* Stats - HARDCODED */}
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <div className="text-3xl font-light text-white mb-2">6-12 weeks</div>
+                    <div className="text-sm text-slate-400">Average time to MVP</div>
                   </div>
-                )}
+                  <div>
+                    <div className="text-3xl font-light text-white mb-2">70% faster</div>
+                    <div className="text-sm text-slate-400">Than traditional methods</div>
+                  </div>
+                </div>
               </div>
               
               <div className="relative">
