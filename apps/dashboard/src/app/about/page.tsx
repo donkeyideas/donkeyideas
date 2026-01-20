@@ -22,6 +22,12 @@ export default async function AboutPage() {
       title: 'Building the future of intelligent ventures',
       description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering to build ventures that matter. Each product represents a bold bet on ideas others overlook.',
     },
+    stats: [
+      { value: '87%', label: 'Ventures reach market fit' },
+      { value: '$45M+', label: 'Portfolio valuation' },
+      { value: '23', label: 'AI systems in production' },
+      { value: '6-12 weeks', label: 'Average time to MVP' },
+    ],
     mission: {
       title: 'Where bold ideas become reality',
       description: 'We bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.\n\nOur mission is to transform unconventional concepts that traditional VCs overlook into revenue-generating businesses. We take calculated risks on ideas that sound absurd at first, because we know world-changing innovations often do.',
@@ -41,6 +47,33 @@ export default async function AboutPage() {
         description: 'We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.',
       },
     ],
+    approach: {
+      title: 'AI-powered venture methodology',
+      description: 'We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.',
+      process: {
+        steps: [
+          {
+            number: '1',
+            title: 'Unconventional idea submitted',
+            subtitle: 'AI scans market for validation signals',
+            badge: 'Market gap identified',
+            items: [
+              'Technical architecture designed',
+              'MVP built in 6-12 weeks',
+              'Product-market fit validated',
+            ],
+          },
+          {
+            number: '2',
+            title: 'Production launch & scaling',
+            subtitle: 'AI optimizes growth loops automatically',
+            badge: 'Revenue generating',
+            items: [],
+          },
+        ],
+        result: 'Result: Validated venture ready for scale',
+      },
+    },
     team: {
       title: 'Builders, engineers & strategists',
       description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.\n\nWe\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
@@ -72,26 +105,16 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Stats Section - HARDCODED */}
+      {/* Stats Section */}
       <section className="py-16 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">87%</div>
-              <div className="text-sm text-slate-400">Ventures reach market fit</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">$45M+</div>
-              <div className="text-sm text-slate-400">Portfolio valuation</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">23</div>
-              <div className="text-sm text-slate-400">AI systems in production</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">6-12 weeks</div>
-              <div className="text-sm text-slate-400">Average time to MVP</div>
-            </div>
+            {pageContent.stats?.map((stat: any, index: number) => (
+              <div key={index} className="text-center">
+                <div className="text-4xl font-light text-white mb-2">{stat.value}</div>
+                <div className="text-sm text-slate-400">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -171,52 +194,57 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Approach Section - HARDCODED DEMO */}
+      {/* Approach Section */}
       <section className="py-32 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="order-2 md:order-1">
-              {/* Demo Card - HARDCODED */}
+              {/* Venture Building Process Card */}
               <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 space-y-6">
                 <div className="text-sm text-slate-400 mb-4">Venture Building Process</div>
                 
                 <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <span className="text-blue-400 font-medium">1</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-base text-white mb-1">Unconventional idea submitted</div>
-                      <div className="text-sm text-slate-400">AI scans market for validation signals</div>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="px-2 py-1 bg-green-500/10 text-green-400 rounded text-xs">Market gap identified</span>
-                      </div>
-                    </div>
-                  </div>
+                  {pageContent.approach?.process?.steps?.map((step: any, index: number) => {
+                    const stepColors = [
+                      { bg: 'bg-blue-500/10', text: 'text-blue-400', badge: 'bg-green-500/10 text-green-400' },
+                      { bg: 'bg-purple-500/10', text: 'text-purple-400', badge: 'bg-blue-500/10 text-blue-400' },
+                    ];
+                    const color = stepColors[index] || stepColors[0];
+                    
+                    return (
+                      <div key={index}>
+                        <div className="flex items-start gap-4">
+                          <div className={`flex-shrink-0 w-10 h-10 rounded-lg ${color.bg} flex items-center justify-center`}>
+                            <span className={`${color.text} font-medium`}>{step.number}</span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-base text-white mb-1">{step.title}</div>
+                            <div className="text-sm text-slate-400">{step.subtitle}</div>
+                            {step.badge && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className={`px-2 py-1 ${color.badge} rounded text-xs`}>{step.badge}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
 
-                  <div className="border-l-2 border-blue-500/30 pl-4 ml-5 space-y-3">
-                    <div className="text-sm text-slate-300">→ Technical architecture designed</div>
-                    <div className="text-sm text-slate-300">→ MVP built in 6-12 weeks</div>
-                    <div className="text-sm text-slate-300">→ Product-market fit validated</div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                      <span className="text-purple-400 font-medium">2</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-base text-white mb-1">Production launch & scaling</div>
-                      <div className="text-sm text-slate-400">AI optimizes growth loops automatically</div>
-                      <div className="mt-2">
-                        <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded text-xs">Revenue generating</span>
+                        {step.items && step.items.length > 0 && (
+                          <div className="border-l-2 border-blue-500/30 pl-4 ml-5 mt-3 space-y-3">
+                            {step.items.map((item: string, itemIndex: number) => (
+                              <div key={itemIndex} className="text-sm text-slate-300">→ {item}</div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
 
-                <div className="pt-4 border-t border-slate-700/50">
-                  <div className="text-sm text-green-400">Result: Validated venture ready for scale</div>
-                </div>
+                {pageContent.approach?.process?.result && (
+                  <div className="pt-4 border-t border-slate-700/50">
+                    <div className="text-sm text-green-400">{pageContent.approach.process.result}</div>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -228,14 +256,17 @@ export default async function AboutPage() {
                 </span>
               </div>
               <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
-                AI-powered venture<br />methodology
+                {pageContent.approach?.title?.split('\n').map((line: string, i: number) => (
+                  <span key={i}>{line}<br /></span>
+                )) || 'Our Approach'}
               </h2>
-              <p className="text-xl text-slate-300 mb-6 leading-relaxed">
-                We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.
-              </p>
-              <p className="text-lg text-slate-400 leading-relaxed">
-                Our Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.
-              </p>
+              <div className="space-y-6">
+                {pageContent.approach?.description?.split('\n\n').map((paragraph: string, index: number) => (
+                  <p key={index} className={index === 0 ? 'text-xl text-slate-300 leading-relaxed' : 'text-lg text-slate-400 leading-relaxed'}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -157,6 +157,12 @@ export function EditContentModal({
             title: 'Building the future of intelligent ventures',
             description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering to build ventures that matter. Each product represents a bold bet on ideas others overlook.',
           },
+          stats: [
+            { value: '87%', label: 'Ventures reach market fit' },
+            { value: '$45M+', label: 'Portfolio valuation' },
+            { value: '23', label: 'AI systems in production' },
+            { value: '6-12 weeks', label: 'Average time to MVP' },
+          ],
           mission: {
             title: 'Where bold ideas become reality',
             description: 'We bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.\n\nOur mission is to transform unconventional concepts that traditional VCs overlook into revenue-generating businesses. We take calculated risks on ideas that sound absurd at first, because we know world-changing innovations often do.',
@@ -167,6 +173,29 @@ export function EditContentModal({
             { title: 'Excellence', description: 'We maintain the highest standards in engineering and product development. Every venture represents a commitment to meticulously crafted systems.' },
             { title: 'Impact', description: 'We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.' },
           ],
+          approach: {
+            title: 'AI-powered venture methodology',
+            description: 'We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.',
+            process: {
+              steps: [
+                {
+                  number: '1',
+                  title: 'Unconventional idea submitted',
+                  subtitle: 'AI scans market for validation signals',
+                  badge: 'Market gap identified',
+                  items: ['Technical architecture designed', 'MVP built in 6-12 weeks', 'Product-market fit validated'],
+                },
+                {
+                  number: '2',
+                  title: 'Production launch & scaling',
+                  subtitle: 'AI optimizes growth loops automatically',
+                  badge: 'Revenue generating',
+                  items: [],
+                },
+              ],
+              result: 'Result: Validated venture ready for scale',
+            },
+          },
           team: {
             title: 'Builders, engineers & strategists',
             description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.\n\nWe\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
@@ -1417,6 +1446,74 @@ export function EditContentModal({
                   />
                 </div>
               </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Stats Section</h3>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        stats: [...(formData.stats || []), { value: '', label: '' }],
+                      });
+                    }}
+                  >
+                    + Add Stat
+                  </Button>
+                </div>
+                {formData.stats?.map((stat: any, index: number) => (
+                  <Card key={index}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Stat {index + 1}</CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const newStats = formData.stats.filter((_: any, i: number) => i !== index);
+                            setFormData({ ...formData, stats: newStats });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Value</label>
+                        <input
+                          type="text"
+                          value={stat.value || ''}
+                          onChange={(e) => {
+                            const newStats = [...formData.stats];
+                            newStats[index] = { ...newStats[index], value: e.target.value };
+                            setFormData({ ...formData, stats: newStats });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="87%"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Label</label>
+                        <input
+                          type="text"
+                          value={stat.label || ''}
+                          onChange={(e) => {
+                            const newStats = [...formData.stats];
+                            newStats[index] = { ...newStats[index], label: e.target.value };
+                            setFormData({ ...formData, stats: newStats });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="Ventures reach market fit"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Mission Section</h3>
                 <div>
