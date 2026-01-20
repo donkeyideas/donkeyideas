@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@donkey-ideas/database';
-import ScrollHeader from './home/scroll-header';
+import ScrollHeader from '@/components/scroll-header';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 

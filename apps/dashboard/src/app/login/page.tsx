@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@donkey-ideas/ui';
 import api from '@/lib/api-client';
-import ScrollHeader from '../home/scroll-header';
+import ScrollHeader from '@/components/scroll-header';
 
 export default function LoginPage() {
   const router = useRouter();

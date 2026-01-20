@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@donkey-ideas/database';
-import ScrollHeader from '../../home/scroll-header';
+import ScrollHeader from '@/components/scroll-header';
 
 // Default ventures data
 const defaultVentures = [

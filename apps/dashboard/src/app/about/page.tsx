@@ -1,6 +1,6 @@
 import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
-import ScrollHeader from '../home/scroll-header';
+import ScrollHeader from '@/components/scroll-header';
 
 async function getPageContent() {
   try {
