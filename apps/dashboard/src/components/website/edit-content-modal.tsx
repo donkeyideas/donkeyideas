@@ -37,6 +37,7 @@ export function EditContentModal({
           label: '',
           headline: '',
           description: '',
+          backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
           cta: {
             primary: { text: '', link: '' },
             secondary: { text: '', link: '' },
@@ -55,6 +56,32 @@ export function EditContentModal({
         setFormData(section.content || {
           title: 'Where Bold Ideas Meet Rigorous Engineering',
           text: 'At Donkey Ideas, we believe the best ventures emerge from the intersection of unconventional thinking and disciplined execution. While others chase trends, we build foundational technologies that create lasting value. Our AI-powered approach combines cutting-edge machine learning, battle-tested engineering practices, and deep market understanding to transform raw concepts into revenue-generating businesses.\n\nWe\'re not a traditional incubator or consultancy. We\'re builders who get our hands dirty with code, data, and customer conversations. Every venture in our portfolio represents a commitment to excellence—meticulously crafted systems designed to scale, adapt, and dominate their markets. We take calculated risks on ideas others overlook, because we know that world-changing innovations often sound absurd at first.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that reduce time-to-market by 70% while increasing success probability. Whether you\'re a first-time founder with a napkin sketch or an enterprise looking to spin out innovation, we provide the technical firepower and strategic guidance to win.',
+        });
+      } else if (section.key === 'engage-excellence') {
+        setFormData(section.content || {
+          badge: { text: 'Innovation First', color: 'yellow' },
+          title: 'Engage with\nexcellence',
+          features: [
+            {
+              title: 'AI-First Development',
+              description: 'Every venture leverages AI frameworks giving you an unfair advantage',
+            },
+            {
+              title: 'Venture Operating System',
+              description: 'Battle-tested platform powered by AI insights',
+            },
+            {
+              title: 'Full-Stack Partnership',
+              description: 'Co-builders providing hands-on expertise across every dimension',
+            },
+          ],
+          ventureCanvas: {
+            title: 'Venture Canvas',
+            text1: 'Ready to transform your idea into a market-dominating venture? Our team of AI engineers, product strategists, and growth experts is standing by to evaluate your concept.',
+            text2: 'We move fast—most partnerships begin within 48 hours of first contact. From writing code and designing systems to acquiring customers and raising capital, we provide hands-on expertise across every dimension of venture building. Let's build something extraordinary together.',
+            ctaText: 'Explore Venture Canvas',
+            imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
+          },
         });
       } else if (section.key === 'services') {
         setFormData(section.content || {
@@ -320,6 +347,17 @@ export function EditContentModal({
                   rows={3}
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Background Image URL</label>
+                <input
+                  type="text"
+                  value={formData.backgroundImage || ''}
+                  onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
+                  className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  placeholder="https://images.unsplash.com/photo-..."
+                />
+                <p className="text-xs text-white/50 mt-1">Full-screen background image for the hero section</p>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Primary Button Text</label>
@@ -458,6 +496,140 @@ export function EditContentModal({
                   className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
                   rows={6}
                 />
+              </div>
+            </div>
+          )}
+
+          {section.key === 'engage-excellence' && (
+            <div className="space-y-6">
+              <div className="space-y-4 p-4 bg-black/20 rounded-lg">
+                <h3 className="text-lg font-semibold">Badge</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Badge Text</label>
+                  <input
+                    type="text"
+                    value={formData.badge?.text || ''}
+                    onChange={(e) => setFormData({ ...formData, badge: { ...formData.badge, text: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    placeholder="Innovation First"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Main Title</label>
+                <textarea
+                  value={formData.title || ''}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  rows={2}
+                  placeholder="Engage with\nexcellence"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Features</h3>
+                {formData.features?.map((feature: any, index: number) => (
+                  <Card key={index}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Feature {index + 1}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Title</label>
+                        <input
+                          type="text"
+                          value={feature.title || ''}
+                          onChange={(e) => {
+                            const newFeatures = [...formData.features];
+                            newFeatures[index] = { ...newFeatures[index], title: e.target.value };
+                            setFormData({ ...formData, features: newFeatures });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Description</label>
+                        <textarea
+                          value={feature.description || ''}
+                          onChange={(e) => {
+                            const newFeatures = [...formData.features];
+                            newFeatures[index] = { ...newFeatures[index], description: e.target.value };
+                            setFormData({ ...formData, features: newFeatures });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          rows={2}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="space-y-4 p-4 bg-black/20 rounded-lg">
+                <h3 className="text-lg font-semibold">Venture Canvas Section</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Title</label>
+                  <input
+                    type="text"
+                    value={formData.ventureCanvas?.title || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      ventureCanvas: { ...formData.ventureCanvas, title: e.target.value } 
+                    })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">First Paragraph</label>
+                  <textarea
+                    value={formData.ventureCanvas?.text1 || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      ventureCanvas: { ...formData.ventureCanvas, text1: e.target.value } 
+                    })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Second Paragraph</label>
+                  <textarea
+                    value={formData.ventureCanvas?.text2 || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      ventureCanvas: { ...formData.ventureCanvas, text2: e.target.value } 
+                    })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">CTA Button Text</label>
+                  <input
+                    type="text"
+                    value={formData.ventureCanvas?.ctaText || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      ventureCanvas: { ...formData.ventureCanvas, ctaText: e.target.value } 
+                    })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Image URL</label>
+                  <input
+                    type="text"
+                    value={formData.ventureCanvas?.imageUrl || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      ventureCanvas: { ...formData.ventureCanvas, imageUrl: e.target.value } 
+                    })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    placeholder="https://images.unsplash.com/photo-..."
+                  />
+                  <p className="text-xs text-white/50 mt-1">Enter image URL or upload to Unsplash and paste link</p>
+                </div>
               </div>
             </div>
           )}

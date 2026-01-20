@@ -80,11 +80,8 @@ export default function WebsitePage() {
   const homeSections = [
     { key: 'hero', name: 'Hero Section' },
     { key: 'stats', name: 'Stats Section' },
-    { key: 'about', name: 'About Section' },
-    { key: 'ventures', name: 'Ventures Section' },
-    { key: 'services', name: 'Services Section' },
-    { key: 'process', name: 'Process Section' },
-    { key: 'cta', name: 'Call to Action' },
+    { key: 'about', name: 'About / Philosophy Section' },
+    { key: 'engage-excellence', name: 'Engage with Excellence Section' },
   ];
 
   const pageSections = {
