@@ -152,19 +152,14 @@ export default async function VenturePage({ params }: { params: { slug: string }
             {venture.imageUrl ? (
               <>
                 {venture.imageUrl.startsWith('/') ? (
-                  // Local logo - served unoptimized with padding for perfect quality
-                  <Image
+                  // Local file - serve unoptimized for perfect quality (logos)
+                  <img
                     src={venture.imageUrl}
                     alt={venture.title}
-                    width={1920}
-                    height={1080}
-                    className="w-full h-auto max-h-[400px] object-contain p-12"
-                    quality={100}
-                    priority
-                    unoptimized
+                    className="w-full h-auto max-h-[400px] object-contain p-8"
                   />
                 ) : (
-                  // External image - optimized
+                  // External URL - use Next.js Image optimization (photos)
                   <Image
                     src={venture.imageUrl}
                     alt={venture.title}
@@ -173,6 +168,7 @@ export default async function VenturePage({ params }: { params: { slug: string }
                     className="w-full h-auto max-h-[400px] object-cover"
                     quality={100}
                     priority
+                    unoptimized={venture.imageUrl?.includes('.png')}
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent pointer-events-none" />

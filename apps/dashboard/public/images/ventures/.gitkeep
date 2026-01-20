@@ -1,0 +1,14 @@
+# Venture Logos Directory
+
+Store company logos here for pixel-perfect quality.
+
+## Usage:
+1. Place logo files in this folder (e.g., kamioi-logo.png)
+2. In Website Manager, use path: /images/ventures/kamioi-logo.png
+3. Logos will render at original quality with no compression
+
+## Best Practices:
+- Use PNG format for logos with transparency
+- Use SVG for scalable vector logos (best quality)
+- Recommended size: 1200x1200px for logos
+- File names: lowercase, use hyphens (e.g., company-name-logo.png)

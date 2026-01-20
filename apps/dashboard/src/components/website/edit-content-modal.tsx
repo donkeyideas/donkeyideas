@@ -1073,21 +1073,23 @@ export function EditContentModal({
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <ImageUploadField
-                          label="Image (Optional - gradient will be used if no image)"
-                          value={venture.imageUrl || ''}
-                          onChange={(url) => {
-                            const newVentures = [...(formData.ventures || formData.sections || [])];
-                            newVentures[index] = { ...newVentures[index], imageUrl: url };
-                            setFormData({ ...formData, ventures: newVentures, sections: newVentures });
-                          }}
-                          id={`ventures-page-image-${index}`}
-                        />
-                        <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm text-slate-300">
-                          <div className="font-medium text-blue-400 mb-1">💡 Image Quality Tips:</div>
-                          <div className="space-y-1 text-xs">
-                            <div>• <strong>For company logos:</strong> Save to <code className="bg-black/30 px-1 rounded">/apps/dashboard/public/images/ventures/</code> then use path: <code className="bg-black/30 px-1 rounded">/images/ventures/your-logo.png</code> (perfect quality, no compression)</div>
-                            <div>• <strong>For photos:</strong> Use Pexels URL like <code className="bg-black/30 px-1 rounded">https://images.pexels.com/...</code> (optimized, works great)</div>
+                        <label className="block text-sm font-medium mb-2">Image</label>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={venture.imageUrl || ''}
+                            onChange={(e) => {
+                              const newVentures = [...(formData.ventures || formData.sections || [])];
+                              newVentures[index] = { ...newVentures[index], imageUrl: e.target.value };
+                              setFormData({ ...formData, ventures: newVentures, sections: newVentures });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                            placeholder="/images/ventures/company-logo.png or https://images.pexels.com/..."
+                          />
+                          <div className="text-xs text-slate-400 space-y-1">
+                            <div><strong>For Logos:</strong> Upload to <code className="bg-black/30 px-1 py-0.5 rounded">/public/images/ventures/</code> then use path: <code className="bg-black/30 px-1 py-0.5 rounded">/images/ventures/logo.png</code></div>
+                            <div><strong>For Photos:</strong> Use Pexels URL: <code className="bg-black/30 px-1 py-0.5 rounded">https://images.pexels.com/...</code></div>
+                            <div className="text-green-400">✓ Local logos render at perfect quality with no compression</div>
                           </div>
                         </div>
                       </div>
