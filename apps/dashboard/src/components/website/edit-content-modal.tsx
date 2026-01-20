@@ -1435,6 +1435,44 @@ export function EditContentModal({
                     rows={3}
                   />
                 </div>
+                <div className="space-y-4">
+                  <h4 className="text-md font-semibold">Hero Features</h4>
+                  {formData.hero?.features?.map((feature: any, index: number) => (
+                    <Card key={index}>
+                      <CardHeader>
+                        <CardTitle className="text-sm">Feature {index + 1}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Title</label>
+                          <input
+                            type="text"
+                            value={feature.title || ''}
+                            onChange={(e) => {
+                              const newFeatures = [...formData.hero.features];
+                              newFeatures[index] = { ...newFeatures[index], title: e.target.value };
+                              setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Description</label>
+                          <input
+                            type="text"
+                            value={feature.description || ''}
+                            onChange={(e) => {
+                              const newFeatures = [...formData.hero.features];
+                              newFeatures[index] = { ...newFeatures[index], description: e.target.value };
+                              setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -1512,6 +1550,114 @@ export function EditContentModal({
                           placeholder="https://images.unsplash.com/..."
                         />
                       </div>
+                      {index === 1 && (
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Markets List (Section 2 only, one per line)</label>
+                          <textarea
+                            value={(sectionItem.markets || []).join('\n')}
+                            onChange={(e) => {
+                              const newSections = [...formData.sections];
+                              newSections[1] = { ...newSections[1], markets: e.target.value.split('\n').filter(Boolean) };
+                              setFormData({ ...formData, sections: newSections });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                            rows={4}
+                            placeholder="North America - Tech & SaaS ecosystems&#10;Europe - Enterprise & B2B markets"
+                          />
+                        </div>
+                      )}
+                      {index === 2 && (
+                        <div className="space-y-4">
+                          <h4 className="text-sm font-semibold">Founder Input & AI Response (Section 3 only)</h4>
+                          <Card>
+                            <CardHeader><CardTitle className="text-xs">Founder Input</CardTitle></CardHeader>
+                            <CardContent className="space-y-2">
+                              <input
+                                type="text"
+                                value={sectionItem.founderInput?.title || ''}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  newSections[2] = { ...newSections[2], founderInput: { ...(newSections[2].founderInput || {}), title: e.target.value } };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                placeholder="Founder Input"
+                              />
+                              <input
+                                type="text"
+                                value={sectionItem.founderInput?.tag || ''}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  newSections[2] = { ...newSections[2], founderInput: { ...(newSections[2].founderInput || {}), tag: e.target.value } };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                placeholder="Strategic"
+                              />
+                              <input
+                                type="text"
+                                value={sectionItem.founderInput?.quote || ''}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  newSections[2] = { ...newSections[2], founderInput: { ...(newSections[2].founderInput || {}), quote: e.target.value } };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                placeholder='"We need to pivot our B2B strategy"'
+                              />
+                              <input
+                                type="text"
+                                value={sectionItem.founderInput?.description || ''}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  newSections[2] = { ...newSections[2], founderInput: { ...(newSections[2].founderInput || {}), description: e.target.value } };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                placeholder="Market conditions suggest enterprise focus"
+                              />
+                            </CardContent>
+                          </Card>
+                          <Card>
+                            <CardHeader><CardTitle className="text-xs">AI Response</CardTitle></CardHeader>
+                            <CardContent className="space-y-2">
+                              <input
+                                type="text"
+                                value={sectionItem.aiResponse?.title || ''}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  newSections[2] = { ...newSections[2], aiResponse: { ...(newSections[2].aiResponse || {}), title: e.target.value } };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                placeholder="AI Response"
+                              />
+                              <input
+                                type="text"
+                                value={sectionItem.aiResponse?.tag || ''}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  newSections[2] = { ...newSections[2], aiResponse: { ...(newSections[2].aiResponse || {}), tag: e.target.value } };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                placeholder="Adaptive"
+                              />
+                              <textarea
+                                value={(sectionItem.aiResponse?.points || []).join('\n')}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  newSections[2] = { ...newSections[2], aiResponse: { ...(newSections[2].aiResponse || {}), points: e.target.value.split('\n').filter(Boolean) } };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                rows={3}
+                                placeholder="Point 1&#10;Point 2"
+                              />
+                            </CardContent>
+                          </Card>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -1536,6 +1682,94 @@ export function EditContentModal({
                     className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
                     rows={3}
                   />
+                </div>
+                <div className="space-y-4">
+                  <h4 className="text-md font-semibold">Market Signal Detected</h4>
+                  <Card>
+                    <CardHeader><CardTitle className="text-sm">Signal Details</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Title</label>
+                        <input
+                          type="text"
+                          value={formData.howItWorks?.marketSignal?.title || ''}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            howItWorks: { 
+                              ...formData.howItWorks, 
+                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), title: e.target.value }
+                            } 
+                          })}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="Market Signal Detected"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Signal</label>
+                        <input
+                          type="text"
+                          value={formData.howItWorks?.marketSignal?.signal || ''}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            howItWorks: { 
+                              ...formData.howItWorks, 
+                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), signal: e.target.value }
+                            } 
+                          })}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="Customer acquisition cost rising beyond sustainable levels"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Badges (one per line)</label>
+                        <textarea
+                          value={(formData.howItWorks?.marketSignal?.badges || []).join('\n')}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            howItWorks: { 
+                              ...formData.howItWorks, 
+                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), badges: e.target.value.split('\n').filter(Boolean) }
+                            } 
+                          })}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          rows={2}
+                          placeholder="Urgency indicator detected&#10;Budget threshold exceeded"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Automated Responses (one per line)</label>
+                        <textarea
+                          value={(formData.howItWorks?.marketSignal?.responses || []).join('\n')}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            howItWorks: { 
+                              ...formData.howItWorks, 
+                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), responses: e.target.value.split('\n').filter(Boolean) }
+                            } 
+                          })}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          rows={3}
+                          placeholder="Triggered product-led growth strategy&#10;Shifted 40% budget to content marketing"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Result</label>
+                        <input
+                          type="text"
+                          value={formData.howItWorks?.marketSignal?.result || ''}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            howItWorks: { 
+                              ...formData.howItWorks, 
+                              marketSignal: { ...(formData.howItWorks?.marketSignal || {}), result: e.target.value }
+                            } 
+                          })}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="CAC reduced by 62% within 8 weeks"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
