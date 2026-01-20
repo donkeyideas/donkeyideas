@@ -30,7 +30,7 @@ export default async function HomePage() {
     redirect('/app/dashboard');
   }
   
-  // Otherwise, show public home page
+  // Otherwise, show public home page with dynamic content
   const content = await getWebsiteContent();
   
   // Default content if not in database
@@ -38,6 +38,7 @@ export default async function HomePage() {
     label: 'Innovation Laboratory / Venture Builder',
     headline: 'Transforming\nUnconventional\nIdeas Into\nIntelligent Systems',
     description: 'We architect and deploy AI-powered products at the intersection of experimental thinking and production-grade engineering.',
+    backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
     cta: {
       primary: { text: 'EXPLORE VENTURES', link: '#ventures' },
       secondary: { text: 'VIEW SERVICES', link: '#services' },
@@ -58,6 +59,32 @@ export default async function HomePage() {
     ],
   };
 
+  const engageContent = content['engage-excellence'] || {
+    badge: { text: 'Innovation First', color: 'yellow' },
+    title: 'Engage with\nexcellence',
+    features: [
+      {
+        title: 'AI-First Development',
+        description: 'Every venture leverages AI frameworks giving you an unfair advantage',
+      },
+      {
+        title: 'Venture Operating System',
+        description: 'Battle-tested platform powered by AI insights',
+      },
+      {
+        title: 'Full-Stack Partnership',
+        description: 'Co-builders providing hands-on expertise across every dimension',
+      },
+    ],
+    ventureCanvas: {
+      title: 'Venture Canvas',
+      text1: 'Ready to transform your idea into a market-dominating venture? Our team of AI engineers, product strategists, and growth experts is standing by to evaluate your concept.',
+      text2: 'We move fast—most partnerships begin within 48 hours of first contact. From writing code and designing systems to acquiring customers and raising capital, we provide hands-on expertise across every dimension of venture building. Let\'s build something extraordinary together.',
+      ctaText: 'Explore Venture Canvas',
+      imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
+    },
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
       {/* Navigation - Giga.ai style with scroll behavior */}
@@ -70,7 +97,7 @@ export default async function HomePage() {
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: `url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop')`,
+              backgroundImage: `url('${heroContent.backgroundImage}')`,
             }}
           />
           {/* Gradient overlays for better text readability */}
@@ -129,110 +156,103 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* About Section */}
-      <section className="py-24 px-8">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="mb-8">
-            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-blue-500/10">
-              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-              <span className="text-xs uppercase tracking-widest text-blue-400 font-medium">
-                Our Philosophy
-              </span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-light leading-tight mb-6">
-              {aboutContent.title}
-            </h2>
+      {/* Philosophy Section */}
+      <section id="about" className="py-32 px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="text-xs uppercase tracking-widest text-blue-400 mb-6 font-medium">
+            Our Philosophy
           </div>
-          <div className="prose prose-invert prose-lg max-w-none">
+          <h2 className="text-5xl md:text-6xl font-light mb-8 leading-tight text-white">
+            {aboutContent.title}
+          </h2>
+          <div className="space-y-6 text-lg text-slate-300 leading-relaxed font-light text-left">
             {aboutContent.text.split('\n\n').map((paragraph: string, index: number) => (
-              <p key={index} className="text-slate-300 text-lg leading-relaxed mb-6">
-                {paragraph}
-              </p>
+              <p key={index}>{paragraph}</p>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Feature Showcase Section - Giga.ai style */}
-      <section className="py-24 px-8">
+      {/* Engage with Excellence Section */}
+      <section className="py-32 px-8">
         <div className="max-w-[1400px] mx-auto">
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-blue-500/10">
-              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-              <span className="text-xs uppercase tracking-widest text-blue-400 font-medium">
-                Innovation First
-              </span>
-            </div>
-            <h2 className="text-5xl md:text-6xl font-light mb-4">
-              Engage with <br />excellence
-            </h2>
-          </div>
-
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-6 mb-16">
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
-              <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium mb-3 text-white">AI-First Development</h3>
-              <p className="text-slate-400 leading-relaxed">
-                Every venture leverages AI frameworks giving you an unfair advantage
-              </p>
-            </div>
-
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
-              <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium mb-3 text-white">Venture Operating System</h3>
-              <p className="text-slate-400 leading-relaxed">
-                Battle-tested platform powered by AI insights
-              </p>
-            </div>
-
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
-              <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium mb-3 text-white">Full-Stack Partnership</h3>
-              <p className="text-slate-400 leading-relaxed">
-                Co-builders providing hands-on expertise across every dimension
-              </p>
-            </div>
-          </div>
-
-          {/* Venture Canvas Section */}
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          {/* Top Section - Title and Features */}
+          <div className="grid md:grid-cols-2 gap-20 items-start mb-24">
+            {/* Left - Title */}
             <div>
-              <h3 className="text-3xl font-light mb-6">Venture Canvas</h3>
+              <div className="inline-flex items-center gap-2 mb-8 px-3 py-1.5 rounded-full bg-yellow-500/10">
+                <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
+                <span className="text-xs uppercase tracking-widest text-yellow-400 font-medium">
+                  {engageContent.badge?.text || 'Innovation First'}
+                </span>
+              </div>
+              <h2 className="text-5xl md:text-6xl font-light leading-tight text-white">
+                {engageContent.title?.split('\n').map((line: string, i: number) => (
+                  <div key={i}>{line}</div>
+                ))}
+              </h2>
+            </div>
+
+            {/* Right - Feature Cards */}
+            <div className="grid grid-cols-3 gap-8">
+              {engageContent.features?.map((feature: any, index: number) => (
+                <div key={index}>
+                  <div className="w-12 h-12 rounded-lg bg-slate-800/50 flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {index === 0 && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />}
+                      {index === 1 && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />}
+                      {index === 2 && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />}
+                    </svg>
+                  </div>
+                  <h3 className="text-base font-medium mb-2 text-white">{feature.title}</h3>
+                  <p className="text-slate-400 text-xs leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Section - Venture Canvas with Image */}
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            {/* Left - Description */}
+            <div>
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-medium text-white">{engageContent.ventureCanvas?.title || 'Venture Canvas'}</h3>
+              </div>
+              
               <p className="text-slate-300 text-lg leading-relaxed mb-8">
-                Ready to transform your idea into a market-dominating venture? Our team of AI engineers, product strategists, and growth experts is standing by to evaluate your concept.
-                <br /><br />
-                We move fast—most partnerships begin within 48 hours of first contact. From writing code and designing systems to acquiring customers and raising capital, we provide hands-on expertise across every dimension of venture building. Let&apos;s build something extraordinary together.
+                {engageContent.ventureCanvas?.text1}
               </p>
+
+              <p className="text-slate-400 leading-relaxed mb-10">
+                {engageContent.ventureCanvas?.text2}
+              </p>
+
               <Link
                 href="/contact"
-                className="inline-block px-8 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all font-medium"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-all text-sm font-medium"
               >
-                Explore Venture Canvas
+                {engageContent.ventureCanvas?.ctaText || 'Explore Venture Canvas'}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
             </div>
-            <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
+
+            {/* Right - Large Image */}
+            <div className="relative rounded-2xl overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop"
+                src={engageContent.ventureCanvas?.imageUrl || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop'}
                 alt="Venture Canvas Platform"
                 className="w-full h-auto"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6">
-                <h4 className="text-2xl font-light text-white mb-2">Venture Canvas Platform</h4>
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
             </div>
           </div>
         </div>
