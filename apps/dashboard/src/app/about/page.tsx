@@ -41,6 +41,35 @@ export default async function AboutPage() {
         description: 'We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.',
       },
     ],
+    ventureProcess: {
+      title: 'Venture Building Process',
+      steps: [
+        {
+          number: '1',
+          title: 'Unconventional idea submitted',
+          subtitle: 'AI scans market for validation signals',
+          badge: 'Market gap identified',
+          actions: [
+            'Technical architecture designed',
+            'MVP built in 6-12 weeks',
+            'Product-market fit validated',
+          ],
+        },
+        {
+          number: '2',
+          title: 'Production launch & scaling',
+          subtitle: 'AI optimizes growth loops automatically',
+          badge: 'Revenue generating',
+          actions: [],
+        },
+      ],
+      result: 'Validated venture ready for scale',
+    },
+    approach: {
+      badge: 'Our Approach',
+      title: 'AI-powered venture methodology',
+      description: 'We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.',
+    },
     team: {
       title: 'Builders, engineers & strategists',
       description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.\n\nWe\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
@@ -171,14 +200,15 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* Approach Section - HARDCODED DEMO */}
+      {/* Venture Building Process & Approach Section */}
       <section className="py-32 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="order-2 md:order-1">
-              {/* Demo Card - HARDCODED */}
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 space-y-6">
-                <div className="text-sm text-slate-400 mb-4">Venture Building Process</div>
+              {/* Venture Building Process Card */}
+              {pageContent.ventureProcess && (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 space-y-6">
+                  <div className="text-sm text-slate-400 mb-4">{pageContent.ventureProcess.title}</div>
                 
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
@@ -221,21 +251,29 @@ export default async function AboutPage() {
             </div>
             
             <div className="order-1 md:order-2">
-              <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-purple-500/10">
-                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
-                <span className="text-xs uppercase tracking-widest text-purple-400 font-medium">
-                  Our Approach
-                </span>
-              </div>
-              <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
-                AI-powered venture<br />methodology
-              </h2>
-              <p className="text-xl text-slate-300 mb-6 leading-relaxed">
-                We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.
-              </p>
-              <p className="text-lg text-slate-400 leading-relaxed">
-                Our Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.
-              </p>
+              {pageContent.approach && (
+                <>
+                  <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-purple-500/10">
+                    <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                    <span className="text-xs uppercase tracking-widest text-purple-400 font-medium">
+                      {pageContent.approach.badge}
+                    </span>
+                  </div>
+                  <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+                    {pageContent.approach.title?.split('\n').map((line: string, i: number) => (
+                      <span key={i}>{line}<br /></span>
+                    )) || pageContent.approach.title}
+                  </h2>
+                  <div className="space-y-6 text-lg leading-relaxed">
+                    {pageContent.approach.description?.split('\n\n').map((paragraph: string, index: number) => (
+                      <p key={index} className={index === 0 ? 'text-xl text-slate-300' : 'text-lg text-slate-400'}>
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </>
+              )}
+              )}
             </div>
           </div>
         </div>

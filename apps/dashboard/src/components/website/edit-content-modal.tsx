@@ -167,6 +167,31 @@ export function EditContentModal({
             { title: 'Excellence', description: 'We maintain the highest standards in engineering and product development. Every venture represents a commitment to meticulously crafted systems.' },
             { title: 'Impact', description: 'We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.' },
           ],
+          ventureProcess: {
+            title: 'Venture Building Process',
+            steps: [
+              {
+                number: '1',
+                title: 'Unconventional idea submitted',
+                subtitle: 'AI scans market for validation signals',
+                badge: 'Market gap identified',
+                actions: ['Technical architecture designed', 'MVP built in 6-12 weeks', 'Product-market fit validated'],
+              },
+              {
+                number: '2',
+                title: 'Production launch & scaling',
+                subtitle: 'AI optimizes growth loops automatically',
+                badge: 'Revenue generating',
+                actions: [],
+              },
+            ],
+            result: 'Validated venture ready for scale',
+          },
+          approach: {
+            badge: 'Our Approach',
+            title: 'AI-powered venture methodology',
+            description: 'We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.',
+          },
           team: {
             title: 'Builders, engineers & strategists',
             description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.\n\nWe\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
@@ -1770,6 +1795,132 @@ export function EditContentModal({
                   </Card>
                 ))}
               </div>
+
+              <div className="space-y-4 border-t border-white/10 pt-6">
+                <h3 className="text-lg font-semibold">Venture Building Process (Numbers Section)</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Section Title</label>
+                  <input
+                    type="text"
+                    value={formData.ventureProcess?.title || ''}
+                    onChange={(e) => setFormData({ ...formData, ventureProcess: { ...formData.ventureProcess, title: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  />
+                </div>
+                
+                {/* Steps */}
+                {formData.ventureProcess?.steps?.map((step: any, stepIdx: number) => (
+                  <Card key={stepIdx}>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Step {step.number}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Title</label>
+                        <input
+                          type="text"
+                          value={step.title || ''}
+                          onChange={(e) => {
+                            const newSteps = [...(formData.ventureProcess?.steps || [])];
+                            newSteps[stepIdx] = { ...newSteps[stepIdx], title: e.target.value };
+                            setFormData({ ...formData, ventureProcess: { ...formData.ventureProcess, steps: newSteps } });
+                          }}
+                          className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Subtitle</label>
+                        <input
+                          type="text"
+                          value={step.subtitle || ''}
+                          onChange={(e) => {
+                            const newSteps = [...(formData.ventureProcess?.steps || [])];
+                            newSteps[stepIdx] = { ...newSteps[stepIdx], subtitle: e.target.value };
+                            setFormData({ ...formData, ventureProcess: { ...formData.ventureProcess, steps: newSteps } });
+                          }}
+                          className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Badge Text</label>
+                        <input
+                          type="text"
+                          value={step.badge || ''}
+                          onChange={(e) => {
+                            const newSteps = [...(formData.ventureProcess?.steps || [])];
+                            newSteps[stepIdx] = { ...newSteps[stepIdx], badge: e.target.value };
+                            setFormData({ ...formData, ventureProcess: { ...formData.ventureProcess, steps: newSteps } });
+                          }}
+                          className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                        />
+                      </div>
+                      {stepIdx === 0 && step.actions && (
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium mb-2">Action Items (→)</label>
+                          {step.actions.map((action: string, actionIdx: number) => (
+                            <input
+                              key={actionIdx}
+                              type="text"
+                              value={action}
+                              onChange={(e) => {
+                                const newSteps = [...(formData.ventureProcess?.steps || [])];
+                                const newActions = [...newSteps[stepIdx].actions];
+                                newActions[actionIdx] = e.target.value;
+                                newSteps[stepIdx] = { ...newSteps[stepIdx], actions: newActions };
+                                setFormData({ ...formData, ventureProcess: { ...formData.ventureProcess, steps: newSteps } });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Result Text</label>
+                  <input
+                    type="text"
+                    value={formData.ventureProcess?.result || ''}
+                    onChange={(e) => setFormData({ ...formData, ventureProcess: { ...formData.ventureProcess, result: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t border-white/10 pt-6">
+                <h3 className="text-lg font-semibold">Our Approach Section</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Badge</label>
+                  <input
+                    type="text"
+                    value={formData.approach?.badge || ''}
+                    onChange={(e) => setFormData({ ...formData, approach: { ...formData.approach, badge: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Title</label>
+                  <input
+                    type="text"
+                    value={formData.approach?.title || ''}
+                    onChange={(e) => setFormData({ ...formData, approach: { ...formData.approach, title: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <textarea
+                    value={formData.approach?.description || ''}
+                    onChange={(e) => setFormData({ ...formData, approach: { ...formData.approach, description: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    rows={4}
+                    placeholder="Use \n\n to separate paragraphs"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Team Section</h3>
                 <div>
