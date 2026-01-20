@@ -232,14 +232,48 @@ export function EditContentModal({
       } else if (section.key === 'services-page') {
         setFormData(section.content || {
           hero: {
-            title: 'Our Services',
-            subtitle: 'What We Offer',
-            description: 'Comprehensive solutions for building and scaling innovative ventures.',
+            title: 'The more ventures you build,\nthe better you become',
+            subtitle: 'AI-powered venture building platform',
+            description: 'Go beyond traditional consulting with our AI-powered venture building platform.',
+            features: [
+              { title: 'AI-Powered Insights', description: 'Machine learning recommendations based on real portfolio data' },
+              { title: 'Accelerate Any Metric', description: 'Set goals and continuously improve time-to-market' },
+              { title: 'Actionable Intelligence', description: 'Implement and measure improvements instantly' },
+            ],
           },
+          dashboardImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
           sections: [
-            { title: '', description: '', imageUrl: '', features: [] },
-            { title: '', description: '', imageUrl: '', features: [] },
-            { title: '', description: '', imageUrl: '', features: [] },
+            {
+              badge: 'Rapid Deployment',
+              title: 'Quickly validate\nand launch',
+              description: '',
+              imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
+              stats: [
+                { value: '6-12 weeks', label: 'Average time to MVP' },
+                { value: '70% faster', label: 'Than traditional methods' },
+              ],
+            },
+            {
+              badge: 'Intelligent Platform',
+              title: 'AI-powered\nrecommendations',
+              description: '',
+              imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop',
+              features: [
+                { title: 'Real-time Portfolio Analytics', description: 'Track KPIs across all ventures' },
+                { title: 'Predictive Market Intelligence', description: 'AI-driven insights for decisions' },
+                { title: 'Automated Optimization', description: 'Continuous improvement recommendations' },
+              ],
+            },
+            {
+              badge: 'Seamless Integration',
+              title: 'Prioritize what\nmatters most',
+              description: '',
+              imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop',
+              insights: [
+                { category: 'Technical Architecture', impact: '+23% efficiency', title: 'Implement microservices', description: 'Reduce deployment time' },
+                { category: 'Go-to-Market Strategy', impact: '+15% conversion', title: 'Add PLG motion', description: 'Accelerate customer acquisition' },
+              ],
+            },
           ],
         });
       } else if (section.key === 'process-page') {
