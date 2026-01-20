@@ -1072,16 +1072,25 @@ export function EditContentModal({
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <ImageUploadField
-                        label="Image (Optional - gradient will be used if no image)"
-                        value={venture.imageUrl || ''}
-                        onChange={(url) => {
-                          const newVentures = [...(formData.ventures || formData.sections || [])];
-                          newVentures[index] = { ...newVentures[index], imageUrl: url };
-                          setFormData({ ...formData, ventures: newVentures, sections: newVentures });
-                        }}
-                        id={`ventures-page-image-${index}`}
-                      />
+                      <div>
+                        <ImageUploadField
+                          label="Image (Optional - gradient will be used if no image)"
+                          value={venture.imageUrl || ''}
+                          onChange={(url) => {
+                            const newVentures = [...(formData.ventures || formData.sections || [])];
+                            newVentures[index] = { ...newVentures[index], imageUrl: url };
+                            setFormData({ ...formData, ventures: newVentures, sections: newVentures });
+                          }}
+                          id={`ventures-page-image-${index}`}
+                        />
+                        <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm text-slate-300">
+                          <div className="font-medium text-blue-400 mb-1">💡 Image Quality Tips:</div>
+                          <div className="space-y-1 text-xs">
+                            <div>• <strong>For company logos:</strong> Save to <code className="bg-black/30 px-1 rounded">/apps/dashboard/public/images/ventures/</code> then use path: <code className="bg-black/30 px-1 rounded">/images/ventures/your-logo.png</code> (perfect quality, no compression)</div>
+                            <div>• <strong>For photos:</strong> Use Pexels URL like <code className="bg-black/30 px-1 rounded">https://images.pexels.com/...</code> (optimized, works great)</div>
+                          </div>
+                        </div>
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium mb-2">Status</label>

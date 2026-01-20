@@ -208,17 +208,31 @@ export default async function VenturesPage() {
                   <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 aspect-video bg-slate-800/50">
                     {venture.imageUrl ? (
                       <>
-                        <Image
-                          src={venture.imageUrl}
-                          alt={venture.title}
-                          width={1920}
-                          height={1080}
-                          className="w-full h-full object-cover"
-                          quality={100}
-                          priority={index === 0}
-                          unoptimized={venture.imageUrl?.includes('.png')}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
+                        {venture.imageUrl.startsWith('/') ? (
+                          // Local image - served unoptimized for perfect logo quality
+                          <Image
+                            src={venture.imageUrl}
+                            alt={venture.title}
+                            width={1920}
+                            height={1080}
+                            className="w-full h-full object-contain p-8"
+                            quality={100}
+                            priority={index === 0}
+                            unoptimized
+                          />
+                        ) : (
+                          // External image (e.g., Pexels) - optimized
+                          <Image
+                            src={venture.imageUrl}
+                            alt={venture.title}
+                            width={1920}
+                            height={1080}
+                            className="w-full h-full object-cover"
+                            quality={100}
+                            priority={index === 0}
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent pointer-events-none" />
                       </>
                     ) : (
                       <div className={`relative w-full h-full bg-gradient-to-br ${gradients[gradient]} backdrop-blur-sm flex items-center justify-center`}>

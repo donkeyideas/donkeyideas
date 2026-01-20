@@ -151,17 +151,31 @@ export default async function VenturePage({ params }: { params: { slug: string }
           <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
             {venture.imageUrl ? (
               <>
-                <Image
-                  src={venture.imageUrl}
-                  alt={venture.title}
-                  width={1920}
-                  height={1080}
-                  className="w-full h-auto max-h-[400px] object-cover"
-                  quality={100}
-                  priority
-                  unoptimized={venture.imageUrl?.includes('.png')}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
+                {venture.imageUrl.startsWith('/') ? (
+                  // Local logo - served unoptimized with padding for perfect quality
+                  <Image
+                    src={venture.imageUrl}
+                    alt={venture.title}
+                    width={1920}
+                    height={1080}
+                    className="w-full h-auto max-h-[400px] object-contain p-12"
+                    quality={100}
+                    priority
+                    unoptimized
+                  />
+                ) : (
+                  // External image - optimized
+                  <Image
+                    src={venture.imageUrl}
+                    alt={venture.title}
+                    width={1920}
+                    height={1080}
+                    className="w-full h-auto max-h-[400px] object-cover"
+                    quality={100}
+                    priority
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent pointer-events-none" />
               </>
             ) : (
               <div className="w-full aspect-[16/6] flex items-center justify-center">
