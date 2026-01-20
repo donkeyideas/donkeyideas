@@ -21,6 +21,11 @@ export default async function ProcessPage() {
     hero: {
       title: 'Meet your market with precision at every turn',
       description: 'Designed to make every venture launch feel inevitable. Our AI-powered approach allows us to navigate rapid market shifts, validate product-market fit, and detect opportunities with precision.',
+      features: [
+        { title: 'Tailored Strategies', description: 'Customized to match your unique vision and market' },
+        { title: 'Dynamic Pivots', description: 'Adapted to changing markets and customer feedback' },
+        { title: 'Ultra-Fast Execution', description: 'Industry-leading time from concept to production' },
+      ],
     },
     integrationTitle: 'Integration without compromising velocity',
     sections: [
@@ -35,17 +40,48 @@ export default async function ProcessPage() {
         title: 'Launch in any market',
         description: 'Deploy ventures anywhere in the world with localized strategies, compliance frameworks, and market-specific positioning. Our platform adapts to regional nuances automatically.',
         imageUrl: 'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=2006&auto=format&fit=crop',
+        markets: [
+          'North America - Tech & SaaS ecosystems',
+          'Europe - Enterprise & B2B markets',
+          'Asia-Pacific - Consumer & mobile-first',
+          'Latin America - Emerging tech hubs',
+        ],
       },
       {
         badge: 'Venture Execution',
         title: 'Strike the right balance',
         description: 'A venture approach that understands founder intent and meets it with contextually relevant strategies. This includes natural iteration cycles, adaptive pivots, and strategic decision-making at the right moments.',
         imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
+        founderInput: {
+          title: 'Founder Input',
+          tag: 'Strategic',
+          quote: '"We need to pivot our B2B strategy"',
+          description: 'Market conditions suggest enterprise focus',
+        },
+        aiResponse: {
+          title: 'AI Response',
+          tag: 'Adaptive',
+          points: [
+            'Identified 3 enterprise segments with immediate demand',
+            'Realigned roadmap, adjusted messaging, prioritized features',
+          ],
+        },
       },
     ],
     howItWorks: {
       title: 'Data-driven venture building',
       description: 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.',
+      marketSignal: {
+        title: 'Market Signal Detected',
+        signal: 'Customer acquisition cost rising beyond sustainable levels',
+        badges: ['Urgency indicator detected', 'Budget threshold exceeded'],
+        responses: [
+          'Triggered product-led growth strategy',
+          'Shifted 40% budget to content marketing',
+          'Implemented referral program with AI optimization',
+        ],
+        result: 'CAC reduced by 62% within 8 weeks',
+      },
     },
   };
 
@@ -71,20 +107,14 @@ export default async function ProcessPage() {
             {pageContent.hero?.description || ''}
           </p>
           
-          {/* Key Features Grid - HARDCODED */}
+          {/* Key Features Grid */}
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="text-sm uppercase tracking-widest text-white mb-2 font-medium">Tailored Strategies</div>
-              <p className="text-slate-400 text-sm">Customized to match your unique vision and market</p>
-            </div>
-            <div className="text-center">
-              <div className="text-sm uppercase tracking-widest text-white mb-2 font-medium">Dynamic Pivots</div>
-              <p className="text-slate-400 text-sm">Adapted to changing markets and customer feedback</p>
-            </div>
-            <div className="text-center">
-              <div className="text-sm uppercase tracking-widest text-white mb-2 font-medium">Ultra-Fast Execution</div>
-              <p className="text-slate-400 text-sm">Industry-leading time from concept to production</p>
-            </div>
+            {pageContent.hero?.features?.map((feature: any, index: number) => (
+              <div key={index} className="text-center">
+                <div className="text-sm uppercase tracking-widest text-white mb-2 font-medium">{feature.title}</div>
+                <p className="text-slate-400 text-sm">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -186,25 +216,17 @@ export default async function ProcessPage() {
                   {pageContent.sections[1].description}
                 </p>
                 
-                {/* Market List - HARDCODED */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                    <span>North America - Tech & SaaS ecosystems</span>
+                {/* Market List */}
+                {pageContent.sections?.[1]?.markets && (
+                  <div className="space-y-3">
+                    {pageContent.sections[1].markets.map((market: string, index: number) => (
+                      <div key={index} className="flex items-center gap-3 text-slate-300">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                        <span>{market}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                    <span>Europe - Enterprise & B2B markets</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                    <span>Asia-Pacific - Consumer & mobile-first</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                    <span>Latin America - Emerging tech hubs</span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -236,24 +258,29 @@ export default async function ProcessPage() {
                   {pageContent.sections[2].description}
                 </p>
               
-              {/* Example Cards */}
+              {/* Founder Input & AI Response Cards */}
               <div className="space-y-4">
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-sm text-slate-400">Founder Input</div>
-                    <div className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Strategic</div>
+                {pageContent.sections?.[2]?.founderInput && (
+                  <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-sm text-slate-400">{pageContent.sections[2].founderInput.title}</div>
+                      <div className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">{pageContent.sections[2].founderInput.tag}</div>
+                    </div>
+                    <div className="text-base text-white mb-2">{pageContent.sections[2].founderInput.quote}</div>
+                    <div className="text-sm text-slate-400">{pageContent.sections[2].founderInput.description}</div>
                   </div>
-                  <div className="text-base text-white mb-2">"We need to pivot our B2B strategy"</div>
-                  <div className="text-sm text-slate-400">Market conditions suggest enterprise focus</div>
-                </div>
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-sm text-slate-400">AI Response</div>
-                    <div className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">Adaptive</div>
+                )}
+                {pageContent.sections?.[2]?.aiResponse && (
+                  <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-sm text-slate-400">{pageContent.sections[2].aiResponse.title}</div>
+                      <div className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">{pageContent.sections[2].aiResponse.tag}</div>
+                    </div>
+                    {pageContent.sections[2].aiResponse.points?.map((point: string, index: number) => (
+                      <div key={index} className={`text-sm ${index === 0 ? 'text-white mb-2' : 'text-slate-400'}`}>{point}</div>
+                    ))}
                   </div>
-                  <div className="text-base text-white mb-2">Identified 3 enterprise segments with immediate demand</div>
-                  <div className="text-sm text-slate-400">Realigned roadmap, adjusted messaging, prioritized features</div>
-                </div>
+                )}
               </div>
             </div>
             
@@ -288,46 +315,50 @@ export default async function ProcessPage() {
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8">
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm text-slate-400 mb-2">Market Signal Detected</div>
-                    <div className="text-base text-white mb-1">Customer acquisition cost rising beyond sustainable levels</div>
-                    <div className="flex items-center gap-3 mt-3">
-                      <span className="px-3 py-1 bg-yellow-500/10 text-yellow-400 rounded-full text-xs">Urgency indicator detected</span>
-                      <span className="px-3 py-1 bg-red-500/10 text-red-400 rounded-full text-xs">Budget threshold exceeded</span>
+          {/* Market Signal Detected Card */}
+          {pageContent.howItWorks?.marketSignal && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8">
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-slate-400 mb-2">{pageContent.howItWorks.marketSignal.title}</div>
+                      <div className="text-base text-white mb-1">{pageContent.howItWorks.marketSignal.signal}</div>
+                      {pageContent.howItWorks.marketSignal.badges && (
+                        <div className="flex items-center gap-3 mt-3">
+                          {pageContent.howItWorks.marketSignal.badges.map((badge: string, index: number) => (
+                            <span key={index} className={`px-3 py-1 ${index === 0 ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'} rounded-full text-xs`}>{badge}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-                
-                <div className="border-l-2 border-blue-500/30 pl-6 ml-6 space-y-4">
-                  <div className="text-sm text-slate-400">Automated Response:</div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                      Triggered product-led growth strategy
+                  
+                  {pageContent.howItWorks.marketSignal.responses && (
+                    <div className="border-l-2 border-blue-500/30 pl-6 ml-6 space-y-4">
+                      <div className="text-sm text-slate-400">Automated Response:</div>
+                      <div className="space-y-2">
+                        {pageContent.howItWorks.marketSignal.responses.map((response: string, index: number) => (
+                          <div key={index} className="flex items-center gap-2 text-sm text-slate-300">
+                            <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                            {response}
+                          </div>
+                        ))}
+                      </div>
+                      {pageContent.howItWorks.marketSignal.result && (
+                        <div className="text-sm text-green-400 mt-4">Result: {pageContent.howItWorks.marketSignal.result}</div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                      Shifted 40% budget to content marketing
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
-                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                      Implemented referral program with AI optimization
-                    </div>
-                  </div>
-                  <div className="text-sm text-green-400 mt-4">Result: CAC reduced by 62% within 8 weeks</div>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 

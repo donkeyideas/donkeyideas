@@ -278,6 +278,11 @@ export function EditContentModal({
           hero: {
             title: 'Meet your market with precision at every turn',
             description: 'Designed to make every venture launch feel inevitable. Our AI-powered approach allows us to navigate rapid market shifts, validate product-market fit, and detect opportunities with precision.',
+            features: [
+              { title: 'Tailored Strategies', description: 'Customized to match your unique vision and market' },
+              { title: 'Dynamic Pivots', description: 'Adapted to changing markets and customer feedback' },
+              { title: 'Ultra-Fast Execution', description: 'Industry-leading time from concept to production' },
+            ],
           },
           integrationTitle: 'Integration without compromising velocity',
           sections: [
@@ -292,17 +297,48 @@ export function EditContentModal({
               title: 'Launch in any market',
               description: 'Deploy ventures anywhere in the world with localized strategies, compliance frameworks, and market-specific positioning. Our platform adapts to regional nuances automatically.',
               imageUrl: 'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=2006&auto=format&fit=crop',
+              markets: [
+                'North America - Tech & SaaS ecosystems',
+                'Europe - Enterprise & B2B markets',
+                'Asia-Pacific - Consumer & mobile-first',
+                'Latin America - Emerging tech hubs',
+              ],
             },
             {
               badge: 'Venture Execution',
               title: 'Strike the right balance',
               description: 'A venture approach that understands founder intent and meets it with contextually relevant strategies. This includes natural iteration cycles, adaptive pivots, and strategic decision-making at the right moments.',
               imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
+              founderInput: {
+                title: 'Founder Input',
+                tag: 'Strategic',
+                quote: '"We need to pivot our B2B strategy"',
+                description: 'Market conditions suggest enterprise focus',
+              },
+              aiResponse: {
+                title: 'AI Response',
+                tag: 'Adaptive',
+                points: [
+                  'Identified 3 enterprise segments with immediate demand',
+                  'Realigned roadmap, adjusted messaging, prioritized features',
+                ],
+              },
             },
           ],
           howItWorks: {
             title: 'Data-driven venture building',
             description: 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.',
+            marketSignal: {
+              title: 'Market Signal Detected',
+              signal: 'Customer acquisition cost rising beyond sustainable levels',
+              badges: ['Urgency indicator detected', 'Budget threshold exceeded'],
+              responses: [
+                'Triggered product-led growth strategy',
+                'Shifted 40% budget to content marketing',
+                'Implemented referral program with AI optimization',
+              ],
+              result: 'CAC reduced by 62% within 8 weeks',
+            },
           },
         });
       } else if (section.key === 'process') {
@@ -1610,6 +1646,196 @@ export function EditContentModal({
                   </Card>
                 ))}
               </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Our Approach Section</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Title</label>
+                  <input
+                    type="text"
+                    value={formData.approach?.title || ''}
+                    onChange={(e) => setFormData({ ...formData, approach: { ...formData.approach, title: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    placeholder="AI-powered venture methodology"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <textarea
+                    value={formData.approach?.description || ''}
+                    onChange={(e) => setFormData({ ...formData, approach: { ...formData.approach, description: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    rows={4}
+                    placeholder="Use \n\n to separate paragraphs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Process Result Text</label>
+                  <input
+                    type="text"
+                    value={formData.approach?.process?.result || ''}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      approach: { 
+                        ...formData.approach, 
+                        process: { ...(formData.approach?.process || {}), result: e.target.value }
+                      } 
+                    })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    placeholder="Result: Validated venture ready for scale"
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-4">
+                  <h4 className="text-md font-semibold">Process Steps (Numbered Sections)</h4>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      const currentSteps = formData.approach?.process?.steps || [];
+                      setFormData({
+                        ...formData,
+                        approach: {
+                          ...formData.approach,
+                          process: {
+                            ...(formData.approach?.process || {}),
+                            steps: [...currentSteps, { number: String(currentSteps.length + 1), title: '', subtitle: '', badge: '', items: [] }],
+                          },
+                        },
+                      });
+                    }}
+                  >
+                    + Add Step
+                  </Button>
+                </div>
+                {formData.approach?.process?.steps?.map((step: any, index: number) => (
+                  <Card key={index}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Step {step.number}</CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const newSteps = formData.approach.process.steps.filter((_: any, i: number) => i !== index);
+                            setFormData({
+                              ...formData,
+                              approach: {
+                                ...formData.approach,
+                                process: { ...formData.approach.process, steps: newSteps },
+                              },
+                            });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Step Number</label>
+                        <input
+                          type="text"
+                          value={step.number || ''}
+                          onChange={(e) => {
+                            const newSteps = [...formData.approach.process.steps];
+                            newSteps[index] = { ...newSteps[index], number: e.target.value };
+                            setFormData({
+                              ...formData,
+                              approach: {
+                                ...formData.approach,
+                                process: { ...formData.approach.process, steps: newSteps },
+                              },
+                            });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Step Title</label>
+                        <input
+                          type="text"
+                          value={step.title || ''}
+                          onChange={(e) => {
+                            const newSteps = [...formData.approach.process.steps];
+                            newSteps[index] = { ...newSteps[index], title: e.target.value };
+                            setFormData({
+                              ...formData,
+                              approach: {
+                                ...formData.approach,
+                                process: { ...formData.approach.process, steps: newSteps },
+                              },
+                            });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="Unconventional idea submitted"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Step Subtitle</label>
+                        <input
+                          type="text"
+                          value={step.subtitle || ''}
+                          onChange={(e) => {
+                            const newSteps = [...formData.approach.process.steps];
+                            newSteps[index] = { ...newSteps[index], subtitle: e.target.value };
+                            setFormData({
+                              ...formData,
+                              approach: {
+                                ...formData.approach,
+                                process: { ...formData.approach.process, steps: newSteps },
+                              },
+                            });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="AI scans market for validation signals"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Badge Text</label>
+                        <input
+                          type="text"
+                          value={step.badge || ''}
+                          onChange={(e) => {
+                            const newSteps = [...formData.approach.process.steps];
+                            newSteps[index] = { ...newSteps[index], badge: e.target.value };
+                            setFormData({
+                              ...formData,
+                              approach: {
+                                ...formData.approach,
+                                process: { ...formData.approach.process, steps: newSteps },
+                              },
+                            });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          placeholder="Market gap identified"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Sub-items (one per line, arrow will be added)</label>
+                        <textarea
+                          value={step.items?.join('\n') || ''}
+                          onChange={(e) => {
+                            const newSteps = [...formData.approach.process.steps];
+                            newSteps[index] = { ...newSteps[index], items: e.target.value.split('\n').filter(Boolean) };
+                            setFormData({
+                              ...formData,
+                              approach: {
+                                ...formData.approach,
+                                process: { ...formData.approach.process, steps: newSteps },
+                              },
+                            });
+                          }}
+                          className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          rows={3}
+                          placeholder="Technical architecture designed&#10;MVP built in 6-12 weeks&#10;Product-market fit validated"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Team Section</h3>
                 <div>
