@@ -1236,6 +1236,44 @@ export function EditContentModal({
                     rows={3}
                   />
                 </div>
+                <div className="space-y-4">
+                  <h4 className="text-md font-semibold">Hero Features</h4>
+                  {formData.hero?.features?.map((feature: any, index: number) => (
+                    <Card key={index}>
+                      <CardHeader>
+                        <CardTitle className="text-sm">Feature {index + 1}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Title</label>
+                          <input
+                            type="text"
+                            value={feature.title || ''}
+                            onChange={(e) => {
+                              const newFeatures = [...formData.hero.features];
+                              newFeatures[index] = { ...newFeatures[index], title: e.target.value };
+                              setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Description</label>
+                          <input
+                            type="text"
+                            value={feature.description || ''}
+                            onChange={(e) => {
+                              const newFeatures = [...formData.hero.features];
+                              newFeatures[index] = { ...newFeatures[index], description: e.target.value };
+                              setFormData({ ...formData, hero: { ...formData.hero, features: newFeatures } });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -1308,20 +1346,65 @@ export function EditContentModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Features (one per line)</label>
-                        <textarea
-                          value={(sectionItem.features || []).join('\n')}
+                        <label className="block text-sm font-medium mb-2">Badge Text</label>
+                        <input
+                          type="text"
+                          value={sectionItem.badge || ''}
                           onChange={(e) => {
-                            const features = e.target.value.split('\n').filter(f => f.trim());
                             const newSections = [...formData.sections];
-                            newSections[index] = { ...newSections[index], features };
+                            newSections[index] = { ...newSections[index], badge: e.target.value };
                             setFormData({ ...formData, sections: newSections });
                           }}
                           className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          rows={4}
-                          placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
+                          placeholder="Rapid Deployment"
                         />
                       </div>
+                      {index === 0 && (
+                        <div className="space-y-3">
+                          <h4 className="text-sm font-semibold">Stats (Section 1 only)</h4>
+                          {sectionItem.stats?.map((stat: any, statIndex: number) => (
+                            <Card key={statIndex}>
+                              <CardHeader>
+                                <CardTitle className="text-xs">Stat {statIndex + 1}</CardTitle>
+                              </CardHeader>
+                              <CardContent className="space-y-2">
+                                <div>
+                                  <label className="block text-sm font-medium mb-1">Value</label>
+                                  <input
+                                    type="text"
+                                    value={stat.value || ''}
+                                    onChange={(e) => {
+                                      const newSections = [...formData.sections];
+                                      const newStats = [...(newSections[0].stats || [])];
+                                      newStats[statIndex] = { ...newStats[statIndex], value: e.target.value };
+                                      newSections[0] = { ...newSections[0], stats: newStats };
+                                      setFormData({ ...formData, sections: newSections });
+                                    }}
+                                    className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                    placeholder="6-12 weeks"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium mb-1">Label</label>
+                                  <input
+                                    type="text"
+                                    value={stat.label || ''}
+                                    onChange={(e) => {
+                                      const newSections = [...formData.sections];
+                                      const newStats = [...(newSections[0].stats || [])];
+                                      newStats[statIndex] = { ...newStats[statIndex], label: e.target.value };
+                                      newSections[0] = { ...newSections[0], stats: newStats };
+                                      setFormData({ ...formData, sections: newSections });
+                                    }}
+                                    className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                    placeholder="Average time to MVP"
+                                  />
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
