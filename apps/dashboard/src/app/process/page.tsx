@@ -34,6 +34,14 @@ export default async function ProcessPage() {
         title: 'AI-driven validation in real-time',
         description: 'Designed to respond dynamically to market signals and customer behavior patterns with less manual research. Our AI systems continuously monitor trends, validate assumptions, and identify opportunities before competitors.',
         imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+        marketAnalysis: {
+          title: 'Market Analysis',
+          status: 'Processing...',
+          task: 'Analyze competitor landscape for fintech space',
+          scanning: 'Scanning 10,000+ data points...',
+          result: 'Found 3 underserved segments with 94% confidence',
+          aiStatus: 'AI Model Active (2.4s)',
+        },
       },
       {
         badge: 'Global Reach',
@@ -142,24 +150,26 @@ export default async function ProcessPage() {
                 <p className="text-xl text-slate-300 mb-8 leading-relaxed">
                   {pageContent.sections[0].description}
                 </p>
-              
-              {/* Demo Card */}
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-slate-400">Market Analysis</div>
-                  <div className="text-xs text-blue-400">Processing...</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-base text-white">Analyze competitor landscape for fintech space</div>
-                  <div className="text-sm text-slate-400">Scanning 10,000+ data points...</div>
-                  <div className="text-sm text-green-400">Found 3 underserved segments with 94% confidence</div>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                  AI Model Active (2.4s)
-                </div>
+
+                {/* Market Analysis Card */}
+                {pageContent.sections[0].marketAnalysis && (
+                  <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-slate-400">{pageContent.sections[0].marketAnalysis.title}</div>
+                      <div className="text-xs text-blue-400">{pageContent.sections[0].marketAnalysis.status}</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-base text-white">{pageContent.sections[0].marketAnalysis.task}</div>
+                      <div className="text-sm text-slate-400">{pageContent.sections[0].marketAnalysis.scanning}</div>
+                      <div className="text-sm text-green-400">{pageContent.sections[0].marketAnalysis.result}</div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                      {pageContent.sections[0].marketAnalysis.aiStatus}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
             
             <div className="relative">
               <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">

@@ -287,6 +287,14 @@ export function EditContentModal({
               title: 'AI-driven validation in real-time',
               description: 'Designed to respond dynamically to market signals and customer behavior patterns with less manual research. Our AI systems continuously monitor trends, validate assumptions, and identify opportunities before competitors.',
               imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+              marketAnalysis: {
+                title: 'Market Analysis',
+                status: 'Processing...',
+                task: 'Analyze competitor landscape for fintech space',
+                scanning: 'Scanning 10,000+ data points...',
+                result: 'Found 3 underserved segments with 94% confidence',
+                aiStatus: 'AI Model Active (2.4s)',
+              },
             },
             {
               badge: 'Global Reach',
@@ -1473,6 +1481,111 @@ export function EditContentModal({
                               placeholder="Region - Description"
                             />
                           ))}
+                        </div>
+                      )}
+
+                      {/* Market Analysis for Section 1 (Autonomous Discovery) */}
+                      {index === 0 && (
+                        <div className="space-y-4 border-t border-white/10 pt-4">
+                          <h4 className="text-sm font-semibold">Market Analysis Card</h4>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Card Title</label>
+                            <input
+                              type="text"
+                              value={sectionItem.marketAnalysis?.title || ''}
+                              onChange={(e) => {
+                                const newSections = [...formData.sections];
+                                newSections[index] = {
+                                  ...newSections[index],
+                                  marketAnalysis: { ...newSections[index].marketAnalysis, title: e.target.value }
+                                };
+                                setFormData({ ...formData, sections: newSections });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-sm font-medium mb-2">Status Text</label>
+                              <input
+                                type="text"
+                                value={sectionItem.marketAnalysis?.status || ''}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  newSections[index] = {
+                                    ...newSections[index],
+                                    marketAnalysis: { ...newSections[index].marketAnalysis, status: e.target.value }
+                                  };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-2">AI Status</label>
+                              <input
+                                type="text"
+                                value={sectionItem.marketAnalysis?.aiStatus || ''}
+                                onChange={(e) => {
+                                  const newSections = [...formData.sections];
+                                  newSections[index] = {
+                                    ...newSections[index],
+                                    marketAnalysis: { ...newSections[index].marketAnalysis, aiStatus: e.target.value }
+                                  };
+                                  setFormData({ ...formData, sections: newSections });
+                                }}
+                                className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Task</label>
+                            <input
+                              type="text"
+                              value={sectionItem.marketAnalysis?.task || ''}
+                              onChange={(e) => {
+                                const newSections = [...formData.sections];
+                                newSections[index] = {
+                                  ...newSections[index],
+                                  marketAnalysis: { ...newSections[index].marketAnalysis, task: e.target.value }
+                                };
+                                setFormData({ ...formData, sections: newSections });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Scanning Text</label>
+                            <input
+                              type="text"
+                              value={sectionItem.marketAnalysis?.scanning || ''}
+                              onChange={(e) => {
+                                const newSections = [...formData.sections];
+                                newSections[index] = {
+                                  ...newSections[index],
+                                  marketAnalysis: { ...newSections[index].marketAnalysis, scanning: e.target.value }
+                                };
+                                setFormData({ ...formData, sections: newSections });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Result (green text)</label>
+                            <input
+                              type="text"
+                              value={sectionItem.marketAnalysis?.result || ''}
+                              onChange={(e) => {
+                                const newSections = [...formData.sections];
+                                newSections[index] = {
+                                  ...newSections[index],
+                                  marketAnalysis: { ...newSections[index].marketAnalysis, result: e.target.value }
+                                };
+                                setFormData({ ...formData, sections: newSections });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                            />
+                          </div>
                         </div>
                       )}
 
