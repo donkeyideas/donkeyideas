@@ -1204,6 +1204,108 @@ export function EditContentModal({
                           <option value="from-orange-950/40 to-red-950/30" style={{ backgroundColor: '#0F0F0F', color: 'white' }}>Subtle Orange to Red</option>
                         </select>
                       </div>
+
+                      {/* Impact & Results Stats */}
+                      <div className="border-t border-white/10 pt-4">
+                        <h4 className="text-sm font-semibold mb-3">Impact & Results (4 stats)</h4>
+                        <div className="space-y-3">
+                          {[0, 1, 2, 3].map((statIdx) => {
+                            const stats = venture.stats || [];
+                            const stat = stats[statIdx] || { value: '', label: '' };
+                            return (
+                              <div key={statIdx} className="grid grid-cols-2 gap-3">
+                                <input
+                                  type="text"
+                                  value={stat.value}
+                                  onChange={(e) => {
+                                    const newVentures = [...(formData.ventures || formData.sections || [])];
+                                    const newStats = [...(newVentures[index].stats || [{ value: '', label: '' }, { value: '', label: '' }, { value: '', label: '' }, { value: '', label: '' }])];
+                                    newStats[statIdx] = { ...newStats[statIdx], value: e.target.value };
+                                    newVentures[index] = { ...newVentures[index], stats: newStats };
+                                    setFormData({ ...formData, ventures: newVentures, sections: newVentures });
+                                  }}
+                                  className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                  placeholder={`Value ${statIdx + 1} (e.g., 99.9%)`}
+                                />
+                                <input
+                                  type="text"
+                                  value={stat.label}
+                                  onChange={(e) => {
+                                    const newVentures = [...(formData.ventures || formData.sections || [])];
+                                    const newStats = [...(newVentures[index].stats || [{ value: '', label: '' }, { value: '', label: '' }, { value: '', label: '' }, { value: '', label: '' }])];
+                                    newStats[statIdx] = { ...newStats[statIdx], label: e.target.value };
+                                    newVentures[index] = { ...newVentures[index], stats: newStats };
+                                    setFormData({ ...formData, ventures: newVentures, sections: newVentures });
+                                  }}
+                                  className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                                  placeholder={`Label ${statIdx + 1} (e.g., System Uptime)`}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Technology Stack */}
+                      <div className="border-t border-white/10 pt-4">
+                        <h4 className="text-sm font-semibold mb-3">Technology Stack</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Frontend (one per line)</label>
+                            <textarea
+                              value={(venture.techStack?.frontend || []).join('\n')}
+                              onChange={(e) => {
+                                const frontend = e.target.value.split('\n').filter(t => t.trim());
+                                const newVentures = [...(formData.ventures || formData.sections || [])];
+                                newVentures[index] = { 
+                                  ...newVentures[index], 
+                                  techStack: { ...(newVentures[index].techStack || {}), frontend } 
+                                };
+                                setFormData({ ...formData, ventures: newVentures, sections: newVentures });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                              rows={3}
+                              placeholder="React / Next.js&#10;TypeScript&#10;Tailwind CSS"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Backend (one per line)</label>
+                            <textarea
+                              value={(venture.techStack?.backend || []).join('\n')}
+                              onChange={(e) => {
+                                const backend = e.target.value.split('\n').filter(t => t.trim());
+                                const newVentures = [...(formData.ventures || formData.sections || [])];
+                                newVentures[index] = { 
+                                  ...newVentures[index], 
+                                  techStack: { ...(newVentures[index].techStack || {}), backend } 
+                                };
+                                setFormData({ ...formData, ventures: newVentures, sections: newVentures });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                              rows={3}
+                              placeholder="Node.js / Python&#10;PostgreSQL&#10;Redis Cache"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">AI/ML (one per line)</label>
+                            <textarea
+                              value={(venture.techStack?.aiml || []).join('\n')}
+                              onChange={(e) => {
+                                const aiml = e.target.value.split('\n').filter(t => t.trim());
+                                const newVentures = [...(formData.ventures || formData.sections || [])];
+                                newVentures[index] = { 
+                                  ...newVentures[index], 
+                                  techStack: { ...(newVentures[index].techStack || {}), aiml } 
+                                };
+                                setFormData({ ...formData, ventures: newVentures, sections: newVentures });
+                              }}
+                              className="w-full p-2 bg-black/30 border border-white/20 rounded text-white text-sm"
+                              rows={3}
+                              placeholder="Custom LLMs&#10;TensorFlow&#10;Real-time Analytics"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}

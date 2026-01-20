@@ -14,6 +14,17 @@ const defaultVentures = [
     tags: ['Real-time Analytics', 'C-Suite Intelligence', 'Strategic Planning'],
     gradient: 'from-blue-600 to-blue-400',
     imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+    stats: [
+      { value: '99.9%', label: 'System Uptime' },
+      { value: '10x', label: 'Performance Increase' },
+      { value: '70%', label: 'Cost Reduction' },
+      { value: '24/7', label: 'AI Monitoring' },
+    ],
+    techStack: {
+      frontend: ['React / Next.js', 'TypeScript', 'Tailwind CSS'],
+      backend: ['Node.js / Python', 'PostgreSQL', 'Redis Cache'],
+      aiml: ['Custom LLMs', 'TensorFlow', 'Real-time Analytics'],
+    },
   },
   {
     status: 'PRODUCTION',
@@ -256,74 +267,74 @@ export default async function VenturePage({ params }: { params: { slug: string }
       </section>
 
       {/* Key Metrics */}
-      <section className="py-16 px-8">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-light mb-4">Impact & Results</h2>
-            <p className="text-xl text-slate-400">Measurable outcomes from our work</p>
-          </div>
-          
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">99.9%</div>
-              <div className="text-sm text-slate-400">System Uptime</div>
+      {venture.stats && venture.stats.length > 0 && (
+        <section className="py-16 px-8">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-5xl font-light mb-4">Impact & Results</h2>
+              <p className="text-xl text-slate-400">Measurable outcomes from our work</p>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">10x</div>
-              <div className="text-sm text-slate-400">Performance Increase</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">70%</div>
-              <div className="text-sm text-slate-400">Cost Reduction</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">24/7</div>
-              <div className="text-sm text-slate-400">AI Monitoring</div>
+            
+            <div className="grid md:grid-cols-4 gap-8">
+              {venture.stats.map((stat: any, index: number) => (
+                <div key={index} className="text-center">
+                  <div className="text-4xl font-light text-white mb-2">{stat.value}</div>
+                  <div className="text-sm text-slate-400">{stat.label}</div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Technology Stack */}
-      <section className="py-16 px-8">
-        <div className="max-w-[1400px] mx-auto">
-          <h2 className="text-3xl md:text-4xl font-light mb-8">Technology Stack</h2>
-          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
-            <div className="grid md:grid-cols-3 gap-8">
-              <div>
-                <div className="text-sm uppercase tracking-widest text-blue-400 mb-4 font-medium">
-                  Frontend
-                </div>
-                <div className="space-y-2">
-                  <div className="text-slate-300">React / Next.js</div>
-                  <div className="text-slate-300">TypeScript</div>
-                  <div className="text-slate-300">Tailwind CSS</div>
-                </div>
-              </div>
-              <div>
-                <div className="text-sm uppercase tracking-widest text-blue-400 mb-4 font-medium">
-                  Backend
-                </div>
-                <div className="space-y-2">
-                  <div className="text-slate-300">Node.js / Python</div>
-                  <div className="text-slate-300">PostgreSQL</div>
-                  <div className="text-slate-300">Redis Cache</div>
-                </div>
-              </div>
-              <div>
-                <div className="text-sm uppercase tracking-widest text-blue-400 mb-4 font-medium">
-                  AI/ML
-                </div>
-                <div className="space-y-2">
-                  <div className="text-slate-300">Custom LLMs</div>
-                  <div className="text-slate-300">TensorFlow</div>
-                  <div className="text-slate-300">Real-time Analytics</div>
-                </div>
+      {venture.techStack && (
+        <section className="py-16 px-8">
+          <div className="max-w-[1400px] mx-auto">
+            <h2 className="text-3xl md:text-4xl font-light mb-8">Technology Stack</h2>
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
+              <div className="grid md:grid-cols-3 gap-8">
+                {venture.techStack.frontend && venture.techStack.frontend.length > 0 && (
+                  <div>
+                    <div className="text-sm uppercase tracking-widest text-blue-400 mb-4 font-medium">
+                      Frontend
+                    </div>
+                    <div className="space-y-2">
+                      {venture.techStack.frontend.map((tech: string, index: number) => (
+                        <div key={index} className="text-slate-300">{tech}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {venture.techStack.backend && venture.techStack.backend.length > 0 && (
+                  <div>
+                    <div className="text-sm uppercase tracking-widest text-blue-400 mb-4 font-medium">
+                      Backend
+                    </div>
+                    <div className="space-y-2">
+                      {venture.techStack.backend.map((tech: string, index: number) => (
+                        <div key={index} className="text-slate-300">{tech}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {venture.techStack.aiml && venture.techStack.aiml.length > 0 && (
+                  <div>
+                    <div className="text-sm uppercase tracking-widest text-blue-400 mb-4 font-medium">
+                      AI/ML
+                    </div>
+                    <div className="space-y-2">
+                      {venture.techStack.aiml.map((tech: string, index: number) => (
+                        <div key={index} className="text-slate-300">{tech}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-24 px-8">

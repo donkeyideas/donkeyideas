@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
 
@@ -207,10 +208,14 @@ export default async function VenturesPage() {
                   <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 aspect-video bg-slate-800/50">
                     {venture.imageUrl ? (
                       <>
-                        <img
+                        <Image
                           src={venture.imageUrl}
                           alt={venture.title}
+                          width={1920}
+                          height={1080}
                           className="w-full h-full object-cover"
+                          quality={95}
+                          priority={index === 0}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
                       </>
