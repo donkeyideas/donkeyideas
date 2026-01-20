@@ -157,8 +157,9 @@ export default async function VenturePage({ params }: { params: { slug: string }
                   width={1920}
                   height={1080}
                   className="w-full h-auto max-h-[400px] object-cover"
-                  quality={95}
+                  quality={100}
                   priority
+                  unoptimized={venture.imageUrl?.includes('.png')}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
               </>

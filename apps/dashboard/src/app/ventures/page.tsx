@@ -214,8 +214,9 @@ export default async function VenturesPage() {
                           width={1920}
                           height={1080}
                           className="w-full h-full object-cover"
-                          quality={95}
+                          quality={100}
                           priority={index === 0}
+                          unoptimized={venture.imageUrl?.includes('.png')}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
                       </>
