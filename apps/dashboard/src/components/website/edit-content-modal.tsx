@@ -154,43 +154,23 @@ export function EditContentModal({
       } else if (section.key === 'about-page') {
         setFormData(section.content || {
           hero: {
-            title: 'Building the future of\nintelligent ventures',
-            description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering.',
+            title: 'Building the future of intelligent ventures',
+            description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering to build ventures that matter. Each product represents a bold bet on ideas others overlook.',
           },
-          stats: [
-            { value: '87%', label: 'Ventures reach market fit' },
-            { value: '$45M+', label: 'Portfolio valuation' },
-            { value: '23', label: 'AI systems in production' },
-            { value: '6-12 weeks', label: 'Average time to MVP' },
-          ],
           mission: {
-            badge: 'Our Mission',
-            title: 'Where bold ideas\nbecome reality',
-            description: '',
-            extendedDescription: '',
+            title: 'Where bold ideas become reality',
+            description: 'We bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.\n\nOur mission is to transform unconventional concepts that traditional VCs overlook into revenue-generating businesses. We take calculated risks on ideas that sound absurd at first, because we know world-changing innovations often do.',
             imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
           },
           values: [
-            { title: 'Innovation', description: '', icon: 'lightning' },
-            { title: 'Excellence', description: '', icon: 'check' },
-            { title: 'Impact', description: '', icon: 'chart' },
+            { title: 'Innovation', description: 'We push boundaries and explore unconventional approaches. While others chase trends, we build foundational technologies that create lasting value.' },
+            { title: 'Excellence', description: 'We maintain the highest standards in engineering and product development. Every venture represents a commitment to meticulously crafted systems.' },
+            { title: 'Impact', description: 'We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.' },
           ],
-          approach: {
-            badge: 'Our Approach',
-            title: 'AI-powered venture\nmethodology',
-            description: '',
-            extendedDescription: '',
-          },
           team: {
-            badge: 'Our Team',
-            title: 'Builders, engineers\n& strategists',
-            description: '',
-            extendedDescription: '',
+            title: 'Builders, engineers & strategists',
+            description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.\n\nWe\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
             imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
-            stats: [
-              { value: '15+', label: 'Team members' },
-              { value: '50+', label: 'Years combined experience' },
-            ],
           },
         });
       } else if (section.key === 'privacy-page') {
@@ -239,87 +219,62 @@ export function EditContentModal({
       } else if (section.key === 'services-page') {
         setFormData(section.content || {
           hero: {
-            title: 'The more ventures you build,\nthe better you become',
-            subtitle: 'AI-powered venture building platform',
-            description: 'Go beyond traditional consulting with our AI-powered venture building platform.',
-            features: [
-              { title: 'AI-Powered Insights', description: 'Machine learning recommendations based on real portfolio data' },
-              { title: 'Accelerate Any Metric', description: 'Set goals and continuously improve time-to-market' },
-              { title: 'Actionable Intelligence', description: 'Implement and measure improvements instantly' },
-            ],
+            title: 'The more ventures you build, the better you become',
+            description: 'Go beyond traditional consulting with our AI-powered venture building platform. Track portfolio performance, leverage intelligent insights, and get custom recommendations to accelerate any venture metric.',
           },
           dashboardImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
           sections: [
             {
               badge: 'Rapid Deployment',
-              title: 'Quickly validate\nand launch',
-              description: '',
+              title: 'Quickly validate and launch',
+              description: 'Catch market opportunities and implement solutions before they become missed chances. Our AI-powered platform helps you move from concept to production in weeks, not months.',
               imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
-              stats: [
-                { value: '6-12 weeks', label: 'Average time to MVP' },
-                { value: '70% faster', label: 'Than traditional methods' },
-              ],
             },
             {
               badge: 'Intelligent Platform',
-              title: 'AI-powered\nrecommendations',
-              description: '',
+              title: 'AI-powered recommendations',
+              description: 'Get intelligent suggestions to reduce development time, boost product-market fit, and streamline operations based on real portfolio data and market trends.',
               imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop',
-              features: [
-                { title: 'Real-time Portfolio Analytics', description: 'Track KPIs across all ventures' },
-                { title: 'Predictive Market Intelligence', description: 'AI-driven insights for decisions' },
-                { title: 'Automated Optimization', description: 'Continuous improvement recommendations' },
-              ],
             },
             {
               badge: 'Seamless Integration',
-              title: 'Prioritize what\nmatters most',
-              description: '',
+              title: 'Prioritize what matters most',
+              description: 'See projected outcomes for strategic initiatives so you can focus on the developments that will make the biggest impact on your business goals.',
               imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop',
-              insights: [
-                { category: 'Technical Architecture', impact: '+23% efficiency', title: 'Implement microservices', description: 'Reduce deployment time' },
-                { category: 'Go-to-Market Strategy', impact: '+15% conversion', title: 'Add PLG motion', description: 'Accelerate customer acquisition' },
-              ],
             },
           ],
         });
       } else if (section.key === 'process-page') {
         setFormData(section.content || {
           hero: {
-            title: 'Meet your market with precision\nat every turn',
+            title: 'Meet your market with precision at every turn',
             description: 'Designed to make every venture launch feel inevitable. Our AI-powered approach allows us to navigate rapid market shifts, validate product-market fit, and detect opportunities with precision.',
-            features: [
-              { title: 'Tailored Strategies', description: 'Customized to match your unique vision and market' },
-              { title: 'Dynamic Pivots', description: 'Adapted to changing markets and customer feedback' },
-              { title: 'Ultra-Fast Execution', description: 'Industry-leading time from concept to production' },
-            ],
           },
+          integrationTitle: 'Integration without compromising velocity',
           sections: [
             {
               badge: 'Autonomous Discovery',
-              title: 'AI-driven validation\nin real-time',
-              description: '',
+              title: 'AI-driven validation in real-time',
+              description: 'Designed to respond dynamically to market signals and customer behavior patterns with less manual research. Our AI systems continuously monitor trends, validate assumptions, and identify opportunities before competitors.',
               imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
             },
             {
               badge: 'Global Reach',
-              title: 'Launch in any\nmarket',
-              description: '',
+              title: 'Launch in any market',
+              description: 'Deploy ventures anywhere in the world with localized strategies, compliance frameworks, and market-specific positioning. Our platform adapts to regional nuances automatically.',
               imageUrl: 'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=2006&auto=format&fit=crop',
-              markets: [
-                'North America - Tech & SaaS ecosystems',
-                'Europe - Enterprise & B2B markets',
-                'Asia-Pacific - Consumer & mobile-first',
-                'Latin America - Emerging tech hubs',
-              ],
             },
             {
               badge: 'Venture Execution',
-              title: 'Strike the right\nbalance',
-              description: '',
+              title: 'Strike the right balance',
+              description: 'A venture approach that understands founder intent and meets it with contextually relevant strategies. This includes natural iteration cycles, adaptive pivots, and strategic decision-making at the right moments.',
               imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
             },
           ],
+          howItWorks: {
+            title: 'Data-driven venture building',
+            description: 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.',
+          },
         });
       } else if (section.key === 'process') {
         setFormData(section.content || {
@@ -1315,15 +1270,6 @@ export function EditContentModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Subtitle</label>
-                  <input
-                    type="text"
-                    value={formData.hero?.subtitle || ''}
-                    onChange={(e) => setFormData({ ...formData, hero: { ...formData.hero, subtitle: e.target.value } })}
-                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                  />
-                </div>
-                <div>
                   <label className="block text-sm font-medium mb-2">Description</label>
                   <textarea
                     value={formData.hero?.description || ''}
@@ -1333,36 +1279,40 @@ export function EditContentModal({
                   />
                 </div>
               </div>
+
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Process Steps</h3>
+                <h3 className="text-lg font-semibold">Integration Section</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Integration Title</label>
+                  <input
+                    type="text"
+                    value={formData.integrationTitle || ''}
+                    onChange={(e) => setFormData({ ...formData, integrationTitle: e.target.value })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    placeholder="Integration without compromising velocity"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Feature Sections</h3>
                 {formData.sections?.map((sectionItem: any, index: number) => (
                   <Card key={index}>
                     <CardHeader>
-                      <CardTitle className="text-lg">Step {sectionItem.step || `0${index + 1}`}</CardTitle>
+                      <CardTitle className="text-lg">Section {index + 1}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <ImageUploadField
-                        label="Image"
-                        value={sectionItem.imageUrl}
-                        onChange={(url) => {
-                          const newSections = [...formData.sections];
-                          newSections[index] = { ...newSections[index], imageUrl: url };
-                          setFormData({ ...formData, sections: newSections });
-                        }}
-                        id={`process-page-image-${index}`}
-                      />
                       <div>
-                        <label className="block text-sm font-medium mb-2">Step Number</label>
+                        <label className="block text-sm font-medium mb-2">Badge Text</label>
                         <input
                           type="text"
-                          value={sectionItem.step || ''}
+                          value={sectionItem.badge || ''}
                           onChange={(e) => {
                             const newSections = [...formData.sections];
-                            newSections[index] = { ...newSections[index], step: e.target.value };
+                            newSections[index] = { ...newSections[index], badge: e.target.value };
                             setFormData({ ...formData, sections: newSections });
                           }}
                           className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          placeholder="01"
                         />
                       </div>
                       <div>
@@ -1388,25 +1338,48 @@ export function EditContentModal({
                             setFormData({ ...formData, sections: newSections });
                           }}
                           className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          rows={2}
+                          rows={3}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Details</label>
-                        <textarea
-                          value={sectionItem.details || ''}
+                        <label className="block text-sm font-medium mb-2">Image URL</label>
+                        <input
+                          type="text"
+                          value={sectionItem.imageUrl || ''}
                           onChange={(e) => {
                             const newSections = [...formData.sections];
-                            newSections[index] = { ...newSections[index], details: e.target.value };
+                            newSections[index] = { ...newSections[index], imageUrl: e.target.value };
                             setFormData({ ...formData, sections: newSections });
                           }}
                           className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                          rows={3}
+                          placeholder="https://images.unsplash.com/..."
                         />
                       </div>
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">How It Works Section</h3>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Title</label>
+                  <input
+                    type="text"
+                    value={formData.howItWorks?.title || ''}
+                    onChange={(e) => setFormData({ ...formData, howItWorks: { ...formData.howItWorks, title: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <textarea
+                    value={formData.howItWorks?.description || ''}
+                    onChange={(e) => setFormData({ ...formData, howItWorks: { ...formData.howItWorks, description: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    rows={3}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -1462,6 +1435,17 @@ export function EditContentModal({
                     onChange={(e) => setFormData({ ...formData, mission: { ...formData.mission, description: e.target.value } })}
                     className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
                     rows={4}
+                    placeholder="Use \n\n to separate paragraphs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Image URL</label>
+                  <input
+                    type="text"
+                    value={formData.mission?.imageUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, mission: { ...formData.mission, imageUrl: e.target.value } })}
+                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    placeholder="https://images.unsplash.com/..."
                   />
                 </div>
               </div>
@@ -1546,37 +1530,18 @@ export function EditContentModal({
                     value={formData.team?.description || ''}
                     onChange={(e) => setFormData({ ...formData, team: { ...formData.team, description: e.target.value } })}
                     className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                    rows={3}
+                    rows={4}
+                    placeholder="Use \n\n to separate paragraphs"
                   />
                 </div>
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Contact Section</h3>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Title</label>
+                  <label className="block text-sm font-medium mb-2">Image URL</label>
                   <input
                     type="text"
-                    value={formData.contact?.title || ''}
-                    onChange={(e) => setFormData({ ...formData, contact: { ...formData.contact, title: e.target.value } })}
+                    value={formData.team?.imageUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, team: { ...formData.team, imageUrl: e.target.value } })}
                     className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
-                  <textarea
-                    value={formData.contact?.description || ''}
-                    onChange={(e) => setFormData({ ...formData, contact: { ...formData.contact, description: e.target.value } })}
-                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                    rows={2}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={formData.contact?.email || ''}
-                    onChange={(e) => setFormData({ ...formData, contact: { ...formData.contact, email: e.target.value } })}
-                    className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                    placeholder="https://images.unsplash.com/..."
                   />
                 </div>
               </div>

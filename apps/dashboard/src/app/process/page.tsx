@@ -21,38 +21,32 @@ export default async function ProcessPage() {
     hero: {
       title: 'Meet your market with precision at every turn',
       description: 'Designed to make every venture launch feel inevitable. Our AI-powered approach allows us to navigate rapid market shifts, validate product-market fit, and detect opportunities with precision.',
-      features: [
-        { title: 'Tailored Strategies', description: 'Customized to match your unique vision and market' },
-        { title: 'Dynamic Pivots', description: 'Adapted to changing markets and customer feedback' },
-        { title: 'Ultra-Fast Execution', description: 'Industry-leading time from concept to production' },
-      ],
     },
+    integrationTitle: 'Integration without compromising velocity',
     sections: [
       {
         badge: 'Autonomous Discovery',
-        title: 'AI-driven validation\nin real-time',
+        title: 'AI-driven validation in real-time',
         description: 'Designed to respond dynamically to market signals and customer behavior patterns with less manual research. Our AI systems continuously monitor trends, validate assumptions, and identify opportunities before competitors.',
         imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
       },
       {
         badge: 'Global Reach',
-        title: 'Launch in any\nmarket',
+        title: 'Launch in any market',
         description: 'Deploy ventures anywhere in the world with localized strategies, compliance frameworks, and market-specific positioning. Our platform adapts to regional nuances automatically.',
         imageUrl: 'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=2006&auto=format&fit=crop',
-        markets: [
-          'North America - Tech & SaaS ecosystems',
-          'Europe - Enterprise & B2B markets',
-          'Asia-Pacific - Consumer & mobile-first',
-          'Latin America - Emerging tech hubs',
-        ],
       },
       {
         badge: 'Venture Execution',
-        title: 'Strike the right\nbalance',
+        title: 'Strike the right balance',
         description: 'A venture approach that understands founder intent and meets it with contextually relevant strategies. This includes natural iteration cycles, adaptive pivots, and strategic decision-making at the right moments.',
         imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
       },
     ],
+    howItWorks: {
+      title: 'Data-driven venture building',
+      description: 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.',
+    },
   };
 
   // Type guard to ensure content is an object with the expected structure
@@ -77,18 +71,20 @@ export default async function ProcessPage() {
             {pageContent.hero?.description || ''}
           </p>
           
-          {/* Key Features Grid */}
+          {/* Key Features Grid - HARDCODED */}
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {pageContent.hero?.features?.map((feature: any, index: number) => (
-              <div key={index} className="text-center">
-                <div className="text-sm uppercase tracking-widest text-white mb-2 font-medium">
-                  {feature.title}
-                </div>
-                <p className="text-slate-400 text-sm">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-widest text-white mb-2 font-medium">Tailored Strategies</div>
+              <p className="text-slate-400 text-sm">Customized to match your unique vision and market</p>
+            </div>
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-widest text-white mb-2 font-medium">Dynamic Pivots</div>
+              <p className="text-slate-400 text-sm">Adapted to changing markets and customer feedback</p>
+            </div>
+            <div className="text-center">
+              <div className="text-sm uppercase tracking-widest text-white mb-2 font-medium">Ultra-Fast Execution</div>
+              <p className="text-slate-400 text-sm">Industry-leading time from concept to production</p>
+            </div>
           </div>
         </div>
       </section>
@@ -97,7 +93,7 @@ export default async function ProcessPage() {
       <section className="py-16 px-8">
         <div className="max-w-[1400px] mx-auto text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-light mb-4">
-            Integration without compromising velocity
+            {pageContent.integrationTitle || 'Integration without compromising velocity'}
           </h2>
         </div>
       </section>
@@ -157,7 +153,7 @@ export default async function ProcessPage() {
       </section>
       )}
 
-      {/* Feature 2 */}
+      {/* Feature 2 - Multi-Market Support */}
       {pageContent.sections?.[1] && (
         <section className="py-32 px-8">
           <div className="max-w-[1400px] mx-auto">
@@ -190,17 +186,25 @@ export default async function ProcessPage() {
                   {pageContent.sections[1].description}
                 </p>
                 
-                {/* Market List */}
-                {pageContent.sections[1].markets && (
-                  <div className="space-y-3">
-                    {pageContent.sections[1].markets.map((market: string, index: number) => (
-                      <div key={index} className="flex items-center gap-3 text-slate-300">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                        <span>{market}</span>
-                      </div>
-                    ))}
+                {/* Market List - HARDCODED */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                    <span>North America - Tech & SaaS ecosystems</span>
                   </div>
-                )}
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                    <span>Europe - Enterprise & B2B markets</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                    <span>Asia-Pacific - Consumer & mobile-first</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                    <span>Latin America - Emerging tech hubs</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -277,10 +281,10 @@ export default async function ProcessPage() {
               How It Works
             </div>
             <h2 className="text-5xl md:text-6xl font-light text-white mb-6">
-              Data-driven venture building
+              {pageContent.howItWorks?.title || 'Data-driven venture building'}
             </h2>
             <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-              Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.
+              {pageContent.howItWorks?.description || 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.'}
             </p>
           </div>
 
