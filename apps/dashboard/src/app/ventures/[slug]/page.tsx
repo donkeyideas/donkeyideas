@@ -189,7 +189,7 @@ export default async function VenturePage({ params }: { params: { slug: string }
       </section>
 
       {/* Tags */}
-      {venture.tags && venture.tags.length > 0 && (
+      {venture.tags && Array.isArray(venture.tags) && venture.tags.length > 0 && (
         <section className="py-8 px-8">
           <div className="max-w-[1400px] mx-auto">
             <div className="flex flex-wrap gap-3">

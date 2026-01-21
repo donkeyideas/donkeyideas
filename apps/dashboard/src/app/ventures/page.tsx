@@ -178,7 +178,7 @@ export default async function VenturesPage() {
                   </p>
 
                   {/* Tags */}
-                  {venture.tags && venture.tags.length > 0 && (
+                  {venture.tags && Array.isArray(venture.tags) && venture.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-8">
                       {venture.tags.map((tag: string, tagIndex: number) => (
                         <span
