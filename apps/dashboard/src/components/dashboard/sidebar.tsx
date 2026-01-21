@@ -14,6 +14,7 @@ const donkeyIdeasNavigation = [
     items: [
       { name: 'Dashboard', href: '/app/dashboard', icon: '' },
       { name: 'Consolidated View', href: '/app/consolidated', icon: '' },
+      { name: 'Consolidated Budget', href: '/app/budget/consolidated', icon: '' },
       { name: 'Analytics & Reports', href: '/app/analytics', icon: '' },
       { name: 'Project Board', href: '/app/consolidated-projects', icon: '' },
     ],
@@ -41,7 +42,6 @@ const activeCompanyNavigation = [
     items: [
       { name: 'Financial Hub', href: '/app/financials', icon: '' },
       { name: 'Budget & Forecast', href: '/app/budget', icon: '' },
-      { name: 'Budget Consolidated', href: '/app/budget/consolidated', icon: '' },
       { name: 'Valuation Engine', href: '/app/valuation', icon: '' },
     ],
   },
