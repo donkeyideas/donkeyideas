@@ -365,7 +365,7 @@ export default function CategoriesPage() {
                       onChange={(e) =>
                       setFormData({
                         ...formData,
-                        companyId: e.target.checked ? null : currentCompany?.id,
+                        companyId: e.target.checked ? null : (currentCompany?.id || null),
                       })
                     }
                   />
