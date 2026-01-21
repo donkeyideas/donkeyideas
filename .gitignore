@@ -47,6 +47,6 @@ Thumbs.db
 .turbo/
 
 # Prisma
-packages/database/prisma/migrations/
+# packages/database/prisma/migrations/ (commented out - we need migrations tracked)
 
 
