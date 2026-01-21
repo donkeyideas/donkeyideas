@@ -40,6 +40,7 @@ const activeCompanyNavigation = [
     section: 'Financial',
     items: [
       { name: 'Financial Hub', href: '/app/financials', icon: '' },
+      { name: 'Budget & Forecast', href: '/app/budget', icon: '' },
       { name: 'Valuation Engine', href: '/app/valuation', icon: '' },
     ],
   },
