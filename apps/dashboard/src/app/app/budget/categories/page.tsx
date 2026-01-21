@@ -45,12 +45,13 @@ export default function CategoriesPage() {
     try {
       const response = await fetch('/api/companies');
       const data = await response.json();
-      setCompanies(data);
-      if (data.length > 0) {
+      setCompanies(Array.isArray(data) ? data : []);
+      if (Array.isArray(data) && data.length > 0) {
         setSelectedCompany(data[0].id);
       }
     } catch (error) {
       console.error('Error loading companies:', error);
+      setCompanies([]);
     }
   };
 
@@ -59,9 +60,10 @@ export default function CategoriesPage() {
       setLoading(true);
       const response = await fetch(`/api/budget/categories?companyId=${selectedCompany}`);
       const data = await response.json();
-      setCategories(data);
+      setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading categories:', error);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -185,7 +187,7 @@ export default function CategoriesPage() {
             ) : (
               <div className="space-y-2">
                 {categories
-                  .filter((c) => c.type === 'INCOME')
+                  ?.filter((c) => c.type === 'INCOME')
                   .map((category) => (
                     <div
                       key={category.id}
@@ -247,7 +249,7 @@ export default function CategoriesPage() {
             ) : (
               <div className="space-y-2">
                 {categories
-                  .filter((c) => c.type === 'EXPENSE')
+                  ?.filter((c) => c.type === 'EXPENSE')
                   .map((category) => (
                     <div
                       key={category.id}

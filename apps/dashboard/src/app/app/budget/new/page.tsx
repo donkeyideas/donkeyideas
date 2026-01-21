@@ -38,12 +38,13 @@ export default function NewPeriodPage() {
     try {
       const response = await fetch('/api/companies');
       const data = await response.json();
-      setCompanies(data);
-      if (data.length > 0) {
+      setCompanies(Array.isArray(data) ? data : []);
+      if (Array.isArray(data) && data.length > 0) {
         setFormData(prev => ({ ...prev, companyId: data[0].id }));
       }
     } catch (error) {
       console.error('Error loading companies:', error);
+      setCompanies([]);
     }
   };
 
@@ -139,7 +140,7 @@ export default function NewPeriodPage() {
                 required
               >
                 <option value="">Select a company</option>
-                {companies.map((company) => (
+                {companies?.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name}
                   </option>
