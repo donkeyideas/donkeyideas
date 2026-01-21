@@ -171,48 +171,55 @@ export async function GET(request: NextRequest) {
     // Use clean engine to consolidate (only companies with actual transactions)
     const consolidated = consolidateFinancials(companiesWithTransactions);
     
-    // Build company breakdown for UI - USE STORED DATABASE VALUES ONLY
-    // DO NOT use calculated values - query actual P&L and Balance Sheets from database
+    // Build company breakdown for UI - CALL INDIVIDUAL COMPANY API FOR ACCURATE DATA
+    // This ensures we get the SAME calculated values shown on individual company pages
     const companyBreakdown = await Promise.all(allCompaniesData.map(async (companyData) => {
-      // Get ACTUAL stored financial statements from database
-      const [latestPL, latestBalanceSheet] = await Promise.all([
-        prisma.pLStatement.findFirst({
-          where: { companyId: companyData.companyId },
-          orderBy: { period: 'desc' },
-        }),
-        prisma.balanceSheet.findFirst({
-          where: { companyId: companyData.companyId },
-          orderBy: { period: 'desc' },
-        }),
-      ]);
-      
-      // Calculate values from stored P&L fields
-      const revenue = latestPL 
-        ? Number(latestPL.productRevenue || 0) + Number(latestPL.serviceRevenue || 0) + Number(latestPL.otherRevenue || 0)
-        : 0;
-      const cogs = latestPL 
-        ? Number(latestPL.directCosts || 0) + Number(latestPL.infrastructureCosts || 0)
-        : 0;
-      const operatingExpenses = latestPL
-        ? Number(latestPL.salesMarketing || 0) + Number(latestPL.rdExpenses || 0) + Number(latestPL.adminExpenses || 0)
-        : 0;
-      const totalExpenses = cogs + operatingExpenses;
-      const profit = revenue - totalExpenses;
-      
-      // Use ONLY stored values from database (not calculated from transactions)
-      return {
-        id: companyData.companyId,
-        name: companyData.companyName,
-        logo: companyData.companyLogo || null,
-        projectStatus: companyData.projectStatus || null,
-        revenue,
-        cogs,
-        operatingExpenses,
-        expenses: totalExpenses,
-        profit,
-        cashBalance: latestBalanceSheet ? Number(latestBalanceSheet.cashEquivalents || 0) : 0,
-        valuation: companyData.valuation || 0,
-      };
+      try {
+        // Call the individual company's calculate endpoint to get accurate values
+        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/companies/${companyData.companyId}/financials/calculate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to calculate financials for ${companyData.companyName}`);
+        }
+        
+        const data = await response.json();
+        const statements = data.statements;
+        
+        return {
+          id: companyData.companyId,
+          name: companyData.companyName,
+          logo: companyData.companyLogo || null,
+          projectStatus: companyData.projectStatus || null,
+          revenue: statements.pl.revenue,
+          cogs: statements.pl.cogs,
+          operatingExpenses: statements.pl.operatingExpenses,
+          expenses: statements.pl.totalExpenses,
+          profit: statements.pl.netProfit,
+          cashBalance: statements.cashFlow.endingCash,
+          valuation: companyData.valuation || 0,
+        };
+      } catch (error) {
+        console.error(`Error getting financials for ${companyData.companyName}:`, error);
+        // Fallback to $0 if API call fails
+        return {
+          id: companyData.companyId,
+          name: companyData.companyName,
+          logo: companyData.companyLogo || null,
+          projectStatus: companyData.projectStatus || null,
+          revenue: 0,
+          cogs: 0,
+          operatingExpenses: 0,
+          expenses: 0,
+          profit: 0,
+          cashBalance: 0,
+          valuation: companyData.valuation || 0,
+        };
+      }
     }));
     
     // Return consolidated financials
