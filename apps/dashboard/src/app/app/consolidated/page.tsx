@@ -42,7 +42,9 @@ export default function ConsolidatedViewPage() {
   const [loading, setLoading] = useState(true);
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
   const [showRebuildConfirm, setShowRebuildConfirm] = useState(false);
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [rebuildLoading, setRebuildLoading] = useState(false);
+  const [clearAllLoading, setClearAllLoading] = useState(false);
   const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
     isOpen: false,
     title: '',
@@ -139,6 +141,29 @@ export default function ConsolidatedViewPage() {
     }
   };
 
+  const handleClearAllData = async () => {
+    setClearAllLoading(true);
+    try {
+      const response = await api.delete('/companies/consolidated/debug-transactions');
+      setNotification({
+        isOpen: true,
+        title: 'Success',
+        message: `Deleted ${response.data.deletedTransactions} transactions, ${response.data.deletedBalanceSheets} balance sheets, ${response.data.deletedCashFlows} cash flows across ${response.data.companiesAffected} companies. All financial data cleared!`,
+        type: 'success',
+      });
+      await loadConsolidatedFinancials();
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error || 'Failed to clear financial data',
+        type: 'error',
+      });
+    } finally {
+      setClearAllLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-white/60 [.light_&]:text-slate-600">Loading consolidated financials...</div>;
   }
@@ -194,6 +219,14 @@ export default function ConsolidatedViewPage() {
             disabled={rebuildLoading}
           >
             {rebuildLoading ? 'Rebuilding...' : 'Rebuild All Balance Sheets'}
+          </Button>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowClearAllConfirm(true)}
+            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border-red-500/30"
+            disabled={clearAllLoading}
+          >
+            {clearAllLoading ? 'Deleting...' : 'Clear All Data'}
           </Button>
           <Button variant="secondary" onClick={loadConsolidatedFinancials}>
             Refresh
@@ -434,6 +467,19 @@ export default function ConsolidatedViewPage() {
         cancelText="Cancel"
         variant="info"
         loading={rebuildLoading}
+      />
+
+      {/* Confirm Clear All Data Modal */}
+      <ConfirmModal
+        isOpen={showClearAllConfirm}
+        onClose={() => setShowClearAllConfirm(false)}
+        onConfirm={handleClearAllData}
+        title="⚠️ Clear ALL Financial Data"
+        message="This will permanently delete ALL transactions, balance sheets, cash flows, and P&L statements across ALL companies.\n\n🚨 This action cannot be undone!\n\nThis will fix the -$5 balance sheet issue by removing all phantom data."
+        confirmText="Delete Everything"
+        cancelText="Cancel"
+        variant="danger"
+        loading={clearAllLoading}
       />
 
       {/* Notification Modal */}
