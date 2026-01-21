@@ -151,7 +151,7 @@ export default function ApproveActualsPage({ params }: { params: Promise<{ id: s
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-light text-white">
-              ${parseFloat(summary.totals.income).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ${parseFloat(summary?.totals?.income || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
@@ -161,19 +161,19 @@ export default function ApproveActualsPage({ params }: { params: Promise<{ id: s
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-light text-white">
-              ${parseFloat(summary.totals.expense).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ${parseFloat(summary?.totals?.expense || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className={parseFloat(summary.totals.net) >= 0 ? 'text-green-400' : 'text-red-400'}>
+            <CardTitle className={parseFloat(summary?.totals?.net || '0') >= 0 ? 'text-green-400' : 'text-red-400'}>
               Net Result
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-light text-white">
-              ${parseFloat(summary.totals.net).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ${parseFloat(summary?.totals?.net || '0').toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
@@ -185,7 +185,7 @@ export default function ApproveActualsPage({ params }: { params: Promise<{ id: s
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {summary.categories.map((cat, idx) => (
+            {summary?.categories?.map((cat, idx) => (
               <div
                 key={idx}
                 className="flex items-center justify-between p-4 bg-black/20 border border-white/10 rounded-lg"
@@ -233,7 +233,7 @@ export default function ApproveActualsPage({ params }: { params: Promise<{ id: s
             <div className="flex-1">
               <div className="text-yellow-400 font-medium mb-2">⚠️ Important - Approval will:</div>
               <ul className="text-sm text-yellow-300 space-y-1">
-                <li>• Create <strong>{summary.unapprovedCount}</strong> transaction records in your financial system</li>
+                <li>• Create <strong>{summary?.unapprovedCount || 0}</strong> transaction records in your financial system</li>
                 <li>• Update your P&L, Balance Sheet, and Cash Flow statements</li>
                 <li>• Lock these entries (they cannot be edited after approval)</li>
                 <li>• Link each budget line to its corresponding transaction</li>
@@ -255,7 +255,7 @@ export default function ApproveActualsPage({ params }: { params: Promise<{ id: s
           className="flex-1 bg-green-600 hover:bg-green-700"
           disabled={approving}
         >
-          {approving ? 'Approving...' : `Approve & Post ${summary.unapprovedCount} Transactions`}
+          {approving ? 'Approving...' : `Approve & Post ${summary?.unapprovedCount || 0} Transactions`}
         </Button>
       </div>
 
