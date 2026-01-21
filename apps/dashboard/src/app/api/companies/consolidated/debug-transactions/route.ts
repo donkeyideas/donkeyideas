@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest) {
       prisma.cashFlow.deleteMany({
         where: { companyId: { in: companyIds } },
       }),
-      prisma.plStatement.deleteMany({
+      prisma.pLStatement.deleteMany({
         where: { companyId: { in: companyIds } },
       }),
     ]);
