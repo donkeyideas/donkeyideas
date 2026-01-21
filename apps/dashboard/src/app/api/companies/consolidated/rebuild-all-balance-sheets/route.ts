@@ -40,64 +40,36 @@ export async function POST(request: NextRequest) {
     let totalProcessed = 0;
     const results = [];
     
-    // Process each company
+    // Process each company using the NEW clean recalculation endpoint
     for (const company of companies) {
       try {
-        // STEP 1: Fix transaction flags for revenue/expense transactions
-        // This ensures all revenue/expense transactions have correct flags before rebuilding
-        await prisma.transaction.updateMany({
-          where: {
-            companyId: company.id,
-            type: { in: ['revenue', 'expense'] },
-          },
-          data: {
-            affectsPL: true,
-            affectsCashFlow: true,
-            affectsBalance: true,
+        console.log(`🔄 Recalculating ${company.name}...`);
+        
+        // Call the NEW clean recalculation endpoint
+        // This properly calculates AND stores P&L, Balance Sheet, Cash Flow
+        const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/companies/${company.id}/financials/recalculate-all`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || '',
           },
         });
         
-        // STEP 2: Delete all existing balance sheets and cash flows for this company
-        await prisma.balanceSheet.deleteMany({
-          where: { companyId: company.id },
-        });
-        
-        await prisma.cashFlow.deleteMany({
-          where: { companyId: company.id },
-        });
-        
-        // STEP 3: Get all transactions sorted by date
-        const transactions = await prisma.transaction.findMany({
-          where: { companyId: company.id },
-          orderBy: { date: 'asc' },
-        });
-        
-        // Process transactions to rebuild cash flow and balance sheet
-        for (const tx of transactions) {
-          const txDate = new Date(tx.date);
-          const period = new Date(txDate.getFullYear(), txDate.getMonth(), 1);
-          const amount = Number(tx.amount);
-          
-          // Rebuild cash flow if transaction affects cash flow
-          if (tx.affectsCashFlow) {
-            await updateCashFlow(company.id, period, tx.type, tx.category, amount);
-          }
-          
-          // Rebuild balance sheet if transaction affects balance
-          if (tx.affectsBalance) {
-            await updateBalanceSheet(company.id, period, tx.type, tx.category, amount, tx.affectsCashFlow);
-          }
+        if (!response.ok) {
+          throw new Error(`Failed to recalculate: ${response.statusText}`);
         }
+        
+        const data = await response.json();
         
         totalProcessed++;
         results.push({
           companyId: company.id,
           companyName: company.name,
-          transactionsProcessed: transactions.length,
+          transactionsProcessed: data.transactionsProcessed,
           success: true,
         });
       } catch (error: any) {
-        console.error(`Failed to rebuild balance sheet for ${company.name}:`, error);
+        console.error(`Failed to rebuild for ${company.name}:`, error);
         results.push({
           companyId: company.id,
           companyName: company.name,
