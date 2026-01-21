@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     
     console.log(`📊 Found ${companies.length} active companies`);
     
-    // For each company, get the LATEST stored financial statements
+    // For each company, get the LATEST stored financial statements + check status
     const companyBreakdown = [];
     let totalRevenue = 0;
     let totalCOGS = 0;
@@ -65,6 +65,11 @@ export async function GET(request: NextRequest) {
     let totalValuation = 0;
     
     for (const company of companies) {
+      // Check if company has transactions
+      const transactionCount = await prisma.transaction.count({
+        where: { companyId: company.id },
+      });
+      
       // Get latest P&L Statement
       const latestPL = await prisma.pLStatement.findFirst({
         where: { companyId: company.id },
@@ -76,6 +81,16 @@ export async function GET(request: NextRequest) {
         where: { companyId: company.id },
         orderBy: { period: 'desc' },
       });
+      
+      // Determine data status
+      let dataStatus: 'ok' | 'needs_rebuild' | 'no_data';
+      if (transactionCount === 0) {
+        dataStatus = 'no_data'; // No transactions - expected $0
+      } else if (!latestPL || !latestBS) {
+        dataStatus = 'needs_rebuild'; // Has transactions but no statements
+      } else {
+        dataStatus = 'ok'; // Has both transactions and statements
+      }
       
       // Calculate totals from P&L Statement fields
       const revenue = latestPL 
@@ -96,21 +111,27 @@ export async function GET(request: NextRequest) {
       
       const valuation = company.valuations[0] ? Number(company.valuations[0].amount) : 0;
       
-      console.log(`💰 ${company.name}: Revenue=$${revenue}, COGS=$${cogs}, OpEx=$${opex}, Profit=$${profit}, Cash=$${cash}`);
+      const statusEmoji = dataStatus === 'ok' ? '✅' : dataStatus === 'needs_rebuild' ? '⚠️' : '📭';
+      console.log(`${statusEmoji} ${company.name}: Status=${dataStatus}, Transactions=${transactionCount}, Revenue=$${revenue}, Profit=$${profit}`);
       
-      // Add to totals
-      totalRevenue += revenue;
-      totalCOGS += cogs;
-      totalOpEx += opex;
-      totalProfit += profit;
-      totalCash += cash;
-      totalValuation += valuation;
+      // Add to totals (only if data is OK)
+      if (dataStatus === 'ok') {
+        totalRevenue += revenue;
+        totalCOGS += cogs;
+        totalOpEx += opex;
+        totalProfit += profit;
+        totalCash += cash;
+        totalValuation += valuation;
+      }
       
       companyBreakdown.push({
         id: company.id,
         name: company.name,
         logo: company.logo,
         projectStatus: company.businessProfile?.projectStatus || null,
+        dataStatus,
+        transactionCount,
+        hasStatements: !!latestPL && !!latestBS,
         revenue,
         cogs,
         operatingExpenses: opex,

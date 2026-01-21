@@ -26,6 +26,9 @@ interface ConsolidatedFinancials {
     name: string;
     logo?: string | null;
     projectStatus: string | null;
+    dataStatus: 'ok' | 'needs_rebuild' | 'no_data';
+    transactionCount: number;
+    hasStatements: boolean;
     revenue: number;
     cogs: number;
     operatingExpenses: number;
@@ -45,6 +48,7 @@ export default function ConsolidatedViewPage() {
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [rebuildLoading, setRebuildLoading] = useState(false);
   const [clearAllLoading, setClearAllLoading] = useState(false);
+  const [rebuildingCompanyId, setRebuildingCompanyId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
     isOpen: false,
     title: '',
@@ -164,6 +168,73 @@ export default function ConsolidatedViewPage() {
     }
   };
 
+  const handleRebuildCompany = async (companyId: string, companyName: string) => {
+    try {
+      setRebuildingCompanyId(companyId);
+      await api.post(`/companies/${companyId}/financials/recalculate-all`);
+      
+      setNotification({
+        isOpen: true,
+        title: 'Success',
+        message: `Rebuilt financial statements for ${companyName}`,
+        type: 'success',
+      });
+      
+      // Reload consolidated view
+      await loadConsolidatedFinancials();
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error || `Failed to rebuild ${companyName}`,
+        type: 'error',
+      });
+    } finally {
+      setRebuildingCompanyId(null);
+    }
+  };
+
+  const handleRebuildNeeded = async () => {
+    const companiesNeedingRebuild = financials?.companies.filter(c => c.dataStatus === 'needs_rebuild') || [];
+    
+    if (companiesNeedingRebuild.length === 0) {
+      setNotification({
+        isOpen: true,
+        title: 'No Action Needed',
+        message: 'All companies with transactions already have stored financial statements',
+        type: 'success',
+      });
+      return;
+    }
+    
+    try {
+      setRebuildLoading(true);
+      
+      for (const company of companiesNeedingRebuild) {
+        await api.post(`/companies/${company.id}/financials/recalculate-all`);
+      }
+      
+      setNotification({
+        isOpen: true,
+        title: 'Success',
+        message: `Rebuilt financial statements for ${companiesNeedingRebuild.length} companies`,
+        type: 'success',
+      });
+      
+      // Reload
+      await loadConsolidatedFinancials();
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error || 'Failed to rebuild companies',
+        type: 'error',
+      });
+    } finally {
+      setRebuildLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-white/60 [.light_&]:text-slate-600">Loading consolidated financials...</div>;
   }
@@ -214,11 +285,19 @@ export default function ConsolidatedViewPage() {
           </div>
           <Button 
             variant="secondary" 
+            onClick={handleRebuildNeeded}
+            className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border-yellow-500/30"
+            disabled={rebuildLoading || !financials || financials.companies.filter(c => c.dataStatus === 'needs_rebuild').length === 0}
+          >
+            {rebuildLoading ? 'Rebuilding...' : `Rebuild Needed Companies ${financials ? `(${financials.companies.filter(c => c.dataStatus === 'needs_rebuild').length})` : ''}`}
+          </Button>
+          <Button 
+            variant="secondary" 
             onClick={() => setShowRebuildConfirm(true)}
             className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30"
             disabled={rebuildLoading}
           >
-            {rebuildLoading ? 'Rebuilding...' : 'Rebuild All Balance Sheets'}
+            {rebuildLoading ? 'Rebuilding...' : 'Rebuild All Companies'}
           </Button>
           <Button 
             variant="secondary" 
@@ -392,66 +471,120 @@ export default function ConsolidatedViewPage() {
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="text-left py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Company</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Status</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Project</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Data Status</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Revenue</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">COGS</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">OpEx</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Profit</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Cash</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Valuation</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {financials.companies.map((company) => (
-                  <tr key={company.id} className="border-b border-white/5 hover:bg-white/5">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        {company.logo ? (
-                          <img
-                            src={company.logo}
-                            alt={company.name}
-                            className="w-8 h-8 object-contain rounded border border-white/10 bg-white/5 p-1"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
+                {financials.companies.map((company) => {
+                  const statusConfig = {
+                    ok: { emoji: '✅', text: 'Data OK', color: 'bg-green-500/20 text-green-300 border-green-500/30' },
+                    needs_rebuild: { emoji: '⚠️', text: 'Needs Rebuild', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
+                    no_data: { emoji: '📭', text: 'No Transactions', color: 'bg-gray-500/20 text-gray-300 border-gray-500/30' },
+                  };
+                  const status = statusConfig[company.dataStatus];
+                  
+                  return (
+                    <tr key={company.id} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          {company.logo ? (
+                            <img
+                              src={company.logo}
+                              alt={company.name}
+                              className="w-8 h-8 object-contain rounded border border-white/10 bg-white/5 p-1"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded border border-white/10 bg-white/5 flex items-center justify-center text-xs text-white/40 [.light_&]:text-slate-500">
+                              {company.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <span className="font-medium">{company.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        {company.projectStatus ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                            {company.projectStatus}
+                          </span>
                         ) : (
-                          <div className="w-8 h-8 rounded border border-white/10 bg-white/5 flex items-center justify-center text-xs text-white/40 [.light_&]:text-slate-500">
-                            {company.name.charAt(0).toUpperCase()}
-                          </div>
+                          <span className="text-white/40 [.light_&]:text-slate-500 text-sm">—</span>
                         )}
-                        <span className="font-medium">{company.name}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      {company.projectStatus ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                          {company.projectStatus}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${status.color}`}>
+                          <span>{status.emoji}</span>
+                          <span>{status.text}</span>
                         </span>
-                      ) : (
-                        <span className="text-white/40 [.light_&]:text-slate-500 text-sm">—</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right">{formatCurrency(company.revenue)}</td>
-                    <td className="py-3 px-4 text-right text-orange-400">
-                      {formatCurrency(company.cogs || 0)}
-                    </td>
-                    <td className="py-3 px-4 text-right text-red-400">
-                      {formatCurrency(company.operatingExpenses || 0)}
-                    </td>
-                    <td className={`py-3 px-4 text-right ${company.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatCurrency(company.profit)}
-                    </td>
-                    <td className="py-3 px-4 text-right text-blue-400">
-                      {formatCurrency(company.cashBalance || 0)}
-                    </td>
-                    <td className="py-3 px-4 text-right text-blue-400">
-                      {formatCurrency(company.valuation)}
-                    </td>
-                  </tr>
-                ))}
+                        <div className="text-[10px] text-white/40 [.light_&]:text-slate-500 mt-1">
+                          {company.transactionCount} txns
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right">{formatCurrency(company.revenue)}</td>
+                      <td className="py-3 px-4 text-right text-orange-400">
+                        {formatCurrency(company.cogs || 0)}
+                      </td>
+                      <td className="py-3 px-4 text-right text-red-400">
+                        {formatCurrency(company.operatingExpenses || 0)}
+                      </td>
+                      <td className={`py-3 px-4 text-right ${company.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {formatCurrency(company.profit)}
+                      </td>
+                      <td className="py-3 px-4 text-right text-blue-400">
+                        {formatCurrency(company.cashBalance || 0)}
+                      </td>
+                      <td className="py-3 px-4">
+                        {company.dataStatus === 'needs_rebuild' && (
+                          <Button
+                            onClick={() => handleRebuildCompany(company.id, company.name)}
+                            disabled={rebuildingCompanyId === company.id}
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs"
+                          >
+                            {rebuildingCompanyId === company.id ? 'Rebuilding...' : 'Rebuild'}
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+          </div>
+          
+          {/* Legend */}
+          <div className="mt-4 p-3 bg-white/5 [.light_&]:bg-slate-100 rounded-lg border border-white/10 [.light_&]:border-slate-200">
+            <div className="text-xs font-semibold text-white/60 [.light_&]:text-slate-600 mb-2">Data Status Legend:</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">✅</span>
+                <span className="text-white/80 [.light_&]:text-slate-700">
+                  <strong>Data OK:</strong> Has transactions and stored financial statements
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⚠️</span>
+                <span className="text-white/80 [.light_&]:text-slate-700">
+                  <strong>Needs Rebuild:</strong> Has transactions but no statements - click "Rebuild" to fix
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📭</span>
+                <span className="text-white/80 [.light_&]:text-slate-700">
+                  <strong>No Transactions:</strong> No financial data entered yet (expected $0)
+                </span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
