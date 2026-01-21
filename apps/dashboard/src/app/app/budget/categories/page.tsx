@@ -211,7 +211,7 @@ export default function CategoriesPage() {
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => handleEdit(category)}
                         >
                           Edit

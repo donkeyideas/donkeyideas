@@ -87,7 +87,7 @@ export default function BudgetPage() {
         </div>
         <div className="flex gap-3">
           <Link href="/app/budget/categories">
-            <Button variant="outline">
+            <Button variant="secondary">
               Manage Categories
             </Button>
           </Link>
