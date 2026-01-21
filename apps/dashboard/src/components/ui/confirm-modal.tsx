@@ -56,7 +56,7 @@ export function ConfirmModal({
             {cancelText}
           </Button>
           <Button 
-            variant={variant === 'danger' ? 'destructive' : 'primary'}
+            variant={variant === 'danger' ? 'danger' : 'primary'}
             onClick={handleConfirm}
             disabled={loading}
             className={variant === 'info' ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}
