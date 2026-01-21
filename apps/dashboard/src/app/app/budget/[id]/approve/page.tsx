@@ -246,7 +246,7 @@ export default function ApproveActualsPage({ params }: { params: Promise<{ id: s
 
       <div className="flex gap-4">
         <Link href={`/app/budget/${periodId}`} className="flex-1">
-          <Button variant="outline" className="w-full" disabled={approving}>
+          <Button variant="secondary" className="w-full" disabled={approving}>
             Cancel
           </Button>
         </Link>

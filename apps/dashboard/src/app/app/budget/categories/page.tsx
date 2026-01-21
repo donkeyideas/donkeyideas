@@ -273,7 +273,7 @@ export default function CategoriesPage() {
                       <div className="flex gap-2">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => handleEdit(category)}
                         >
                           Edit
@@ -414,7 +414,7 @@ export default function CategoriesPage() {
                 <div className="flex gap-3 pt-4">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => {
                       setShowModal(false);
                       setEditingCategory(null);
