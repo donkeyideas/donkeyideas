@@ -112,7 +112,6 @@ export async function POST(
         period,
         cashEquivalents: new Decimal(statements.balanceSheet.cash),
         accountsReceivable: new Decimal(statements.balanceSheet.accountsReceivable),
-        inventory: new Decimal(statements.balanceSheet.inventory),
         fixedAssets: new Decimal(statements.balanceSheet.fixedAssets),
         accountsPayable: new Decimal(statements.balanceSheet.accountsPayable),
         shortTermDebt: new Decimal(statements.balanceSheet.shortTermDebt),
