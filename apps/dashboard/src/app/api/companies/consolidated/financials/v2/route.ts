@@ -172,12 +172,24 @@ export async function GET(request: NextRequest) {
     const consolidated = consolidateFinancials(companiesWithTransactions);
     
     // Build company breakdown for UI - INCLUDE ALL COMPANIES (not just those with transactions)
-    const companyBreakdown = allCompaniesData.map(companyData => {
+    // IMPORTANT: Get ACTUAL balance sheets from database for correct cash values
+    const companyBreakdown = await Promise.all(allCompaniesData.map(async (companyData) => {
       // Find this company in the consolidated results (if it had transactions)
       const consolidatedCompany = consolidated.companies.find(c => c.companyId === companyData.companyId);
       
+      // Get the ACTUAL latest balance sheet from database (not calculated)
+      const latestBalanceSheet = await prisma.balanceSheet.findFirst({
+        where: { companyId: companyData.companyId },
+        orderBy: { period: 'desc' },
+      });
+      
+      // Use REAL cash from balance sheet if available, otherwise use calculated
+      const actualCash = latestBalanceSheet 
+        ? Number(latestBalanceSheet.cashEquivalents || 0)
+        : (consolidatedCompany ? consolidatedCompany.statements.cashFlow.endingCash : 0);
+      
       if (consolidatedCompany) {
-        // Company has transactions - use calculated values
+        // Company has transactions - use calculated values BUT use REAL cash
         return {
           id: consolidatedCompany.companyId,
           name: consolidatedCompany.companyName,
@@ -188,11 +200,11 @@ export async function GET(request: NextRequest) {
           operatingExpenses: consolidatedCompany.statements.pl.operatingExpenses,
           expenses: consolidatedCompany.statements.pl.totalExpenses,
           profit: consolidatedCompany.statements.pl.netProfit,
-          cashBalance: consolidatedCompany.statements.cashFlow.endingCash,
+          cashBalance: actualCash, // ✅ USE REAL CASH FROM BALANCE SHEET
           valuation: companyData.valuation || 0,
         };
       } else {
-        // Company has NO transactions - show $0
+        // Company has NO transactions - show $0 or actual balance sheet cash
         return {
           id: companyData.companyId,
           name: companyData.companyName,
@@ -203,11 +215,11 @@ export async function GET(request: NextRequest) {
           operatingExpenses: 0,
           expenses: 0,
           profit: 0,
-          cashBalance: 0,
+          cashBalance: actualCash, // ✅ USE REAL CASH FROM BALANCE SHEET
           valuation: companyData.valuation || 0,
         };
       }
-    });
+    }));
     
     // Return consolidated financials
     return NextResponse.json({
