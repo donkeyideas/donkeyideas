@@ -31,14 +31,17 @@ export async function GET(request: NextRequest) {
     const companies = await prisma.company.findMany({
       where: { 
         userId: user.id,
-        isActive: true,
+        status: 'active',
       },
       select: {
         id: true,
         name: true,
         logo: true,
-        projectStatus: true,
-        valuation: true,
+        businessProfile: {
+          select: {
+            projectStatus: true,
+          },
+        },
       },
       orderBy: { name: 'asc' },
     });
@@ -84,14 +87,14 @@ export async function GET(request: NextRequest) {
         id: company.id,
         name: company.name,
         logo: company.logo,
-        projectStatus: company.projectStatus,
+        projectStatus: company.businessProfile?.projectStatus || null,
         revenue,
         cogs,
         operatingExpenses: opex,
         expenses: cogs + opex,
         profit,
         cashBalance: cash,
-        valuation: company.valuation || 0,
+        valuation: 0, // Simplified for diagnostic version
       });
     }
     
