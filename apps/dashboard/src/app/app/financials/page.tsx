@@ -743,7 +743,7 @@ export default function FinancialsPage() {
         message: 'Rebuilding balance sheet and cash flow...',
         type: 'info',
       });
-      const response = await api.post(`/companies/${currentCompany.id}/balance-sheet/rebuild`);
+      const response = await api.post(`/companies/${currentCompany.id}/financials/recalculate-all`);
       setNotification({
         isOpen: true,
         title: 'Success',
