@@ -171,41 +171,29 @@ export async function GET(request: NextRequest) {
     // Use clean engine to consolidate (only companies with actual transactions)
     const consolidated = consolidateFinancials(companiesWithTransactions);
     
-    // Build company breakdown for UI - CALL INDIVIDUAL COMPANY API FOR ACCURATE DATA
-    // This ensures we get the SAME calculated values shown on individual company pages
-    const companyBreakdown = await Promise.all(allCompaniesData.map(async (companyData) => {
-      try {
-        // Call the individual company's calculate endpoint to get accurate values
-        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/companies/${companyData.companyId}/financials/calculate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to calculate financials for ${companyData.companyName}`);
-        }
-        
-        const data = await response.json();
-        const statements = data.statements;
-        
+    // Build company breakdown for UI - Use consolidated results (already calculated)
+    // The consolidated.companies array already has all the calculated values
+    const companyBreakdown = allCompaniesData.map(companyData => {
+      // Find this company in the consolidated results (if it had transactions)
+      const consolidatedCompany = consolidated.companies.find(c => c.companyId === companyData.companyId);
+      
+      if (consolidatedCompany) {
+        // Company has transactions - use calculated values from financial engine
         return {
-          id: companyData.companyId,
-          name: companyData.companyName,
+          id: consolidatedCompany.companyId,
+          name: consolidatedCompany.companyName,
           logo: companyData.companyLogo || null,
           projectStatus: companyData.projectStatus || null,
-          revenue: statements.pl.revenue,
-          cogs: statements.pl.cogs,
-          operatingExpenses: statements.pl.operatingExpenses,
-          expenses: statements.pl.totalExpenses,
-          profit: statements.pl.netProfit,
-          cashBalance: statements.cashFlow.endingCash,
+          revenue: consolidatedCompany.statements.pl.revenue,
+          cogs: consolidatedCompany.statements.pl.cogs,
+          operatingExpenses: consolidatedCompany.statements.pl.operatingExpenses,
+          expenses: consolidatedCompany.statements.pl.totalExpenses,
+          profit: consolidatedCompany.statements.pl.netProfit,
+          cashBalance: consolidatedCompany.statements.cashFlow.endingCash,
           valuation: companyData.valuation || 0,
         };
-      } catch (error) {
-        console.error(`Error getting financials for ${companyData.companyName}:`, error);
-        // Fallback to $0 if API call fails
+      } else {
+        // Company has NO transactions - show $0
         return {
           id: companyData.companyId,
           name: companyData.companyName,
@@ -220,7 +208,7 @@ export async function GET(request: NextRequest) {
           valuation: companyData.valuation || 0,
         };
       }
-    }));
+    });
     
     // Return consolidated financials
     return NextResponse.json({
