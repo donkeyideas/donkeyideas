@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Fetch transactions for all companies
-    const companiesWithTransactions = await Promise.all(
+    const allCompaniesData = await Promise.all(
       companies.map(async (company) => {
         const dbTransactions = await prisma.transaction.findMany({
           where: {
@@ -105,7 +105,57 @@ export async function GET(request: NextRequest) {
       })
     );
     
-    // Use clean engine to consolidate
+    // Filter out companies with NO transactions to avoid phantom data
+    // Only consolidate companies that actually have financial activity
+    const companiesWithTransactions = allCompaniesData.filter(c => c.transactions.length > 0);
+    
+    // If no companies have transactions, return zero values
+    if (companiesWithTransactions.length === 0) {
+      return NextResponse.json({
+        // P&L
+        totalRevenue: 0,
+        totalCOGS: 0,
+        totalOperatingExpenses: 0,
+        totalExpenses: 0,
+        netProfit: 0,
+        profitMargin: 0,
+        
+        // Balance Sheet
+        totalAssets: 0,
+        totalLiabilities: 0,
+        totalEquity: 0,
+        totalCashBalance: 0,
+        
+        // Additional metrics
+        activeCompanies: companies.length,
+        totalValuation: 0,
+        
+        // Company breakdown (still show all companies, just with $0)
+        companies: companies.map(c => ({
+          id: c.id,
+          name: c.name,
+          logo: c.logo,
+          projectStatus: c.businessProfile?.projectStatus || null,
+          revenue: 0,
+          cogs: 0,
+          operatingExpenses: 0,
+          expenses: 0,
+          profit: 0,
+          cashBalance: 0,
+          valuation: c.valuations[0] ? Number(c.valuations[0].amount) : 0,
+        })),
+        
+        // Intercompany info
+        intercompanyEliminations: { receivables: 0, payables: 0 },
+        
+        // Validation
+        isValid: true,
+        errors: undefined,
+        balanceSheetBalances: true,
+      });
+    }
+    
+    // Use clean engine to consolidate (only companies with actual transactions)
     const consolidated = consolidateFinancials(companiesWithTransactions);
     
     // Build company breakdown for UI
