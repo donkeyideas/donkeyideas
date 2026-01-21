@@ -573,7 +573,7 @@ export default function FinancialsPage() {
       if (balanceSheetsArray.length > 0) {
         const mostRecentBalance = balanceSheetsArray[balanceSheetsArray.length - 1];
         const actualCashBalance = Number(mostRecentBalance.cashEquivalents || 0);
-        setSummary(prevSummary => ({
+        setSummary((prevSummary: any) => ({
           ...prevSummary,
           cashBalance: actualCashBalance,
         }));
