@@ -186,17 +186,30 @@ export async function GET(request: NextRequest) {
         }),
       ]);
       
+      // Calculate values from stored P&L fields
+      const revenue = latestPL 
+        ? Number(latestPL.productRevenue || 0) + Number(latestPL.serviceRevenue || 0) + Number(latestPL.otherRevenue || 0)
+        : 0;
+      const cogs = latestPL 
+        ? Number(latestPL.directCosts || 0) + Number(latestPL.infrastructureCosts || 0)
+        : 0;
+      const operatingExpenses = latestPL
+        ? Number(latestPL.salesMarketing || 0) + Number(latestPL.rdExpenses || 0) + Number(latestPL.adminExpenses || 0)
+        : 0;
+      const totalExpenses = cogs + operatingExpenses;
+      const profit = revenue - totalExpenses;
+      
       // Use ONLY stored values from database (not calculated from transactions)
       return {
         id: companyData.companyId,
         name: companyData.companyName,
         logo: companyData.companyLogo || null,
         projectStatus: companyData.projectStatus || null,
-        revenue: latestPL ? Number(latestPL.revenue || 0) : 0,
-        cogs: latestPL ? Number(latestPL.cogs || 0) : 0,
-        operatingExpenses: latestPL ? Number(latestPL.operatingExpenses || 0) : 0,
-        expenses: latestPL ? Number(latestPL.totalExpenses || 0) : 0,
-        profit: latestPL ? Number(latestPL.netProfit || 0) : 0,
+        revenue,
+        cogs,
+        operatingExpenses,
+        expenses: totalExpenses,
+        profit,
         cashBalance: latestBalanceSheet ? Number(latestBalanceSheet.cashEquivalents || 0) : 0,
         valuation: companyData.valuation || 0,
       };
