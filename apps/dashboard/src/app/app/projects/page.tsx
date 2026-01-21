@@ -757,7 +757,7 @@ function SortableCard({ card, onView, onEdit, onDelete }: { card: any; onView: (
               </button>
             </div>
           </div>
-          {card.tags && card.tags.length > 0 && (
+          {card.tags && Array.isArray(card.tags) && card.tags.length > 0 && (
             <div className="flex gap-2 flex-wrap">
               {card.tags.map((tag: string, idx: number) => (
                 <span
@@ -815,7 +815,7 @@ function ViewCardModal({
             </div>
           )}
           
-          {card.tags && card.tags.length > 0 && (
+          {card.tags && Array.isArray(card.tags) && card.tags.length > 0 && (
             <div>
               <label className="block text-sm font-medium mb-2 text-white/60">Tags</label>
               <div className="flex gap-2 flex-wrap">
