@@ -568,6 +568,17 @@ export default function FinancialsPage() {
       setBalanceSheets(balanceSheetsArray);
       setCashFlows(cashFlowsArray);
       
+      // Update cash balance in summary to reflect actual balance sheet cash
+      // Use the most recent balance sheet entry for accuracy
+      if (balanceSheetsArray.length > 0) {
+        const mostRecentBalance = balanceSheetsArray[balanceSheetsArray.length - 1];
+        const actualCashBalance = Number(mostRecentBalance.cashEquivalents || 0);
+        setSummary(prevSummary => ({
+          ...prevSummary,
+          cashBalance: actualCashBalance,
+        }));
+      }
+      
       // Log validation status
       if (!statements.isValid) {
         console.warn('⚠️ Financial statements validation failed:', statements.errors);
