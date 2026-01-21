@@ -36,12 +36,13 @@ export default function BudgetPage() {
     try {
       const response = await fetch('/api/companies');
       const data = await response.json();
-      setCompanies(data);
-      if (data.length > 0) {
+      setCompanies(Array.isArray(data) ? data : []);
+      if (Array.isArray(data) && data.length > 0) {
         setSelectedCompany(data[0].id);
       }
     } catch (error) {
       console.error('Error loading companies:', error);
+      setCompanies([]);
     }
   };
 
@@ -50,9 +51,10 @@ export default function BudgetPage() {
       setLoading(true);
       const response = await fetch(`/api/budget/periods?companyId=${selectedCompany}`);
       const data = await response.json();
-      setPeriods(data);
+      setPeriods(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading periods:', error);
+      setPeriods([]);
     } finally {
       setLoading(false);
     }
@@ -111,7 +113,7 @@ export default function BudgetPage() {
             onChange={(e) => setSelectedCompany(e.target.value)}
             className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
           >
-            {companies.map((company) => (
+            {companies?.map((company) => (
               <option key={company.id} value={company.id}>
                 {company.name}
               </option>
@@ -127,7 +129,7 @@ export default function BudgetPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-light text-white">
-              {periods.filter(p => p.type === 'BUDGET').length}
+              {periods?.filter(p => p.type === 'BUDGET').length || 0}
             </div>
             <div className="text-sm text-slate-400">Planning periods</div>
           </CardContent>
@@ -138,7 +140,7 @@ export default function BudgetPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-light text-white">
-              {periods.filter(p => p.type === 'FORECAST').length}
+              {periods?.filter(p => p.type === 'FORECAST').length || 0}
             </div>
             <div className="text-sm text-slate-400">Forecast periods</div>
           </CardContent>
@@ -149,7 +151,7 @@ export default function BudgetPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-light text-white">
-              {periods.filter(p => p.type === 'ACTUALS').length}
+              {periods?.filter(p => p.type === 'ACTUALS').length || 0}
             </div>
             <div className="text-sm text-slate-400">Actuals periods</div>
           </CardContent>
@@ -163,7 +165,7 @@ export default function BudgetPage() {
         <CardContent>
           {loading ? (
             <div className="text-center py-8 text-slate-400">Loading...</div>
-          ) : periods.length === 0 ? (
+          ) : !periods || periods.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-slate-400 mb-4">No budget periods yet</p>
               <Link href="/app/budget/new">
@@ -172,7 +174,7 @@ export default function BudgetPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {periods.map((period) => (
+              {periods?.map((period) => (
                 <div
                   key={period.id}
                   className="flex items-center justify-between p-4 bg-black/20 border border-white/10 rounded-lg hover:bg-black/30 transition-colors"
