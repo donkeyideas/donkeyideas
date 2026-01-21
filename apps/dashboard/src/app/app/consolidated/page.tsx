@@ -218,29 +218,55 @@ export default function ConsolidatedViewPage() {
           <CardHeader>
             <CardTitle>Consolidated Balance Sheet</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Assets</div>
-              <div className="text-2xl font-bold text-white [.light_&]:text-slate-900">{formatCurrency(financials.totalAssets)}</div>
-            </div>
-            <div>
-              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Liabilities</div>
-              <div className="text-2xl font-bold text-red-400">
-                {formatCurrency(financials.totalLiabilities)}
+          <CardContent>
+            {/* 2-Column Layout */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Left Column: Total Assets */}
+              <div className="space-y-2">
+                <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Assets</div>
+                <div className="text-3xl font-bold text-blue-400 [.light_&]:text-blue-600">
+                  {formatCurrency(financials.totalAssets)}
+                </div>
+                <div className="text-xs text-white/40 [.light_&]:text-slate-500 mt-2">
+                  (Includes Cash: {formatCurrency(financials.totalCashBalance || 0)})
+                </div>
+              </div>
+              
+              {/* Right Column: Total Liabilities + Equity */}
+              <div className="space-y-2">
+                <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Liabilities + Equity</div>
+                <div className="text-3xl font-bold text-green-500 [.light_&]:text-green-600">
+                  {formatCurrency(financials.totalLiabilities + financials.totalEquity)}
+                </div>
+                <div className="text-xs text-white/40 [.light_&]:text-slate-500 mt-2">
+                  Liabilities: {formatCurrency(financials.totalLiabilities)} + Equity: {formatCurrency(financials.totalEquity)}
+                </div>
               </div>
             </div>
-            <div>
-              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Cash Balance</div>
-              <div className="text-2xl font-bold text-blue-400">
-                {formatCurrency(financials.totalCashBalance || 0)}
+            
+            {/* Balance Check Warning */}
+            {Math.abs(financials.totalAssets - (financials.totalLiabilities + financials.totalEquity)) > 0.01 && (
+              <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
+                <div className="text-yellow-400 text-sm flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>
+                    ⚠️ Balance sheet does not balance! 
+                    Difference: {formatCurrency(Math.abs(financials.totalAssets - (financials.totalLiabilities + financials.totalEquity)))}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="pt-4 border-t border-white/10">
-              <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Equity</div>
-              <div className="text-2xl font-bold text-green-500">
-                {formatCurrency(financials.totalEquity)}
+            )}
+            
+            {/* Balance Check Success */}
+            {Math.abs(financials.totalAssets - (financials.totalLiabilities + financials.totalEquity)) <= 0.01 && (
+              <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-md text-center">
+                <div className="text-green-400 text-sm">
+                  ✅ Balance sheet balances correctly
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
