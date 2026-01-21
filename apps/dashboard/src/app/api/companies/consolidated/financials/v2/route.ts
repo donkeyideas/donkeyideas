@@ -109,6 +109,19 @@ export async function GET(request: NextRequest) {
     // Only consolidate companies that actually have financial activity
     const companiesWithTransactions = allCompaniesData.filter(c => c.transactions.length > 0);
     
+    // DEBUG: Log what we found
+    console.log('🔍 Consolidated Financials Debug:');
+    console.log(`Total companies: ${allCompaniesData.length}`);
+    console.log(`Companies with transactions: ${companiesWithTransactions.length}`);
+    if (companiesWithTransactions.length > 0) {
+      companiesWithTransactions.forEach(c => {
+        console.log(`  - ${c.companyName}: ${c.transactions.length} transactions`);
+        c.transactions.forEach(tx => {
+          console.log(`    ${tx.date.toISOString().split('T')[0]} | ${tx.type} | ${tx.category} | $${tx.amount} | affectsPL: ${tx.affectsPL}`);
+        });
+      });
+    }
+    
     // If no companies have transactions, return zero values
     if (companiesWithTransactions.length === 0) {
       return NextResponse.json({
@@ -158,23 +171,42 @@ export async function GET(request: NextRequest) {
     // Use clean engine to consolidate (only companies with actual transactions)
     const consolidated = consolidateFinancials(companiesWithTransactions);
     
-    // Build company breakdown for UI
-    const companyBreakdown = consolidated.companies.map(company => {
-      const sourceCompany = companiesWithTransactions.find(c => c.companyId === company.companyId);
+    // Build company breakdown for UI - INCLUDE ALL COMPANIES (not just those with transactions)
+    const companyBreakdown = allCompaniesData.map(companyData => {
+      // Find this company in the consolidated results (if it had transactions)
+      const consolidatedCompany = consolidated.companies.find(c => c.companyId === companyData.companyId);
       
-      return {
-        id: company.companyId,
-        name: company.companyName,
-        logo: sourceCompany?.companyLogo || null,
-        projectStatus: sourceCompany?.projectStatus || null,
-        revenue: company.statements.pl.revenue,
-        cogs: company.statements.pl.cogs,
-        operatingExpenses: company.statements.pl.operatingExpenses,
-        expenses: company.statements.pl.totalExpenses,
-        profit: company.statements.pl.netProfit,
-        cashBalance: company.statements.cashFlow.endingCash,
-        valuation: sourceCompany?.valuation || 0,
-      };
+      if (consolidatedCompany) {
+        // Company has transactions - use calculated values
+        return {
+          id: consolidatedCompany.companyId,
+          name: consolidatedCompany.companyName,
+          logo: companyData.companyLogo || null,
+          projectStatus: companyData.projectStatus || null,
+          revenue: consolidatedCompany.statements.pl.revenue,
+          cogs: consolidatedCompany.statements.pl.cogs,
+          operatingExpenses: consolidatedCompany.statements.pl.operatingExpenses,
+          expenses: consolidatedCompany.statements.pl.totalExpenses,
+          profit: consolidatedCompany.statements.pl.netProfit,
+          cashBalance: consolidatedCompany.statements.cashFlow.endingCash,
+          valuation: companyData.valuation || 0,
+        };
+      } else {
+        // Company has NO transactions - show $0
+        return {
+          id: companyData.companyId,
+          name: companyData.companyName,
+          logo: companyData.companyLogo || null,
+          projectStatus: companyData.projectStatus || null,
+          revenue: 0,
+          cogs: 0,
+          operatingExpenses: 0,
+          expenses: 0,
+          profit: 0,
+          cashBalance: 0,
+          valuation: companyData.valuation || 0,
+        };
+      }
     });
     
     // Return consolidated financials
