@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card } from '@donkey-ideas/ui';
-import { api } from '@/lib/api';
+import api from '@/lib/api-client';
 
 interface CompanyBreakdown {
   id: string;
