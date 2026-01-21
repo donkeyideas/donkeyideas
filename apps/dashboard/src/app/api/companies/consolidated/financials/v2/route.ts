@@ -171,54 +171,35 @@ export async function GET(request: NextRequest) {
     // Use clean engine to consolidate (only companies with actual transactions)
     const consolidated = consolidateFinancials(companiesWithTransactions);
     
-    // Build company breakdown for UI - INCLUDE ALL COMPANIES (not just those with transactions)
-    // IMPORTANT: Get ACTUAL balance sheets from database for correct cash values
+    // Build company breakdown for UI - USE STORED DATABASE VALUES ONLY
+    // DO NOT use calculated values - query actual P&L and Balance Sheets from database
     const companyBreakdown = await Promise.all(allCompaniesData.map(async (companyData) => {
-      // Find this company in the consolidated results (if it had transactions)
-      const consolidatedCompany = consolidated.companies.find(c => c.companyId === companyData.companyId);
+      // Get ACTUAL stored financial statements from database
+      const [latestPL, latestBalanceSheet] = await Promise.all([
+        prisma.pLStatement.findFirst({
+          where: { companyId: companyData.companyId },
+          orderBy: { period: 'desc' },
+        }),
+        prisma.balanceSheet.findFirst({
+          where: { companyId: companyData.companyId },
+          orderBy: { period: 'desc' },
+        }),
+      ]);
       
-      // Get the ACTUAL latest balance sheet from database (not calculated)
-      const latestBalanceSheet = await prisma.balanceSheet.findFirst({
-        where: { companyId: companyData.companyId },
-        orderBy: { period: 'desc' },
-      });
-      
-      // Use REAL cash from balance sheet if available, otherwise use calculated
-      const actualCash = latestBalanceSheet 
-        ? Number(latestBalanceSheet.cashEquivalents || 0)
-        : (consolidatedCompany ? consolidatedCompany.statements.cashFlow.endingCash : 0);
-      
-      if (consolidatedCompany) {
-        // Company has transactions - use calculated values BUT use REAL cash
-        return {
-          id: consolidatedCompany.companyId,
-          name: consolidatedCompany.companyName,
-          logo: companyData.companyLogo || null,
-          projectStatus: companyData.projectStatus || null,
-          revenue: consolidatedCompany.statements.pl.revenue,
-          cogs: consolidatedCompany.statements.pl.cogs,
-          operatingExpenses: consolidatedCompany.statements.pl.operatingExpenses,
-          expenses: consolidatedCompany.statements.pl.totalExpenses,
-          profit: consolidatedCompany.statements.pl.netProfit,
-          cashBalance: actualCash, // ✅ USE REAL CASH FROM BALANCE SHEET
-          valuation: companyData.valuation || 0,
-        };
-      } else {
-        // Company has NO transactions - show $0 or actual balance sheet cash
-        return {
-          id: companyData.companyId,
-          name: companyData.companyName,
-          logo: companyData.companyLogo || null,
-          projectStatus: companyData.projectStatus || null,
-          revenue: 0,
-          cogs: 0,
-          operatingExpenses: 0,
-          expenses: 0,
-          profit: 0,
-          cashBalance: actualCash, // ✅ USE REAL CASH FROM BALANCE SHEET
-          valuation: companyData.valuation || 0,
-        };
-      }
+      // Use ONLY stored values from database (not calculated from transactions)
+      return {
+        id: companyData.companyId,
+        name: companyData.companyName,
+        logo: companyData.companyLogo || null,
+        projectStatus: companyData.projectStatus || null,
+        revenue: latestPL ? Number(latestPL.revenue || 0) : 0,
+        cogs: latestPL ? Number(latestPL.cogs || 0) : 0,
+        operatingExpenses: latestPL ? Number(latestPL.operatingExpenses || 0) : 0,
+        expenses: latestPL ? Number(latestPL.totalExpenses || 0) : 0,
+        profit: latestPL ? Number(latestPL.netProfit || 0) : 0,
+        cashBalance: latestBalanceSheet ? Number(latestBalanceSheet.cashEquivalents || 0) : 0,
+        valuation: companyData.valuation || 0,
+      };
     }));
     
     // Return consolidated financials
