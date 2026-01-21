@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
+import { useAppStore } from '@/lib/store';
 
 interface BudgetCategory {
   id: string;
@@ -15,10 +16,9 @@ interface BudgetCategory {
 }
 
 export default function CategoriesPage() {
+  const { currentCompany } = useAppStore();
   const [categories, setCategories] = useState<BudgetCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
-  const [companies, setCompanies] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<BudgetCategory | null>(null);
 
@@ -32,33 +32,17 @@ export default function CategoriesPage() {
   });
 
   useEffect(() => {
-    loadCompanies();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCompany) {
+    if (currentCompany) {
       loadCategories();
     }
-  }, [selectedCompany]);
-
-  const loadCompanies = async () => {
-    try {
-      const response = await fetch('/api/companies');
-      const data = await response.json();
-      setCompanies(Array.isArray(data) ? data : []);
-      if (Array.isArray(data) && data.length > 0) {
-        setSelectedCompany(data[0].id);
-      }
-    } catch (error) {
-      console.error('Error loading companies:', error);
-      setCompanies([]);
-    }
-  };
+  }, [currentCompany]);
 
   const loadCategories = async () => {
+    if (!currentCompany) return;
+    
     try {
       setLoading(true);
-      const response = await fetch(`/api/budget/categories?companyId=${selectedCompany}`);
+      const response = await fetch(`/api/budget/categories?companyId=${currentCompany.id}`);
       const data = await response.json();
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -84,7 +68,7 @@ export default function CategoriesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          companyId: formData.companyId || selectedCompany,
+          companyId: formData.companyId || currentCompany?.id,
         }),
       });
 
@@ -152,28 +136,6 @@ export default function CategoriesPage() {
         </div>
         <Button onClick={openAddModal}>+ Add Category</Button>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Company</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <select
-            value={selectedCompany}
-            onChange={(e) => setSelectedCompany(e.target.value)}
-            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-          >
-            {companies.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
-            ))}
-          </select>
-          <p className="text-sm text-slate-400 mt-2">
-            Note: Categories without a company are available globally across all companies
-          </p>
-        </CardContent>
-      </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Income Categories */}
@@ -304,7 +266,7 @@ export default function CategoriesPage() {
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-lg">
+          <Card className="w-full max-w-lg bg-[#0F0F0F] border-white/20">
             <CardHeader>
               <CardTitle>
                 {editingCategory ? 'Edit Category' : 'Add New Category'}
@@ -401,16 +363,16 @@ export default function CategoriesPage() {
                       type="checkbox"
                       checked={formData.companyId === null}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          companyId: e.target.checked ? null : selectedCompany,
-                        })
-                      }
-                    />
-                    <span className="text-sm">
-                      Make this category available to all companies (Global)
-                    </span>
-                  </label>
+                      setFormData({
+                        ...formData,
+                        companyId: e.target.checked ? null : currentCompany?.id,
+                      })
+                    }
+                  />
+                  <span className="text-sm">
+                    Make this category available to all companies (Global)
+                  </span>
+                </label>
                 </div>
 
                 <div className="flex gap-3 pt-4">

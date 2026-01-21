@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAppStore } from '@/lib/store';
 
 export default function NewPeriodPage() {
   const router = useRouter();
-  const [companies, setCompanies] = useState<any[]>([]);
+  const { currentCompany } = useAppStore();
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    companyId: '',
     name: '',
     startDate: '',
     endDate: '',
@@ -20,7 +20,6 @@ export default function NewPeriodPage() {
   });
 
   useEffect(() => {
-    loadCompanies();
     // Set default dates (current month)
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -34,24 +33,10 @@ export default function NewPeriodPage() {
     }));
   }, []);
 
-  const loadCompanies = async () => {
-    try {
-      const response = await fetch('/api/companies');
-      const data = await response.json();
-      setCompanies(Array.isArray(data) ? data : []);
-      if (Array.isArray(data) && data.length > 0) {
-        setFormData(prev => ({ ...prev, companyId: data[0].id }));
-      }
-    } catch (error) {
-      console.error('Error loading companies:', error);
-      setCompanies([]);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.companyId || !formData.name || !formData.startDate || !formData.endDate) {
+    if (!currentCompany || !formData.name || !formData.startDate || !formData.endDate) {
       alert('Please fill in all required fields');
       return;
     }
@@ -61,7 +46,10 @@ export default function NewPeriodPage() {
       const response = await fetch('/api/budget/periods', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          companyId: currentCompany.id,
+        }),
       });
 
       if (response.ok) {
@@ -111,6 +99,16 @@ export default function NewPeriodPage() {
     }
   };
 
+  if (!currentCompany) {
+    return (
+      <div className="p-8">
+        <div className="text-center py-12">
+          <p className="text-slate-400 text-lg">Please select a company from the sidebar to create a budget period</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 space-y-6">
       <div>
@@ -119,7 +117,7 @@ export default function NewPeriodPage() {
         </Link>
         <h1 className="text-3xl font-semibold text-white">Create New Period</h1>
         <p className="text-slate-400 mt-1">
-          Create a new budget, forecast, or actuals period for tracking
+          Creating period for <span className="text-blue-400 font-medium">{currentCompany.name}</span>
         </p>
       </div>
 
@@ -129,24 +127,6 @@ export default function NewPeriodPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2 text-white">
-                Company *
-              </label>
-              <select
-                value={formData.companyId}
-                onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-                required
-              >
-                <option value="">Select a company</option>
-                {companies?.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
-              </select>
-            </div>
 
             <div>
               <label className="block text-sm font-medium mb-2 text-white">

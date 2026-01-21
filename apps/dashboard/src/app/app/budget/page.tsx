@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
+import { useAppStore } from '@/lib/store';
 
 interface BudgetPeriod {
   id: string;
@@ -17,39 +18,22 @@ interface BudgetPeriod {
 }
 
 export default function BudgetPage() {
+  const { currentCompany } = useAppStore();
   const [periods, setPeriods] = useState<BudgetPeriod[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
-  const [companies, setCompanies] = useState<any[]>([]);
 
   useEffect(() => {
-    loadCompanies();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCompany) {
+    if (currentCompany) {
       loadPeriods();
     }
-  }, [selectedCompany]);
-
-  const loadCompanies = async () => {
-    try {
-      const response = await fetch('/api/companies');
-      const data = await response.json();
-      setCompanies(Array.isArray(data) ? data : []);
-      if (Array.isArray(data) && data.length > 0) {
-        setSelectedCompany(data[0].id);
-      }
-    } catch (error) {
-      console.error('Error loading companies:', error);
-      setCompanies([]);
-    }
-  };
+  }, [currentCompany]);
 
   const loadPeriods = async () => {
+    if (!currentCompany) return;
+    
     try {
       setLoading(true);
-      const response = await fetch(`/api/budget/periods?companyId=${selectedCompany}`);
+      const response = await fetch(`/api/budget/periods?companyId=${currentCompany.id}`);
       const data = await response.json();
       setPeriods(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -78,13 +62,23 @@ export default function BudgetPage() {
     }
   };
 
+  if (!currentCompany) {
+    return (
+      <div className="p-8">
+        <div className="text-center py-12">
+          <p className="text-slate-400 text-lg">Please select a company from the sidebar to view budgets</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-white">Budget & Forecast</h1>
           <p className="text-slate-400 mt-1">
-            Plan, track, and approve your budget, forecasts, and actuals
+            Managing budgets for <span className="text-blue-400 font-medium">{currentCompany.name}</span>
           </p>
         </div>
         <div className="flex gap-3">
@@ -100,27 +94,6 @@ export default function BudgetPage() {
           </Link>
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Select Company</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <select
-            value={selectedCompany}
-            onChange={(e) => setSelectedCompany(e.target.value)}
-            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-          >
-            {companies?.map((company) => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
-            ))}
-          </select>
-        </CardContent>
-      </Card>
 
       <div className="grid md:grid-cols-3 gap-4">
         <Card>
