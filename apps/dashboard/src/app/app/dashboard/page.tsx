@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@donkey-ideas/ui';
 import { EmptyState } from '@donkey-ideas/ui';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { NotificationModal } from '@/components/ui/notification-modal';
 import { useAppStore } from '@/lib/store';
 import { CreateCompanyModal } from '@/components/companies/create-company-modal';
 import { AIAssistant } from '@/components/ai/ai-assistant';
@@ -31,6 +33,14 @@ export default function DashboardPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
+  const [showRebuildConfirm, setShowRebuildConfirm] = useState(false);
+  const [rebuildLoading, setRebuildLoading] = useState(false);
+  const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'success',
+  });
 
   // Use React Query for data fetching (cached, optimized)
   const { data: consolidatedData, isLoading: loading, refetch } = useConsolidatedData(
@@ -44,6 +54,29 @@ export default function DashboardPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleRebuildAll = async () => {
+    setRebuildLoading(true);
+    try {
+      const response = await api.post('/companies/consolidated/rebuild-all-balance-sheets');
+      setNotification({
+        isOpen: true,
+        title: 'Success',
+        message: response.data.message || 'Balance sheets rebuilt successfully for all companies',
+        type: 'success',
+      });
+      await refetch();
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error?.message || 'Failed to rebuild balance sheets',
+        type: 'error',
+      });
+    } finally {
+      setRebuildLoading(false);
+    }
   };
 
   // Show empty state if no companies
@@ -112,19 +145,11 @@ export default function DashboardPage() {
           </div>
           <Button 
             variant="secondary" 
-            onClick={async () => {
-              if (!confirm('This will rebuild balance sheets and cash flow for ALL companies. Continue?')) return;
-              try {
-                const response = await api.post('/companies/consolidated/rebuild-all-balance-sheets');
-                refetch(); // Refetch data after rebuild
-                alert(response.data.message || 'Balance sheets rebuilt successfully for all companies');
-              } catch (error: any) {
-                alert(error.response?.data?.error?.message || 'Failed to rebuild balance sheets');
-              }
-            }}
+            onClick={() => setShowRebuildConfirm(true)}
             className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30"
+            disabled={rebuildLoading}
           >
-            Rebuild All Balance Sheets
+            {rebuildLoading ? 'Rebuilding...' : 'Rebuild All Balance Sheets'}
           </Button>
           <Button variant="secondary" onClick={() => setShowAIAssistant(true)}>
             Ask AI
@@ -299,6 +324,28 @@ export default function DashboardPage() {
       />
 
       <AIAssistant isOpen={showAIAssistant} onClose={() => setShowAIAssistant(false)} />
+
+      {/* Confirm Rebuild Modal */}
+      <ConfirmModal
+        isOpen={showRebuildConfirm}
+        onClose={() => setShowRebuildConfirm(false)}
+        onConfirm={handleRebuildAll}
+        title="Rebuild All Balance Sheets"
+        message="This will rebuild balance sheets and cash flow for ALL companies. This may take a few moments. Continue?"
+        confirmText="Rebuild All"
+        cancelText="Cancel"
+        variant="info"
+        loading={rebuildLoading}
+      />
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </div>
   );
 }

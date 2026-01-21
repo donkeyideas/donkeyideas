@@ -6,6 +6,7 @@ import { EmptyState } from '@donkey-ideas/ui';
 import { useAppStore } from '@/lib/store';
 import api from '@/lib/api-client';
 import { NotificationModal } from '@/components/ui/notification-modal';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { TransactionEntryModal } from '@/components/financials/transaction-entry-modal';
 import { FinancialSummaryCards } from '@/components/financials/financial-summary-cards';
 import { PLCharts } from '@/components/financials/pl-charts';
@@ -38,6 +39,10 @@ export default function FinancialsPage() {
     message: string;
     type: 'info' | 'success' | 'error' | 'warning';
   } | null>(null);
+  const [showRebuildConfirm, setShowRebuildConfirm] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [rebuildLoading, setRebuildLoading] = useState(false);
+  const [deleteAllLoading, setDeleteAllLoading] = useState(false);
   const loadingRef = useRef(false);
 
   // Calculate P&L from transactions
@@ -703,15 +708,12 @@ export default function FinancialsPage() {
   const handleDeleteAllTransactions = async () => {
     if (!currentCompany) return;
 
-    if (!confirm('Are you sure you want to delete ALL transactions? This will also clear all financial statements (P&L, Balance Sheets, Cash Flow). This action cannot be undone.')) {
-      return;
-    }
-
+    setDeleteAllLoading(true);
     try {
       // Use efficient backend endpoint to delete ALL data at once
       const response = await api.delete(`/companies/${currentCompany.id}/transactions/delete-all`);
       
-      loadFinancials();
+      await loadFinancials();
       setNotification({
         isOpen: true,
         title: 'Success',
@@ -725,6 +727,39 @@ export default function FinancialsPage() {
         message: error.response?.data?.error?.message || 'Failed to delete all transactions',
         type: 'error',
       });
+    } finally {
+      setDeleteAllLoading(false);
+    }
+  };
+
+  const handleRebuildBalanceSheet = async () => {
+    if (!currentCompany) return;
+
+    setRebuildLoading(true);
+    try {
+      setNotification({
+        isOpen: true,
+        title: 'Processing',
+        message: 'Rebuilding balance sheet and cash flow...',
+        type: 'info',
+      });
+      const response = await api.post(`/companies/${currentCompany.id}/balance-sheet/rebuild`);
+      setNotification({
+        isOpen: true,
+        title: 'Success',
+        message: response.data.message || 'Balance sheet rebuilt successfully',
+        type: 'success',
+      });
+      await loadFinancials();
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error?.message || 'Failed to rebuild balance sheet',
+        type: 'error',
+      });
+    } finally {
+      setRebuildLoading(false);
     }
   };
 
@@ -785,43 +820,19 @@ export default function FinancialsPage() {
           </Button>
           <Button 
             variant="secondary" 
-            onClick={async () => {
-              if (!currentCompany) return;
-              if (!confirm('This will rebuild the balance sheet and cash flow from all transactions. Continue?')) return;
-              try {
-                setNotification({
-                  isOpen: true,
-                  title: 'Processing',
-                  message: 'Rebuilding balance sheet and cash flow...',
-                  type: 'info',
-                });
-                const response = await api.post(`/companies/${currentCompany.id}/balance-sheet/rebuild`);
-                setNotification({
-                  isOpen: true,
-                  title: 'Success',
-                  message: response.data.message || 'Balance sheet rebuilt successfully',
-                  type: 'success',
-                });
-                loadFinancials();
-              } catch (error: any) {
-                setNotification({
-                  isOpen: true,
-                  title: 'Error',
-                  message: error.response?.data?.error?.message || 'Failed to rebuild balance sheet',
-                  type: 'error',
-                });
-              }
-            }}
+            onClick={() => setShowRebuildConfirm(true)}
             className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30"
+            disabled={rebuildLoading}
           >
-            Rebuild Balance Sheet
+            {rebuildLoading ? 'Rebuilding...' : 'Rebuild Balance Sheet'}
           </Button>
           <Button 
             variant="secondary" 
-            onClick={handleDeleteAllTransactions}
+            onClick={() => setShowDeleteAllConfirm(true)}
             className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border-red-500/30"
+            disabled={deleteAllLoading}
           >
-            Clear All Data
+            {deleteAllLoading ? 'Deleting...' : 'Clear All Data'}
           </Button>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setShowTransactionModal(true)}>
@@ -1035,6 +1046,32 @@ export default function FinancialsPage() {
           type={notification.type}
         />
       )}
+
+      {/* Confirm Rebuild Modal */}
+      <ConfirmModal
+        isOpen={showRebuildConfirm}
+        onClose={() => setShowRebuildConfirm(false)}
+        onConfirm={handleRebuildBalanceSheet}
+        title="Rebuild Balance Sheet"
+        message="This will rebuild the balance sheet and cash flow from all transactions. This may take a few moments. Continue?"
+        confirmText="Rebuild"
+        cancelText="Cancel"
+        variant="info"
+        loading={rebuildLoading}
+      />
+
+      {/* Confirm Delete All Modal */}
+      <ConfirmModal
+        isOpen={showDeleteAllConfirm}
+        onClose={() => setShowDeleteAllConfirm(false)}
+        onConfirm={handleDeleteAllTransactions}
+        title="Delete All Transactions"
+        message="Are you sure you want to delete ALL transactions? This will also clear all financial statements (P&L, Balance Sheets, Cash Flow).\n\n⚠️ This action cannot be undone."
+        confirmText="Delete All"
+        cancelText="Cancel"
+        variant="danger"
+        loading={deleteAllLoading}
+      />
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@donkey-ideas/ui';
 import { EmptyState } from '@donkey-ideas/ui';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { NotificationModal } from '@/components/ui/notification-modal';
 import api from '@/lib/api-client';
 import { useAppStore } from '@/lib/store';
 
@@ -39,6 +41,14 @@ export default function ConsolidatedViewPage() {
   const [financials, setFinancials] = useState<ConsolidatedFinancials | null>(null);
   const [loading, setLoading] = useState(true);
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
+  const [showRebuildConfirm, setShowRebuildConfirm] = useState(false);
+  const [rebuildLoading, setRebuildLoading] = useState(false);
+  const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'success',
+  });
 
   useEffect(() => {
     if (companies.length > 0) {
@@ -106,6 +116,29 @@ export default function ConsolidatedViewPage() {
     }
   };
 
+  const handleRebuildAll = async () => {
+    setRebuildLoading(true);
+    try {
+      const response = await api.post('/companies/consolidated/rebuild-all-balance-sheets');
+      setNotification({
+        isOpen: true,
+        title: 'Success',
+        message: response.data.message || 'Balance sheets rebuilt successfully for all companies',
+        type: 'success',
+      });
+      await loadConsolidatedFinancials();
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error?.message || 'Failed to rebuild balance sheets',
+        type: 'error',
+      });
+    } finally {
+      setRebuildLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-white/60 [.light_&]:text-slate-600">Loading consolidated financials...</div>;
   }
@@ -156,19 +189,11 @@ export default function ConsolidatedViewPage() {
           </div>
           <Button 
             variant="secondary" 
-            onClick={async () => {
-              if (!confirm('This will rebuild balance sheets and cash flow for ALL companies. Continue?')) return;
-              try {
-                const response = await api.post('/companies/consolidated/rebuild-all-balance-sheets');
-                loadConsolidatedFinancials();
-                alert(response.data.message || 'Balance sheets rebuilt successfully for all companies');
-              } catch (error: any) {
-                alert(error.response?.data?.error?.message || 'Failed to rebuild balance sheets');
-              }
-            }}
+            onClick={() => setShowRebuildConfirm(true)}
             className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30"
+            disabled={rebuildLoading}
           >
-            Rebuild All Balance Sheets
+            {rebuildLoading ? 'Rebuilding...' : 'Rebuild All Balance Sheets'}
           </Button>
           <Button variant="secondary" onClick={loadConsolidatedFinancials}>
             Refresh
@@ -397,6 +422,28 @@ export default function ConsolidatedViewPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Confirm Rebuild Modal */}
+      <ConfirmModal
+        isOpen={showRebuildConfirm}
+        onClose={() => setShowRebuildConfirm(false)}
+        onConfirm={handleRebuildAll}
+        title="Rebuild All Balance Sheets"
+        message="This will rebuild balance sheets and cash flow for ALL companies. This may take a few moments. Continue?"
+        confirmText="Rebuild All"
+        cancelText="Cancel"
+        variant="info"
+        loading={rebuildLoading}
+      />
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </div>
   );
 }
