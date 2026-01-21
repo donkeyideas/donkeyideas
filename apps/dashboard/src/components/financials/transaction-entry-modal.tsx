@@ -236,7 +236,8 @@ export function TransactionEntryModal({ companyId, transaction, onClose, onSave 
         await api.put(`/companies/${companyId}/transactions/${transaction.id}`, formData);
         onSave();
       } else if (formData.type === 'intercompany_transfer') {
-        // Create intercompany transfer - need to create transactions in both companies
+        // Use the dedicated intercompany transfer API endpoint
+        // This correctly creates receivable/payable pairs without affecting P&L
         const destinationCompany = companies.find(c => c.id === formData.destinationCompanyId);
         if (!destinationCompany) {
           setError('Destination company not found');
@@ -244,237 +245,31 @@ export function TransactionEntryModal({ companyId, transaction, onClose, onSave 
           return;
         }
 
-        const sourceCompanyName = currentCompany?.name || 'Source Company';
-        const destinationCompanyName = destinationCompany.name;
-
-        // Create source company transaction (outflow)
-        // This creates: Debit Intercompany Receivable, Credit Cash
-        // Only send standard fields that backend expects
-        // Try intercompany_receivable first, fallback to accounts_receivable if backend doesn't support it
-        const sourceTransaction = {
-          date: formData.date,
-          type: 'asset',
-          category: 'intercompany_receivable', // Backend may need this added to valid categories
-          amount: Math.abs(formData.amount), // Positive amount for receivable
-          description: formData.description || `[INTERCOMPANY] Transfer to ${destinationCompanyName} - Intercompany Receivable`,
-          affectsPL: false, // Intercompany transfers don't affect P&L
-          affectsBalance: true,
-          affectsCashFlow: false, // Receivable doesn't directly affect cash flow
-        };
-
-        // Also create cash outflow transaction for source company
-        // Note: Backend may not accept negative amounts, so we'll try positive first
-        // and fallback to expense type if needed
-        const sourceCashTransaction = {
-          date: formData.date,
-          type: 'asset',
-          category: 'cash',
-          amount: -Math.abs(formData.amount), // Negative for cash outflow - backend may reject this
-          description: formData.description || `[CASH OUTFLOW] Transfer to ${destinationCompanyName}`,
-          affectsPL: false,
-          affectsBalance: true,
-          affectsCashFlow: true,
-        };
-
-        // Create destination company transaction (inflow)
-        // This creates: Debit Cash, Credit Intercompany Payable
-        const destinationCashTransaction = {
-          date: formData.date,
-          type: 'asset',
-          category: 'cash',
-          amount: Math.abs(formData.amount), // Positive for cash inflow
-          description: formData.description || `Intercompany transfer from ${sourceCompanyName}`,
-          affectsPL: false,
-          affectsBalance: true,
-          affectsCashFlow: true,
-        };
-
-        const destinationLiabilityTransaction = {
-          date: formData.date,
-          type: 'liability',
-          category: 'intercompany_payable', // Backend may need this added to valid categories
-          amount: Math.abs(formData.amount), // Positive for payable
-          description: formData.description || `[INTERCOMPANY] Payable from ${sourceCompanyName} - Intercompany Payable`,
-          affectsPL: false,
-          affectsBalance: true,
-          affectsCashFlow: false, // Payable doesn't affect cash flow directly
-        };
-
-        // Create all transactions - create them sequentially to better handle errors
-        // If intercompany categories don't exist, fallback to standard categories
-        // Declare variables outside try-catch so they're accessible later
-        let sourceTx1: any = null;
-        let sourceTx2: any = null;
-        let destTx1: any = null;
-        let destTx2: any = null;
-        
         try {
-          console.log('Creating intercompany transfer transactions...', {
+          console.log('Creating intercompany transfer via API...', {
             sourceCompanyId: companyId,
             destinationCompanyId: formData.destinationCompanyId,
             amount: formData.amount
           });
           
-          try {
-            // Create source company transactions first
-            console.log('Creating source receivable transaction:', sourceTransaction);
-            sourceTx1 = await api.post(`/companies/${companyId}/transactions`, sourceTransaction);
-            console.log('Source receivable created:', sourceTx1.data);
-          } catch (err: any) {
-            // If intercompany_receivable fails, try accounts_receivable
-            if (err.response?.status === 400 || err.response?.status === 422) {
-              console.warn('intercompany_receivable not recognized, using accounts_receivable');
-              const fallbackTransaction = {
-                ...sourceTransaction,
-                category: 'accounts_receivable',
-                description: `[INTERCOMPANY] ${sourceTransaction.description}`
-              };
-              sourceTx1 = await api.post(`/companies/${companyId}/transactions`, fallbackTransaction);
-            } else {
-              throw err;
-            }
-          }
-
-          try {
-            console.log('Creating source cash transaction:', sourceCashTransaction);
-            sourceTx2 = await api.post(`/companies/${companyId}/transactions`, sourceCashTransaction);
-            console.log('Source cash created:', sourceTx2.data);
-          } catch (err: any) {
-            console.error('Source cash transaction error details:', {
-              status: err.response?.status,
-              statusText: err.response?.statusText,
-              data: err.response?.data,
-              fullError: err
-            });
-            
-            // Backend likely doesn't accept negative amounts
-            // Try using a positive amount with a different approach
-            if (err.response?.status === 400 || err.response?.status === 422) {
-              console.warn('Negative cash amount rejected, trying positive amount with expense type');
-              
-              // Option 1: Try expense type (represents cash outflow)
-              const expenseTransaction = {
-                date: formData.date,
-                type: 'expense',
-                category: 'direct_costs',
-                amount: Math.abs(formData.amount), // Positive amount
-                description: formData.description || `[INTERCOMPANY CASH OUTFLOW] Transfer to ${destinationCompanyName}`,
-                affectsPL: false, // Don't affect P&L for intercompany
-                affectsBalance: true,
-                affectsCashFlow: true,
-              };
-              
-              try {
-                sourceTx2 = await api.post(`/companies/${companyId}/transactions`, expenseTransaction);
-                console.log('Source cash outflow (as expense) created:', sourceTx2.data);
-              } catch (expenseErr: any) {
-                console.error('Expense approach also failed:', expenseErr.response?.data);
-                
-                // Option 2: Try positive cash amount (backend will need to handle direction)
-                console.warn('Trying positive cash amount as last resort');
-                const positiveCashTransaction = {
-                  date: formData.date,
-                  type: 'asset',
-                  category: 'cash',
-                  amount: Math.abs(formData.amount), // Positive amount
-                  description: formData.description || `[CASH OUTFLOW - USE NEGATIVE] Transfer to ${destinationCompanyName}`,
-                  affectsPL: false,
-                  affectsBalance: true,
-                  affectsCashFlow: true,
-                };
-                
-                try {
-                  sourceTx2 = await api.post(`/companies/${companyId}/transactions`, positiveCashTransaction);
-                  console.warn('Created positive cash transaction - manual adjustment may be needed');
-                  console.log('Source cash (positive) created:', sourceTx2.data);
-                } catch (positiveErr: any) {
-                  const errorDetails = positiveErr.response?.data?.error?.message || 
-                                      positiveErr.response?.data?.message || 
-                                      JSON.stringify(positiveErr.response?.data) ||
-                                      positiveErr.message || 
-                                      'Validation error';
-                  throw new Error(`Failed to create source cash transaction. Backend error: ${errorDetails}`);
-                }
-              }
-            } else {
-              const errorDetails = err.response?.data?.error?.message || 
-                                  err.response?.data?.message || 
-                                  JSON.stringify(err.response?.data) ||
-                                  err.message || 
-                                  'Unknown error';
-              throw new Error(`Failed to create source cash transaction: ${errorDetails}`);
-            }
-          }
-          
-          try {
-            // Then create destination company transactions
-            console.log('Creating destination cash transaction:', destinationCashTransaction);
-            destTx1 = await api.post(`/companies/${formData.destinationCompanyId}/transactions`, destinationCashTransaction);
-            console.log('Destination cash created:', destTx1.data);
-          } catch (err: any) {
-            throw new Error(`Failed to create destination cash transaction: ${err.response?.data?.error?.message || err.message}`);
-          }
-
-          try {
-            console.log('Creating destination payable transaction:', destinationLiabilityTransaction);
-            destTx2 = await api.post(`/companies/${formData.destinationCompanyId}/transactions`, destinationLiabilityTransaction);
-            console.log('Destination payable created:', destTx2.data);
-          } catch (err: any) {
-            // If intercompany_payable fails, try accounts_payable
-            if (err.response?.status === 400 || err.response?.status === 422) {
-              console.warn('intercompany_payable not recognized, using accounts_payable');
-              const fallbackTransaction = {
-                ...destinationLiabilityTransaction,
-                category: 'accounts_payable',
-                description: `[INTERCOMPANY] ${destinationLiabilityTransaction.description}`
-              };
-              destTx2 = await api.post(`/companies/${formData.destinationCompanyId}/transactions`, fallbackTransaction);
-            } else {
-              throw err;
-            }
-          }
-          
-          console.log('Intercompany transfer created successfully!');
-        } catch (txError: any) {
-          // If any transaction fails, provide detailed error
-          console.error('Failed to create intercompany transfer transaction:', txError);
-          console.error('Error response:', txError.response?.data);
-          console.error('Error status:', txError.response?.status);
-          console.error('Transaction data attempted:', {
-            sourceTransaction,
-            sourceCashTransaction,
-            destinationCashTransaction,
-            destinationLiabilityTransaction
+          // Call the dedicated intercompany transfer endpoint
+          // This creates all 4 transactions correctly:
+          // - Source: Intercompany Receivable (asset) + Cash out
+          // - Destination: Cash in + Intercompany Payable (liability)
+          await api.post(`/companies/${companyId}/intercompany-transfer`, {
+            targetCompanyId: formData.destinationCompanyId,
+            amount: Math.abs(formData.amount),
+            date: formData.date,
+            description: formData.description || `Intercompany transfer with ${destinationCompany.name}`,
+            affectsCashFlow: true, // Set to false if no actual cash movement
           });
           
-          // Provide more specific error message
-          const errorMsg = txError.response?.data?.error?.message || 
-                          txError.response?.data?.message || 
-                          txError.message ||
-                          'Unknown error occurred';
-          throw new Error(`Transaction failed: ${errorMsg}`);
+          console.log('✅ Intercompany transfer created successfully via API');
+          onSave();
+        } catch (err: any) {
+          console.error('Failed to create intercompany transfer:', err);
+          throw err;
         }
-
-        // Link the transactions together (optional - only if all transactions were created successfully)
-        if (sourceTx1 && sourceTx2 && destTx1 && destTx2) {
-          try {
-            const transferId = sourceTx1.data?.transaction?.id || sourceTx1.data?.id || Date.now().toString();
-            await Promise.all([
-              sourceTx1.data?.transaction?.id && api.put(`/companies/${companyId}/transactions/${sourceTx1.data.transaction.id}`, { intercompanyTransferId: transferId }),
-              sourceTx2.data?.transaction?.id && api.put(`/companies/${companyId}/transactions/${sourceTx2.data.transaction.id}`, { intercompanyTransferId: transferId }),
-              destTx1.data?.transaction?.id && api.put(`/companies/${formData.destinationCompanyId}/transactions/${destTx1.data.transaction.id}`, { intercompanyTransferId: transferId }),
-              destTx2.data?.transaction?.id && api.put(`/companies/${formData.destinationCompanyId}/transactions/${destTx2.data.transaction.id}`, { intercompanyTransferId: transferId }),
-            ].filter(Boolean)).catch(() => {
-              // If linking fails, that's okay - transactions are still created
-              console.warn('Failed to link intercompany transactions, but transactions were created successfully');
-            });
-          } catch (linkError) {
-            // Linking is optional - don't fail the whole operation
-            console.warn('Failed to link intercompany transactions:', linkError);
-          }
-        }
-
-        onSave();
       } else {
         // Regular transaction
         await api.post(`/companies/${companyId}/transactions`, formData);
