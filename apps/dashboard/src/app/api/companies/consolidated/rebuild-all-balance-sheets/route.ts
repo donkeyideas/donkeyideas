@@ -2,9 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { calculateFinancials, Transaction } from '@donkey-ideas/financial-engine';
 
-// POST /api/companies/consolidated/rebuild-all-balance-sheets
-// Rebuild balance sheets for ALL companies owned by the user
+/**
+ * REBUILD ALL FINANCIAL STATEMENTS
+ * POST /api/companies/consolidated/rebuild-all-balance-sheets
+ * 
+ * For each company:
+ * 1. Get all transactions
+ * 2. Calculate P&L, Balance Sheet, Cash Flow
+ * 3. STORE results in database
+ * 
+ * This ensures all stored statements are up-to-date
+ */
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -25,6 +35,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    console.log('🔄 Rebuilding ALL financial statements...');
+    
     // Get all companies for the user
     const companies = await prisma.company.findMany({
       where: { userId: user.id },
@@ -37,39 +49,110 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    console.log(`📊 Found ${companies.length} companies to rebuild`);
+    
     let totalProcessed = 0;
     const results = [];
     
-    // Process each company using the NEW clean recalculation endpoint
+    // Import Decimal for Prisma
+    const { Decimal } = await import('@prisma/client/runtime/library');
+    const period = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    
+    // Process each company
     for (const company of companies) {
       try {
         console.log(`🔄 Recalculating ${company.name}...`);
         
-        // Call the NEW clean recalculation endpoint
-        // This properly calculates AND stores P&L, Balance Sheet, Cash Flow
-        const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/companies/${company.id}/financials/recalculate-all`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Cookie': request.headers.get('cookie') || '',
+        // STEP 1: Get all transactions
+        const dbTransactions = await prisma.transaction.findMany({
+          where: { companyId: company.id },
+          orderBy: { date: 'asc' },
+        });
+        
+        console.log(`  📊 Found ${dbTransactions.length} transactions`);
+        
+        // STEP 2: Delete ALL existing financial statements (fresh start)
+        await Promise.all([
+          prisma.pLStatement.deleteMany({ where: { companyId: company.id } }),
+          prisma.balanceSheet.deleteMany({ where: { companyId: company.id } }),
+          prisma.cashFlow.deleteMany({ where: { companyId: company.id } }),
+        ]);
+        
+        console.log(`  🗑️ Deleted old statements`);
+        
+        // STEP 3: Transform transactions for financial engine
+        const transactions: Transaction[] = dbTransactions.map(tx => ({
+          id: tx.id,
+          date: new Date(tx.date),
+          type: tx.type as any,
+          category: tx.category || 'Uncategorized',
+          amount: Number(tx.amount),
+          description: tx.description || undefined,
+          affectsPL: tx.affectsPL ?? true,
+          affectsCashFlow: tx.affectsCashFlow ?? true,
+          affectsBalance: tx.affectsBalance ?? true,
+        }));
+        
+        // STEP 4: Calculate using financial engine
+        const statements = calculateFinancials(transactions, 0);
+        
+        console.log(`  ✅ Calculated: Revenue=$${statements.pl.revenue}, Profit=$${statements.pl.netProfit}, Cash=$${statements.cashFlow.endingCash}`);
+        
+        // STEP 5: Store P&L Statement
+        await prisma.pLStatement.create({
+          data: {
+            companyId: company.id,
+            period,
+            productRevenue: new Decimal(statements.pl.revenue),
+            serviceRevenue: new Decimal(0),
+            otherRevenue: new Decimal(0),
+            directCosts: new Decimal(statements.pl.cogs),
+            infrastructureCosts: new Decimal(0),
+            salesMarketing: new Decimal(statements.pl.operatingExpenses),
+            rdExpenses: new Decimal(0),
+            adminExpenses: new Decimal(0),
           },
         });
         
-        if (!response.ok) {
-          throw new Error(`Failed to recalculate: ${response.statusText}`);
-        }
+        // STEP 6: Store Balance Sheet
+        await prisma.balanceSheet.create({
+          data: {
+            companyId: company.id,
+            period,
+            cashEquivalents: new Decimal(statements.balanceSheet.cash),
+            accountsReceivable: new Decimal(statements.balanceSheet.accountsReceivable),
+            fixedAssets: new Decimal(statements.balanceSheet.fixedAssets),
+            accountsPayable: new Decimal(statements.balanceSheet.accountsPayable),
+            shortTermDebt: new Decimal(statements.balanceSheet.shortTermDebt),
+            longTermDebt: new Decimal(statements.balanceSheet.longTermDebt),
+          },
+        });
         
-        const data = await response.json();
+        // STEP 7: Store Cash Flow
+        await prisma.cashFlow.create({
+          data: {
+            companyId: company.id,
+            period,
+            beginningCash: new Decimal(statements.cashFlow.beginningCash),
+            operatingCashFlow: new Decimal(statements.cashFlow.operatingCashFlow),
+            investingCashFlow: new Decimal(statements.cashFlow.investingCashFlow),
+            financingCashFlow: new Decimal(statements.cashFlow.financingCashFlow),
+            netCashFlow: new Decimal(statements.cashFlow.netCashFlow),
+            endingCash: new Decimal(statements.cashFlow.endingCash),
+          },
+        });
+        
+        console.log(`  💾 Stored all statements`);
         
         totalProcessed++;
         results.push({
           companyId: company.id,
           companyName: company.name,
-          transactionsProcessed: data.transactionsProcessed,
+          transactionsProcessed: transactions.length,
           success: true,
         });
       } catch (error: any) {
-        console.error(`Failed to rebuild for ${company.name}:`, error);
+        console.error(`  ❌ Failed for ${company.name}:`, error);
         results.push({
           companyId: company.id,
           companyName: company.name,
@@ -79,210 +162,21 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    return NextResponse.json({ 
-      success: true, 
-      message: `Rebuilt balance sheets for ${totalProcessed} of ${companies.length} companies`,
-      companiesProcessed: totalProcessed,
+    console.log(`✅ Rebuild complete: ${totalProcessed}/${companies.length} companies processed`);
+    
+    return NextResponse.json({
+      success: true,
+      message: `Successfully rebuilt financial statements for ${totalProcessed} out of ${companies.length} companies`,
       totalCompanies: companies.length,
+      processed: totalProcessed,
       results,
     });
+    
   } catch (error: any) {
-    console.error('Failed to rebuild all balance sheets:', error);
+    console.error('❌ Failed to rebuild all balance sheets:', error);
     return NextResponse.json(
-      { error: { message: error.message || 'Failed to rebuild all balance sheets' } },
+      { error: { message: error.message || 'Failed to rebuild balance sheets' } },
       { status: 500 }
     );
-  }
-}
-
-// Helper function to update cash flow (same as in single company rebuild)
-async function updateCashFlow(
-  companyId: string,
-  period: Date,
-  type: string,
-  category: string,
-  amount: number
-) {
-  const { Decimal } = await import('@prisma/client/runtime/library');
-  
-  // Get the most recent period's ending cash before the current period for beginning cash
-  const mostRecentCashFlow = await prisma.cashFlow.findFirst({
-    where: {
-      companyId,
-      period: {
-        lt: period,
-      },
-    },
-    orderBy: { period: 'desc' },
-  });
-  
-  let beginningCash = 0;
-  if (mostRecentCashFlow) {
-    beginningCash = Number(mostRecentCashFlow.endingCash || 0);
-  }
-  
-  // Check if cash flow already exists
-  const existingCashFlow = await prisma.cashFlow.findUnique({
-    where: {
-      companyId_period: {
-        companyId,
-        period,
-      },
-    },
-  });
-  
-  const cashFlow = existingCashFlow || await prisma.cashFlow.create({
-    data: {
-      companyId,
-      period,
-      beginningCash: new Decimal(beginningCash),
-      endingCash: new Decimal(beginningCash),
-      operatingCashFlow: new Decimal(0),
-      investingCashFlow: new Decimal(0),
-      financingCashFlow: new Decimal(0),
-      netCashFlow: new Decimal(0),
-    },
-  });
-  
-  const updateData: any = {};
-  
-  // Categorize cash flows
-  if (type === 'revenue') {
-    updateData.operatingCashFlow = { increment: new Decimal(amount) };
-  } else if (type === 'expense') {
-    updateData.operatingCashFlow = { increment: new Decimal(-amount) };
-  } else if (type === 'asset') {
-    if (category === 'cash') {
-      updateData.operatingCashFlow = { increment: new Decimal(amount) };
-    } else if (category === 'equipment' || category === 'inventory') {
-      updateData.investingCashFlow = { increment: new Decimal(-amount) };
-    }
-  } else if (type === 'equity') {
-    updateData.financingCashFlow = { increment: new Decimal(amount) };
-  } else if (type === 'liability') {
-    if (category === 'short_term_debt' || category === 'long_term_debt') {
-      updateData.financingCashFlow = { increment: new Decimal(amount) };
-    } else if (category === 'accounts_payable') {
-      updateData.operatingCashFlow = { increment: new Decimal(-amount) };
-    }
-  }
-  
-  if (Object.keys(updateData).length > 0) {
-    await prisma.cashFlow.update({
-      where: { id: cashFlow.id },
-      data: updateData,
-    });
-    
-    // Recalculate net cash flow and ending cash
-    const updated = await prisma.cashFlow.findUnique({
-      where: { id: cashFlow.id },
-    });
-    
-    if (updated) {
-      const operating = Number(updated.operatingCashFlow || 0);
-      const investing = Number(updated.investingCashFlow || 0);
-      const financing = Number(updated.financingCashFlow || 0);
-      const netCashFlow = operating + investing + financing;
-      const endingCash = Number(updated.beginningCash || 0) + netCashFlow;
-      
-      await prisma.cashFlow.update({
-        where: { id: cashFlow.id },
-        data: {
-          netCashFlow: new Decimal(netCashFlow),
-          endingCash: new Decimal(endingCash),
-        },
-      });
-      
-      // Sync ending cash with balance sheet
-      await prisma.balanceSheet.upsert({
-        where: {
-          companyId_period: {
-            companyId,
-            period,
-          },
-        },
-        update: {
-          cashEquivalents: new Decimal(endingCash),
-        },
-        create: {
-          companyId,
-          period,
-          cashEquivalents: new Decimal(endingCash),
-        },
-      });
-    }
-  }
-}
-
-// Helper function to update balance sheet (same as in single company rebuild)
-async function updateBalanceSheet(
-  companyId: string,
-  period: Date,
-  type: string,
-  category: string,
-  amount: number,
-  isCashTransaction: boolean = false
-) {
-  const { Decimal } = await import('@prisma/client/runtime/library');
-  
-  // If this is a cash flow transaction, the cash flow update already synced the balance sheet
-  if (isCashTransaction && (type === 'revenue' || type === 'expense')) {
-    return;
-  }
-  
-  const balanceSheet = await prisma.balanceSheet.upsert({
-    where: {
-      companyId_period: {
-        companyId,
-        period,
-      },
-    },
-    update: {},
-    create: {
-      companyId,
-      period,
-    },
-  });
-  
-  const updateData: any = {};
-  
-  if (type === 'asset') {
-    const categoryLower = category.toLowerCase().trim().replace(/[_\s]+/g, '_');
-    
-    if (categoryLower === 'cash') {
-      updateData.cashEquivalents = { increment: new Decimal(amount) };
-    } else if (categoryLower === 'accounts_receivable' || categoryLower === 'intercompany_receivable') {
-      // Intercompany receivables are treated as accounts receivable on individual balance sheets
-      updateData.accountsReceivable = { increment: new Decimal(amount) };
-    } else if (categoryLower === 'equipment' || categoryLower === 'inventory') {
-      updateData.fixedAssets = { increment: new Decimal(amount) };
-    }
-  } else if (type === 'liability') {
-    const categoryLower = category.toLowerCase().trim().replace(/[_\s]+/g, '_');
-    
-    if (categoryLower === 'accounts_payable' || categoryLower === 'intercompany_payable') {
-      // Intercompany payables are treated as accounts payable on individual balance sheets
-      updateData.accountsPayable = { increment: new Decimal(amount) };
-    } else if (categoryLower === 'short_term_debt') {
-      updateData.shortTermDebt = { increment: new Decimal(amount) };
-    } else if (categoryLower === 'long_term_debt') {
-      updateData.longTermDebt = { increment: new Decimal(amount) };
-    }
-  }
-  
-  // Handle revenue/expense effects on balance sheet (only if not cash flow transaction)
-  if (!isCashTransaction) {
-    if (type === 'revenue') {
-      updateData.accountsReceivable = { increment: new Decimal(amount) };
-    } else if (type === 'expense') {
-      updateData.accountsPayable = { increment: new Decimal(amount) };
-    }
-  }
-  
-  if (Object.keys(updateData).length > 0) {
-    await prisma.balanceSheet.update({
-      where: { id: balanceSheet.id },
-      data: updateData,
-    });
   }
 }
