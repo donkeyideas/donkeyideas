@@ -57,6 +57,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       loadCategories();
       loadLines();
       generateDates();
+      restoreSelectedCategories();
     }
   }, [period]);
 
@@ -100,7 +101,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       const data = await response.json();
       setCategories(data);
       
-      // Auto-select first few categories
+      // Auto-select first few categories (only if none saved)
       if (data.length > 0 && selectedCategories.length === 0) {
         setSelectedCategories(data.slice(0, Math.min(5, data.length)).map((c: any) => c.id));
       }
@@ -108,6 +109,33 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       console.error('Error loading categories:', error);
     }
   };
+
+  const storageKey = period
+    ? `budget:selectedCategories:${period.companyId}:${period.id}`
+    : null;
+
+  const restoreSelectedCategories = () => {
+    if (!storageKey) return;
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        setSelectedCategories(parsed);
+      }
+    } catch (error) {
+      console.error('Error restoring selected categories:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(selectedCategories));
+    } catch (error) {
+      console.error('Error saving selected categories:', error);
+    }
+  }, [storageKey, selectedCategories]);
 
   const loadLines = async () => {
     try {
@@ -253,6 +281,9 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
     if (dates.length === 0) return {};
     const totalsByDate: Record<string, number> = {};
     Object.values(lines).forEach((line) => {
+      if (!line.date) {
+        return;
+      }
       const dateKey = line.date.split('T')[0];
       const amount = parseFloat(String(line.amount).replace(/,/g, ''));
       totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) + (Number.isNaN(amount) ? 0 : amount);
@@ -377,8 +408,8 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
 
       <Card>
         <CardContent className="p-0">
-          <div className="max-h-[70vh] overflow-auto">
-            <table className="w-full min-w-[900px]">
+          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto pb-2">
+            <table className="w-max min-w-full">
               <thead className="bg-black/30">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[180px] sticky top-0 z-20 bg-[#0b1220]">
