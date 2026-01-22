@@ -54,6 +54,43 @@ export async function POST(
     
     console.log(`📊 Found ${dbTransactions.length} transactions`);
     
+    // STEP 1.5: Fix transaction flags BEFORE calculating (ensures correct calculation)
+    console.log(`🔧 Fixing transaction flags...`);
+    
+    // Fix revenue/expense/cogs flags
+    await prisma.transaction.updateMany({
+      where: {
+        companyId,
+        type: { in: ['revenue', 'expense', 'cogs'] },
+      },
+      data: {
+        affectsPL: true,
+        affectsCashFlow: true,
+        affectsBalance: true,
+      },
+    });
+    
+    // Fix intercompany flags (should NOT affect P&L)
+    await prisma.transaction.updateMany({
+      where: {
+        companyId,
+        type: 'intercompany',
+      },
+      data: {
+        affectsPL: false,
+        affectsCashFlow: true,
+        affectsBalance: true,
+      },
+    });
+    
+    // Reload transactions after fixing flags
+    const fixedTransactions = await prisma.transaction.findMany({
+      where: { companyId },
+      orderBy: { date: 'asc' },
+    });
+    
+    console.log(`✅ Fixed transaction flags, reloaded ${fixedTransactions.length} transactions`);
+    
     // STEP 2: Delete ALL existing financial statements (fresh start)
     await Promise.all([
       prisma.pLStatement.deleteMany({ where: { companyId } }),
@@ -63,8 +100,8 @@ export async function POST(
     
     console.log(`🗑️ Deleted all existing financial statements`);
     
-    // STEP 3: Transform transactions for financial engine
-    const transactions: Transaction[] = dbTransactions.map(tx => ({
+    // STEP 3: Transform transactions for financial engine (use fixed transactions)
+    const transactions: Transaction[] = fixedTransactions.map(tx => ({
       id: tx.id,
       date: new Date(tx.date),
       type: tx.type as any,

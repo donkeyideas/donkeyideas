@@ -116,9 +116,31 @@ export async function POST(
     const body = await request.json();
     const validated = createTransactionSchema.parse(body);
     
-    // Auto-set affectsCashFlow for revenue and expense transactions (they're typically cash transactions)
-    if (!body.affectsCashFlow && (validated.type === 'revenue' || validated.type === 'expense')) {
-      validated.affectsCashFlow = true;
+    // Auto-set flags based on transaction type
+    // Revenue, Expense, COGS should affect P&L and Cash Flow
+    if (validated.type === 'revenue' || validated.type === 'expense' || validated.type === 'cogs') {
+      if (body.affectsPL === undefined) {
+        validated.affectsPL = true; // Auto-set to true for P&L transactions
+      }
+      if (!body.affectsCashFlow) {
+        validated.affectsCashFlow = true; // Auto-set to true for cash transactions
+      }
+      if (body.affectsBalance === undefined) {
+        validated.affectsBalance = true; // Auto-set to true for balance sheet
+      }
+    }
+    
+    // Intercompany transactions should NOT affect P&L
+    if (validated.type === 'intercompany') {
+      if (body.affectsPL === undefined) {
+        validated.affectsPL = false; // Intercompany doesn't affect P&L
+      }
+      if (!body.affectsCashFlow) {
+        validated.affectsCashFlow = true; // But does affect cash
+      }
+      if (body.affectsBalance === undefined) {
+        validated.affectsBalance = true; // And balance sheet
+      }
     }
     
     const transactionDate = new Date(validated.date);
