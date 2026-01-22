@@ -106,12 +106,35 @@ export async function GET(request: NextRequest) {
         dataStatus = 'needs_rebuild'; // Has transactions but no statements
       } else {
         // Has both transactions AND statements - check if statements are meaningful
+        // BUT: Intercompany-only transactions won't show P&L activity (by design)
+        // So check if there are any P&L-affecting transactions OR if balance sheet has activity
+        const hasPLTransactions = await prisma.transaction.count({
+          where: {
+            companyId: company.id,
+            affectsPL: true,
+          },
+        });
+        
+        const hasBalanceSheetActivity = cash !== 0 || 
+          (latestBS && (
+            Number(latestBS.accountsReceivable) !== 0 ||
+            Number(latestBS.fixedAssets) !== 0 ||
+            Number(latestBS.accountsPayable) !== 0 ||
+            Number(latestBS.shortTermDebt) !== 0 ||
+            Number(latestBS.longTermDebt) !== 0
+          ));
+        
         const hasAnyFinancialActivity = revenue !== 0 || cogs !== 0 || opex !== 0 || profit !== 0 || cash !== 0;
         
-        if (hasAnyFinancialActivity) {
-          dataStatus = 'ok'; // Has transactions, statements, AND meaningful values
+        if (hasAnyFinancialActivity || (hasPLTransactions === 0 && hasBalanceSheetActivity)) {
+          // Either has P&L activity OR only has intercompany/balance sheet transactions (which is valid)
+          dataStatus = 'ok';
+        } else if (hasPLTransactions > 0 && !hasAnyFinancialActivity) {
+          // Has P&L transactions but no activity - needs rebuild
+          dataStatus = 'needs_rebuild';
         } else {
-          dataStatus = 'needs_rebuild'; // Has transactions and statements, but all values are $0 (bad calculation)
+          // No P&L transactions and no balance sheet activity - might be empty or needs rebuild
+          dataStatus = hasBalanceSheetActivity ? 'ok' : 'needs_rebuild';
         }
       }
       

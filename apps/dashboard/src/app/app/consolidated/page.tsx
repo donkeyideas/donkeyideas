@@ -173,22 +173,29 @@ export default function ConsolidatedViewPage() {
   const handleRebuildCompany = async (companyId: string, companyName: string) => {
     try {
       setRebuildingCompanyId(companyId);
-      await api.post(`/companies/${companyId}/financials/recalculate-all`);
+      console.log(`🔄 Rebuilding ${companyName}...`);
+      
+      const response = await api.post(`/companies/${companyId}/financials/recalculate-all`);
+      
+      console.log(`✅ Rebuild response:`, response.data);
       
       setNotification({
         isOpen: true,
         title: 'Success',
-        message: `Rebuilt financial statements for ${companyName}`,
+        message: response.data.message || `Rebuilt financial statements for ${companyName}`,
         type: 'success',
       });
       
       // Reload consolidated view
       await loadConsolidatedFinancials();
     } catch (error: any) {
+      console.error(`❌ Rebuild failed for ${companyName}:`, error);
+      console.error('Error details:', error.response?.data);
+      
       setNotification({
         isOpen: true,
         title: 'Error',
-        message: error.response?.data?.error || `Failed to rebuild ${companyName}`,
+        message: error.response?.data?.error || error.message || `Failed to rebuild ${companyName}. Check console for details.`,
         type: 'error',
       });
     } finally {

@@ -156,6 +156,151 @@ export async function POST(
       return { receivable, payable };
     });
     
+    // FIX: Trigger full recalculation for both companies after intercompany transfer
+    // This ensures balance sheets are correct and consistent
+    try {
+      const { calculateFinancials, Transaction: FinancialTransaction } = await import('@donkey-ideas/financial-engine');
+      
+      // Recalculate for source company
+      const sourceTransactions = await prisma.transaction.findMany({
+        where: { companyId: sourceCompany.id },
+        orderBy: { date: 'asc' },
+      });
+      
+      const sourceFinancialTxs: FinancialTransaction[] = sourceTransactions.map(tx => ({
+        id: tx.id,
+        date: new Date(tx.date),
+        type: tx.type as any,
+        category: tx.category || 'Uncategorized',
+        amount: Number(tx.amount),
+        description: tx.description || undefined,
+        affectsPL: tx.affectsPL ?? true,
+        affectsCashFlow: tx.affectsCashFlow ?? true,
+        affectsBalance: tx.affectsBalance ?? true,
+      }));
+      
+      const sourceStatements = calculateFinancials(sourceFinancialTxs, 0);
+      
+      // Delete and recreate statements for source
+      await Promise.all([
+        prisma.pLStatement.deleteMany({ where: { companyId: sourceCompany.id } }),
+        prisma.balanceSheet.deleteMany({ where: { companyId: sourceCompany.id } }),
+        prisma.cashFlow.deleteMany({ where: { companyId: sourceCompany.id } }),
+      ]);
+      
+      await prisma.pLStatement.create({
+        data: {
+          companyId: sourceCompany.id,
+          period,
+          productRevenue: new Decimal(sourceStatements.pl.revenue),
+          serviceRevenue: new Decimal(0),
+          otherRevenue: new Decimal(0),
+          directCosts: new Decimal(sourceStatements.pl.cogs),
+          infrastructureCosts: new Decimal(0),
+          salesMarketing: new Decimal(sourceStatements.pl.operatingExpenses),
+          rdExpenses: new Decimal(0),
+          adminExpenses: new Decimal(0),
+        },
+      });
+      
+      await prisma.balanceSheet.create({
+        data: {
+          companyId: sourceCompany.id,
+          period,
+          cashEquivalents: new Decimal(sourceStatements.balanceSheet.cash),
+          accountsReceivable: new Decimal(sourceStatements.balanceSheet.accountsReceivable),
+          fixedAssets: new Decimal(sourceStatements.balanceSheet.fixedAssets),
+          accountsPayable: new Decimal(sourceStatements.balanceSheet.accountsPayable),
+          shortTermDebt: new Decimal(sourceStatements.balanceSheet.shortTermDebt),
+          longTermDebt: new Decimal(sourceStatements.balanceSheet.longTermDebt),
+        },
+      });
+      
+      await prisma.cashFlow.create({
+        data: {
+          companyId: sourceCompany.id,
+          period,
+          beginningCash: new Decimal(sourceStatements.cashFlow.beginningCash),
+          operatingCashFlow: new Decimal(sourceStatements.cashFlow.operatingCashFlow),
+          investingCashFlow: new Decimal(sourceStatements.cashFlow.investingCashFlow),
+          financingCashFlow: new Decimal(sourceStatements.cashFlow.financingCashFlow),
+          netCashFlow: new Decimal(sourceStatements.cashFlow.netCashFlow),
+          endingCash: new Decimal(sourceStatements.cashFlow.endingCash),
+        },
+      });
+      
+      // Recalculate for target company
+      const targetTransactions = await prisma.transaction.findMany({
+        where: { companyId: targetCompany.id },
+        orderBy: { date: 'asc' },
+      });
+      
+      const targetFinancialTxs: FinancialTransaction[] = targetTransactions.map(tx => ({
+        id: tx.id,
+        date: new Date(tx.date),
+        type: tx.type as any,
+        category: tx.category || 'Uncategorized',
+        amount: Number(tx.amount),
+        description: tx.description || undefined,
+        affectsPL: tx.affectsPL ?? true,
+        affectsCashFlow: tx.affectsCashFlow ?? true,
+        affectsBalance: tx.affectsBalance ?? true,
+      }));
+      
+      const targetStatements = calculateFinancials(targetFinancialTxs, 0);
+      
+      // Delete and recreate statements for target
+      await Promise.all([
+        prisma.pLStatement.deleteMany({ where: { companyId: targetCompany.id } }),
+        prisma.balanceSheet.deleteMany({ where: { companyId: targetCompany.id } }),
+        prisma.cashFlow.deleteMany({ where: { companyId: targetCompany.id } }),
+      ]);
+      
+      await prisma.pLStatement.create({
+        data: {
+          companyId: targetCompany.id,
+          period,
+          productRevenue: new Decimal(targetStatements.pl.revenue),
+          serviceRevenue: new Decimal(0),
+          otherRevenue: new Decimal(0),
+          directCosts: new Decimal(targetStatements.pl.cogs),
+          infrastructureCosts: new Decimal(0),
+          salesMarketing: new Decimal(targetStatements.pl.operatingExpenses),
+          rdExpenses: new Decimal(0),
+          adminExpenses: new Decimal(0),
+        },
+      });
+      
+      await prisma.balanceSheet.create({
+        data: {
+          companyId: targetCompany.id,
+          period,
+          cashEquivalents: new Decimal(targetStatements.balanceSheet.cash),
+          accountsReceivable: new Decimal(targetStatements.balanceSheet.accountsReceivable),
+          fixedAssets: new Decimal(targetStatements.balanceSheet.fixedAssets),
+          accountsPayable: new Decimal(targetStatements.balanceSheet.accountsPayable),
+          shortTermDebt: new Decimal(targetStatements.balanceSheet.shortTermDebt),
+          longTermDebt: new Decimal(targetStatements.balanceSheet.longTermDebt),
+        },
+      });
+      
+      await prisma.cashFlow.create({
+        data: {
+          companyId: targetCompany.id,
+          period,
+          beginningCash: new Decimal(targetStatements.cashFlow.beginningCash),
+          operatingCashFlow: new Decimal(targetStatements.cashFlow.operatingCashFlow),
+          investingCashFlow: new Decimal(targetStatements.cashFlow.investingCashFlow),
+          financingCashFlow: new Decimal(targetStatements.cashFlow.financingCashFlow),
+          netCashFlow: new Decimal(targetStatements.cashFlow.netCashFlow),
+          endingCash: new Decimal(targetStatements.cashFlow.endingCash),
+        },
+      });
+    } catch (recalcError: any) {
+      console.error('Failed to recalculate after intercompany transfer:', recalcError);
+      // Don't fail the transfer - it was created successfully
+    }
+    
     return NextResponse.json({
       success: true,
       message: `Created intercompany transfer: ${sourceCompany.name} → ${targetCompany.name}`,
