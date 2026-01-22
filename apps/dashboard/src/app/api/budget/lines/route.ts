@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { Decimal } from '@prisma/client/runtime/library';
+import { calculateFinancials, Transaction as FinancialTransaction } from '@donkey-ideas/financial-engine';
 
 // GET /api/budget/lines - Get budget lines with filters
 export async function GET(request: NextRequest) {
@@ -95,6 +96,43 @@ export async function POST(request: NextRequest) {
 // Helper function to calculate running balances
 async function calculateRunningBalances(periodId: string) {
   try {
+    const period = await prisma.budgetPeriod.findUnique({
+      where: { id: periodId },
+      select: {
+        companyId: true,
+        startDate: true,
+      },
+    });
+
+    if (!period) {
+      return;
+    }
+
+    const priorTransactions = await prisma.transaction.findMany({
+      where: {
+        companyId: period.companyId,
+        date: {
+          lt: period.startDate,
+        },
+      },
+      orderBy: { date: 'asc' },
+    });
+
+    const financialTransactions: FinancialTransaction[] = priorTransactions.map((tx) => ({
+      id: tx.id,
+      date: new Date(tx.date),
+      type: tx.type as FinancialTransaction['type'],
+      category: tx.category || 'Uncategorized',
+      amount: Number(tx.amount),
+      description: tx.description || undefined,
+      affectsPL: tx.affectsPL ?? true,
+      affectsCashFlow: tx.affectsCashFlow ?? true,
+      affectsBalance: tx.affectsBalance ?? true,
+    }));
+
+    const openingStatements = calculateFinancials(financialTransactions, 0);
+    let runningBalance = new Decimal(openingStatements.cashFlow.endingCash);
+
     // Get all lines for this period, ordered by date
     const lines = await prisma.budgetLine.findMany({
       where: { periodId },
@@ -113,7 +151,6 @@ async function calculateRunningBalances(periodId: string) {
     }
 
     // Calculate running balance
-    let runningBalance = new Decimal(0);
     const updates = [];
 
     for (const [date, netAmount] of Array.from(dailyTotals.entries()).sort()) {
