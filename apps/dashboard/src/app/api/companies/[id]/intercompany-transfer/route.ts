@@ -3,6 +3,7 @@ import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { calculateFinancials, Transaction as FinancialTransaction } from '@donkey-ideas/financial-engine';
 
 // POST /api/companies/:id/intercompany-transfer
 // Create a matched pair of intercompany transactions (receivable + payable)
@@ -159,8 +160,6 @@ export async function POST(
     // FIX: Trigger full recalculation for both companies after intercompany transfer
     // This ensures balance sheets are correct and consistent
     try {
-      const { calculateFinancials, Transaction: FinancialTransaction } = await import('@donkey-ideas/financial-engine');
-      
       // Recalculate for source company
       const sourceTransactions = await prisma.transaction.findMany({
         where: { companyId: sourceCompany.id },
