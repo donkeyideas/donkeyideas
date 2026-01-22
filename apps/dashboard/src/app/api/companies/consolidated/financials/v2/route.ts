@@ -126,7 +126,21 @@ export async function GET(request: NextRequest) {
         
         const hasAnyFinancialActivity = revenue !== 0 || cogs !== 0 || opex !== 0 || profit !== 0 || cash !== 0;
         
-        if (hasAnyFinancialActivity || (hasPLTransactions === 0 && hasBalanceSheetActivity)) {
+        // Check if there are cash-affecting transactions that should result in non-zero cash
+        const hasCashAffectingTransactions = await prisma.transaction.count({
+          where: {
+            companyId: company.id,
+            affectsCashFlow: true,
+          },
+        });
+        
+        // If there are cash-affecting transactions but cash is $0, something is wrong
+        if (hasCashAffectingTransactions > 0 && cash === 0 && !hasBalanceSheetActivity) {
+          // Has transactions that should affect cash, but cash is $0 and no other balance sheet activity
+          // This means statements are stale or calculation failed
+          dataStatus = 'needs_rebuild';
+          console.log(`⚠️ ${company.name}: Has ${hasCashAffectingTransactions} cash-affecting transactions but cash is $0 - marking as needs_rebuild`);
+        } else if (hasAnyFinancialActivity || (hasPLTransactions === 0 && hasBalanceSheetActivity)) {
           // Either has P&L activity OR only has intercompany/balance sheet transactions (which is valid)
           dataStatus = 'ok';
         } else if (hasPLTransactions > 0 && !hasAnyFinancialActivity) {
