@@ -82,6 +82,12 @@ export async function GET(request: NextRequest) {
         orderBy: { period: 'desc' },
       });
       
+      // Get latest Cash Flow (use endingCash as primary source, same as individual pages)
+      const latestCF = await prisma.cashFlow.findFirst({
+        where: { companyId: company.id },
+        orderBy: { period: 'desc' },
+      });
+      
       // Calculate totals first to determine if statements are meaningful
       const revenue = latestPL 
         ? Number(latestPL.productRevenue) + Number(latestPL.serviceRevenue) + Number(latestPL.otherRevenue)
@@ -96,7 +102,15 @@ export async function GET(request: NextRequest) {
         : 0;
       
       const profit = revenue - cogs - opex;
-      const cash = latestBS ? Number(latestBS.cashEquivalents) : 0;
+      
+      // Use Cash Flow endingCash as primary source (same as individual company pages)
+      // Fallback to Balance Sheet cashEquivalents if Cash Flow doesn't exist
+      const cash = latestCF 
+        ? Number(latestCF.endingCash || 0)
+        : (latestBS ? Number(latestBS.cashEquivalents || 0) : 0);
+      
+      // DEBUG: Log what we're reading
+      console.log(`  ${company.name}: CashFlow endingCash=${latestCF ? Number(latestCF.endingCash || 0) : 'N/A'}, BalanceSheet cash=${latestBS ? Number(latestBS.cashEquivalents || 0) : 'N/A'}, Using cash=${cash}`);
       
       // Determine data status (SMART LOGIC)
       let dataStatus: 'ok' | 'needs_rebuild' | 'no_data';
