@@ -4,6 +4,7 @@ import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { Decimal } from '@prisma/client/runtime/library';
+import { calculateFinancials, Transaction as FinancialTransaction } from '@donkey-ideas/financial-engine';
 
 const createTransactionSchema = z.object({
   date: z.string(),
@@ -179,9 +180,6 @@ export async function POST(
         prisma.balanceSheet.deleteMany({ where: { companyId: params.id } }),
         prisma.cashFlow.deleteMany({ where: { companyId: params.id } }),
       ]);
-      
-      // Import financial engine
-      const { calculateFinancials, Transaction: FinancialTransaction } = await import('@donkey-ideas/financial-engine');
       
       // Transform for financial engine
       const transactions: FinancialTransaction[] = allTransactions.map(tx => ({
