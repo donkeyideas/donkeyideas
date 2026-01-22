@@ -344,45 +344,47 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
         <CardHeader>
           <CardTitle>Select Categories to Display</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => {
-                  setSelectedCategories(prev =>
-                    prev.includes(category.id)
-                      ? prev.filter(id => id !== category.id)
-                      : [...prev, category.id]
-                  );
-                }}
-                className={`px-3 py-1.5 rounded text-sm transition-all ${
-                  selectedCategories.includes(category.id)
-                    ? 'bg-white/20 text-white border-2 border-white/40'
-                    : 'bg-black/20 text-slate-400 border border-white/10 hover:bg-black/30'
-                }`}
-              >
-                <span
-                  className="inline-block w-2 h-2 rounded-full mr-2"
-                  style={{ backgroundColor: category.color }}
-                />
-                {category.name}
-              </button>
-            ))}
+        <CardContent className="p-0">
+          <div className="overflow-x-auto px-6 py-4">
+            <div className="flex flex-nowrap gap-2 min-w-max">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => {
+                    setSelectedCategories(prev =>
+                      prev.includes(category.id)
+                        ? prev.filter(id => id !== category.id)
+                        : [...prev, category.id]
+                    );
+                  }}
+                  className={`px-3 py-1.5 rounded text-sm transition-all whitespace-nowrap ${
+                    selectedCategories.includes(category.id)
+                      ? 'bg-white/20 text-white border-2 border-white/40'
+                      : 'bg-black/20 text-slate-400 border border-white/10 hover:bg-black/30'
+                  }`}
+                >
+                  <span
+                    className="inline-block w-2 h-2 rounded-full mr-2"
+                    style={{ backgroundColor: category.color }}
+                  />
+                  {category.name}
+                </button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-black/30 sticky top-0">
+          <div className="max-h-[70vh] overflow-auto">
+            <table className="w-full min-w-[900px]">
+              <thead className="bg-black/30">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[180px] sticky top-0 z-20 bg-[#0b1220]">
                     Date
                   </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 border-r border-white/10">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[140px] sticky top-0 z-20 bg-[#0b1220]">
                     Balance
                   </th>
                   {selectedCategories.map(catId => {
@@ -390,7 +392,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                     return (
                       <th
                         key={catId}
-                        className="px-4 py-3 text-right text-sm font-medium text-white border-r border-white/10 min-w-[150px]"
+                        className="px-4 py-3 text-right text-sm font-medium text-white border-r border-white/10 min-w-[150px] sticky top-0 z-20 bg-[#0b1220]"
                       >
                         <div className="flex items-center justify-end gap-2">
                           <span
@@ -416,9 +418,9 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                         isWeekend ? 'bg-black/20' : ''
                       }`}
                     >
-                      <td className="px-4 py-2 text-sm text-slate-300 border-r border-white/10">
+                      <td className="px-4 py-2 text-sm text-slate-300 border-r border-white/10 whitespace-nowrap">
                         <div className="font-medium">
-                          {dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                          {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </td>
                       <td className="px-4 py-2 text-right text-sm font-medium text-white border-r border-white/10">
