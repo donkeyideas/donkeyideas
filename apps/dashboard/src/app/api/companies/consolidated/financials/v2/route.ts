@@ -141,12 +141,12 @@ export async function GET(request: NextRequest) {
       // Calculate cash from transactions using the same logic as Financial Hub
       const cash = calculateEndingCashFromTransactions(financialTxs);
       
-      const dataStatus: 'ok' | 'needs_rebuild' | 'no_data' =
+      const dataStatus: 'ok' | 'no_data' =
         transactionCount === 0 ? 'no_data' : 'ok';
       
       const valuation = company.valuations[0] ? Number(company.valuations[0].amount) : 0;
       
-      const statusEmoji = dataStatus === 'ok' ? '✅' : dataStatus === 'needs_rebuild' ? '⚠️' : '📭';
+      const statusEmoji = dataStatus === 'ok' ? '✅' : '📭';
       console.log(`${statusEmoji} ${company.name}: Status=${dataStatus}, Transactions=${transactionCount}, Revenue=$${revenue}, Profit=$${profit}, Cash=$${cash}`);
       
       // Add to totals (only if data is OK)
