@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
 
@@ -40,7 +40,6 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dates, setDates] = useState<string[]>([]);
-  const saveTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
     loadPeriod();
@@ -115,7 +114,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
     setDates(dateList);
   };
 
-  const updateAmount = async (date: string, categoryId: string, amount: string) => {
+  const updateAmount = (date: string, categoryId: string, amount: string) => {
     const key = `${date}_${categoryId}`;
     
     // Update local state optimistically
@@ -130,46 +129,42 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       },
     }));
     
-    // Debounced save per cell
-    if (saveTimeoutsRef.current[key]) {
-      clearTimeout(saveTimeoutsRef.current[key]);
-    }
-    
-    saveTimeoutsRef.current[key] = setTimeout(async () => {
-      try {
-        setSaving(true);
-        
-        // Prepare line for save
-        const line = lines[key] || {};
-        const cleanedAmount = amount.replace(/,/g, '');
-        const numAmount = parseFloat(cleanedAmount);
-        const safeAmount = Number.isNaN(numAmount) ? 0 : numAmount;
-        
-        const response = await fetch('/api/budget/lines', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            lines: [{
-              id: line.id || undefined,
-              periodId,
-              companyId: period?.companyId,
-              categoryId,
-              date,
-              amount: safeAmount,
-            }],
-          }),
-        });
+  };
 
-        if (response.ok) {
-          // Reload to get updated balances
-          await loadLines();
-        }
-      } catch (error) {
-        console.error('Error saving line:', error);
-      } finally {
-        setSaving(false);
+  const saveAmount = async (date: string, categoryId: string, amount: string) => {
+    const key = `${date}_${categoryId}`;
+    try {
+      setSaving(true);
+      
+      const line = lines[key] || {};
+      const cleanedAmount = amount.replace(/,/g, '');
+      const numAmount = parseFloat(cleanedAmount);
+      const safeAmount = Number.isNaN(numAmount) ? 0 : numAmount;
+      
+      const response = await fetch('/api/budget/lines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lines: [{
+            id: line.id || undefined,
+            periodId,
+            companyId: period?.companyId,
+            categoryId,
+            date,
+            amount: safeAmount,
+          }],
+        }),
+      });
+
+      if (response.ok) {
+        // Reload to get updated balances
+        await loadLines();
       }
-    }, 600);
+    } catch (error) {
+      console.error('Error saving line:', error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const getLineValue = (date: string, categoryId: string): string => {
@@ -346,6 +341,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                               if (formatted !== e.target.value) {
                                 updateAmount(date, catId, formatted);
                               }
+                              saveAmount(date, catId, formatted);
                             }}
                             className="w-full px-2 py-1 bg-transparent text-right text-sm text-white focus:bg-black/30 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
                             placeholder="0.00"
