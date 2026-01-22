@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { calculateFinancials, Transaction as FinancialTransaction } from '@donkey-ideas/financial-engine';
 
 /**
  * CLEAN CONSOLIDATED VIEW - READS FROM STORED STATEMENTS
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
       console.log(`  ${company.name}: CashFlow endingCash=${latestCF ? Number(latestCF.endingCash || 0) : 'N/A'}, BalanceSheet cash=${latestBS ? Number(latestBS.cashEquivalents || 0) : 'N/A'}, Using cash=${cash}`);
       
       // AUTO-FIX: If cash is $0 but there are cash-affecting transactions, statements are stale
-      // Trigger automatic recalculation in background (don't wait - return current data)
+      // Recalculate on-the-fly and update stored statements
       if (cash === 0 && transactionCount > 0) {
         const hasCashAffectingTxns = await prisma.transaction.count({
           where: {
@@ -123,15 +124,107 @@ export async function GET(request: NextRequest) {
         });
         
         if (hasCashAffectingTxns > 0) {
-          console.log(`  ⚠️ ${company.name}: Cash is $0 but has ${hasCashAffectingTxns} cash-affecting transactions - statements are stale, triggering auto-rebuild...`);
-          // Trigger rebuild in background (don't await - return current data immediately)
-          // User will see updated data on next refresh
-          fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/companies/${company.id}/financials/recalculate-all`, {
-            method: 'POST',
-            headers: {
-              'Cookie': `auth-token=${token}`,
-            },
-          }).catch(err => console.error(`Failed to auto-rebuild ${company.name}:`, err));
+          console.log(`  ⚠️ ${company.name}: Cash is $0 but has ${hasCashAffectingTxns} cash-affecting transactions - statements are stale, auto-recalculating...`);
+          
+          try {
+            // Get all transactions and recalculate
+            const allTxns = await prisma.transaction.findMany({
+              where: { companyId: company.id },
+              orderBy: { date: 'asc' },
+            });
+            
+            // Fix flags
+            await prisma.transaction.updateMany({
+              where: {
+                companyId: company.id,
+                type: { in: ['revenue', 'expense'] },
+              },
+              data: {
+                affectsPL: true,
+                affectsCashFlow: true,
+                affectsBalance: true,
+              },
+            });
+            
+            // Transform and calculate
+            const financialTxs: FinancialTransaction[] = allTxns.map(tx => ({
+              id: tx.id,
+              date: new Date(tx.date),
+              type: tx.type as any,
+              category: tx.category || 'Uncategorized',
+              amount: Number(tx.amount),
+              description: tx.description || undefined,
+              affectsPL: tx.affectsPL ?? true,
+              affectsCashFlow: tx.affectsCashFlow ?? true,
+              affectsBalance: tx.affectsBalance ?? true,
+            }));
+            
+            const statements = calculateFinancials(financialTxs, 0);
+            
+            // Delete old statements
+            await Promise.all([
+              prisma.pLStatement.deleteMany({ where: { companyId: company.id } }),
+              prisma.balanceSheet.deleteMany({ where: { companyId: company.id } }),
+              prisma.cashFlow.deleteMany({ where: { companyId: company.id } }),
+            ]);
+            
+            // Store new statements
+            const { Decimal } = await import('@prisma/client/runtime/library');
+            const period = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+            
+            await prisma.pLStatement.create({
+              data: {
+                companyId: company.id,
+                period,
+                productRevenue: new Decimal(statements.pl.revenue),
+                serviceRevenue: new Decimal(0),
+                otherRevenue: new Decimal(0),
+                directCosts: new Decimal(statements.pl.cogs),
+                infrastructureCosts: new Decimal(0),
+                salesMarketing: new Decimal(statements.pl.operatingExpenses),
+                rdExpenses: new Decimal(0),
+                adminExpenses: new Decimal(0),
+              },
+            });
+            
+            await prisma.balanceSheet.create({
+              data: {
+                companyId: company.id,
+                period,
+                cashEquivalents: new Decimal(statements.balanceSheet.cash),
+                accountsReceivable: new Decimal(statements.balanceSheet.accountsReceivable),
+                fixedAssets: new Decimal(statements.balanceSheet.fixedAssets),
+                accountsPayable: new Decimal(statements.balanceSheet.accountsPayable),
+                shortTermDebt: new Decimal(statements.balanceSheet.shortTermDebt),
+                longTermDebt: new Decimal(statements.balanceSheet.longTermDebt),
+              },
+            });
+            
+            await prisma.cashFlow.create({
+              data: {
+                companyId: company.id,
+                period,
+                beginningCash: new Decimal(statements.cashFlow.beginningCash),
+                operatingCashFlow: new Decimal(statements.cashFlow.operatingCashFlow),
+                investingCashFlow: new Decimal(statements.cashFlow.investingCashFlow),
+                financingCashFlow: new Decimal(statements.cashFlow.financingCashFlow),
+                netCashFlow: new Decimal(statements.cashFlow.netCashFlow),
+                endingCash: new Decimal(statements.cashFlow.endingCash),
+              },
+            });
+            
+            // Update cash value with recalculated value
+            cash = statements.cashFlow.endingCash;
+            revenue = statements.pl.revenue;
+            cogs = statements.pl.cogs;
+            opex = statements.pl.operatingExpenses;
+            profit = statements.pl.netProfit;
+            
+            console.log(`  ✅ ${company.name}: Auto-recalculated - Cash now $${cash}, Revenue $${revenue}, Profit $${profit}`);
+          } catch (recalcError: any) {
+            console.error(`  ❌ Failed to auto-recalculate ${company.name}:`, recalcError);
+            // Continue with $0 values if recalculation fails
+          }
         }
       }
       
