@@ -44,13 +44,7 @@ export default function ConsolidatedViewPage() {
   const [financials, setFinancials] = useState<ConsolidatedFinancials | null>(null);
   const [loading, setLoading] = useState(true);
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
-  const [showRebuildConfirm, setShowRebuildConfirm] = useState(false);
-  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
-  const [showFixAllConfirm, setShowFixAllConfirm] = useState(false);
-  const [rebuildLoading, setRebuildLoading] = useState(false);
   const [clearAllLoading, setClearAllLoading] = useState(false);
-  const [fixAllLoading, setFixAllLoading] = useState(false);
-  const [rebuildingCompanyId, setRebuildingCompanyId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
     isOpen: false,
     title: '',
@@ -124,29 +118,6 @@ export default function ConsolidatedViewPage() {
     }
   };
 
-  const handleRebuildAll = async () => {
-    setRebuildLoading(true);
-    try {
-      const response = await api.post('/companies/consolidated/rebuild-all-balance-sheets');
-      setNotification({
-        isOpen: true,
-        title: 'Success',
-        message: response.data.message || 'Balance sheets rebuilt successfully for all companies',
-        type: 'success',
-      });
-      await loadConsolidatedFinancials();
-    } catch (error: any) {
-      setNotification({
-        isOpen: true,
-        title: 'Error',
-        message: error.response?.data?.error?.message || 'Failed to rebuild balance sheets',
-        type: 'error',
-      });
-    } finally {
-      setRebuildLoading(false);
-    }
-  };
-
   const handleClearAllData = async () => {
     setClearAllLoading(true);
     try {
@@ -167,107 +138,6 @@ export default function ConsolidatedViewPage() {
       });
     } finally {
       setClearAllLoading(false);
-    }
-  };
-
-  const handleRebuildCompany = async (companyId: string, companyName: string) => {
-    try {
-      setRebuildingCompanyId(companyId);
-      console.log(`🔄 Rebuilding ${companyName}...`);
-      
-      const response = await api.post(`/companies/${companyId}/financials/recalculate-all`);
-      
-      console.log(`✅ Rebuild response:`, response.data);
-      
-      setNotification({
-        isOpen: true,
-        title: 'Success',
-        message: response.data.message || `Rebuilt financial statements for ${companyName}`,
-        type: 'success',
-      });
-      
-      // Reload consolidated view
-      await loadConsolidatedFinancials();
-    } catch (error: any) {
-      console.error(`❌ Rebuild failed for ${companyName}:`, error);
-      console.error('Error details:', error.response?.data);
-      
-      setNotification({
-        isOpen: true,
-        title: 'Error',
-        message: error.response?.data?.error || error.message || `Failed to rebuild ${companyName}. Check console for details.`,
-        type: 'error',
-      });
-    } finally {
-      setRebuildingCompanyId(null);
-    }
-  };
-
-  const handleRebuildNeeded = async () => {
-    const companiesNeedingRebuild = financials?.companies.filter(c => c.dataStatus === 'needs_rebuild') || [];
-    
-    if (companiesNeedingRebuild.length === 0) {
-      setNotification({
-        isOpen: true,
-        title: 'No Action Needed',
-        message: 'All companies with transactions already have stored financial statements',
-        type: 'success',
-      });
-      return;
-    }
-    
-    try {
-      setRebuildLoading(true);
-      
-      for (const company of companiesNeedingRebuild) {
-        await api.post(`/companies/${company.id}/financials/recalculate-all`);
-      }
-      
-      setNotification({
-        isOpen: true,
-        title: 'Success',
-        message: `Rebuilt financial statements for ${companiesNeedingRebuild.length} companies`,
-        type: 'success',
-      });
-      
-      // Reload
-      await loadConsolidatedFinancials();
-    } catch (error: any) {
-      setNotification({
-        isOpen: true,
-        title: 'Error',
-        message: error.response?.data?.error || 'Failed to rebuild companies',
-        type: 'error',
-      });
-    } finally {
-      setRebuildLoading(false);
-    }
-  };
-
-  const handleFixAllData = async () => {
-    try {
-      setFixAllLoading(true);
-      const response = await api.post('/companies/consolidated/fix-all-data');
-      
-      setNotification({
-        isOpen: true,
-        title: '✅ All Data Fixed!',
-        message: `Fixed ${response.data.summary.transactionsFixed} transaction flags and created ${response.data.summary.statementsCreated} new financial statements for ${response.data.summary.companiesProcessed} companies`,
-        type: 'success',
-      });
-      
-      // Reload to show fixed data
-      await loadConsolidatedFinancials();
-    } catch (error: any) {
-      setNotification({
-        isOpen: true,
-        title: 'Error',
-        message: error.response?.data?.error || 'Failed to fix all data',
-        type: 'error',
-      });
-    } finally {
-      setFixAllLoading(false);
-      setShowFixAllConfirm(false);
     }
   };
 
@@ -319,30 +189,6 @@ export default function ConsolidatedViewPage() {
               })}
             </select>
           </div>
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowFixAllConfirm(true)}
-            className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border-purple-500/30 font-bold"
-            disabled={fixAllLoading}
-          >
-            {fixAllLoading ? 'Fixing Everything...' : '☢️ FIX ALL DATA (Nuclear Option)'}
-          </Button>
-          <Button 
-            variant="secondary" 
-            onClick={handleRebuildNeeded}
-            className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border-yellow-500/30"
-            disabled={rebuildLoading || fixAllLoading || !financials || financials.companies.filter(c => c.dataStatus === 'needs_rebuild').length === 0}
-          >
-            {rebuildLoading ? 'Rebuilding...' : `Rebuild Needed Companies ${financials ? `(${financials.companies.filter(c => c.dataStatus === 'needs_rebuild').length})` : ''}`}
-          </Button>
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowRebuildConfirm(true)}
-            className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-blue-500/30"
-            disabled={rebuildLoading}
-          >
-            {rebuildLoading ? 'Rebuilding...' : 'Rebuild All Companies'}
-          </Button>
           <Button 
             variant="secondary" 
             onClick={() => setShowClearAllConfirm(true)}
@@ -522,7 +368,6 @@ export default function ConsolidatedViewPage() {
                   <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">OpEx</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Profit</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Cash</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-white/60 [.light_&]:text-slate-600">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -585,96 +430,14 @@ export default function ConsolidatedViewPage() {
                       <td className="py-3 px-4 text-right text-blue-400">
                         {formatCurrency(company.cashBalance || 0)}
                       </td>
-                      <td className="py-3 px-4">
-                        {company.dataStatus === 'needs_rebuild' && (
-                          <Button
-                            onClick={() => handleRebuildCompany(company.id, company.name)}
-                            disabled={rebuildingCompanyId === company.id}
-                            size="sm"
-                            variant="ghost"
-                            className="text-xs"
-                          >
-                            {rebuildingCompanyId === company.id ? 'Rebuilding...' : 'Rebuild'}
-                          </Button>
-                        )}
-                      </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          
-          {/* Legend */}
-          <div className="mt-4 p-3 bg-white/5 [.light_&]:bg-slate-100 rounded-lg border border-white/10 [.light_&]:border-slate-200">
-            <div className="text-xs font-semibold text-white/60 [.light_&]:text-slate-600 mb-2">Data Status Legend:</div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-green-500/20 text-green-300 border-green-500/30">
-                  Data OK
-                </span>
-                <span className="text-white/80 [.light_&]:text-slate-700">
-                  Has transactions and stored financial statements
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
-                  Needs Rebuild
-                </span>
-                <span className="text-white/80 [.light_&]:text-slate-700">
-                  Has transactions but no statements - click "Rebuild" to fix
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-gray-500/20 text-gray-300 border-gray-500/30">
-                  No Transactions
-                </span>
-                <span className="text-white/80 [.light_&]:text-slate-700">
-                  No financial data entered yet (expected $0)
-                </span>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
-
-      {/* Confirm Fix All Data Modal */}
-      <ConfirmModal
-        isOpen={showFixAllConfirm}
-        onClose={() => setShowFixAllConfirm(false)}
-        onConfirm={handleFixAllData}
-        title="☢️ FIX ALL DATA - Nuclear Option"
-        message="This is the NUCLEAR OPTION. It will:
-
-1. Fix ALL transaction flags (affectsPL, affectsCashFlow)
-2. Delete ALL existing financial statements
-3. Recalculate EVERYTHING from scratch
-4. Store NEW statements for ALL companies
-
-This fixes:
-- Wrong cash calculations
-- Companies showing $0 despite having transactions
-- Rebuild button not working
-
-This takes 30-60 seconds. Continue?"
-        confirmText="☢️ FIX EVERYTHING"
-        cancelText="Cancel"
-        variant="danger"
-        loading={fixAllLoading}
-      />
-
-      {/* Confirm Rebuild Modal */}
-      <ConfirmModal
-        isOpen={showRebuildConfirm}
-        onClose={() => setShowRebuildConfirm(false)}
-        onConfirm={handleRebuildAll}
-        title="Rebuild All Balance Sheets"
-        message="This will rebuild balance sheets and cash flow for ALL companies. This may take a few moments. Continue?"
-        confirmText="Rebuild All"
-        cancelText="Cancel"
-        variant="info"
-        loading={rebuildLoading}
-      />
 
       {/* Confirm Clear All Data Modal */}
       <ConfirmModal
