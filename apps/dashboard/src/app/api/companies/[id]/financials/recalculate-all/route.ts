@@ -76,6 +76,12 @@ export async function POST(
       affectsBalance: tx.affectsBalance ?? true,
     }));
     
+    // DEBUG: Log transaction details
+    console.log(`📋 Processing ${transactions.length} transactions for ${company.name}:`);
+    transactions.forEach((tx, idx) => {
+      console.log(`  [${idx + 1}] ${tx.date.toISOString().split('T')[0]} | Type: ${tx.type} | Category: ${tx.category} | Amount: $${tx.amount} | AffectsPL: ${tx.affectsPL} | AffectsCF: ${tx.affectsCashFlow}`);
+    });
+    
     // STEP 4: Calculate using financial engine
     const statements = calculateFinancials(transactions, 0);
     
@@ -84,6 +90,11 @@ export async function POST(
       expenses: statements.pl.totalExpenses,
       profit: statements.pl.netProfit,
       cash: statements.cashFlow.endingCash,
+    });
+    console.log(`   P&L breakdown:`, {
+      revenue: statements.pl.revenue,
+      cogs: statements.pl.cogs,
+      opex: statements.pl.operatingExpenses,
     });
     
     // STEP 5: Store P&L Statement
