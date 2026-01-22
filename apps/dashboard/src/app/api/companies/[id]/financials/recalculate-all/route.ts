@@ -71,11 +71,12 @@ export async function POST(
     });
     
     // Fix asset/liability/equity flags (should NOT affect P&L by default)
+    // Note: We update all of them - if they were explicitly set, they'll be overridden
+    // This ensures consistency during rebuild
     await prisma.transaction.updateMany({
       where: {
         companyId,
         type: { in: ['asset', 'liability', 'equity'] },
-        affectsPL: null, // Only update if not explicitly set
       },
       data: {
         affectsPL: false,
