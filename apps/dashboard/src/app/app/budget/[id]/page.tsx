@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface BudgetPeriod {
   id: string;
@@ -33,6 +34,7 @@ interface BudgetLine {
 
 export default function BudgetEntryPage({ params }: { params: { id: string } }) {
   const periodId = params.id;
+  const router = useRouter();
 
   const [period, setPeriod] = useState<BudgetPeriod | null>(null);
   const [categories, setCategories] = useState<BudgetCategory[]>([]);
@@ -52,7 +54,6 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       loadCategories();
       loadLines();
       generateDates();
-      loadCashBalance();
     }
   }, [period]);
 
@@ -67,15 +68,25 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
     }
   };
 
-  const loadCashBalance = async () => {
-    if (!period?.companyId) return;
+  const handleDeletePeriod = async () => {
+    if (!period) return;
+    const confirmed = window.confirm(
+      `Delete "${period.name}"?\n\nThis will permanently remove the period and all entries.`
+    );
+    if (!confirmed) return;
     try {
-      const response = await fetch(`/api/companies/${period.companyId}/financials/calculate`);
-      if (!response.ok) return;
-      const data = await response.json();
-      setOpeningBalance(Number(data?.cashFlow?.endingCash || 0));
+      const response = await fetch(`/api/budget/periods/${period.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        alert(`Error: ${error.error || 'Failed to delete period'}`);
+        return;
+      }
+      router.push('/app/budget?manage=1');
     } catch (error) {
-      console.error('Error loading cash balance:', error);
+      console.error('Error deleting period:', error);
+      alert('Failed to delete period');
     }
   };
 
@@ -240,7 +251,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/app/budget" className="text-blue-400 hover:text-blue-300 text-sm mb-2 inline-block">
+          <Link href="/app/budget?manage=1" className="text-blue-400 hover:text-blue-300 text-sm mb-2 inline-block">
             ← Back to Budget & Forecast
           </Link>
           <div className="flex items-center gap-4">
@@ -266,6 +277,19 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
           </p>
         </div>
         <div className="flex gap-3">
+          <Link href="/app/budget/categories">
+            <Button variant="secondary">Manage Categories</Button>
+          </Link>
+          <Link href="/app/budget/new">
+            <Button>+ New Period</Button>
+          </Link>
+          <Button
+            variant="secondary"
+            onClick={handleDeletePeriod}
+            className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+          >
+            Delete Period
+          </Button>
           {saving && <span className="text-sm text-blue-400">Saving...</span>}
           {period.type === 'ACTUALS' && unapprovedCount > 0 && (
             <Link href={`/app/budget/${periodId}/approve`}>

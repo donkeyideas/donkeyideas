@@ -26,17 +26,14 @@ export async function GET(
       return NextResponse.json({ error: 'Period not found' }, { status: 404 });
     }
 
-    const priorTransactions = await prisma.transaction.findMany({
+    const allTransactions = await prisma.transaction.findMany({
       where: {
         companyId: period.companyId,
-        date: {
-          lt: period.startDate,
-        },
       },
       orderBy: { date: 'asc' },
     });
 
-    const financialTransactions: FinancialTransaction[] = priorTransactions.map((tx) => ({
+    const financialTransactions: FinancialTransaction[] = allTransactions.map((tx) => ({
       id: tx.id,
       date: new Date(tx.date),
       type: tx.type as FinancialTransaction['type'],

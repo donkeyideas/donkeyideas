@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface BudgetPeriod {
   id: string;
@@ -22,6 +23,9 @@ export default function BudgetPage() {
   const [periods, setPeriods] = useState<BudgetPeriod[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const manageMode = searchParams.get('manage') === '1';
 
   useEffect(() => {
     if (currentCompany) {
@@ -44,6 +48,21 @@ export default function BudgetPage() {
       setLoading(false);
     }
   };
+
+  const latestPeriod = useMemo(() => {
+    if (!periods.length) return null;
+    return [...periods].sort((a, b) => {
+      const aDate = new Date(a.endDate).getTime();
+      const bDate = new Date(b.endDate).getTime();
+      return bDate - aDate;
+    })[0];
+  }, [periods]);
+
+  useEffect(() => {
+    if (!manageMode && latestPeriod && !loading) {
+      router.replace(`/app/budget/${latestPeriod.id}`);
+    }
+  }, [manageMode, latestPeriod, loading, router]);
 
   const handleDeletePeriod = async (period: BudgetPeriod) => {
     const confirmed = window.confirm(
@@ -94,6 +113,14 @@ export default function BudgetPage() {
         <div className="text-center py-12">
           <p className="text-slate-400 text-lg">Please select a company from the sidebar to view budgets</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!manageMode && latestPeriod) {
+    return (
+      <div className="p-8">
+        <div className="text-center text-slate-400">Loading period...</div>
       </div>
     );
   }
@@ -197,6 +224,9 @@ export default function BudgetPage() {
                     <div className="text-sm text-slate-400">
                       {period._count.lines} entries
                     </div>
+                    <Link href={`/app/budget/${period.id}`}>
+                      <Button size="sm">Edit</Button>
+                    </Link>
                     <Button
                       size="sm"
                       variant="secondary"
