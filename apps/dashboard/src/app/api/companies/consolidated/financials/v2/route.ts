@@ -82,17 +82,7 @@ export async function GET(request: NextRequest) {
         orderBy: { period: 'desc' },
       });
       
-      // Determine data status
-      let dataStatus: 'ok' | 'needs_rebuild' | 'no_data';
-      if (transactionCount === 0) {
-        dataStatus = 'no_data'; // No transactions - expected $0
-      } else if (!latestPL || !latestBS) {
-        dataStatus = 'needs_rebuild'; // Has transactions but no statements
-      } else {
-        dataStatus = 'ok'; // Has both transactions and statements
-      }
-      
-      // Calculate totals from P&L Statement fields
+      // Calculate totals first to determine if statements are meaningful
       const revenue = latestPL 
         ? Number(latestPL.productRevenue) + Number(latestPL.serviceRevenue) + Number(latestPL.otherRevenue)
         : 0;
@@ -106,8 +96,26 @@ export async function GET(request: NextRequest) {
         : 0;
       
       const profit = revenue - cogs - opex;
-      
       const cash = latestBS ? Number(latestBS.cashEquivalents) : 0;
+      
+      // Determine data status (SMART LOGIC)
+      let dataStatus: 'ok' | 'needs_rebuild' | 'no_data';
+      if (transactionCount === 0) {
+        dataStatus = 'no_data'; // No transactions - expected $0
+      } else if (!latestPL || !latestBS) {
+        dataStatus = 'needs_rebuild'; // Has transactions but no statements
+      } else {
+        // Has both transactions AND statements - check if statements are meaningful
+        const hasAnyFinancialActivity = revenue !== 0 || cogs !== 0 || opex !== 0 || profit !== 0 || cash !== 0;
+        
+        if (hasAnyFinancialActivity) {
+          dataStatus = 'ok'; // Has transactions, statements, AND meaningful values
+        } else {
+          dataStatus = 'needs_rebuild'; // Has transactions and statements, but all values are $0 (bad calculation)
+        }
+      }
+      
+      // Values already calculated above in status determination
       
       const valuation = company.valuations[0] ? Number(company.valuations[0].amount) : 0;
       
