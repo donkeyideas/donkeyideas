@@ -417,13 +417,13 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       <Card>
         <CardContent className="p-0">
           <div className="max-h-[70vh] overflow-x-auto overflow-y-auto pb-4 w-full max-w-full">
-            <table className="min-w-max w-max">
+            <table className="min-w-max w-max pr-6">
               <thead className="bg-black/30">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[180px] sticky top-0 z-20 bg-[#0b1220]">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[180px] sticky top-0 left-0 z-30 bg-[#0b1220]">
                     Date
                   </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[140px] sticky top-0 z-20 bg-[#0b1220]">
+                  <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[140px] sticky top-0 left-[180px] z-30 bg-[#0b1220]">
                     Balance
                   </th>
                   {selectedCategories.map(catId => {
@@ -457,12 +457,12 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                         isWeekend ? 'bg-black/20' : ''
                       }`}
                     >
-                      <td className="px-4 py-2 text-sm text-slate-300 border-r border-white/10 whitespace-nowrap">
+                      <td className="px-4 py-2 text-sm text-slate-300 border-r border-white/10 whitespace-nowrap sticky left-0 z-20 bg-[#0b1220]">
                         <div className="font-medium">
                           {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </td>
-                      <td className="px-4 py-2 text-right text-sm font-medium text-white border-r border-white/10">
+                      <td className="px-4 py-2 text-right text-sm font-medium text-white border-r border-white/10 whitespace-nowrap sticky left-[180px] z-20 bg-[#0b1220]">
                         ${getBalance(date)}
                       </td>
                       {selectedCategories.map(catId => (
