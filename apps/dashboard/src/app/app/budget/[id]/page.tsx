@@ -57,7 +57,6 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       loadCategories();
       loadLines();
       generateDates();
-      restoreSelectedCategories();
     }
   }, [period]);
 
@@ -101,8 +100,11 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       const data = await response.json();
       setCategories(data);
       
-      // Auto-select first few categories (only if none saved)
-      if (data.length > 0 && selectedCategories.length === 0) {
+      const stored = getStoredSelections();
+      if (stored && stored.length > 0) {
+        const validIds = new Set(data.map((category: BudgetCategory) => category.id));
+        setSelectedCategories(stored.filter((id) => validIds.has(id)));
+      } else if (data.length > 0) {
         setSelectedCategories(data.slice(0, Math.min(5, data.length)).map((c: any) => c.id));
       }
     } catch (error) {
@@ -114,18 +116,19 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
     ? `budget:selectedCategories:${period.companyId}:${period.id}`
     : null;
 
-  const restoreSelectedCategories = () => {
+  const getStoredSelections = () => {
     if (!storageKey) return;
     try {
       const stored = localStorage.getItem(storageKey);
       if (!stored) return;
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) {
-        setSelectedCategories(parsed);
+        return parsed as string[];
       }
     } catch (error) {
       console.error('Error restoring selected categories:', error);
     }
+    return;
   };
 
   useEffect(() => {
@@ -376,7 +379,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
           <CardTitle>Select Categories to Display</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto px-6 py-4">
+          <div className="overflow-x-auto px-6 py-4 w-full">
             <div className="flex flex-nowrap gap-2 min-w-max">
               {categories.map((category) => (
                 <button
@@ -408,7 +411,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
 
       <Card>
         <CardContent className="p-0">
-          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto pb-2">
+          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto pb-4 w-full">
             <table className="w-max min-w-full">
               <thead className="bg-black/30">
                 <tr>
