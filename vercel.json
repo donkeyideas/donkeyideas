@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx prisma migrate deploy --schema=../../packages/database/prisma/schema.prisma && npm run build --workspace=@donkey-ideas/financial-engine && npm run build --workspace=@donkey-ideas/dashboard",
+  "buildCommand": "npx prisma db push --schema=../../packages/database/prisma/schema.prisma && npm run build --workspace=@donkey-ideas/financial-engine && npm run build --workspace=@donkey-ideas/dashboard",
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs"
