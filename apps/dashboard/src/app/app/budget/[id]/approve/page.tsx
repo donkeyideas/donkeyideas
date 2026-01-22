@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { use } from 'react';
 
 interface ApprovalSummary {
   periodId: string;
@@ -23,9 +22,8 @@ interface ApprovalSummary {
   };
 }
 
-export default function ApproveActualsPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const periodId = resolvedParams.id;
+export default function ApproveActualsPage({ params }: { params: { id: string } }) {
+  const periodId = params.id;
   const router = useRouter();
 
   const [summary, setSummary] = useState<ApprovalSummary | null>(null);

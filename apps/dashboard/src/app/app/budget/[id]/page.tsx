@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
-import { use } from 'react';
 
 interface BudgetPeriod {
   id: string;
@@ -31,9 +30,8 @@ interface BudgetLine {
   isApproved: boolean;
 }
 
-export default function BudgetEntryPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const periodId = resolvedParams.id;
+export default function BudgetEntryPage({ params }: { params: { id: string } }) {
+  const periodId = params.id;
 
   const [period, setPeriod] = useState<BudgetPeriod | null>(null);
   const [categories, setCategories] = useState<BudgetCategory[]>([]);
