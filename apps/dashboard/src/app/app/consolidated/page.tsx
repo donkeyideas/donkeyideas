@@ -46,8 +46,10 @@ export default function ConsolidatedViewPage() {
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
   const [showRebuildConfirm, setShowRebuildConfirm] = useState(false);
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
+  const [showFixAllConfirm, setShowFixAllConfirm] = useState(false);
   const [rebuildLoading, setRebuildLoading] = useState(false);
   const [clearAllLoading, setClearAllLoading] = useState(false);
+  const [fixAllLoading, setFixAllLoading] = useState(false);
   const [rebuildingCompanyId, setRebuildingCompanyId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
     isOpen: false,
@@ -235,6 +237,33 @@ export default function ConsolidatedViewPage() {
     }
   };
 
+  const handleFixAllData = async () => {
+    try {
+      setFixAllLoading(true);
+      const response = await api.post('/companies/consolidated/fix-all-data');
+      
+      setNotification({
+        isOpen: true,
+        title: '✅ All Data Fixed!',
+        message: `Fixed ${response.data.summary.transactionsFixed} transaction flags and created ${response.data.summary.statementsCreated} new financial statements for ${response.data.summary.companiesProcessed} companies`,
+        type: 'success',
+      });
+      
+      // Reload to show fixed data
+      await loadConsolidatedFinancials();
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error || 'Failed to fix all data',
+        type: 'error',
+      });
+    } finally {
+      setFixAllLoading(false);
+      setShowFixAllConfirm(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-white/60 [.light_&]:text-slate-600">Loading consolidated financials...</div>;
   }
@@ -285,9 +314,17 @@ export default function ConsolidatedViewPage() {
           </div>
           <Button 
             variant="secondary" 
+            onClick={() => setShowFixAllConfirm(true)}
+            className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border-purple-500/30 font-bold"
+            disabled={fixAllLoading}
+          >
+            {fixAllLoading ? 'Fixing Everything...' : '☢️ FIX ALL DATA (Nuclear Option)'}
+          </Button>
+          <Button 
+            variant="secondary" 
             onClick={handleRebuildNeeded}
             className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border-yellow-500/30"
-            disabled={rebuildLoading || !financials || financials.companies.filter(c => c.dataStatus === 'needs_rebuild').length === 0}
+            disabled={rebuildLoading || fixAllLoading || !financials || financials.companies.filter(c => c.dataStatus === 'needs_rebuild').length === 0}
           >
             {rebuildLoading ? 'Rebuilding...' : `Rebuild Needed Companies ${financials ? `(${financials.companies.filter(c => c.dataStatus === 'needs_rebuild').length})` : ''}`}
           </Button>
@@ -593,6 +630,31 @@ export default function ConsolidatedViewPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Confirm Fix All Data Modal */}
+      <ConfirmModal
+        isOpen={showFixAllConfirm}
+        onClose={() => setShowFixAllConfirm(false)}
+        onConfirm={handleFixAllData}
+        title="☢️ FIX ALL DATA - Nuclear Option"
+        message="This is the NUCLEAR OPTION. It will:
+
+1. Fix ALL transaction flags (affectsPL, affectsCashFlow)
+2. Delete ALL existing financial statements
+3. Recalculate EVERYTHING from scratch
+4. Store NEW statements for ALL companies
+
+This fixes:
+- Wrong cash calculations
+- Companies showing $0 despite having transactions
+- Rebuild button not working
+
+This takes 30-60 seconds. Continue?"
+        confirmText="☢️ FIX EVERYTHING"
+        cancelText="Cancel"
+        variant="danger"
+        loading={fixAllLoading}
+      />
 
       {/* Confirm Rebuild Modal */}
       <ConfirmModal
