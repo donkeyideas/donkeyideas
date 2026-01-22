@@ -117,8 +117,9 @@ export async function POST(
     const validated = createTransactionSchema.parse(body);
     
     // Auto-set flags based on transaction type
-    // Revenue, Expense, COGS should affect P&L and Cash Flow
-    if (validated.type === 'revenue' || validated.type === 'expense' || validated.type === 'cogs') {
+    // Revenue and Expense should affect P&L and Cash Flow
+    // (COGS is handled as 'expense' type with specific categories)
+    if (validated.type === 'revenue' || validated.type === 'expense') {
       if (body.affectsPL === undefined) {
         validated.affectsPL = true; // Auto-set to true for P&L transactions
       }
@@ -130,16 +131,17 @@ export async function POST(
       }
     }
     
-    // Intercompany transactions should NOT affect P&L
-    if (validated.type === 'intercompany') {
+    // Asset, Liability, Equity typically don't affect P&L
+    if (validated.type === 'asset' || validated.type === 'liability' || validated.type === 'equity') {
       if (body.affectsPL === undefined) {
-        validated.affectsPL = false; // Intercompany doesn't affect P&L
+        validated.affectsPL = false; // Assets/Liabilities/Equity don't affect P&L
       }
-      if (!body.affectsCashFlow) {
-        validated.affectsCashFlow = true; // But does affect cash
+      if (body.affectsCashFlow === undefined) {
+        // Assets usually affect cash, liabilities/equity depends on transaction
+        validated.affectsCashFlow = validated.type === 'asset';
       }
       if (body.affectsBalance === undefined) {
-        validated.affectsBalance = true; // And balance sheet
+        validated.affectsBalance = true; // All affect balance sheet
       }
     }
     

@@ -57,11 +57,11 @@ export async function POST(
     // STEP 1.5: Fix transaction flags BEFORE calculating (ensures correct calculation)
     console.log(`🔧 Fixing transaction flags...`);
     
-    // Fix revenue/expense/cogs flags
+    // Fix revenue/expense flags (COGS is just an expense with specific category)
     await prisma.transaction.updateMany({
       where: {
         companyId,
-        type: { in: ['revenue', 'expense', 'cogs'] },
+        type: { in: ['revenue', 'expense'] },
       },
       data: {
         affectsPL: true,
@@ -70,15 +70,15 @@ export async function POST(
       },
     });
     
-    // Fix intercompany flags (should NOT affect P&L)
+    // Fix asset/liability/equity flags (should NOT affect P&L by default)
     await prisma.transaction.updateMany({
       where: {
         companyId,
-        type: 'intercompany',
+        type: { in: ['asset', 'liability', 'equity'] },
+        affectsPL: null, // Only update if not explicitly set
       },
       data: {
         affectsPL: false,
-        affectsCashFlow: true,
         affectsBalance: true,
       },
     });

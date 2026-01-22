@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         },
       });
       
-      // Fix flags for expense transactions
+      // Fix flags for expense transactions (COGS is just an expense with specific category)
       const expenseFixed = await prisma.transaction.updateMany({
         where: {
           companyId: company.id,
@@ -73,33 +73,20 @@ export async function POST(request: NextRequest) {
         },
       });
       
-      // Fix flags for COGS transactions
-      const cogsFixed = await prisma.transaction.updateMany({
+      // Fix flags for asset/liability/equity transactions (should NOT affect P&L)
+      const assetFixed = await prisma.transaction.updateMany({
         where: {
           companyId: company.id,
-          type: 'cogs',
-        },
-        data: {
-          affectsPL: true,
-          affectsCashFlow: true,
-          affectsBalance: true,
-        },
-      });
-      
-      // Fix intercompany transactions (should NOT affect P&L)
-      const intercompanyFixed = await prisma.transaction.updateMany({
-        where: {
-          companyId: company.id,
-          type: 'intercompany',
+          type: { in: ['asset', 'liability', 'equity'] },
         },
         data: {
           affectsPL: false,
-          affectsCashFlow: true,
+          affectsCashFlow: true, // Assets usually affect cash
           affectsBalance: true,
         },
       });
       
-      const fixed = revenueFixed.count + expenseFixed.count + cogsFixed.count + intercompanyFixed.count;
+      const fixed = revenueFixed.count + expenseFixed.count + assetFixed.count;
       totalTransactionsFixed += fixed;
       
       console.log(`  ✅ ${company.name}: Fixed ${fixed} transaction flags`);
