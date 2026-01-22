@@ -90,19 +90,19 @@ export async function GET(request: NextRequest) {
       });
       
       // Calculate totals first to determine if statements are meaningful
-      const revenue = latestPL 
+      let revenue = latestPL 
         ? Number(latestPL.productRevenue) + Number(latestPL.serviceRevenue) + Number(latestPL.otherRevenue)
         : 0;
       
-      const cogs = latestPL
+      let cogs = latestPL
         ? Number(latestPL.directCosts) + Number(latestPL.infrastructureCosts)
         : 0;
       
-      const opex = latestPL
+      let opex = latestPL
         ? Number(latestPL.salesMarketing) + Number(latestPL.rdExpenses) + Number(latestPL.adminExpenses)
         : 0;
       
-      const profit = revenue - cogs - opex;
+      let profit = revenue - cogs - opex;
       
       // Use Cash Flow endingCash as primary source (same as individual company pages)
       // Fallback to Balance Sheet cashEquivalents if Cash Flow doesn't exist
