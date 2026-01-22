@@ -21,6 +21,7 @@ export default function BudgetPage() {
   const { currentCompany } = useAppStore();
   const [periods, setPeriods] = useState<BudgetPeriod[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentCompany) {
@@ -41,6 +42,31 @@ export default function BudgetPage() {
       setPeriods([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeletePeriod = async (period: BudgetPeriod) => {
+    const confirmed = window.confirm(
+      `Delete "${period.name}"?\n\nThis will permanently remove the period and all ${period._count.lines} entries.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(period.id);
+      const response = await fetch(`/api/budget/periods/${period.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        alert(`Error: ${error.error || 'Failed to delete period'}`);
+        return;
+      }
+      await loadPeriods();
+    } catch (error) {
+      console.error('Error deleting period:', error);
+      alert('Failed to delete period');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -159,7 +185,8 @@ export default function BudgetPage() {
                     <div>
                       <div className="text-white font-medium">{period.name}</div>
                       <div className="text-sm text-slate-400">
-                        {new Date(period.startDate).toLocaleDateString()} - {new Date(period.endDate).toLocaleDateString()}
+                        {new Date(period.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} -{' '}
+                        {new Date(period.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </div>
                     </div>
                   </div>
@@ -173,6 +200,15 @@ export default function BudgetPage() {
                     <Link href={`/app/budget/${period.id}`}>
                       <Button size="sm">Edit</Button>
                     </Link>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleDeletePeriod(period)}
+                      disabled={deletingId === period.id}
+                      className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                    >
+                      {deletingId === period.id ? 'Deleting...' : 'Delete'}
+                    </Button>
                   </div>
                 </div>
               ))}

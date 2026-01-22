@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
 
@@ -40,6 +40,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dates, setDates] = useState<string[]>([]);
+  const saveTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
     loadPeriod();
@@ -116,7 +117,6 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
 
   const updateAmount = async (date: string, categoryId: string, amount: string) => {
     const key = `${date}_${categoryId}`;
-    const numAmount = parseFloat(amount) || 0;
     
     // Update local state optimistically
     setLines(prev => ({
@@ -125,20 +125,25 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
         ...prev[key],
         date,
         categoryId,
-        amount: numAmount.toString(),
+        amount,
         id: prev[key]?.id || '',
       },
     }));
-
-    // Debounced save
-    if (saving) return;
     
-    setTimeout(async () => {
+    // Debounced save per cell
+    if (saveTimeoutsRef.current[key]) {
+      clearTimeout(saveTimeoutsRef.current[key]);
+    }
+    
+    saveTimeoutsRef.current[key] = setTimeout(async () => {
       try {
         setSaving(true);
         
         // Prepare line for save
         const line = lines[key] || {};
+        const cleanedAmount = amount.replace(/,/g, '');
+        const numAmount = parseFloat(cleanedAmount);
+        const safeAmount = Number.isNaN(numAmount) ? 0 : numAmount;
         
         const response = await fetch('/api/budget/lines', {
           method: 'POST',
@@ -150,7 +155,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
               companyId: period?.companyId,
               categoryId,
               date,
-              amount: numAmount,
+              amount: safeAmount,
             }],
           }),
         });
@@ -164,7 +169,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       } finally {
         setSaving(false);
       }
-    }, 500);
+    }, 600);
   };
 
   const getLineValue = (date: string, categoryId: string): string => {
@@ -187,7 +192,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
 
   const formatCurrency = (value: string): string => {
     if (!value) return '';
-    const num = parseFloat(value);
+    const num = parseFloat(value.replace(/,/g, ''));
     if (isNaN(num)) return value;
     return num.toLocaleString('en-US', {
       minimumFractionDigits: 2,
@@ -230,7 +235,8 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
             </span>
           </div>
           <p className="text-slate-400 mt-1">
-            {new Date(period.startDate).toLocaleDateString()} - {new Date(period.endDate).toLocaleDateString()}
+            {new Date(period.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} -{' '}
+            {new Date(period.endDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
           </p>
         </div>
         <div className="flex gap-3">
@@ -323,7 +329,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                     >
                       <td className="px-4 py-2 text-sm text-slate-300 border-r border-white/10">
                         <div className="font-medium">
-                          {dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                          {dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </td>
                       <td className="px-4 py-2 text-right text-sm font-medium text-white border-r border-white/10">
@@ -336,9 +342,10 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                             value={getLineValue(date, catId)}
                             onChange={(e) => updateAmount(date, catId, e.target.value)}
                             onBlur={(e) => {
-                              // Format on blur
                               const formatted = formatCurrency(e.target.value);
-                              e.target.value = formatted;
+                              if (formatted !== e.target.value) {
+                                updateAmount(date, catId, formatted);
+                              }
                             }}
                             className="w-full px-2 py-1 bg-transparent text-right text-sm text-white focus:bg-black/30 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
                             placeholder="0.00"
