@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
@@ -18,7 +18,7 @@ interface BudgetPeriod {
   };
 }
 
-export default function BudgetPage() {
+function BudgetPageContent() {
   const { currentCompany } = useAppStore();
   const [periods, setPeriods] = useState<BudgetPeriod[]>([]);
   const [loading, setLoading] = useState(true);
@@ -244,5 +244,13 @@ export default function BudgetPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function BudgetPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-slate-400">Loading...</div>}>
+      <BudgetPageContent />
+    </Suspense>
   );
 }
