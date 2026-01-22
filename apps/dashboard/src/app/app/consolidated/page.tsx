@@ -484,9 +484,9 @@ export default function ConsolidatedViewPage() {
               <tbody>
                 {financials.companies.map((company) => {
                   const statusConfig = {
-                    ok: { emoji: '✅', text: 'Data OK', color: 'bg-green-500/20 text-green-300 border-green-500/30' },
-                    needs_rebuild: { emoji: '⚠️', text: 'Needs Rebuild', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
-                    no_data: { emoji: '📭', text: 'No Transactions', color: 'bg-gray-500/20 text-gray-300 border-gray-500/30' },
+                    ok: { text: 'Data OK', color: 'bg-green-500/20 text-green-300 border-green-500/30' },
+                    needs_rebuild: { text: 'Needs Rebuild', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
+                    no_data: { text: 'No Transactions', color: 'bg-gray-500/20 text-gray-300 border-gray-500/30' },
                   };
                   const status = statusConfig[company.dataStatus];
                   
@@ -521,9 +521,8 @@ export default function ConsolidatedViewPage() {
                         )}
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${status.color}`}>
-                          <span>{status.emoji}</span>
-                          <span>{status.text}</span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${status.color}`}>
+                          {status.text}
                         </span>
                         <div className="text-[10px] text-white/40 [.light_&]:text-slate-500 mt-1">
                           {company.transactionCount} txns
@@ -567,21 +566,27 @@ export default function ConsolidatedViewPage() {
             <div className="text-xs font-semibold text-white/60 [.light_&]:text-slate-600 mb-2">Data Status Legend:</div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
               <div className="flex items-center gap-2">
-                <span className="text-lg">✅</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-green-500/20 text-green-300 border-green-500/30">
+                  Data OK
+                </span>
                 <span className="text-white/80 [.light_&]:text-slate-700">
-                  <strong>Data OK:</strong> Has transactions and stored financial statements
+                  Has transactions and stored financial statements
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-lg">⚠️</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
+                  Needs Rebuild
+                </span>
                 <span className="text-white/80 [.light_&]:text-slate-700">
-                  <strong>Needs Rebuild:</strong> Has transactions but no statements - click "Rebuild" to fix
+                  Has transactions but no statements - click "Rebuild" to fix
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-lg">📭</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-gray-500/20 text-gray-300 border-gray-500/30">
+                  No Transactions
+                </span>
                 <span className="text-white/80 [.light_&]:text-slate-700">
-                  <strong>No Transactions:</strong> No financial data entered yet (expected $0)
+                  No financial data entered yet (expected $0)
                 </span>
               </div>
             </div>
