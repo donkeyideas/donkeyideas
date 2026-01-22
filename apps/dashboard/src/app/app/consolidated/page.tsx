@@ -44,6 +44,7 @@ export default function ConsolidatedViewPage() {
   const [financials, setFinancials] = useState<ConsolidatedFinancials | null>(null);
   const [loading, setLoading] = useState(true);
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [clearAllLoading, setClearAllLoading] = useState(false);
   const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
     isOpen: false,
