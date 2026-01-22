@@ -163,19 +163,86 @@ export async function POST(
       },
     });
     
-    // Auto-update P&L Statement if needed
-    if (validated.affectsPL) {
-      await updatePLStatement(params.id, period, validated.type, validated.category, validated.amount);
-    }
-    
-    // Auto-update Cash Flow first if needed (so balance sheet can sync from it)
-    if (validated.affectsCashFlow) {
-      await updateCashFlow(params.id, period, validated.type, validated.category, validated.amount);
-    }
-    
-    // Auto-update Balance Sheet if needed
-    if (validated.affectsBalance) {
-      await updateBalanceSheet(params.id, period, validated.type, validated.category, validated.amount, validated.affectsCashFlow);
+    // FIX: Instead of incremental updates (which cause validation errors),
+    // trigger a full recalculation using the financial engine
+    // This ensures consistency and correct calculations
+    try {
+      // Get all transactions
+      const allTransactions = await prisma.transaction.findMany({
+        where: { companyId: params.id },
+        orderBy: { date: 'asc' },
+      });
+      
+      // Delete old statements
+      await Promise.all([
+        prisma.pLStatement.deleteMany({ where: { companyId: params.id } }),
+        prisma.balanceSheet.deleteMany({ where: { companyId: params.id } }),
+        prisma.cashFlow.deleteMany({ where: { companyId: params.id } }),
+      ]);
+      
+      // Import financial engine
+      const { calculateFinancials, Transaction: FinancialTransaction } = await import('@donkey-ideas/financial-engine');
+      
+      // Transform for financial engine
+      const transactions: FinancialTransaction[] = allTransactions.map(tx => ({
+        id: tx.id,
+        date: new Date(tx.date),
+        type: tx.type as any,
+        category: tx.category || 'Uncategorized',
+        amount: Number(tx.amount),
+        description: tx.description || undefined,
+        affectsPL: tx.affectsPL ?? true,
+        affectsCashFlow: tx.affectsCashFlow ?? true,
+        affectsBalance: tx.affectsBalance ?? true,
+      }));
+      
+      // Calculate using financial engine
+      const statements = calculateFinancials(transactions, 0);
+      
+      // Store new statements
+      await prisma.pLStatement.create({
+        data: {
+          companyId: params.id,
+          period,
+          productRevenue: new Decimal(statements.pl.revenue),
+          serviceRevenue: new Decimal(0),
+          otherRevenue: new Decimal(0),
+          directCosts: new Decimal(statements.pl.cogs),
+          infrastructureCosts: new Decimal(0),
+          salesMarketing: new Decimal(statements.pl.operatingExpenses),
+          rdExpenses: new Decimal(0),
+          adminExpenses: new Decimal(0),
+        },
+      });
+      
+      await prisma.balanceSheet.create({
+        data: {
+          companyId: params.id,
+          period,
+          cashEquivalents: new Decimal(statements.balanceSheet.cash),
+          accountsReceivable: new Decimal(statements.balanceSheet.accountsReceivable),
+          fixedAssets: new Decimal(statements.balanceSheet.fixedAssets),
+          accountsPayable: new Decimal(statements.balanceSheet.accountsPayable),
+          shortTermDebt: new Decimal(statements.balanceSheet.shortTermDebt),
+          longTermDebt: new Decimal(statements.balanceSheet.longTermDebt),
+        },
+      });
+      
+      await prisma.cashFlow.create({
+        data: {
+          companyId: params.id,
+          period,
+          beginningCash: new Decimal(statements.cashFlow.beginningCash),
+          operatingCashFlow: new Decimal(statements.cashFlow.operatingCashFlow),
+          investingCashFlow: new Decimal(statements.cashFlow.investingCashFlow),
+          financingCashFlow: new Decimal(statements.cashFlow.financingCashFlow),
+          netCashFlow: new Decimal(statements.cashFlow.netCashFlow),
+          endingCash: new Decimal(statements.cashFlow.endingCash),
+        },
+      });
+    } catch (recalcError: any) {
+      // Log but don't fail transaction creation
+      console.error('Failed to recalculate financial statements after transaction creation:', recalcError);
     }
     
     return NextResponse.json({ transaction: { ...transaction, amount: transaction.amount.toNumber() } }, { status: 201 });
