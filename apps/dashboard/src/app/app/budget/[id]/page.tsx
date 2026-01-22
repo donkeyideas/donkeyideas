@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
 
@@ -12,6 +12,7 @@ interface BudgetPeriod {
   type: string;
   status: string;
   companyId: string;
+  openingBalance?: number;
 }
 
 interface BudgetCategory {
@@ -40,6 +41,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dates, setDates] = useState<string[]>([]);
+  const [openingBalance, setOpeningBalance] = useState(0);
 
   useEffect(() => {
     loadPeriod();
@@ -58,6 +60,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       const response = await fetch(`/api/budget/periods/${periodId}`);
       const data = await response.json();
       setPeriod(data);
+      setOpeningBalance(Number(data.openingBalance || 0));
     } catch (error) {
       console.error('Error loading period:', error);
     }
@@ -173,23 +176,38 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
     return line?.amount || '';
   };
 
-  const getBalance = (date: string): string => {
-    // Find any line for this date to get the balance
-    const dateLines = Object.values(lines).filter(l => l.date.split('T')[0] === date);
-    if (dateLines.length > 0 && dateLines[0].balance) {
-      return parseFloat(dateLines[0].balance).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-    }
-    return '0.00';
-  };
-
   const formatCurrency = (value: string): string => {
     if (!value) return '';
     const num = parseFloat(value.replace(/,/g, ''));
     if (isNaN(num)) return value;
     return num.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const balanceByDate = useMemo(() => {
+    if (dates.length === 0) return {};
+    const totalsByDate: Record<string, number> = {};
+    Object.values(lines).forEach((line) => {
+      const dateKey = line.date.split('T')[0];
+      const amount = parseFloat(String(line.amount).replace(/,/g, ''));
+      totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) + (Number.isNaN(amount) ? 0 : amount);
+    });
+
+    const balances: Record<string, number> = {};
+    let running = openingBalance;
+    dates.forEach((date) => {
+      running += totalsByDate[date] || 0;
+      balances[date] = running;
+    });
+    return balances;
+  }, [dates, lines, openingBalance]);
+
+  const getBalance = (date: string): string => {
+    const value = balanceByDate[date];
+    if (value === undefined) return '0.00';
+    return value.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });

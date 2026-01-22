@@ -16,7 +16,7 @@ export default function NewPeriodPage() {
     startDate: '',
     endDate: '',
     type: 'ACTUALS' as 'BUDGET' | 'FORECAST' | 'ACTUALS',
-    status: 'DRAFT' as 'DRAFT' | 'ACTIVE' | 'CLOSED',
+    status: 'ACTIVE' as 'DRAFT' | 'ACTIVE' | 'CLOSED',
   });
 
   useEffect(() => {
@@ -229,21 +229,6 @@ export default function NewPeriodPage() {
               <p className="text-xs text-slate-400 mt-1">
                 Auto-generated from dates, but you can customize it
               </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2 text-white">
-                Status
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
-              >
-                <option value="DRAFT">Draft - Work in progress</option>
-                <option value="ACTIVE">Active - Ready to use</option>
-                <option value="CLOSED">Closed - Locked/archived</option>
-              </select>
             </div>
 
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
