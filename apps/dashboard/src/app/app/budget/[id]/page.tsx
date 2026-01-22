@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@donkey-ideas/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -44,6 +44,9 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
   const [saving, setSaving] = useState(false);
   const [dates, setDates] = useState<string[]>([]);
   const [openingBalance, setOpeningBalance] = useState(0);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [draftValues, setDraftValues] = useState<Record<string, string>>({});
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
     loadPeriod();
@@ -141,8 +144,22 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
     setDates(dateList);
   };
 
+  const normalizeInput = (value: string) => value.replace(/[^0-9.-]/g, '');
+
+  const formatCurrencyDisplay = (value: string): string => {
+    if (!value) return '';
+    const num = parseFloat(value.replace(/,/g, ''));
+    if (isNaN(num)) return value;
+    return `$${num.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
   const updateAmount = (date: string, categoryId: string, amount: string) => {
     const key = `${date}_${categoryId}`;
+    const cleaned = normalizeInput(amount);
+    setDraftValues(prev => ({ ...prev, [key]: amount }));
     
     // Update local state optimistically
     setLines(prev => ({
@@ -151,11 +168,21 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
         ...prev[key],
         date,
         categoryId,
-        amount,
+        amount: cleaned,
         id: prev[key]?.id || '',
       },
     }));
     
+  };
+
+  const scheduleSave = (date: string, categoryId: string, amount: string) => {
+    const key = `${date}_${categoryId}`;
+    if (saveTimers.current[key]) {
+      clearTimeout(saveTimers.current[key]);
+    }
+    saveTimers.current[key] = setTimeout(() => {
+      saveAmount(date, categoryId, amount);
+    }, 800);
   };
 
   const saveAmount = async (date: string, categoryId: string, amount: string) => {
@@ -164,7 +191,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       setSaving(true);
       
       const line = lines[key] || {};
-      const cleanedAmount = amount.replace(/,/g, '');
+      const cleanedAmount = normalizeInput(amount).replace(/,/g, '');
       const numAmount = parseFloat(cleanedAmount);
       const safeAmount = Number.isNaN(numAmount) ? 0 : numAmount;
       
@@ -184,8 +211,18 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       });
 
       if (response.ok) {
-        // Reload to get updated balances
-        await loadLines();
+        const saved = await response.json();
+        const savedLine = Array.isArray(saved) ? saved[0] : saved;
+        if (savedLine?.id) {
+          setLines(prev => ({
+            ...prev,
+            [key]: {
+              ...prev[key],
+              id: savedLine.id,
+              amount: String(savedLine.amount ?? safeAmount),
+            },
+          }));
+        }
       }
     } catch (error) {
       console.error('Error saving line:', error);
@@ -196,18 +233,20 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
 
   const getLineValue = (date: string, categoryId: string): string => {
     const key = `${date}_${categoryId}`;
+    if (editingKey === key && draftValues[key] !== undefined) {
+      return draftValues[key];
+    }
     const line = lines[key];
     return line?.amount || '';
   };
 
-  const formatCurrency = (value: string): string => {
-    if (!value) return '';
-    const num = parseFloat(value.replace(/,/g, ''));
-    if (isNaN(num)) return value;
-    return num.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  const getDisplayValue = (date: string, categoryId: string): string => {
+    const key = `${date}_${categoryId}`;
+    const raw = getLineValue(date, categoryId);
+    if (editingKey === key) {
+      return raw;
+    }
+    return formatCurrencyDisplay(raw);
   };
 
   const balanceByDate = useMemo(() => {
@@ -389,17 +428,33 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                         <td key={`${date}_${catId}`} className="px-2 py-1 border-r border-white/10">
                           <input
                             type="text"
-                            value={getLineValue(date, catId)}
-                            onChange={(e) => updateAmount(date, catId, e.target.value)}
+                            value={getDisplayValue(date, catId)}
+                            onFocus={() => {
+                              const key = `${date}_${catId}`;
+                              setEditingKey(key);
+                              setDraftValues(prev => ({
+                                ...prev,
+                                [key]: prev[key] ?? getLineValue(date, catId),
+                              }));
+                            }}
+                            onChange={(e) => {
+                              updateAmount(date, catId, e.target.value);
+                              scheduleSave(date, catId, e.target.value);
+                            }}
                             onBlur={(e) => {
-                              const formatted = formatCurrency(e.target.value);
-                              if (formatted !== e.target.value) {
-                                updateAmount(date, catId, formatted);
+                              const key = `${date}_${catId}`;
+                              if (saveTimers.current[key]) {
+                                clearTimeout(saveTimers.current[key]);
                               }
-                              saveAmount(date, catId, formatted);
+                              saveAmount(date, catId, e.target.value);
+                              setEditingKey(null);
+                              setDraftValues(prev => {
+                                const { [key]: _, ...rest } = prev;
+                                return rest;
+                              });
                             }}
                             className="w-full px-2 py-1 bg-transparent text-right text-sm text-white focus:bg-black/30 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
-                            placeholder="0.00"
+                            placeholder="$0.00"
                           />
                         </td>
                       ))}
