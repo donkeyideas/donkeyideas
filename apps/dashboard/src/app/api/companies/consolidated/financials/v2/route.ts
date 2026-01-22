@@ -105,12 +105,35 @@ export async function GET(request: NextRequest) {
       
       // Use Cash Flow endingCash as primary source (same as individual company pages)
       // Fallback to Balance Sheet cashEquivalents if Cash Flow doesn't exist
-      const cash = latestCF 
+      let cash = latestCF 
         ? Number(latestCF.endingCash || 0)
         : (latestBS ? Number(latestBS.cashEquivalents || 0) : 0);
       
       // DEBUG: Log what we're reading
       console.log(`  ${company.name}: CashFlow endingCash=${latestCF ? Number(latestCF.endingCash || 0) : 'N/A'}, BalanceSheet cash=${latestBS ? Number(latestBS.cashEquivalents || 0) : 'N/A'}, Using cash=${cash}`);
+      
+      // AUTO-FIX: If cash is $0 but there are cash-affecting transactions, statements are stale
+      // Trigger automatic recalculation in background (don't wait - return current data)
+      if (cash === 0 && transactionCount > 0) {
+        const hasCashAffectingTxns = await prisma.transaction.count({
+          where: {
+            companyId: company.id,
+            affectsCashFlow: true,
+          },
+        });
+        
+        if (hasCashAffectingTxns > 0) {
+          console.log(`  ⚠️ ${company.name}: Cash is $0 but has ${hasCashAffectingTxns} cash-affecting transactions - statements are stale, triggering auto-rebuild...`);
+          // Trigger rebuild in background (don't await - return current data immediately)
+          // User will see updated data on next refresh
+          fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/companies/${company.id}/financials/recalculate-all`, {
+            method: 'POST',
+            headers: {
+              'Cookie': `auth-token=${token}`,
+            },
+          }).catch(err => console.error(`Failed to auto-rebuild ${company.name}:`, err));
+        }
+      }
       
       // Determine data status (SMART LOGIC)
       let dataStatus: 'ok' | 'needs_rebuild' | 'no_data';
