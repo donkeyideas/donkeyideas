@@ -47,6 +47,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [draftValues, setDraftValues] = useState<Record<string, string>>({});
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const [hasRestoredSelections, setHasRestoredSelections] = useState(false);
 
   useEffect(() => {
     loadPeriod();
@@ -104,8 +105,12 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       if (stored && stored.length > 0) {
         const validIds = new Set(data.map((category: BudgetCategory) => category.id));
         setSelectedCategories(stored.filter((id) => validIds.has(id)));
+        setHasRestoredSelections(true);
       } else if (data.length > 0) {
         setSelectedCategories(data.slice(0, Math.min(5, data.length)).map((c: any) => c.id));
+        setHasRestoredSelections(true);
+      } else {
+        setHasRestoredSelections(true);
       }
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -132,13 +137,13 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
   };
 
   useEffect(() => {
-    if (!storageKey) return;
+    if (!storageKey || !hasRestoredSelections) return;
     try {
       localStorage.setItem(storageKey, JSON.stringify(selectedCategories));
     } catch (error) {
       console.error('Error saving selected categories:', error);
     }
-  }, [storageKey, selectedCategories]);
+  }, [storageKey, selectedCategories, hasRestoredSelections]);
 
   const loadLines = async () => {
     try {
@@ -379,7 +384,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
           <CardTitle>Select Categories to Display</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto px-6 py-4 w-full">
+          <div className="overflow-x-auto px-6 py-4 w-full max-w-full">
             <div className="flex flex-nowrap gap-2 min-w-max">
               {categories.map((category) => (
                 <button
@@ -411,8 +416,8 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
 
       <Card>
         <CardContent className="p-0">
-          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto pb-4 w-full">
-            <table className="w-max min-w-full">
+          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto pb-4 w-full max-w-full">
+            <table className="min-w-max w-max">
               <thead className="bg-black/30">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[180px] sticky top-0 z-20 bg-[#0b1220]">
