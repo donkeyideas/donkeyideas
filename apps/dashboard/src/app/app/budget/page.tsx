@@ -197,9 +197,6 @@ export default function BudgetPage() {
                     <div className="text-sm text-slate-400">
                       {period._count.lines} entries
                     </div>
-                    <Link href={`/app/budget/${period.id}`}>
-                      <Button size="sm">Edit</Button>
-                    </Link>
                     <Button
                       size="sm"
                       variant="secondary"

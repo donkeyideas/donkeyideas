@@ -52,6 +52,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       loadCategories();
       loadLines();
       generateDates();
+      loadCashBalance();
     }
   }, [period]);
 
@@ -63,6 +64,18 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
       setOpeningBalance(Number(data.openingBalance || 0));
     } catch (error) {
       console.error('Error loading period:', error);
+    }
+  };
+
+  const loadCashBalance = async () => {
+    if (!period?.companyId) return;
+    try {
+      const response = await fetch(`/api/companies/${period.companyId}/financials/calculate`);
+      if (!response.ok) return;
+      const data = await response.json();
+      setOpeningBalance(Number(data?.cashFlow?.endingCash || 0));
+    } catch (error) {
+      console.error('Error loading cash balance:', error);
     }
   };
 
