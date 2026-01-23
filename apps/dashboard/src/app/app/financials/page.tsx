@@ -407,11 +407,67 @@ export default function FinancialsPage() {
         profitMargin: statements.pl.profitMargin,
       });
 
+      const normalizeIntercompany = (tx: any) => {
+        const rawType = String(tx.type || '').toLowerCase().trim();
+        if (rawType !== 'intercompany_transfer' && rawType !== 'intercompany') {
+          return [tx];
+        }
+
+        const amount = Number(tx.amount);
+        if (!amount) {
+          return [];
+        }
+
+        const base = {
+          ...tx,
+          affectsPL: false,
+          affectsBalance: true,
+        };
+
+        if (amount < 0) {
+          return [
+            {
+              ...base,
+              type: 'asset',
+              category: 'cash',
+              amount,
+              affectsCashFlow: true,
+            },
+            {
+              ...base,
+              type: 'asset',
+              category: 'intercompany_receivable',
+              amount: Math.abs(amount),
+              affectsCashFlow: false,
+            },
+          ];
+        }
+
+        return [
+          {
+            ...base,
+            type: 'asset',
+            category: 'cash',
+            amount,
+            affectsCashFlow: true,
+          },
+          {
+            ...base,
+            type: 'liability',
+            category: 'intercompany_payable',
+            amount: Math.abs(amount),
+            affectsCashFlow: false,
+          },
+        ];
+      };
+
+      const normalizedTransactions = loadedTransactions.flatMap(normalizeIntercompany);
+
       // Group transactions by month to create monthly statements
       // This is what the charts and tables need - monthly breakdowns, not just one aggregate
       const monthlyData = new Map<string, any>();
       
-      loadedTransactions.forEach(tx => {
+      normalizedTransactions.forEach(tx => {
         const txDate = new Date(tx.date);
         const monthKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
         
@@ -456,7 +512,12 @@ export default function FinancialsPage() {
           } else if (tx.type === 'expense') {
             monthData.operatingCashFlow -= amount;
           } else if (tx.type === 'asset') {
-            monthData.investingCashFlow -= amount;
+            const category = (tx.category || '').toLowerCase();
+            if (category.includes('cash')) {
+              monthData.operatingCashFlow += amount;
+            } else {
+              monthData.investingCashFlow -= amount;
+            }
           } else if (tx.type === 'equity' || tx.type === 'liability') {
             monthData.financingCashFlow += amount;
           }

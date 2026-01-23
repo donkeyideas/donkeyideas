@@ -142,9 +142,12 @@ export function calculateCashFlow(
     // Investing Activities: Asset purchases/sales
     else if (tx.type === 'asset') {
       const category = tx.category.toLowerCase();
-      if (category.includes('equipment') || 
-          category.includes('inventory') ||
-          category.includes('fixed')) {
+      if (category.includes('cash')) {
+        // Direct cash adjustments should affect cash flow
+        operatingCashFlow += amount;
+      } else if (category.includes('equipment') || 
+                 category.includes('inventory') ||
+                 category.includes('fixed')) {
         investingCashFlow += amount; // Negative for purchases
       }
     }

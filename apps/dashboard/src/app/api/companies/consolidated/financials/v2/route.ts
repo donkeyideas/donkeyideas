@@ -24,14 +24,19 @@ function calculateEndingCashFromTransactions(transactions: FinancialTransaction[
   transactions.forEach((tx) => {
     if (!tx.affectsCashFlow) return;
 
-    const amount = Math.abs(tx.amount);
+    const amount = tx.amount;
+    const category = (tx.category || '').toLowerCase().trim();
 
     if (tx.type === 'revenue') {
       operatingCashFlow += amount;
     } else if (tx.type === 'expense') {
-      operatingCashFlow -= amount;
+      operatingCashFlow -= Math.abs(amount);
     } else if (tx.type === 'asset') {
-      investingCashFlow -= amount;
+      if (category.includes('cash')) {
+        operatingCashFlow += amount;
+      } else {
+        investingCashFlow += amount;
+      }
     } else if (tx.type === 'liability' || tx.type === 'equity') {
       financingCashFlow += amount;
     }
@@ -119,17 +124,73 @@ export async function GET(request: NextRequest) {
       
       const transactionCount = dbTransactions.length;
       
-      const financialTxs: FinancialTransaction[] = dbTransactions.map(tx => ({
-        id: tx.id,
-        date: new Date(tx.date),
-        type: tx.type as any,
-        category: tx.category || 'Uncategorized',
-        amount: Number(tx.amount),
-        description: tx.description || undefined,
-        affectsPL: tx.affectsPL ?? true,
-        affectsCashFlow: tx.affectsCashFlow ?? true,
-        affectsBalance: tx.affectsBalance ?? true,
-      }));
+      const normalizeIntercompany = (tx: typeof dbTransactions[number]): FinancialTransaction[] => {
+        const rawType = String(tx.type || '').toLowerCase().trim();
+        if (rawType !== 'intercompany_transfer' && rawType !== 'intercompany') {
+          return [{
+            id: tx.id,
+            date: new Date(tx.date),
+            type: tx.type as any,
+            category: tx.category || 'Uncategorized',
+            amount: Number(tx.amount),
+            description: tx.description || undefined,
+            affectsPL: tx.affectsPL ?? true,
+            affectsCashFlow: tx.affectsCashFlow ?? true,
+            affectsBalance: tx.affectsBalance ?? true,
+          }];
+        }
+
+        const amount = Number(tx.amount);
+        if (!amount) {
+          return [];
+        }
+
+        const base = {
+          id: tx.id,
+          date: new Date(tx.date),
+          description: tx.description || undefined,
+          affectsPL: false,
+          affectsBalance: true,
+        };
+
+        if (amount < 0) {
+          return [
+            {
+              ...base,
+              type: 'asset',
+              category: 'cash',
+              amount,
+              affectsCashFlow: true,
+            },
+            {
+              ...base,
+              type: 'asset',
+              category: 'intercompany_receivable',
+              amount: Math.abs(amount),
+              affectsCashFlow: false,
+            },
+          ];
+        }
+
+        return [
+          {
+            ...base,
+            type: 'asset',
+            category: 'cash',
+            amount,
+            affectsCashFlow: true,
+          },
+          {
+            ...base,
+            type: 'liability',
+            category: 'intercompany_payable',
+            amount: Math.abs(amount),
+            affectsCashFlow: false,
+          },
+        ];
+      };
+
+      const financialTxs: FinancialTransaction[] = dbTransactions.flatMap(normalizeIntercompany);
       
       const statements = calculateFinancials(financialTxs, 0);
       

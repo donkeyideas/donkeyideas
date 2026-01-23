@@ -77,19 +77,77 @@ export async function GET(
       orderBy: { date: 'asc' },
     });
     
-    // Transform to engine format
-    const transactions: Transaction[] = dbTransactions.map(tx => ({
-      id: tx.id,
-      date: new Date(tx.date),
-      type: tx.type as any,
-      category: tx.category || 'Uncategorized',
-      amount: Number(tx.amount),
-      description: tx.description || undefined,
-      // Use nullish coalescing to default to true if null/undefined
-      affectsPL: tx.affectsPL ?? true,
-      affectsCashFlow: tx.affectsCashFlow ?? true,
-      affectsBalance: tx.affectsBalance ?? true,
-    }));
+    const normalizeIntercompany = (tx: typeof dbTransactions[number]): Transaction[] => {
+      const rawType = String(tx.type || '').toLowerCase().trim();
+      if (rawType !== 'intercompany_transfer' && rawType !== 'intercompany') {
+        return [{
+          id: tx.id,
+          date: new Date(tx.date),
+          type: tx.type as any,
+          category: tx.category || 'Uncategorized',
+          amount: Number(tx.amount),
+          description: tx.description || undefined,
+          // Use nullish coalescing to default to true if null/undefined
+          affectsPL: tx.affectsPL ?? true,
+          affectsCashFlow: tx.affectsCashFlow ?? true,
+          affectsBalance: tx.affectsBalance ?? true,
+        }];
+      }
+
+      const amount = Number(tx.amount);
+      if (!amount) {
+        return [];
+      }
+
+      const base = {
+        id: tx.id,
+        date: new Date(tx.date),
+        description: tx.description || undefined,
+        affectsPL: false,
+        affectsBalance: true,
+      };
+
+      if (amount < 0) {
+        // Transfer out: cash decreases, intercompany receivable increases.
+        return [
+          {
+            ...base,
+            type: 'asset',
+            category: 'cash',
+            amount,
+            affectsCashFlow: true,
+          },
+          {
+            ...base,
+            type: 'asset',
+            category: 'intercompany_receivable',
+            amount: Math.abs(amount),
+            affectsCashFlow: false,
+          },
+        ];
+      }
+
+      // Transfer in: cash increases, intercompany payable increases.
+      return [
+        {
+          ...base,
+          type: 'asset',
+          category: 'cash',
+          amount,
+          affectsCashFlow: true,
+        },
+        {
+          ...base,
+          type: 'liability',
+          category: 'intercompany_payable',
+          amount: Math.abs(amount),
+          affectsCashFlow: false,
+        },
+      ];
+    };
+
+    // Transform to engine format (normalize intercompany transfers)
+    const transactions: Transaction[] = dbTransactions.flatMap(normalizeIntercompany);
     
     // Calculate financials using clean engine
     const statements = calculateFinancials(transactions, 0);
@@ -98,7 +156,7 @@ export async function GET(
     const response = {
       companyId: company.id,
       companyName: company.name,
-      transactionCount: transactions.length,
+      transactionCount: dbTransactions.length,
       ...statements,
     };
     
