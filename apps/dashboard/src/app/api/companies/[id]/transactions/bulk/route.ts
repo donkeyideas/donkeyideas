@@ -263,9 +263,13 @@ export async function POST(
 
     const body = await request.json();
     const { transactions } = bulkTransactionSchema.parse(body);
+    const inputCount = transactions.length;
 
     // Process transactions in smaller batches to avoid timeout
     const createdTransactions = [];
+    let createdSingle = 0;
+    let createdPaired = 0;
+    let skippedExisting = 0;
     const batchSize = 10; // Smaller batch size for database operations
     
     for (let i = 0; i < transactions.length; i += batchSize) {
@@ -308,6 +312,7 @@ export async function POST(
                 },
               });
               results.push(singleTransaction);
+              createdSingle += 1;
               continue;
             }
 
@@ -355,6 +360,7 @@ export async function POST(
             });
 
             if (existingOutgoing || existingIncoming) {
+              skippedExisting += 1;
               continue;
             }
 
@@ -384,6 +390,7 @@ export async function POST(
             });
 
             results.push(outgoingTransaction, incomingTransaction);
+            createdPaired += 1;
           } else {
             // Create regular transaction - remove fields that don't exist in database
             const { isIntercompany, targetCompanyId, ...dbTransactionData } = transactionData;
@@ -397,6 +404,7 @@ export async function POST(
             });
 
             results.push(transaction);
+            createdSingle += 1;
           }
         }
 
@@ -423,7 +431,14 @@ export async function POST(
 
     return NextResponse.json({ 
       transactions: formattedTransactions,
-      message: `Successfully created ${createdTransactions.length} transactions`
+      message: `Successfully created ${createdTransactions.length} transactions`,
+      summary: {
+        inputCount,
+        createdCount: createdTransactions.length,
+        createdSingle,
+        createdPaired,
+        skippedExisting,
+      },
     });
   } catch (error: any) {
     console.error('Failed to create bulk transactions:', error);
