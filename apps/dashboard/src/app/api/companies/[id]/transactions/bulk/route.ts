@@ -294,8 +294,8 @@ export async function POST(
             description.includes('transfer in') ||
             (description.includes('transfer') && description.includes(' from '));
 
-          if (hasInflow && !hasOutflow) return 'in';
-          if (hasOutflow && !hasInflow) return 'out';
+          if (hasOutflow) return 'out';
+          if (hasInflow) return 'in';
 
           const amountValue = Number(txData.amount);
           if (!Number.isNaN(amountValue) && amountValue !== 0) {
