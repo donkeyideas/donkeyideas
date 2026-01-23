@@ -298,7 +298,17 @@ export async function POST(
           // Handle intercompany transfers
           if (transactionData.type === 'intercompany_transfer') {
             if (!transactionData.targetCompanyId) {
-              throw new Error('TargetCompanyId is required for intercompany transfers');
+              const { isIntercompany, targetCompanyId, ...dbTransactionData } = transactionData;
+              const singleTransaction = await tx.transaction.create({
+                data: {
+                  ...dbTransactionData,
+                  companyId: params.id,
+                  date: new Date(transactionData.date),
+                  amount: Number(transactionData.amount),
+                },
+              });
+              results.push(singleTransaction);
+              continue;
             }
 
             // Verify target company exists and belongs to the same user
