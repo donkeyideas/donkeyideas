@@ -283,19 +283,25 @@ export async function POST(
         const getIntercompanyDirection = (txData: any) => {
           const description = String(txData.description || '').toLowerCase();
           const category = String(txData.category || '').toLowerCase();
-          const amountValue = Number(txData.amount);
-          if (!Number.isNaN(amountValue) && amountValue !== 0) {
-            return amountValue < 0 ? 'out' : 'in';
-          }
           const hasOutflow = category.includes('transfer_out') ||
+            description.includes('outflow') ||
             description.includes('transfer out') ||
+            description.includes('to chk') ||
+            description.includes('from chk') ||
             (description.includes('transfer') && description.includes(' to '));
           const hasInflow = category.includes('transfer_in') ||
+            description.includes('inflow') ||
             description.includes('transfer in') ||
             (description.includes('transfer') && description.includes(' from '));
 
           if (hasInflow && !hasOutflow) return 'in';
           if (hasOutflow && !hasInflow) return 'out';
+
+          const amountValue = Number(txData.amount);
+          if (!Number.isNaN(amountValue) && amountValue !== 0) {
+            return amountValue < 0 ? 'out' : 'in';
+          }
+
           return 'out';
         };
 
