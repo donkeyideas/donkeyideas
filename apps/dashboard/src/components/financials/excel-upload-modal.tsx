@@ -150,7 +150,7 @@ export function ExcelUploadModal({ isOpen, onClose, onSuccess, companyId }: Exce
         }
 
         // Amount validation
-        const amount = parseFloat(row.Amount);
+          const amount = parseFloat(row.Amount);
         if (isNaN(amount)) {
           errors.push(`Row ${rowNum}: Amount must be a valid number`);
         }
@@ -177,7 +177,7 @@ export function ExcelUploadModal({ isOpen, onClose, onSuccess, companyId }: Exce
             date: date!.toISOString().split('T')[0],
             type: normalizedType,
             category: row.Category,
-            amount: Math.abs(amount), // Always positive
+            amount: isIntercompany ? amount : Math.abs(amount),
             description: row.Description || '',
             affectsPL: row.AffectsPL !== undefined ? Boolean(row.AffectsPL) : !isIntercompany, // Default false for intercompany
             affectsBalance: row.AffectsBalance !== undefined ? Boolean(row.AffectsBalance) : true,
@@ -301,7 +301,7 @@ export function ExcelUploadModal({ isOpen, onClose, onSuccess, companyId }: Exce
           date: date.toISOString().split('T')[0],
           type: normalizedType,
           category: row.Category,
-          amount: Math.abs(parseFloat(row.Amount)),
+          amount: isIntercompany ? parseFloat(row.Amount) : Math.abs(parseFloat(row.Amount)),
           description: row.Description || '',
           affectsPL: row.AffectsPL !== undefined ? Boolean(row.AffectsPL) : !isIntercompany,
           affectsBalance: row.AffectsBalance !== undefined ? Boolean(row.AffectsBalance) : true,
@@ -411,7 +411,7 @@ export function ExcelUploadModal({ isOpen, onClose, onSuccess, companyId }: Exce
                     <li><strong>Date</strong> - Transaction date (YYYY-MM-DD or Excel date format)</li>
                     <li><strong>Type</strong> - Transaction type: revenue, expense, asset, liability, equity, intercompany_transfer (or &quot;Intercompany Transfer&quot;, &quot;Intercompany&quot;, etc.)</li>
                     <li><strong>Category</strong> - Transaction category (see categories below)</li>
-                    <li><strong>Amount</strong> - Transaction amount (positive number)</li>
+                    <li><strong>Amount</strong> - Transaction amount (use negative for intercompany outflows)</li>
                   </ul>
                 </div>
 

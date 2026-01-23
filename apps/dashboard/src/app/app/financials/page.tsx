@@ -749,7 +749,7 @@ export default function FinancialsPage() {
                              transaction.category === 'intercompany_receivable' ||
                              transaction.category === 'intercompany_payable';
 
-      if (isIntercompany) {
+      if (isIntercompany && txAny.intercompanyTransferId) {
         // Find related transactions
         const allTransactions = (await api.get(`/companies/${currentCompany.id}/transactions`)).data.transactions || [];
         const relatedTransactions = allTransactions.filter((tx: any) => 

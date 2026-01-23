@@ -9,7 +9,7 @@ const bulkTransactionSchema = z.object({
     date: z.string(),
     type: z.enum(['revenue', 'expense', 'asset', 'liability', 'equity', 'intercompany_transfer']),
     category: z.string(),
-    amount: z.number().min(0),
+    amount: z.number(),
     description: z.string().optional(),
     affectsPL: z.boolean().default(true),
     affectsBalance: z.boolean().default(true),
@@ -278,6 +278,10 @@ export async function POST(
         const getIntercompanyDirection = (txData: any) => {
           const description = String(txData.description || '').toLowerCase();
           const category = String(txData.category || '').toLowerCase();
+          const amountValue = Number(txData.amount);
+          if (!Number.isNaN(amountValue) && amountValue !== 0) {
+            return amountValue < 0 ? 'out' : 'in';
+          }
           const hasOutflow = category.includes('transfer_out') ||
             description.includes('transfer out') ||
             (description.includes('transfer') && description.includes(' to '));
@@ -314,8 +318,8 @@ export async function POST(
             const targetCompany = direction === 'in' ? company : otherCompany;
 
             const transferDate = new Date(transactionData.date);
-            const outgoingAmount = -Math.abs(transactionData.amount);
-            const incomingAmount = Math.abs(transactionData.amount);
+            const outgoingAmount = -Math.abs(Number(transactionData.amount));
+            const incomingAmount = Math.abs(Number(transactionData.amount));
             const desc = transactionData.description || 'Intercompany transfer';
 
             const existingOutgoing = await tx.transaction.findFirst({
