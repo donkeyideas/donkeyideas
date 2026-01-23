@@ -57,6 +57,8 @@ export async function POST(
       const hasOutflow = desc.includes('outflow')
         || desc.includes('transfer out')
         || desc.includes('transfer to')
+        || desc.includes('from chk')
+        || desc.includes('to chk')
         || desc.includes('payment to')
         || desc.includes('paid to')
         || desc.includes('sent to')
