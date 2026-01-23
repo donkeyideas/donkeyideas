@@ -443,7 +443,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                       </th>
                     );
                   })}
-                  <th className="w-10" aria-hidden="true" />
+                  <th className="min-w-[200px]" aria-hidden="true" />
                 </tr>
               </thead>
               <tbody>
@@ -500,7 +500,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                           />
                         </td>
                       ))}
-                      <td className="w-10" aria-hidden="true" />
+                      <td className="min-w-[200px]" aria-hidden="true" />
                     </tr>
                   );
                 })}
