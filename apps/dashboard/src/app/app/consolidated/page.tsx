@@ -48,6 +48,7 @@ export default function ConsolidatedViewPage() {
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [clearAllLoading, setClearAllLoading] = useState(false);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
   const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
     isOpen: false,
     title: '',
@@ -145,6 +146,53 @@ export default function ConsolidatedViewPage() {
     }
   };
 
+  const handleCleanupDuplicates = async () => {
+    if (companies.length === 0) {
+      return;
+    }
+
+    setCleanupLoading(true);
+    try {
+      const results = await Promise.allSettled(
+        companies.map((company) =>
+          api.post(`/companies/${company.id}/transactions/cleanup-duplicates`)
+        )
+      );
+
+      let totalDeleted = 0;
+      const failures: string[] = [];
+
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          totalDeleted += Number(result.value.data?.deleted ?? 0);
+        } else {
+          failures.push(companies[index]?.name || 'Unknown company');
+        }
+      });
+
+      setNotification({
+        isOpen: true,
+        title: failures.length ? 'Cleanup completed with issues' : 'Cleanup completed',
+        message: failures.length
+          ? `Deleted ${totalDeleted} duplicate intercompany transfers. Failed for: ${failures.join(', ')}.`
+          : `Deleted ${totalDeleted} duplicate intercompany transfers across all companies.`,
+        type: failures.length ? 'error' : 'success',
+      });
+
+      await loadConsolidatedFinancials();
+      await queryClient.invalidateQueries({ queryKey: ['consolidated', 'financials'] });
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error || 'Failed to cleanup duplicate transfers',
+        type: 'error',
+      });
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-white/60 [.light_&]:text-slate-600">Loading consolidated financials...</div>;
   }
@@ -200,6 +248,14 @@ export default function ConsolidatedViewPage() {
             disabled={clearAllLoading}
           >
             {clearAllLoading ? 'Deleting...' : 'Clear All Data'}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleCleanupDuplicates}
+            className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border-yellow-500/30"
+            disabled={cleanupLoading}
+          >
+            {cleanupLoading ? 'Cleaning...' : 'Cleanup Duplicates'}
           </Button>
           <Button variant="secondary" onClick={loadConsolidatedFinancials}>
             Refresh
