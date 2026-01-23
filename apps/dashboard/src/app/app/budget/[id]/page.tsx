@@ -414,11 +414,10 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
         </CardContent>
       </Card>
 
-      <div className="relative left-1/2 right-1/2 w-screen max-w-none -translate-x-1/2 px-8">
-        <Card className="w-full">
-          <CardContent className="p-0">
-            <div className="max-h-[70vh] overflow-x-auto overflow-y-auto pb-4 w-full max-w-full">
-              <table className="min-w-max w-max pr-6">
+      <Card>
+        <CardContent className="p-0">
+          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto w-full max-w-full px-6 pb-4">
+            <table className="min-w-max w-max">
                 <thead className="bg-black/30">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[180px] sticky top-0 left-0 z-30 bg-[#0b1220]">
@@ -507,10 +506,9 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                   })}
                 </tbody>
               </table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex justify-between items-center text-sm text-slate-400">
         <div>
