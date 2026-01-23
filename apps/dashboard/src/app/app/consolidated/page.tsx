@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@donkey-ideas/ui';
 import { EmptyState } from '@donkey-ideas/ui';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -41,6 +42,7 @@ interface ConsolidatedFinancials {
 
 export default function ConsolidatedViewPage() {
   const { companies } = useAppStore();
+  const queryClient = useQueryClient();
   const [financials, setFinancials] = useState<ConsolidatedFinancials | null>(null);
   const [loading, setLoading] = useState(true);
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
@@ -130,6 +132,7 @@ export default function ConsolidatedViewPage() {
         type: 'success',
       });
       await loadConsolidatedFinancials();
+      await queryClient.invalidateQueries({ queryKey: ['consolidated', 'financials'] });
     } catch (error: any) {
       setNotification({
         isOpen: true,

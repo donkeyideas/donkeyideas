@@ -49,8 +49,8 @@ export default function AnalyticsPage() {
       
       // Fetch consolidated financial data for all companies
       const financialsUrl = monthFilter 
-        ? `/companies/consolidated/financials?month=${monthFilter}`
-        : '/companies/consolidated/financials';
+        ? `/companies/consolidated/financials/v2?month=${monthFilter}`
+        : '/companies/consolidated/financials/v2';
       
       const financialsResponse = await api.get(financialsUrl).catch(() => ({ data: null }));
       const financials = financialsResponse.data;
