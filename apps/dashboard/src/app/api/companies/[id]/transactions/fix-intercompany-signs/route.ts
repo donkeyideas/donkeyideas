@@ -73,8 +73,8 @@ export async function POST(
         || desc.includes('wire from')
         || (desc.includes('transfer') && desc.includes(' from '))
         || cat.includes('transfer_in');
-      if (hasOutflow && !hasInflow) return 'outflow';
-      if (hasInflow && !hasOutflow) return 'inflow';
+      if (hasOutflow) return 'outflow';
+      if (hasInflow) return 'inflow';
       return 'unknown';
     };
 
