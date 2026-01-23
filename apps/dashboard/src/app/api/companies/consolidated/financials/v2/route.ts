@@ -16,35 +16,6 @@ import { calculateFinancials, Transaction as FinancialTransaction } from '@donke
  * - Consolidated view shows SUM of stored values
  * - Everyone sees the SAME numbers
  */
-function calculateEndingCashFromTransactions(transactions: FinancialTransaction[]): number {
-  let operatingCashFlow = 0;
-  let investingCashFlow = 0;
-  let financingCashFlow = 0;
-
-  transactions.forEach((tx) => {
-    if (!tx.affectsCashFlow) return;
-
-    const amount = tx.amount;
-    const category = (tx.category || '').toLowerCase().trim();
-
-    if (tx.type === 'revenue') {
-      operatingCashFlow += amount;
-    } else if (tx.type === 'expense') {
-      operatingCashFlow -= Math.abs(amount);
-    } else if (tx.type === 'asset') {
-      if (category.includes('cash')) {
-        operatingCashFlow += amount;
-      } else {
-        investingCashFlow += amount;
-      }
-    } else if (tx.type === 'liability' || tx.type === 'equity') {
-      financingCashFlow += amount;
-    }
-  });
-
-  return operatingCashFlow + investingCashFlow + financingCashFlow;
-}
-
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -110,6 +81,9 @@ export async function GET(request: NextRequest) {
     let totalOpEx = 0;
     let totalProfit = 0;
     let totalCash = 0;
+    let totalAssets = 0;
+    let totalLiabilities = 0;
+    let totalEquity = 0;
     let totalValuation = 0;
     
     for (const company of companies) {
@@ -140,7 +114,16 @@ export async function GET(request: NextRequest) {
           }];
         }
 
-        const amount = Number(tx.amount);
+        const rawAmount = Number(tx.amount);
+        const description = String(tx.description || '').toLowerCase();
+        const category = String(tx.category || '').toLowerCase();
+        const hasOutflow = description.includes('outflow') || description.includes('transfer out') || category.includes('transfer_out');
+        const hasInflow = description.includes('inflow') || description.includes('transfer in') || category.includes('transfer_in');
+        const amount = hasOutflow && rawAmount > 0
+          ? -rawAmount
+          : hasInflow && rawAmount < 0
+            ? Math.abs(rawAmount)
+            : rawAmount;
         if (!amount) {
           return [];
         }
@@ -198,9 +181,10 @@ export async function GET(request: NextRequest) {
       const cogs = statements.pl.cogs;
       const opex = statements.pl.operatingExpenses;
       const profit = statements.pl.netProfit;
-      
-      // Calculate cash from transactions using the same logic as Financial Hub
-      const cash = calculateEndingCashFromTransactions(financialTxs);
+      const cash = statements.balanceSheet.cash;
+      const assets = statements.balanceSheet.totalAssets;
+      const liabilities = statements.balanceSheet.totalLiabilities;
+      const equity = statements.balanceSheet.totalEquity;
       
       const dataStatus: 'ok' | 'no_data' =
         transactionCount === 0 ? 'no_data' : 'ok';
@@ -217,6 +201,9 @@ export async function GET(request: NextRequest) {
         totalOpEx += opex;
         totalProfit += profit;
         totalCash += cash;
+        totalAssets += assets;
+        totalLiabilities += liabilities;
+        totalEquity += equity;
         totalValuation += valuation;
       }
       
@@ -243,11 +230,6 @@ export async function GET(request: NextRequest) {
     // Calculate balance sheet totals
     const totalExpenses = totalCOGS + totalOpEx;
     const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
-    
-    // Simplified balance sheet (Assets = Cash, Equity = Profit)
-    const totalAssets = totalCash;
-    const totalLiabilities = 0;
-    const totalEquity = totalProfit;
     const totalLiabilitiesEquity = totalLiabilities + totalEquity;
     
     return NextResponse.json({

@@ -94,7 +94,16 @@ export async function GET(
         }];
       }
 
-      const amount = Number(tx.amount);
+      const rawAmount = Number(tx.amount);
+      const description = String(tx.description || '').toLowerCase();
+      const category = String(tx.category || '').toLowerCase();
+      const hasOutflow = description.includes('outflow') || description.includes('transfer out') || category.includes('transfer_out');
+      const hasInflow = description.includes('inflow') || description.includes('transfer in') || category.includes('transfer_in');
+      const amount = hasOutflow && rawAmount > 0
+        ? -rawAmount
+        : hasInflow && rawAmount < 0
+          ? Math.abs(rawAmount)
+          : rawAmount;
       if (!amount) {
         return [];
       }
