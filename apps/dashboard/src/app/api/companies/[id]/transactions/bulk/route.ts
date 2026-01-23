@@ -275,6 +275,21 @@ export async function POST(
       const batchResults = await prisma.$transaction(async (tx: any) => {
         const results = [];
         
+        const getIntercompanyDirection = (txData: any) => {
+          const description = String(txData.description || '').toLowerCase();
+          const category = String(txData.category || '').toLowerCase();
+          const hasOutflow = category.includes('transfer_out') ||
+            description.includes('transfer out') ||
+            (description.includes('transfer') && description.includes(' to '));
+          const hasInflow = category.includes('transfer_in') ||
+            description.includes('transfer in') ||
+            (description.includes('transfer') && description.includes(' from '));
+
+          if (hasInflow && !hasOutflow) return 'in';
+          if (hasOutflow && !hasInflow) return 'out';
+          return 'out';
+        };
+
         for (const transactionData of batch) {
           // Handle intercompany transfers
           if (transactionData.type === 'intercompany_transfer') {
@@ -283,15 +298,50 @@ export async function POST(
             }
 
             // Verify target company exists and belongs to the same user
-            const targetCompany = await tx.company.findFirst({
+            const otherCompany = await tx.company.findFirst({
               where: {
                 id: transactionData.targetCompanyId,
                 userId: user.id,
               },
             });
 
-            if (!targetCompany) {
+            if (!otherCompany) {
               throw new Error(`Target company ${transactionData.targetCompanyId} not found or not accessible`);
+            }
+
+            const direction = getIntercompanyDirection(transactionData);
+            const sourceCompany = direction === 'in' ? otherCompany : company;
+            const targetCompany = direction === 'in' ? company : otherCompany;
+
+            const transferDate = new Date(transactionData.date);
+            const outgoingAmount = -Math.abs(transactionData.amount);
+            const incomingAmount = Math.abs(transactionData.amount);
+            const desc = transactionData.description || 'Intercompany transfer';
+
+            const existingOutgoing = await tx.transaction.findFirst({
+              where: {
+                companyId: sourceCompany.id,
+                date: transferDate,
+                type: 'intercompany_transfer',
+                category: transactionData.category,
+                amount: outgoingAmount,
+                description: { contains: desc },
+              },
+            });
+
+            const existingIncoming = await tx.transaction.findFirst({
+              where: {
+                companyId: targetCompany.id,
+                date: transferDate,
+                type: 'intercompany_transfer',
+                category: transactionData.category,
+                amount: incomingAmount,
+                description: { contains: desc },
+              },
+            });
+
+            if (existingOutgoing || existingIncoming) {
+              continue;
             }
 
             // Prepare transaction data without fields that don't exist in the database
@@ -301,10 +351,10 @@ export async function POST(
             const outgoingTransaction = await tx.transaction.create({
               data: {
                 ...dbTransactionData,
-                companyId: params.id,
-                date: new Date(transactionData.date),
-                description: `${transactionData.description || 'Intercompany transfer'} [INTERCOMPANY CASH OUTFLOW to ${targetCompany.name}]`,
-                amount: -Math.abs(transactionData.amount), // Negative for outgoing
+                companyId: sourceCompany.id,
+                date: transferDate,
+                description: `${desc} [INTERCOMPANY CASH OUTFLOW to ${targetCompany.name}]`,
+                amount: outgoingAmount, // Negative for outgoing
               },
             });
 
@@ -312,10 +362,10 @@ export async function POST(
             const incomingTransaction = await tx.transaction.create({
               data: {
                 ...dbTransactionData,
-                companyId: transactionData.targetCompanyId,
-                date: new Date(transactionData.date),
-                description: `${transactionData.description || 'Intercompany transfer'} [INTERCOMPANY CASH INFLOW from ${company.name}]`,
-                amount: Math.abs(transactionData.amount), // Positive for incoming
+                companyId: targetCompany.id,
+                date: transferDate,
+                description: `${desc} [INTERCOMPANY CASH INFLOW from ${sourceCompany.name}]`,
+                amount: incomingAmount, // Positive for incoming
               },
             });
 
