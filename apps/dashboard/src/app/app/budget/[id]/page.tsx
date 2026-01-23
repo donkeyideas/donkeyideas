@@ -414,101 +414,103 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto pb-4 w-full max-w-full">
-            <table className="min-w-max w-max pr-6">
-              <thead className="bg-black/30">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[180px] sticky top-0 left-0 z-30 bg-[#0b1220]">
-                    Date
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[140px] sticky top-0 left-[180px] z-30 bg-[#0b1220]">
-                    Balance
-                  </th>
-                  {selectedCategories.map(catId => {
-                    const category = categories.find(c => c.id === catId);
+      <div className="relative left-1/2 right-1/2 w-screen max-w-none -translate-x-1/2 px-8">
+        <Card className="w-full">
+          <CardContent className="p-0">
+            <div className="max-h-[70vh] overflow-x-auto overflow-y-auto pb-4 w-full max-w-full">
+              <table className="min-w-max w-max pr-6">
+                <thead className="bg-black/30">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[180px] sticky top-0 left-0 z-30 bg-[#0b1220]">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[140px] sticky top-0 left-[180px] z-30 bg-[#0b1220]">
+                      Balance
+                    </th>
+                    {selectedCategories.map(catId => {
+                      const category = categories.find(c => c.id === catId);
+                      return (
+                        <th
+                          key={catId}
+                          className="px-4 py-3 text-right text-sm font-medium text-white border-r border-white/10 min-w-[150px] sticky top-0 z-20 bg-[#0b1220]"
+                        >
+                          <div className="flex items-center justify-end gap-2">
+                            <span
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: category?.color }}
+                            />
+                            {category?.name}
+                          </div>
+                        </th>
+                      );
+                    })}
+                    <th className="min-w-[200px]" aria-hidden="true" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {dates.map((date, idx) => {
+                    const dateObj = new Date(date);
+                    const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+                    
                     return (
-                      <th
-                        key={catId}
-                        className="px-4 py-3 text-right text-sm font-medium text-white border-r border-white/10 min-w-[150px] sticky top-0 z-20 bg-[#0b1220]"
+                      <tr
+                        key={date}
+                        className={`border-t border-white/10 hover:bg-white/5 ${
+                          isWeekend ? 'bg-black/20' : ''
+                        }`}
                       >
-                        <div className="flex items-center justify-end gap-2">
-                          <span
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: category?.color }}
-                          />
-                          {category?.name}
-                        </div>
-                      </th>
+                        <td className="px-4 py-2 text-sm text-slate-300 border-r border-white/10 whitespace-nowrap sticky left-0 z-20 bg-[#0b1220]">
+                          <div className="font-medium">
+                            {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 text-right text-sm font-medium text-white border-r border-white/10 whitespace-nowrap sticky left-[180px] z-20 bg-[#0b1220]">
+                          ${getBalance(date)}
+                        </td>
+                        {selectedCategories.map(catId => (
+                          <td key={`${date}_${catId}`} className="px-2 py-1 border-r border-white/10">
+                            <input
+                              type="text"
+                              value={getDisplayValue(date, catId)}
+                              onFocus={() => {
+                                const key = `${date}_${catId}`;
+                                setEditingKey(key);
+                                setDraftValues(prev => ({
+                                  ...prev,
+                                  [key]: prev[key] ?? getLineValue(date, catId),
+                                }));
+                              }}
+                              onChange={(e) => {
+                                updateAmount(date, catId, e.target.value);
+                                scheduleSave(date, catId, e.target.value);
+                              }}
+                              onBlur={(e) => {
+                                const key = `${date}_${catId}`;
+                                if (saveTimers.current[key]) {
+                                  clearTimeout(saveTimers.current[key]);
+                                }
+                                saveAmount(date, catId, e.target.value);
+                                setEditingKey(null);
+                                setDraftValues(prev => {
+                                  const { [key]: _, ...rest } = prev;
+                                  return rest;
+                                });
+                              }}
+                              className="w-full px-2 py-1 bg-transparent text-right text-sm text-white focus:bg-black/30 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+                              placeholder="$0.00"
+                            />
+                          </td>
+                        ))}
+                        <td className="min-w-[200px]" aria-hidden="true" />
+                      </tr>
                     );
                   })}
-                  <th className="min-w-[200px]" aria-hidden="true" />
-                </tr>
-              </thead>
-              <tbody>
-                {dates.map((date, idx) => {
-                  const dateObj = new Date(date);
-                  const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-                  
-                  return (
-                    <tr
-                      key={date}
-                      className={`border-t border-white/10 hover:bg-white/5 ${
-                        isWeekend ? 'bg-black/20' : ''
-                      }`}
-                    >
-                      <td className="px-4 py-2 text-sm text-slate-300 border-r border-white/10 whitespace-nowrap sticky left-0 z-20 bg-[#0b1220]">
-                        <div className="font-medium">
-                          {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 text-right text-sm font-medium text-white border-r border-white/10 whitespace-nowrap sticky left-[180px] z-20 bg-[#0b1220]">
-                        ${getBalance(date)}
-                      </td>
-                      {selectedCategories.map(catId => (
-                        <td key={`${date}_${catId}`} className="px-2 py-1 border-r border-white/10">
-                          <input
-                            type="text"
-                            value={getDisplayValue(date, catId)}
-                            onFocus={() => {
-                              const key = `${date}_${catId}`;
-                              setEditingKey(key);
-                              setDraftValues(prev => ({
-                                ...prev,
-                                [key]: prev[key] ?? getLineValue(date, catId),
-                              }));
-                            }}
-                            onChange={(e) => {
-                              updateAmount(date, catId, e.target.value);
-                              scheduleSave(date, catId, e.target.value);
-                            }}
-                            onBlur={(e) => {
-                              const key = `${date}_${catId}`;
-                              if (saveTimers.current[key]) {
-                                clearTimeout(saveTimers.current[key]);
-                              }
-                              saveAmount(date, catId, e.target.value);
-                              setEditingKey(null);
-                              setDraftValues(prev => {
-                                const { [key]: _, ...rest } = prev;
-                                return rest;
-                              });
-                            }}
-                            className="w-full px-2 py-1 bg-transparent text-right text-sm text-white focus:bg-black/30 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
-                            placeholder="$0.00"
-                          />
-                        </td>
-                      ))}
-                      <td className="min-w-[200px]" aria-hidden="true" />
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="flex justify-between items-center text-sm text-slate-400">
         <div>
