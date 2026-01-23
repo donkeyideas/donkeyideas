@@ -12,10 +12,16 @@ const normalizeName = (name: string) =>
     .trim();
 
 const extractTargetName = (description: string) => {
-  const bracketMatch = description.match(/\bto\s+([^\]]+)/i);
-  if (bracketMatch?.[1]) {
-    return bracketMatch[1].trim();
+  const bracketMatches = [...description.matchAll(/\[[^\]]*?\bto\s+([^\]]+)\]/gi)];
+  if (bracketMatches.length > 0) {
+    return bracketMatches[bracketMatches.length - 1][1].trim();
   }
+
+  const companyBeforeBracket = description.match(/;\s*([^;\[]+)\s*\[/i);
+  if (companyBeforeBracket?.[1]) {
+    return companyBeforeBracket[1].trim();
+  }
+
   const genericMatch = description.match(/\bto\s+(.+?)(?:;|\[|$)/i);
   return genericMatch?.[1]?.trim() || '';
 };
