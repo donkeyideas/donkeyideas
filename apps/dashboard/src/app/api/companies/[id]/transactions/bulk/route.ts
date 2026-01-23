@@ -304,12 +304,28 @@ export async function POST(
           if (transactionData.type === 'intercompany_transfer') {
             if (!transactionData.targetCompanyId) {
               const { isIntercompany, targetCompanyId, ...dbTransactionData } = transactionData;
+              const descText = String(transactionData.description || '').toLowerCase();
+              const categoryText = String(transactionData.category || '').toLowerCase();
+              const rawAmount = Number(transactionData.amount);
+              const hasOutflow = categoryText.includes('transfer_out') ||
+                descText.includes('outflow') ||
+                descText.includes('transfer out') ||
+                descText.includes('to chk') ||
+                descText.includes('from chk');
+              const hasInflow = categoryText.includes('transfer_in') ||
+                descText.includes('inflow') ||
+                descText.includes('transfer in');
+              const normalizedAmount = hasOutflow && rawAmount > 0
+                ? -rawAmount
+                : hasInflow && rawAmount < 0
+                  ? Math.abs(rawAmount)
+                  : rawAmount;
               const singleTransaction = await tx.transaction.create({
                 data: {
                   ...dbTransactionData,
                   companyId: params.id,
                   date: new Date(transactionData.date),
-                  amount: Number(transactionData.amount),
+                  amount: normalizedAmount,
                 },
               });
               results.push(singleTransaction);
