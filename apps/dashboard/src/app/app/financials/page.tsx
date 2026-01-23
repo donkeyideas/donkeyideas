@@ -500,7 +500,8 @@ export default function FinancialsPage() {
         }
         
         const monthData = monthlyData.get(monthKey);
-        const amount = Math.abs(Number(tx.amount));
+        const signedAmount = Number(tx.amount);
+        const amount = Math.abs(signedAmount);
         
         // P&L data
         if (tx.type === 'revenue' && tx.affectsPL) {
@@ -523,12 +524,12 @@ export default function FinancialsPage() {
           } else if (tx.type === 'asset') {
             const category = (tx.category || '').toLowerCase();
             if (category.includes('cash')) {
-              monthData.operatingCashFlow += amount;
+              monthData.operatingCashFlow += signedAmount;
             } else {
-              monthData.investingCashFlow -= amount;
+              monthData.investingCashFlow += signedAmount;
             }
           } else if (tx.type === 'equity' || tx.type === 'liability') {
-            monthData.financingCashFlow += amount;
+            monthData.financingCashFlow += signedAmount;
           }
         }
         
@@ -537,20 +538,20 @@ export default function FinancialsPage() {
           if (tx.type === 'asset') {
             const category = (tx.category || '').toLowerCase();
             if (category.includes('receivable')) {
-              monthData.accountsReceivable += amount;
+              monthData.accountsReceivable += signedAmount;
             } else if (category.includes('inventory')) {
-              monthData.inventory += amount;
+              monthData.inventory += signedAmount;
             } else if (category.includes('equipment') || category.includes('fixed')) {
-              monthData.fixedAssets += amount;
+              monthData.fixedAssets += signedAmount;
             }
           } else if (tx.type === 'liability') {
             const category = (tx.category || '').toLowerCase();
             if (category.includes('payable')) {
-              monthData.accountsPayable += amount;
+              monthData.accountsPayable += signedAmount;
             } else if (category.includes('short') && category.includes('debt')) {
-              monthData.shortTermDebt += amount;
+              monthData.shortTermDebt += signedAmount;
             } else if (category.includes('long') && category.includes('debt')) {
-              monthData.longTermDebt += amount;
+              monthData.longTermDebt += signedAmount;
             }
           }
         }
