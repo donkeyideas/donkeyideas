@@ -142,16 +142,18 @@ export async function GET(request: NextRequest) {
         const category = String(tx.category || '').toLowerCase();
         const hasOutflow = description.includes('outflow') ||
           description.includes('transfer out') ||
+          description.includes('from chk') ||
+          description.includes('to chk') ||
           (description.includes('transfer') && description.includes(' to ')) ||
           category.includes('transfer_out');
         const hasInflow = description.includes('inflow') ||
           description.includes('transfer in') ||
           (description.includes('transfer') && description.includes(' from ')) ||
           category.includes('transfer_in');
-        const amount = hasOutflow && rawAmount > 0
-          ? -rawAmount
-          : hasInflow && rawAmount < 0
-            ? Math.abs(rawAmount)
+        const amount = hasOutflow
+          ? (rawAmount > 0 ? -rawAmount : rawAmount)
+          : hasInflow
+            ? (rawAmount < 0 ? Math.abs(rawAmount) : rawAmount)
             : rawAmount;
         if (!amount) {
           return [];
