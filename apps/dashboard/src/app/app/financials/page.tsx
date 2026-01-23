@@ -476,7 +476,29 @@ export default function FinancialsPage() {
         ];
       };
 
-      const normalizedTransactions = loadedTransactions.flatMap(normalizeIntercompany);
+      const dedupeIntercompany = (transactions: any[]) => {
+        const seen = new Set<string>();
+        return transactions.filter((tx) => {
+          const rawType = String(tx.type || '').toLowerCase().trim();
+          if (rawType !== 'intercompany_transfer' && rawType !== 'intercompany') {
+            return true;
+          }
+
+          const dateKey = new Date(tx.date).toISOString().split('T')[0];
+          const category = String(tx.category || '').toLowerCase().trim();
+          const description = String(tx.description || '').trim();
+          const amount = Number(tx.amount);
+          const key = `${dateKey}|${rawType}|${category}|${amount}|${description}`;
+
+          if (seen.has(key)) {
+            return false;
+          }
+          seen.add(key);
+          return true;
+        });
+      };
+
+      const normalizedTransactions = dedupeIntercompany(loadedTransactions).flatMap(normalizeIntercompany);
 
       // Group transactions by month to create monthly statements
       // This is what the charts and tables need - monthly breakdowns, not just one aggregate

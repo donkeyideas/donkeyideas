@@ -76,6 +76,30 @@ export async function GET(
       },
       orderBy: { date: 'asc' },
     });
+
+    const dedupeIntercompany = (transactions: typeof dbTransactions) => {
+      const seen = new Set<string>();
+      return transactions.filter((tx) => {
+        const rawType = String(tx.type || '').toLowerCase().trim();
+        if (rawType !== 'intercompany_transfer' && rawType !== 'intercompany') {
+          return true;
+        }
+
+        const dateKey = new Date(tx.date).toISOString().split('T')[0];
+        const category = String(tx.category || '').toLowerCase().trim();
+        const description = String(tx.description || '').trim();
+        const amount = Number(tx.amount);
+        const key = `${dateKey}|${rawType}|${category}|${amount}|${description}`;
+
+        if (seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
+    };
+
+    const dedupedTransactions = dedupeIntercompany(dbTransactions);
     
     const normalizeIntercompany = (tx: typeof dbTransactions[number]): Transaction[] => {
       const rawType = String(tx.type || '').toLowerCase().trim();
@@ -162,7 +186,7 @@ export async function GET(
     };
 
     // Transform to engine format (normalize intercompany transfers)
-    const transactions: Transaction[] = dbTransactions.flatMap(normalizeIntercompany);
+    const transactions: Transaction[] = dedupedTransactions.flatMap(normalizeIntercompany);
     
     // Calculate financials using clean engine
     const statements = calculateFinancials(transactions, 0);
@@ -171,7 +195,7 @@ export async function GET(
     const response = {
       companyId: company.id,
       companyName: company.name,
-      transactionCount: dbTransactions.length,
+      transactionCount: dedupedTransactions.length,
       ...statements,
     };
     
