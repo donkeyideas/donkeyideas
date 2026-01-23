@@ -268,7 +268,8 @@ export async function POST(
     // Process transactions in smaller batches to avoid timeout
     const createdTransactions = [];
     let createdSingle = 0;
-    let createdPaired = 0;
+    let createdOutgoing = 0;
+    let createdIncoming = 0;
     let skippedExisting = 0;
     const batchSize = 10; // Smaller batch size for database operations
     
@@ -344,7 +345,7 @@ export async function POST(
                 type: 'intercompany_transfer',
                 category: transactionData.category,
                 amount: outgoingAmount,
-                description: { contains: desc },
+                description: desc ? { contains: desc } : undefined,
               },
             });
 
@@ -355,11 +356,11 @@ export async function POST(
                 type: 'intercompany_transfer',
                 category: transactionData.category,
                 amount: incomingAmount,
-                description: { contains: desc },
+                description: desc ? { contains: desc } : undefined,
               },
             });
 
-            if (existingOutgoing || existingIncoming) {
+            if (existingOutgoing && existingIncoming) {
               skippedExisting += 1;
               continue;
             }
@@ -367,30 +368,33 @@ export async function POST(
             // Prepare transaction data without fields that don't exist in the database
             const { isIntercompany, targetCompanyId, ...dbTransactionData } = transactionData;
 
-            // Create outgoing transaction (source company)
-            const outgoingTransaction = await tx.transaction.create({
-              data: {
-                ...dbTransactionData,
-                companyId: sourceCompany.id,
-                date: transferDate,
-                description: `${desc} [INTERCOMPANY CASH OUTFLOW to ${targetCompany.name}]`,
-                amount: outgoingAmount, // Negative for outgoing
-              },
-            });
+            if (!existingOutgoing) {
+              const outgoingTransaction = await tx.transaction.create({
+                data: {
+                  ...dbTransactionData,
+                  companyId: sourceCompany.id,
+                  date: transferDate,
+                  description: `${desc} [INTERCOMPANY CASH OUTFLOW to ${targetCompany.name}]`,
+                  amount: outgoingAmount, // Negative for outgoing
+                },
+              });
+              results.push(outgoingTransaction);
+              createdOutgoing += 1;
+            }
 
-            // Create incoming transaction (target company)
-            const incomingTransaction = await tx.transaction.create({
-              data: {
-                ...dbTransactionData,
-                companyId: targetCompany.id,
-                date: transferDate,
-                description: `${desc} [INTERCOMPANY CASH INFLOW from ${sourceCompany.name}]`,
-                amount: incomingAmount, // Positive for incoming
-              },
-            });
-
-            results.push(outgoingTransaction, incomingTransaction);
-            createdPaired += 1;
+            if (!existingIncoming) {
+              const incomingTransaction = await tx.transaction.create({
+                data: {
+                  ...dbTransactionData,
+                  companyId: targetCompany.id,
+                  date: transferDate,
+                  description: `${desc} [INTERCOMPANY CASH INFLOW from ${sourceCompany.name}]`,
+                  amount: incomingAmount, // Positive for incoming
+                },
+              });
+              results.push(incomingTransaction);
+              createdIncoming += 1;
+            }
           } else {
             // Create regular transaction - remove fields that don't exist in database
             const { isIntercompany, targetCompanyId, ...dbTransactionData } = transactionData;
@@ -436,7 +440,8 @@ export async function POST(
         inputCount,
         createdCount: createdTransactions.length,
         createdSingle,
-        createdPaired,
+        createdOutgoing,
+        createdIncoming,
         skippedExisting,
       },
     });
