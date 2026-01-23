@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@donkey-ideas/ui';
 import { EmptyState } from '@donkey-ideas/ui';
@@ -49,6 +49,7 @@ export default function ConsolidatedViewPage() {
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [clearAllLoading, setClearAllLoading] = useState(false);
   const [cleanupLoading, setCleanupLoading] = useState(false);
+  const hasAutoCleaned = useRef(false);
   const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
     isOpen: false,
     title: '',
@@ -61,6 +62,13 @@ export default function ConsolidatedViewPage() {
       loadConsolidatedFinancials();
     }
   }, [monthFilter, companies]);
+
+  useEffect(() => {
+    if (!hasAutoCleaned.current && companies.length > 0) {
+      hasAutoCleaned.current = true;
+      handleCleanupDuplicates();
+    }
+  }, [companies]);
 
   const loadConsolidatedFinancials = async () => {
     try {
