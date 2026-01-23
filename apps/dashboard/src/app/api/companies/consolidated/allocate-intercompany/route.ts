@@ -33,7 +33,7 @@ const extractTargetName = (description: string) => {
  * Creates mirrored inflow transactions for the recipient company based on
  * existing intercompany outflows.
  */
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
@@ -51,6 +51,19 @@ export async function POST(_request: NextRequest) {
       where: { userId: user.id },
       select: { id: true, name: true },
     });
+
+    const { searchParams } = new URL(request.url);
+    const shouldReset = searchParams.get('reset') === 'true';
+
+    if (shouldReset) {
+      await prisma.transaction.deleteMany({
+        where: {
+          companyId: { in: companies.map((c) => c.id) },
+          type: { in: ['intercompany_transfer', 'intercompany'] },
+          amount: { gt: 0 },
+        },
+      });
+    }
 
     const companyByNormalizedName = new Map(
       companies.map((c) => [normalizeName(c.name), c])
@@ -122,6 +135,7 @@ export async function POST(_request: NextRequest) {
         mirroredCreated: created,
         mirroredSkipped: skipped,
         missingTargets: missingTargets.length,
+        resetApplied: shouldReset,
       },
       missingTargets: missingTargets.slice(0, 50),
     });
