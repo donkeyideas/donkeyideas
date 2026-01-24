@@ -24,10 +24,10 @@ export default function ScrollHeader() {
       <div className="max-w-[1400px] mx-auto flex items-center justify-between">
         {/* Left Card - Logo + Navigation */}
         <div
-          className={`flex items-center gap-8 px-6 h-14 transition-all duration-500 ease-out ${
+          className={`flex items-center gap-8 px-6 h-14 rounded-full border transition-all duration-500 ease-out ${
             isScrolled
-              ? 'bg-white/10 backdrop-blur-xl shadow-xl rounded-full border border-white/10'
-              : 'bg-transparent'
+              ? 'bg-white/10 backdrop-blur-xl shadow-xl border-white/10'
+              : 'bg-transparent border-transparent'
           }`}
         >
           <Link
@@ -66,10 +66,10 @@ export default function ScrollHeader() {
 
         {/* Right Card - Sign in + Talk to us */}
         <div
-          className={`flex items-center gap-4 px-6 h-14 transition-all duration-500 ease-out ${
+          className={`flex items-center gap-4 px-6 h-14 rounded-full border transition-all duration-500 ease-out ${
             isScrolled
-              ? 'bg-white/10 backdrop-blur-xl shadow-xl rounded-full border border-white/10'
-              : 'bg-transparent'
+              ? 'bg-white/10 backdrop-blur-xl shadow-xl border-white/10'
+              : 'bg-transparent border-transparent'
           }`}
         >
           <Link
