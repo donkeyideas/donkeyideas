@@ -93,8 +93,8 @@ export default async function AboutPage() {
     },
     approach: {
       badge: 'Our Approach',
-      title: 'AI-powered venture methodology',
-      description: 'We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.',
+      title: 'Disciplined build, fast validation',
+      description: 'We run a repeatable loop: identify a real market pain, design the right system, ship a lean MVP, and validate with paying customers.\n\nEvery step is measured. We prototype quickly, test assumptions in days, and double down only when the data proves momentum. That keeps capital efficient and outcomes predictable.',
     },
     team: {
       title: 'Builders, engineers & strategists',
@@ -104,9 +104,20 @@ export default async function AboutPage() {
   };
 
   // Type guard to ensure content is an object with the expected structure
-  const pageContent = (typeof content === 'object' && content !== null && !Array.isArray(content) 
-    ? content 
-    : defaultContent) as typeof defaultContent;
+  const rawContent = (typeof content === 'object' && content !== null && !Array.isArray(content)
+    ? content
+    : {}) as Partial<typeof defaultContent>;
+
+  const pageContent: typeof defaultContent = {
+    ...defaultContent,
+    ...rawContent,
+    hero: { ...defaultContent.hero, ...rawContent.hero },
+    mission: { ...defaultContent.mission, ...rawContent.mission },
+    ventureProcess: { ...defaultContent.ventureProcess, ...rawContent.ventureProcess },
+    approach: { ...defaultContent.approach, ...rawContent.approach },
+    team: { ...defaultContent.team, ...rawContent.team },
+    values: rawContent.values && rawContent.values.length > 0 ? rawContent.values : defaultContent.values,
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
