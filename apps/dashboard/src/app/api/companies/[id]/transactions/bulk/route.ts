@@ -351,9 +351,8 @@ export async function POST(
               throw new Error(`Target company ${transactionData.targetCompanyId} not found or not accessible`);
             }
 
-            const direction = getIntercompanyDirection(transactionData);
-            const sourceCompany = direction === 'in' ? otherCompany : company;
-            const targetCompany = direction === 'in' ? company : otherCompany;
+            const sourceCompany = company;
+            const targetCompany = otherCompany;
 
             const transferDate = new Date(transactionData.date);
             const outgoingAmount = -Math.abs(Number(transactionData.amount));
