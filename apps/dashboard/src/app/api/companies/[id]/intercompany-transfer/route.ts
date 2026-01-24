@@ -85,76 +85,122 @@ export async function POST(
     const period = new Date(transferDate.getFullYear(), transferDate.getMonth(), 1);
     const description = data.description || `Intercompany transfer with ${targetCompany.name}`;
     
-    // Create BOTH transactions in a database transaction to ensure atomicity
+    // Create ALL transactions in a database transaction to ensure atomicity
+    // Generate a unique ID to link all related intercompany transactions
+    const intercompanyTransferId = `IC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Create Receivable on Source Company (money owed TO source BY target)
-      const receivable = await tx.transaction.create({
-        data: {
-          companyId: sourceCompany.id,
-          date: transferDate,
-          type: 'asset',
-          category: 'Intercompany Receivable',
-          amount: new Decimal(data.amount),
-          description: `${description} [RECEIVABLE from ${targetCompany.name}]`,
-          affectsPL: false, // Intercompany transfers don't affect P&L
-          affectsCashFlow: data.affectsCashFlow,
-          affectsBalance: true,
-        },
-      });
-      
-      // 2. Create Payable on Target Company (money owed BY target TO source)
-      const payable = await tx.transaction.create({
-        data: {
-          companyId: targetCompany.id,
-          date: transferDate,
-          type: 'liability',
-          category: 'Intercompany Payable',
-          amount: new Decimal(data.amount),
-          description: `${description} [PAYABLE to ${sourceCompany.name}]`,
-          affectsPL: false, // Intercompany transfers don't affect P&L
-          affectsCashFlow: data.affectsCashFlow,
-          affectsBalance: true,
-        },
-      });
-      
-      // 3. Update Balance Sheets for both companies
-      // Source Company: Add to Accounts Receivable
-      await tx.balanceSheet.upsert({
-        where: {
-          companyId_period: {
+      const transactions = [];
+
+      if (data.affectsCashFlow) {
+        // When cash actually moves, create 4 transactions for proper double-entry bookkeeping:
+
+        // 1. Source Company: Cash OUT (decrease cash asset)
+        const sourceCashOut = await tx.transaction.create({
+          data: {
             companyId: sourceCompany.id,
-            period,
+            date: transferDate,
+            type: 'asset',
+            category: 'cash',
+            amount: new Decimal(data.amount).negated(), // Negative to decrease cash
+            description: `${description} - Cash Out to ${targetCompany.name}`,
+            affectsPL: false,
+            affectsCashFlow: true, // This affects cash
+            affectsBalance: true,
+            intercompanyTransferId,
           },
-        },
-        update: {
-          accountsReceivable: { increment: new Decimal(data.amount) },
-        },
-        create: {
-          companyId: sourceCompany.id,
-          period,
-          accountsReceivable: new Decimal(data.amount),
-        },
-      });
-      
-      // Target Company: Add to Accounts Payable
-      await tx.balanceSheet.upsert({
-        where: {
-          companyId_period: {
+        });
+        transactions.push(sourceCashOut);
+
+        // 2. Source Company: Intercompany Receivable (track the obligation)
+        const receivable = await tx.transaction.create({
+          data: {
+            companyId: sourceCompany.id,
+            date: transferDate,
+            type: 'asset',
+            category: 'Intercompany Receivable',
+            amount: new Decimal(data.amount),
+            description: `${description} - Receivable from ${targetCompany.name}`,
+            affectsPL: false,
+            affectsCashFlow: false, // Already tracked in cash transaction
+            affectsBalance: true,
+            intercompanyTransferId,
+          },
+        });
+        transactions.push(receivable);
+
+        // 3. Target Company: Cash IN (increase cash asset)
+        const targetCashIn = await tx.transaction.create({
+          data: {
             companyId: targetCompany.id,
-            period,
+            date: transferDate,
+            type: 'asset',
+            category: 'cash',
+            amount: new Decimal(data.amount), // Positive to increase cash
+            description: `${description} - Cash In from ${sourceCompany.name}`,
+            affectsPL: false,
+            affectsCashFlow: true, // This affects cash
+            affectsBalance: true,
+            intercompanyTransferId,
           },
-        },
-        update: {
-          accountsPayable: { increment: new Decimal(data.amount) },
-        },
-        create: {
-          companyId: targetCompany.id,
-          period,
-          accountsPayable: new Decimal(data.amount),
-        },
-      });
-      
-      return { receivable, payable };
+        });
+        transactions.push(targetCashIn);
+
+        // 4. Target Company: Intercompany Payable (track the obligation)
+        const payable = await tx.transaction.create({
+          data: {
+            companyId: targetCompany.id,
+            date: transferDate,
+            type: 'liability',
+            category: 'Intercompany Payable',
+            amount: new Decimal(data.amount),
+            description: `${description} - Payable to ${sourceCompany.name}`,
+            affectsPL: false,
+            affectsCashFlow: false, // Already tracked in cash transaction
+            affectsBalance: true,
+            intercompanyTransferId,
+          },
+        });
+        transactions.push(payable);
+      } else {
+        // When no cash moves (accrual only), create 2 transactions:
+
+        // 1. Create Receivable on Source Company
+        const receivable = await tx.transaction.create({
+          data: {
+            companyId: sourceCompany.id,
+            date: transferDate,
+            type: 'asset',
+            category: 'Intercompany Receivable',
+            amount: new Decimal(data.amount),
+            description: `${description} [RECEIVABLE from ${targetCompany.name}]`,
+            affectsPL: false,
+            affectsCashFlow: false,
+            affectsBalance: true,
+            intercompanyTransferId,
+          },
+        });
+        transactions.push(receivable);
+
+        // 2. Create Payable on Target Company
+        const payable = await tx.transaction.create({
+          data: {
+            companyId: targetCompany.id,
+            date: transferDate,
+            type: 'liability',
+            category: 'Intercompany Payable',
+            amount: new Decimal(data.amount),
+            description: `${description} [PAYABLE to ${sourceCompany.name}]`,
+            affectsPL: false,
+            affectsCashFlow: false,
+            affectsBalance: true,
+            intercompanyTransferId,
+          },
+        });
+        transactions.push(payable);
+      }
+
+      return { transactions, intercompanyTransferId };
     });
     
     // FIX: Trigger full recalculation for both companies after intercompany transfer
@@ -303,9 +349,10 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: `Created intercompany transfer: ${sourceCompany.name} → ${targetCompany.name}`,
-      sourceTransaction: result.receivable,
-      targetTransaction: result.payable,
+      transactions: result.transactions,
+      intercompanyTransferId: result.intercompanyTransferId,
       amount: data.amount,
+      transactionCount: result.transactions.length,
     });
   } catch (error: any) {
     console.error('Failed to create intercompany transfer:', error);

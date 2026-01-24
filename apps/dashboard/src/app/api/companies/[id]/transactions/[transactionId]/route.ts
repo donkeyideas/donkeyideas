@@ -125,14 +125,14 @@ export async function DELETE(
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
-    
+
     if (!token) {
       return NextResponse.json(
         { error: { message: 'Not authenticated' } },
         { status: 401 }
       );
     }
-    
+
     const user = await getUserByToken(token);
     if (!user) {
       return NextResponse.json(
@@ -140,7 +140,7 @@ export async function DELETE(
         { status: 401 }
       );
     }
-    
+
     // Get transaction to reverse its effects
     const transaction = await prisma.transaction.findFirst({
       where: {
@@ -148,45 +148,84 @@ export async function DELETE(
         companyId: params.id,
       },
     });
-    
+
     if (!transaction) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         success: true,
-        message: 'Transaction not found (may have already been deleted)' 
+        message: 'Transaction not found (may have already been deleted)'
       });
     }
-    
-    // Reverse transaction effects
-    if (transaction.affectsPL || transaction.affectsBalance || transaction.affectsCashFlow) {
-      const transactionDate = new Date(transaction.date);
-      const period = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), 1);
-      await reverseTransactionEffects(
-        params.id, 
-        period, 
-        transaction.type, 
-        transaction.category, 
-        Number(transaction.amount),
-        transaction.affectsCashFlow
-      );
-    }
-    
-    // Delete transaction
-    try {
-      await prisma.transaction.delete({
-        where: { id: params.transactionId },
+
+    // Check if this is part of an intercompany transfer
+    const isIntercompanyTransfer = !!transaction.intercompanyTransferId;
+    let linkedTransactions: any[] = [];
+
+    if (isIntercompanyTransfer) {
+      // Get all linked transactions
+      linkedTransactions = await prisma.transaction.findMany({
+        where: {
+          intercompanyTransferId: transaction.intercompanyTransferId,
+        },
       });
-    } catch (deleteError: any) {
-      // If transaction doesn't exist, that's okay - it might have been deleted already
-      if (deleteError.code === 'P2025' || deleteError.message?.includes('Record to delete does not exist')) {
-        return NextResponse.json({ 
-          success: true,
-          message: 'Transaction already deleted' 
-        });
+
+      // Verify all linked companies belong to the user
+      const linkedCompanyIds = [...new Set(linkedTransactions.map(t => t.companyId))];
+      const userCompanies = await prisma.company.findMany({
+        where: {
+          id: { in: linkedCompanyIds },
+          userId: user.id,
+        },
+      });
+
+      if (userCompanies.length !== linkedCompanyIds.length) {
+        return NextResponse.json(
+          { error: { message: 'Cannot delete intercompany transfer - some linked companies are not accessible' } },
+          { status: 403 }
+        );
       }
-      throw deleteError;
     }
-    
-    return NextResponse.json({ success: true });
+
+    // Delete all linked transactions (or just the single transaction if not intercompany)
+    const transactionsToDelete = isIntercompanyTransfer ? linkedTransactions : [transaction];
+
+    for (const txToDelete of transactionsToDelete) {
+      // Reverse transaction effects
+      if (txToDelete.affectsPL || txToDelete.affectsBalance || txToDelete.affectsCashFlow) {
+        const transactionDate = new Date(txToDelete.date);
+        const period = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), 1);
+        await reverseTransactionEffects(
+          txToDelete.companyId,
+          period,
+          txToDelete.type,
+          txToDelete.category,
+          Number(txToDelete.amount),
+          txToDelete.affectsCashFlow
+        );
+      }
+
+      // Delete transaction
+      try {
+        await prisma.transaction.delete({
+          where: { id: txToDelete.id },
+        });
+      } catch (deleteError: any) {
+        // If transaction doesn't exist, that's okay - it might have been deleted already
+        if (deleteError.code === 'P2025' || deleteError.message?.includes('Record to delete does not exist')) {
+          continue;
+        }
+        throw deleteError;
+      }
+    }
+
+    const message = isIntercompanyTransfer
+      ? `Deleted intercompany transfer (${transactionsToDelete.length} linked transactions)`
+      : 'Transaction deleted successfully';
+
+    return NextResponse.json({
+      success: true,
+      message,
+      deletedCount: transactionsToDelete.length,
+    });
   } catch (error: any) {
     return NextResponse.json(
       { error: { message: error.message || 'Failed to delete transaction' } },

@@ -183,24 +183,26 @@ model CashFlow {
 }
 
 model Transaction {
-  id              String   @id @default(cuid())
-  companyId       String
-  date            DateTime
-  type            String // revenue, expense, asset, liability, equity
-  category        String // Detailed category (e.g., "product_revenue", "salaries", "equipment")
-  amount          Decimal
-  description     String?
-  affectsPL       Boolean  @default(false) // Does this affect P&L?
-  affectsBalance  Boolean  @default(true) // Does this affect Balance Sheet?
-  affectsCashFlow Boolean  @default(false) // Does this affect Cash Flow?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  companyId             String
+  date                  DateTime
+  type                  String // revenue, expense, asset, liability, equity
+  category              String // Detailed category (e.g., "product_revenue", "salaries", "equipment")
+  amount                Decimal
+  description           String?
+  affectsPL             Boolean  @default(false) // Does this affect P&L?
+  affectsBalance        Boolean  @default(true) // Does this affect Balance Sheet?
+  affectsCashFlow       Boolean  @default(false) // Does this affect Cash Flow?
+  intercompanyTransferId String? // Links related intercompany transactions together
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([companyId, date])
   @@index([companyId, type, affectsCashFlow])
   @@index([companyId, date, type])
+  @@index([intercompanyTransferId])
   @@map("transactions")
 }
 
