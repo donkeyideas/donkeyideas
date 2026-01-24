@@ -142,6 +142,7 @@ export async function POST(_request: NextRequest) {
 
     for (const tx of outflows) {
       const description = String(tx.description || '');
+      const txAmount = Number(tx.amount);
       const targetRaw = extractTargetName(description);
       const targetCompany = companyByName.get(normalizeName(targetRaw));
 
@@ -158,7 +159,7 @@ export async function POST(_request: NextRequest) {
         where: {
           companyId: targetCompany.id,
           date: tx.date,
-          amount: Math.abs(tx.amount),
+          amount: Math.abs(txAmount),
           description: { contains: mirrorTag },
         },
         select: { id: true },
@@ -174,7 +175,7 @@ export async function POST(_request: NextRequest) {
           date: tx.date,
           type: 'intercompany_transfer',
           category: 'cash',
-          amount: Math.abs(tx.amount),
+          amount: Math.abs(txAmount),
           description: `Intercompany transfer from ${companies.find((c) => c.id === tx.companyId)?.name || 'Unknown'} ${mirrorTag}`,
           affectsPL: false,
           affectsCashFlow: true,
