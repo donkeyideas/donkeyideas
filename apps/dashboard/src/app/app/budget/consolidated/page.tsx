@@ -33,6 +33,8 @@ export default function ConsolidatedBudgetPage() {
   const [periods, setPeriods] = useState<BudgetPeriod[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+  const [loadingErrors, setLoadingErrors] = useState<string[]>([]);
   const [stats, setStats] = useState<ConsolidatedStats>({
     totalBudgetPeriods: 0,
     totalForecastPeriods: 0,
@@ -54,42 +56,61 @@ export default function ConsolidatedBudgetPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+      setError('');
+      setLoadingErrors([]);
+
       // Load all companies
       const companiesRes = await fetch('/api/companies');
+      if (!companiesRes.ok) {
+        throw new Error('Failed to load companies');
+      }
       const companiesData = await companiesRes.json();
-      setCompanies(Array.isArray(companiesData) ? companiesData : []);
+      const validCompanies = Array.isArray(companiesData) ? companiesData : [];
+      setCompanies(validCompanies);
+
+      if (validCompanies.length === 0) {
+        setPeriods([]);
+        return;
+      }
 
       // Load all periods for all companies
-      if (Array.isArray(companiesData) && companiesData.length > 0) {
-        const allPeriods: BudgetPeriod[] = [];
-        
-        for (const company of companiesData) {
-          try {
-            const periodsRes = await fetch(`/api/budget/periods?companyId=${company.id}`);
-            const periodsData = await periodsRes.json();
-            
-            if (Array.isArray(periodsData)) {
-              // Add company info to each period
-              periodsData.forEach(period => {
-                allPeriods.push({
-                  ...period,
-                  company: {
-                    id: company.id,
-                    name: company.name,
-                  },
-                });
-              });
-            }
-          } catch (error) {
-            console.error(`Error loading periods for ${company.name}:`, error);
+      const allPeriods: BudgetPeriod[] = [];
+      const errors: string[] = [];
+
+      for (const company of validCompanies) {
+        try {
+          const periodsRes = await fetch(`/api/budget/periods?companyId=${company.id}`);
+
+          if (!periodsRes.ok) {
+            errors.push(`Failed to load periods for ${company.name}`);
+            continue;
           }
+
+          const periodsData = await periodsRes.json();
+
+          if (Array.isArray(periodsData)) {
+            // Add company info to each period
+            periodsData.forEach(period => {
+              allPeriods.push({
+                ...period,
+                company: {
+                  id: company.id,
+                  name: company.name,
+                },
+              });
+            });
+          }
+        } catch (error) {
+          console.error(`Error loading periods for ${company.name}:`, error);
+          errors.push(`Error loading periods for ${company.name}`);
         }
-        
-        setPeriods(allPeriods);
       }
-    } catch (error) {
+
+      setPeriods(allPeriods);
+      setLoadingErrors(errors);
+    } catch (error: any) {
       console.error('Error loading consolidated budget data:', error);
+      setError(error.message || 'Failed to load consolidated budget data');
       setCompanies([]);
       setPeriods([]);
     } finally {
@@ -167,6 +188,37 @@ export default function ConsolidatedBudgetPage() {
           </Link>
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <div className="flex items-center gap-2 text-red-400">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="font-medium">Error loading data</span>
+          </div>
+          <p className="text-sm text-red-300 mt-1">{error}</p>
+          <Button variant="secondary" onClick={loadData} size="sm" className="mt-3">
+            Try Again
+          </Button>
+        </div>
+      )}
+
+      {loadingErrors.length > 0 && (
+        <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+          <div className="flex items-center gap-2 text-yellow-400">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span className="font-medium">Some periods could not be loaded</span>
+          </div>
+          <ul className="text-sm text-yellow-300 mt-2 ml-7 list-disc">
+            {loadingErrors.map((err, i) => (
+              <li key={i}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-5 gap-4">
         <Card>
@@ -249,13 +301,39 @@ export default function ConsolidatedBudgetPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-slate-400">Loading consolidated data...</div>
+            <div className="text-center py-8 text-slate-400">
+              <div className="mb-2">Loading consolidated data...</div>
+              <div className="text-xs">Fetching periods from {companies.length} companies</div>
+            </div>
           ) : filteredPeriods.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-slate-400 mb-4">No budget periods found</p>
-              <Link href="/app/budget">
-                <Button>Go to Company View</Button>
-              </Link>
+            <div className="text-center py-12">
+              <svg className="w-16 h-16 mx-auto text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="text-white text-lg font-medium mb-2">No budget periods found</h3>
+              <p className="text-slate-400 mb-6 max-w-md mx-auto">
+                {periods.length > 0 && filteredPeriods.length === 0
+                  ? 'No periods match your current filters. Try adjusting the type or status filters above.'
+                  : companies.length === 0
+                  ? 'No companies found. Please create a company first.'
+                  : 'Get started by creating budget periods for your companies. You can create budgets, forecasts, and track actuals.'
+                }
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Link href="/app/budget">
+                  <Button>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Budget Period
+                  </Button>
+                </Link>
+                {periods.length > 0 && filteredPeriods.length === 0 && (
+                  <Button variant="secondary" onClick={() => { setFilterType('all'); setFilterStatus('all'); }}>
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-3">

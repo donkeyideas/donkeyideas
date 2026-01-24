@@ -5,12 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle, Button } from '@donkey-ideas/
 import { EmptyState } from '@donkey-ideas/ui';
 import { useAppStore } from '@/lib/store';
 import api from '@/lib/api-client';
+import { NotificationModal } from '@/components/ui/notification-modal';
 
 export default function ValuationPage() {
   const { currentCompany } = useAppStore();
   const [valuation, setValuation] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'error' | 'warning';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+  });
 
   const calculateValuation = async () => {
     if (!currentCompany) return;
@@ -21,9 +33,20 @@ export default function ValuationPage() {
         `/companies/${currentCompany.id}/valuations/calculate`
       );
       setValuation(response.data.valuation);
+      setNotification({
+        isOpen: true,
+        title: 'Success',
+        message: 'Valuation calculated successfully',
+        type: 'success',
+      });
     } catch (error: any) {
       console.error('Failed to calculate valuation:', error);
-      alert(error.response?.data?.error?.message || 'Failed to calculate valuation');
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error?.message || 'Failed to calculate valuation',
+        type: 'error',
+      });
     } finally {
       setCalculating(false);
     }
@@ -244,6 +267,14 @@ export default function ValuationPage() {
           </Card>
         </>
       )}
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </div>
   );
 }

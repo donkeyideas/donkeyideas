@@ -359,7 +359,7 @@ export function TransactionEntryModal({ companyId, transaction, onClose, onSave 
                   <span className="text-white/60">→</span>
                   <span className="text-white/60">to:</span>
                   <span className="font-semibold text-green-300">
-                    {formData.destinationCompanyId 
+                    {formData.destinationCompanyId
                       ? companies.find(c => c.id === formData.destinationCompanyId)?.name || 'Select company'
                       : 'Select company'}
                   </span>
@@ -400,8 +400,8 @@ export function TransactionEntryModal({ companyId, transaction, onClose, onSave 
                   const newCategory = e.target.value;
                   // Auto-set affectsCashFlow for cash transactions
                   const isCashTransaction = formData.type === 'asset' && newCategory === 'cash';
-                  setFormData({ 
-                    ...formData, 
+                  setFormData({
+                    ...formData,
                     category: newCategory,
                     affectsCashFlow: isCashTransaction ? true : formData.affectsCashFlow
                   });
@@ -410,11 +410,28 @@ export function TransactionEntryModal({ companyId, transaction, onClose, onSave 
                 className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 [&>option]:bg-[#0F0F0F] [&>option]:text-white"
               >
                 <option value="">Select category</option>
-                {categories[formData.type as keyof typeof categories]?.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
+                {(() => {
+                  // Get predefined categories for this type
+                  const predefinedCategories = categories[formData.type as keyof typeof categories] || [];
+
+                  // If editing and current category is not in predefined list, add it dynamically
+                  const currentCategoryInList = predefinedCategories.some(cat => cat.value === formData.category);
+                  const categoriesToShow = [...predefinedCategories];
+
+                  if (transaction?.category && !currentCategoryInList && formData.category) {
+                    // Add current category at the top with a label showing it's a custom category
+                    categoriesToShow.unshift({
+                      value: formData.category,
+                      label: `${formData.category.replace(/_/g, ' ')} (Custom)`,
+                    });
+                  }
+
+                  return categoriesToShow.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ));
+                })()}
               </select>
             </div>
           )}

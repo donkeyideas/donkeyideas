@@ -1029,7 +1029,7 @@ export default function FinancialsPage() {
                           <td className="p-4">{new Date(pl.period).toLocaleDateString()}</td>
                           <td className="p-4 text-right">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(pl.revenue || 0)}</td>
                           <td className="p-4 text-right text-orange-400">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(pl.cogs || 0)}</td>
-                          <td className="p-4 text-right text-red-400">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(pl.opex || 0)}</td>
+                          <td className="p-4 text-right text-red-400">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(pl.operatingExpenses || 0)}</td>
                           <td className={`p-4 text-right ${(pl.netProfit || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                             {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(pl.netProfit || 0)}
                           </td>

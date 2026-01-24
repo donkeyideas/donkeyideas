@@ -395,20 +395,11 @@ export default function BusinessProfilePage() {
                   <button
                     onClick={async () => {
                       if (!currentCompany || !logoPreview) return;
-                      
+
                       setDeletingLogo(true);
                       try {
-                        const response = await fetch(`/api/companies/${currentCompany.id}/logo`, {
-                          method: 'DELETE',
-                          credentials: 'include',
-                        });
-                        
-                        if (!response.ok) {
-                          const errorData = await response.json();
-                          throw new Error(errorData.error?.message || 'Failed to delete logo');
-                        }
-                        
-                        const data = await response.json();
+                        const response = await api.delete(`/companies/${currentCompany.id}/logo`);
+                        const data = response.data;
                         
                         // Clear logo from form and preview
                         setFormData((prev) => ({ ...prev, logo: '' }));

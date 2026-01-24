@@ -7,6 +7,36 @@
   --foreground: #ffffff;
 }
 
+/* Light mode theme colors */
+.light {
+  --background: #F5F5DC; /* Cream color */
+  --foreground: #1e293b; /* Dark slate for text */
+  --border: rgba(30, 41, 59, 0.1);
+  --card-bg: #ffffff;
+  --input-bg: rgba(30, 41, 59, 0.05);
+  --input-border: rgba(30, 41, 59, 0.2);
+}
+
+/* Dark mode theme colors */
+.dark {
+  --background: #0A0A0A;
+  --foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --card-bg: #0F0F0F;
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: rgba(255, 255, 255, 0.1);
+}
+
+/* Blue mode theme colors */
+.blue {
+  --background: #0f172a;
+  --foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --card-bg: #1e293b;
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: rgba(255, 255, 255, 0.1);
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -31,48 +61,173 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-  
+
   .ml-70 {
     margin-left: 280px;
   }
-  
+
   .w-70 {
     width: 280px;
   }
+
+  /* Theme-aware text colors */
+  .theme-text {
+    color: var(--foreground);
+  }
+
+  .theme-text-muted {
+    color: var(--foreground);
+    opacity: 0.6;
+  }
+
+  .theme-bg {
+    background-color: var(--background);
+  }
+
+  .theme-border {
+    border-color: var(--border);
+  }
 }
 
-/* Fix dropdown/select options visibility */
-select option {
+/* Global light mode overrides for hardcoded dark colors */
+.light .bg-\[\#0F0F0F\],
+.light .bg-\[\#0A0A0A\],
+.light .bg-black {
+  background-color: #ffffff !important;
+  border-color: rgba(30, 41, 59, 0.1) !important;
+}
+
+.light .text-white {
+  color: #1e293b !important;
+}
+
+.light .text-white\/90 {
+  color: rgba(30, 41, 59, 0.9) !important;
+}
+
+.light .text-white\/80 {
+  color: rgba(30, 41, 59, 0.8) !important;
+}
+
+.light .text-white\/60 {
+  color: rgba(30, 41, 59, 0.6) !important;
+}
+
+.light .text-white\/40 {
+  color: rgba(30, 41, 59, 0.4) !important;
+}
+
+.light .border-white\/10 {
+  border-color: rgba(30, 41, 59, 0.1) !important;
+}
+
+.light .border-white\/5 {
+  border-color: rgba(30, 41, 59, 0.05) !important;
+}
+
+.light .bg-white\/5 {
+  background-color: rgba(30, 41, 59, 0.05) !important;
+}
+
+.light .bg-white\/10 {
+  background-color: rgba(30, 41, 59, 0.1) !important;
+}
+
+/* Input fields in light mode */
+.light input[type="text"],
+.light input[type="number"],
+.light input[type="date"],
+.light input[type="email"],
+.light input[type="password"],
+.light textarea {
+  background-color: rgba(30, 41, 59, 0.05) !important;
+  border-color: rgba(30, 41, 59, 0.2) !important;
+  color: #1e293b !important;
+}
+
+.light input[type="text"]:focus,
+.light input[type="number"]:focus,
+.light input[type="date"]:focus,
+.light input[type="email"]:focus,
+.light input[type="password"]:focus,
+.light textarea:focus {
+  border-color: #3b82f6 !important;
+}
+
+/* Placeholders in light mode */
+.light input::placeholder,
+.light textarea::placeholder {
+  color: rgba(30, 41, 59, 0.5) !important;
+}
+
+/* Fix dropdown/select options visibility - theme aware */
+.dark select option,
+.blue select option {
   background-color: #0F0F0F !important;
   color: white !important;
 }
 
-select {
+.dark select,
+.blue select {
   color: white !important;
 }
 
-/* Custom scrollbar styling to match dark theme */
+.light select option {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+.light select {
+  color: #1e293b !important;
+}
+
+/* Custom scrollbar styling - theme aware */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
+/* Dark and Blue theme scrollbars */
+.dark ::-webkit-scrollbar-track,
+.blue ::-webkit-scrollbar-track {
   background: #1A1A1A;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb {
+.dark ::-webkit-scrollbar-thumb,
+.blue ::-webkit-scrollbar-thumb {
   background: #3A3A3A;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.dark ::-webkit-scrollbar-thumb:hover,
+.blue ::-webkit-scrollbar-thumb:hover {
   background: #4A4A4A;
 }
 
-/* Firefox scrollbar */
-* {
+/* Light theme scrollbars */
+.light ::-webkit-scrollbar-track {
+  background: #e5e5d4;
+  border-radius: 4px;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #94948a;
+  border-radius: 4px;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #6b6b65;
+}
+
+/* Firefox scrollbar - theme aware */
+.dark *,
+.blue * {
   scrollbar-width: thin;
   scrollbar-color: #3A3A3A #1A1A1A;
+}
+
+.light * {
+  scrollbar-width: thin;
+  scrollbar-color: #94948a #e5e5d4;
 }

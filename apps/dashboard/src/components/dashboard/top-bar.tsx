@@ -7,17 +7,20 @@ export function TopBar() {
 
   const themes = [
     { id: 'dark' as const, label: 'Dark' },
+    { id: 'light' as const, label: 'Light' },
     { id: 'blue' as const, label: 'Blue' },
   ];
 
   // Theme-specific styles
-  const bgClass = theme === 'dark' 
-    ? 'bg-[#0A0A0A]/95' 
+  const bgClass = theme === 'dark'
+    ? 'bg-[#0A0A0A]/95'
+    : theme === 'light'
+    ? 'bg-[#FAF8F3]/95'
     : 'bg-slate-900/95';
-  
-  const borderClass = 'border-white/10';
-  const textClass = 'text-white/60';
-  const activeTextClass = 'text-white';
+
+  const borderClass = theme === 'light' ? 'border-slate-300/50' : 'border-white/10';
+  const textClass = theme === 'light' ? 'text-slate-600' : 'text-white/60';
+  const activeTextClass = theme === 'light' ? 'text-slate-900' : 'text-white';
 
   return (
     <div className={`sticky top-0 z-50 ${bgClass} backdrop-blur-lg border-b ${borderClass} px-8 py-4 flex justify-between items-center`}>
@@ -29,14 +32,20 @@ export function TopBar() {
       
       <div className="flex items-center gap-6">
         {/* Theme Toggle */}
-        <div className="flex items-center gap-1 bg-black/10 dark:bg-white/5 rounded-lg p-1">
+        <div className={`flex items-center gap-1 rounded-lg p-1 ${
+          theme === 'light' ? 'bg-slate-200/50' : 'bg-black/10 dark:bg-white/5'
+        }`}>
           {themes.map((t) => (
             <button
               key={t.id}
               onClick={() => setTheme(t.id)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 theme === t.id
-                  ? 'bg-white/10 text-white'
+                  ? theme === 'light'
+                    ? 'bg-white shadow-sm text-slate-900'
+                    : 'bg-white/10 text-white'
+                  : theme === 'light'
+                  ? 'text-slate-600 hover:bg-white/50'
                   : 'text-white/60 hover:bg-white/5'
               }`}
               title={t.label}

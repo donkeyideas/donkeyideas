@@ -12,6 +12,7 @@ import { useConsolidatedData } from '@/lib/hooks/use-consolidated-data';
 import { StatsGridSkeleton, CardSkeleton } from '@/components/ui/loading-skeleton';
 import api from '@/lib/api-client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface ConsolidatedData {
   totalRevenue: number;
@@ -29,6 +30,7 @@ interface ConsolidatedData {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { companies, currentCompany } = useAppStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
@@ -296,21 +298,21 @@ export default function DashboardPage() {
             <Button
               variant="secondary"
               className="w-full"
-              onClick={() => window.location.href = '/app/financials'}
+              onClick={() => router.push('/app/financials')}
             >
               Update Financials
             </Button>
             <Button
               variant="secondary"
               className="w-full"
-              onClick={() => window.location.href = '/app/deck-builder'}
+              onClick={() => router.push('/app/deck-builder')}
             >
               Generate Deck
             </Button>
             <Button
               variant="secondary"
               className="w-full"
-              onClick={() => window.location.href = '/app/investor-portal'}
+              onClick={() => router.push('/app/investor-portal')}
             >
               Send Update
             </Button>

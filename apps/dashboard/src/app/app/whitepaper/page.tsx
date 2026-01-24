@@ -379,24 +379,49 @@ export default function WhitepaperPage() {
                 // If test passed, store the actual item
                 localStorage.setItem(storageKey, value);
               } catch (testError) {
-                console.warn('localStorage test failed, clearing space and retrying');
-                
-                // Clear ALL whitepaper localStorage data to free up maximum space
+                console.warn('localStorage quota exceeded');
+
+                // Clear only THIS company's whitepaper data (not all companies)
                 const keysToRemove = [];
                 for (let i = 0; i < localStorage.length; i++) {
                   const key = localStorage.key(i);
-                  if (key && key.startsWith('whitepaper-')) {
+                  if (key && key.startsWith(`whitepaper-${currentCompany.id}-`)) {
                     keysToRemove.push(key);
                   }
                 }
-                keysToRemove.forEach(key => localStorage.removeItem(key));
-                console.log(`Cleared ${keysToRemove.length} localStorage entries to free up space`);
-                
-                // Try one more time after clearing
-                try {
-                  localStorage.setItem(storageKey, value);
-                } catch (finalError) {
-                  console.warn('Still cannot store in localStorage after clearing. Image too large.');
+
+                if (keysToRemove.length > 0) {
+                  // Notify user before clearing
+                  setNotification({
+                    isOpen: true,
+                    title: 'Storage Quota Exceeded',
+                    message: `Browser storage limit reached. Clearing ${keysToRemove.length} cached images for ${currentCompany.name} to make space.`,
+                    type: 'warning',
+                  });
+
+                  keysToRemove.forEach(key => localStorage.removeItem(key));
+                  console.log(`Cleared ${keysToRemove.length} localStorage entries for company ${currentCompany.id}`);
+
+                  // Try one more time after clearing
+                  try {
+                    localStorage.setItem(storageKey, value);
+                  } catch (finalError) {
+                    console.warn('Still cannot store in localStorage after clearing. Image too large.');
+                    setNotification({
+                      isOpen: true,
+                      title: 'Image Too Large',
+                      message: 'This image is too large to cache locally. It will still be saved to the server.',
+                      type: 'warning',
+                    });
+                  }
+                } else {
+                  // No cached data to clear - image is just too large
+                  setNotification({
+                    isOpen: true,
+                    title: 'Image Too Large',
+                    message: 'This image cannot be cached locally due to size constraints. It will still be saved to the server.',
+                    type: 'warning',
+                  });
                 }
               }
             }

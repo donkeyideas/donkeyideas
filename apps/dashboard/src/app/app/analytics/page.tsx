@@ -6,6 +6,7 @@ import api from '@/lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@donkey-ideas/ui';
 import { EmptyState } from '@donkey-ideas/ui';
 import { Button } from '@donkey-ideas/ui';
+import { NotificationModal } from '@/components/ui/notification-modal';
 
 interface AnalyticsData {
   financial: {
@@ -38,6 +39,17 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'error' | 'warning';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+  });
 
   useEffect(() => {
     loadAnalytics();
@@ -306,15 +318,25 @@ export default function AnalyticsPage() {
               })}
             </select>
           </div>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={async () => {
               try {
                 await api.post('/companies/consolidated/rebuild-cashflow');
                 loadAnalytics();
-                alert('Cash flow statements rebuilt successfully for all companies');
+                setNotification({
+                  isOpen: true,
+                  title: 'Success',
+                  message: 'Cash flow statements rebuilt successfully for all companies',
+                  type: 'success',
+                });
               } catch (error: any) {
-                alert(error.response?.data?.error?.message || 'Failed to rebuild cash flow');
+                setNotification({
+                  isOpen: true,
+                  title: 'Error',
+                  message: error.response?.data?.error?.message || 'Failed to rebuild cash flow',
+                  type: 'error',
+                });
               }
             }}
           >
@@ -605,7 +627,8 @@ export default function AnalyticsPage() {
                           height: `${
                             (point.value /
                               Math.max(
-                                ...analytics.trends.users.map((p) => p.value)
+                                ...analytics.trends.users.map((p) => p.value),
+                                1
                               )) *
                             100
                           }%`,
@@ -623,6 +646,14 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </div>
   );
 }

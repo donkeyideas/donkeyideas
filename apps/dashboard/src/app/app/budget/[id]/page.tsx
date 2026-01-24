@@ -416,14 +416,14 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
 
       <Card>
         <CardContent className="p-0">
-          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto w-full max-w-full px-6 pb-4">
-            <table className="min-w-max w-max">
-                <thead className="bg-black/30">
+          <div className="max-h-[70vh] overflow-x-auto overflow-y-auto w-full">
+            <table className="w-full border-collapse">
+                <thead className="bg-black/30 sticky top-0 z-20">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[180px] sticky top-0 left-0 z-30 bg-[#0b1220]">
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap min-w-[180px] w-[180px] sticky left-0 z-30 bg-[#0b1220]">
                       Date
                     </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap w-[140px] sticky top-0 left-[180px] z-30 bg-[#0b1220]">
+                    <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap min-w-[140px] w-[140px] sticky left-[180px] z-30 bg-[#0b1220]">
                       Balance
                     </th>
                     {selectedCategories.map(catId => {
@@ -431,7 +431,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                       return (
                         <th
                           key={catId}
-                          className="px-4 py-3 text-right text-sm font-medium text-white border-r border-white/10 min-w-[150px] sticky top-0 z-20 bg-[#0b1220]"
+                          className="px-4 py-3 text-right text-sm font-medium text-white border-r border-white/10 min-w-[150px] w-[150px] bg-[#0b1220]"
                         >
                           <div className="flex items-center justify-end gap-2">
                             <span
@@ -443,7 +443,6 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                         </th>
                       );
                     })}
-                    <th className="min-w-[200px]" aria-hidden="true" />
                   </tr>
                 </thead>
                 <tbody>
@@ -458,16 +457,20 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                           isWeekend ? 'bg-black/20' : ''
                         }`}
                       >
-                        <td className="px-4 py-2 text-sm text-slate-300 border-r border-white/10 whitespace-nowrap sticky left-0 z-20 bg-[#0b1220]">
+                        <td className={`px-4 py-2 text-sm text-slate-300 border-r border-white/10 whitespace-nowrap min-w-[180px] w-[180px] sticky left-0 z-20 ${
+                          isWeekend ? 'bg-black/20' : 'bg-[#0b1220]'
+                        }`}>
                           <div className="font-medium">
                             {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </div>
                         </td>
-                        <td className="px-4 py-2 text-right text-sm font-medium text-white border-r border-white/10 whitespace-nowrap sticky left-[180px] z-20 bg-[#0b1220]">
+                        <td className={`px-4 py-2 text-right text-sm font-medium text-white border-r border-white/10 whitespace-nowrap min-w-[140px] w-[140px] sticky left-[180px] z-20 ${
+                          isWeekend ? 'bg-black/20' : 'bg-[#0b1220]'
+                        }`}>
                           ${getBalance(date)}
                         </td>
                         {selectedCategories.map(catId => (
-                          <td key={`${date}_${catId}`} className="px-2 py-1 border-r border-white/10">
+                          <td key={`${date}_${catId}`} className="px-2 py-1 border-r border-white/10 min-w-[150px] w-[150px]">
                             <input
                               type="text"
                               value={getDisplayValue(date, catId)}
@@ -500,7 +503,6 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                             />
                           </td>
                         ))}
-                        <td className="min-w-[200px]" aria-hidden="true" />
                       </tr>
                     );
                   })}
