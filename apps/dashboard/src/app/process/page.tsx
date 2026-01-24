@@ -1,6 +1,32 @@
 import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
 import ScrollHeader from '@/components/scroll-header';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Our Approach — Venture Building Process',
+  description: 'Learn about Donkey Ideas\' proven approach to venture building, from ideation to scale. Our systematic process helps entrepreneurs succeed.',
+  keywords: [
+    'venture building process',
+    'startup methodology',
+    'business development approach',
+    'entrepreneurship process',
+    'startup framework',
+  ],
+  openGraph: {
+    title: 'Our Approach — Venture Building Process | Donkey Ideas',
+    description: 'Our proven approach to venture building, from ideation to scale.',
+    url: 'https://www.donkeyideas.com/process',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Donkey Ideas Approach',
+      },
+    ],
+  },
+};
 
 async function getPageContent() {
   try {

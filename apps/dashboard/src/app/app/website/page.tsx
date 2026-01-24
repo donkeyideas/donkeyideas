@@ -49,22 +49,63 @@ export default function WebsitePage() {
 
   useEffect(() => {
     loadContent();
-    // Load settings from localStorage or API
-    const savedSettings = localStorage.getItem('website-settings');
-    if (savedSettings) {
+
+    // Load settings from API
+    const loadSettings = async () => {
       try {
-        setSettings(JSON.parse(savedSettings));
+        const response = await fetch('/api/website/seo');
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+          // Also save to localStorage as backup
+          localStorage.setItem('website-settings', JSON.stringify(data));
+        } else {
+          // Fallback to localStorage if API fails
+          const savedSettings = localStorage.getItem('website-settings');
+          if (savedSettings) {
+            setSettings(JSON.parse(savedSettings));
+          }
+        }
       } catch (e) {
-        console.error('Failed to load settings:', e);
+        console.error('Failed to load settings from API:', e);
+        // Fallback to localStorage
+        const savedSettings = localStorage.getItem('website-settings');
+        if (savedSettings) {
+          try {
+            setSettings(JSON.parse(savedSettings));
+          } catch (parseError) {
+            console.error('Failed to parse localStorage settings:', parseError);
+          }
+        }
       }
-    }
+    };
+
+    loadSettings();
   }, []);
 
-  const saveSettings = (key: 'domain' | 'seo' | 'analytics', data: any) => {
+  const saveSettings = async (key: 'domain' | 'seo' | 'analytics', data: any) => {
     const newSettings = { ...settings, [key]: data };
     setSettings(newSettings);
     localStorage.setItem('website-settings', JSON.stringify(newSettings));
-    // In production, save to API
+
+    // Save to API
+    try {
+      const response = await fetch('/api/website/seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSettings),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save settings');
+      }
+
+      console.log('Settings saved successfully to database');
+    } catch (error) {
+      console.error('Failed to save settings to API:', error);
+      // Still close modal even if API fails, as localStorage is updated
+    }
+
     setSettingsModal(null);
   };
 

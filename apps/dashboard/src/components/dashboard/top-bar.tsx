@@ -15,7 +15,7 @@ export function TopBar() {
   const bgClass = theme === 'dark'
     ? 'bg-[#0A0A0A]/95'
     : theme === 'light'
-    ? 'bg-[#FAF8F3]/95'
+    ? 'bg-[#F5F5DC]/95'
     : 'bg-slate-900/95';
 
   const borderClass = theme === 'light' ? 'border-slate-300/50' : 'border-white/10';

@@ -2,6 +2,32 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Our Ventures — Portfolio of Innovation',
+  description: 'Explore Donkey Ideas\' portfolio of innovative ventures and startups. See how we transform ideas into successful businesses across various industries.',
+  keywords: [
+    'startup portfolio',
+    'venture portfolio',
+    'innovation projects',
+    'startup showcase',
+    'venture builder portfolio',
+  ],
+  openGraph: {
+    title: 'Our Ventures — Portfolio of Innovation | Donkey Ideas',
+    description: 'Explore our portfolio of innovative ventures and startups across various industries.',
+    url: 'https://www.donkeyideas.com/ventures',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Donkey Ideas Ventures Portfolio',
+      },
+    ],
+  },
+};
 
 async function getPageContent() {
   try {

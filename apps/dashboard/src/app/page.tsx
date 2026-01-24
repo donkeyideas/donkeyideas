@@ -3,6 +3,42 @@ import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { Metadata } from 'next';
+import { OrganizationStructuredData, WebsiteStructuredData, ServiceStructuredData } from '@/components/seo/structured-data';
+
+export const metadata: Metadata = {
+  title: 'Donkey Ideas — Transform Your Vision Into Reality',
+  description: 'Build and scale your ventures with Donkey Ideas. Comprehensive tools for financial management, project tracking, pitch decks, and strategic planning for entrepreneurs and venture builders.',
+  keywords: [
+    'venture builder',
+    'startup platform',
+    'financial management',
+    'pitch deck builder',
+    'business planning tools',
+    'entrepreneur platform',
+    'venture operating system',
+    'startup financial tools',
+  ],
+  openGraph: {
+    title: 'Donkey Ideas — Transform Your Vision Into Reality',
+    description: 'Build and scale your ventures with comprehensive tools for financial management, project tracking, and strategic planning.',
+    url: 'https://www.donkeyideas.com',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Donkey Ideas - Venture Builder Platform',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Donkey Ideas — Transform Your Vision Into Reality',
+    description: 'Build and scale your ventures with comprehensive tools for financial management, project tracking, and strategic planning.',
+    images: ['/og-image.png'],
+  },
+};
 
 async function getWebsiteContent() {
   try {
@@ -87,6 +123,22 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      {/* Structured Data for SEO */}
+      <OrganizationStructuredData
+        data={{
+          name: 'Donkey Ideas',
+          url: 'https://www.donkeyideas.com',
+          logo: 'https://www.donkeyideas.com/logo.png',
+          description: 'Transform your vision into reality with Donkey Ideas, a comprehensive venture builder platform.',
+          sameAs: [
+            'https://twitter.com/donkeyideas',
+            'https://linkedin.com/company/donkeyideas',
+          ],
+        }}
+      />
+      <WebsiteStructuredData />
+      <ServiceStructuredData />
+
       {/* Navigation - Giga.ai style with scroll behavior */}
       <ScrollHeader />
 

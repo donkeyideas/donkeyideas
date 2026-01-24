@@ -1,6 +1,32 @@
 import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
 import ScrollHeader from '@/components/scroll-header';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'About Us — Our Mission & Vision',
+  description: 'Learn about Donkey Ideas\' mission to empower entrepreneurs with innovative venture building tools and strategic support.',
+  keywords: [
+    'about donkey ideas',
+    'venture builder',
+    'startup platform',
+    'entrepreneurship',
+    'company mission',
+  ],
+  openGraph: {
+    title: 'About Us — Our Mission & Vision | Donkey Ideas',
+    description: 'Empowering entrepreneurs with innovative venture building tools and strategic support.',
+    url: 'https://www.donkeyideas.com/about',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'About Donkey Ideas',
+      },
+    ],
+  },
+};
 
 async function getPageContent() {
   try {

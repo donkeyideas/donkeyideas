@@ -90,10 +90,10 @@ export function Sidebar() {
   }, [companiesData, setCompanies, setCurrentCompany, currentCompany]);
 
   // Theme-specific styles
-  const bgClass = theme === 'dark' 
-    ? 'bg-[#0F0F0F]' 
-    : theme === 'light' 
-    ? 'bg-[#FAF8F3]' 
+  const bgClass = theme === 'dark'
+    ? 'bg-[#0F0F0F]'
+    : theme === 'light'
+    ? 'bg-[#F5F5DC]'
     : 'bg-slate-900/95';
   
   const borderClass = theme === 'light' ? 'border-slate-300' : 'border-white/10';

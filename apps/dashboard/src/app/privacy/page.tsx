@@ -1,6 +1,21 @@
 import Link from 'next/link';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'Donkey Ideas privacy policy. Learn how we collect, use, and protect your data.',
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: 'Privacy Policy | Donkey Ideas',
+    description: 'Learn how we collect, use, and protect your data.',
+    url: 'https://www.donkeyideas.com/privacy',
+  },
+};
 
 async function getPrivacyContent() {
   try {

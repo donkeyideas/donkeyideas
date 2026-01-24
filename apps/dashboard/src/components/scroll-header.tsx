@@ -24,10 +24,10 @@ export default function ScrollHeader() {
       <div className="max-w-[1400px] mx-auto flex items-center justify-between">
         {/* Left Card - Logo + Navigation */}
         <div
-          className={`flex items-center gap-8 px-6 h-14 transition-all duration-300 ${
+          className={`flex items-center gap-8 px-6 h-14 transition-all duration-500 ease-out ${
             isScrolled
               ? 'bg-white/10 backdrop-blur-xl shadow-xl rounded-full border border-white/10'
-              : 'bg-transparent'
+              : 'bg-white/5 backdrop-blur-sm rounded-3xl border border-white/5'
           }`}
         >
           <Link
@@ -66,19 +66,15 @@ export default function ScrollHeader() {
 
         {/* Right Card - Sign in + Talk to us */}
         <div
-          className={`flex items-center gap-4 px-6 h-14 transition-all duration-300 ${
+          className={`flex items-center gap-4 px-6 h-14 transition-all duration-500 ease-out ${
             isScrolled
               ? 'bg-white/10 backdrop-blur-xl shadow-xl rounded-full border border-white/10'
-              : 'bg-transparent'
+              : 'bg-white/5 backdrop-blur-sm rounded-3xl border border-white/5'
           }`}
         >
           <Link
             href="/login"
-            className={`text-sm transition-all ${
-              isScrolled
-                ? 'text-white/90 hover:text-white'
-                : 'px-4 py-2 border border-white/20 rounded-full text-white/90 hover:text-white hover:border-white/40'
-            }`}
+            className="px-4 py-2 border border-white/20 rounded-full text-sm text-white/90 hover:text-white hover:border-white/40 transition-all"
           >
             Sign in
           </Link>

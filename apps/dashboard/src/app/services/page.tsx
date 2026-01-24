@@ -1,6 +1,33 @@
 import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
 import ScrollHeader from '@/components/scroll-header';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Services — Comprehensive Venture Building',
+  description: 'Discover Donkey Ideas\' full suite of venture building services including financial management, strategic planning, pitch deck creation, and project management tools.',
+  keywords: [
+    'venture building services',
+    'startup services',
+    'financial management services',
+    'pitch deck services',
+    'business planning',
+    'strategic consulting',
+  ],
+  openGraph: {
+    title: 'Services — Comprehensive Venture Building | Donkey Ideas',
+    description: 'Full suite of venture building services for entrepreneurs and startups.',
+    url: 'https://www.donkeyideas.com/services',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Donkey Ideas Services',
+      },
+    ],
+  },
+};
 
 async function getPageContent() {
   try {
