@@ -48,10 +48,10 @@ async function buildUserContext(userId: string) {
     for (const company of companies) {
       const recentLines = company.budgetLines || [];
       const expenses = recentLines
-        .filter(l => l.amount < 0)
+        .filter(l => Number(l.amount) < 0)
         .reduce((sum, l) => sum + Number(l.amount), 0);
       const income = recentLines
-        .filter(l => l.amount > 0)
+        .filter(l => Number(l.amount) > 0)
         .reduce((sum, l) => sum + Number(l.amount), 0);
 
       totalBudgetSpend += Math.abs(expenses);
