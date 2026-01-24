@@ -54,7 +54,7 @@ export async function getSEOSettings(): Promise<SEOSettings> {
       }
     }
 
-    return seoSettings.content as SEOSettings;
+    return seoSettings.content as unknown as SEOSettings;
   } catch (error) {
     console.error('Failed to fetch SEO settings:', error);
     return defaultSEOSettings;
