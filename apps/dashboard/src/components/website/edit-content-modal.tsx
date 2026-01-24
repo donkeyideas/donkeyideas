@@ -152,7 +152,7 @@ export function EditContentModal({
           ],
         });
       } else if (section.key === 'about-page') {
-        setFormData(section.content || {
+        const defaults = {
           hero: {
             title: 'Building the future of intelligent ventures',
             description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering to build ventures that matter. Each product represents a bold bet on ideas others overlook.',
@@ -189,14 +189,73 @@ export function EditContentModal({
           },
           approach: {
             badge: 'Our Approach',
-            title: 'AI-powered venture methodology',
-            description: 'We combine cutting-edge AI with battle-tested engineering practices to reduce time-to-market by 70% while increasing success probability.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that turn raw concepts into revenue-generating businesses. We\'re builders who get our hands dirty with code, data, and customer conversations.',
+            title: 'Disciplined build, fast validation',
+            description: 'We run a repeatable loop: identify a real market pain, design the right system, ship a lean MVP, and validate with paying customers.\n\nEvery step is measured. We prototype quickly, test assumptions in days, and double down only when the data proves momentum. That keeps capital efficient and outcomes predictable.',
           },
           team: {
             title: 'Builders, engineers & strategists',
             description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.\n\nWe\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
             imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
           },
+        };
+
+        const content = section.content && typeof section.content === 'object' ? section.content : {};
+        const cleanText = (value: any, fallback: string) => {
+          if (typeof value !== 'string') return fallback;
+          const trimmed = value.trim();
+          if (!trimmed) return fallback;
+          const placeholderOnly = /^[-_—]+$/.test(trimmed);
+          return placeholderOnly ? fallback : value;
+        };
+
+        const mergedApproach = {
+          ...defaults.approach,
+          ...content.approach,
+        };
+
+        const mergedVentureProcess = {
+          ...defaults.ventureProcess,
+          ...content.ventureProcess,
+        };
+
+        const defaultSteps = defaults.ventureProcess.steps || [];
+        const contentSteps = Array.isArray(mergedVentureProcess.steps)
+          ? mergedVentureProcess.steps
+          : [];
+        const mergedSteps = (contentSteps.length > 0 ? contentSteps : defaultSteps).map((step: any, idx: number) => {
+          const fallback = defaultSteps[idx] || {};
+          return {
+            ...fallback,
+            ...step,
+            number: cleanText(step?.number, fallback.number || `${idx + 1}`),
+            title: cleanText(step?.title, fallback.title || ''),
+            subtitle: cleanText(step?.subtitle, fallback.subtitle || ''),
+            badge: cleanText(step?.badge, fallback.badge || ''),
+            actions: Array.isArray(step?.actions) && step.actions.length > 0
+              ? step.actions
+              : (fallback.actions || []),
+          };
+        });
+
+        setFormData({
+          ...defaults,
+          ...content,
+          hero: { ...defaults.hero, ...content.hero },
+          mission: { ...defaults.mission, ...content.mission },
+          ventureProcess: {
+            ...mergedVentureProcess,
+            title: cleanText(mergedVentureProcess.title, defaults.ventureProcess.title),
+            result: cleanText(mergedVentureProcess.result, defaults.ventureProcess.result),
+            steps: mergedSteps,
+          },
+          approach: {
+            ...mergedApproach,
+            badge: cleanText(mergedApproach.badge, defaults.approach.badge),
+            title: cleanText(mergedApproach.title, defaults.approach.title),
+            description: cleanText(mergedApproach.description, defaults.approach.description),
+          },
+          team: { ...defaults.team, ...content.team },
+          values: content.values && content.values.length > 0 ? content.values : defaults.values,
         });
       } else if (section.key === 'privacy-page') {
         setFormData(section.content || {

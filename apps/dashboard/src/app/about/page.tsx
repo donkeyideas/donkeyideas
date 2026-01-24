@@ -108,13 +108,56 @@ export default async function AboutPage() {
     ? content
     : {}) as Partial<typeof defaultContent>;
 
+  const cleanText = (value: unknown, fallback: string) => {
+    if (typeof value !== 'string') return fallback;
+    const trimmed = value.trim();
+    if (!trimmed) return fallback;
+    const placeholderOnly = /^[-_—]+$/.test(trimmed);
+    return placeholderOnly ? fallback : value;
+  };
+
+  const mergedApproach = {
+    ...defaultContent.approach,
+    ...rawContent.approach,
+  };
+
+  const mergedVentureProcess = {
+    ...defaultContent.ventureProcess,
+    ...rawContent.ventureProcess,
+  };
+
+  const defaultSteps = defaultContent.ventureProcess.steps || [];
+  const contentSteps = Array.isArray(mergedVentureProcess.steps) ? mergedVentureProcess.steps : [];
+  const mergedSteps = (contentSteps.length > 0 ? contentSteps : defaultSteps).map((step: any, idx: number) => {
+    const fallback = defaultSteps[idx] || {};
+    return {
+      ...fallback,
+      ...step,
+      number: cleanText(step?.number, fallback.number || `${idx + 1}`),
+      title: cleanText(step?.title, fallback.title || ''),
+      subtitle: cleanText(step?.subtitle, fallback.subtitle || ''),
+      badge: cleanText(step?.badge, fallback.badge || ''),
+      actions: Array.isArray(step?.actions) && step.actions.length > 0 ? step.actions : (fallback.actions || []),
+    };
+  });
+
   const pageContent: typeof defaultContent = {
     ...defaultContent,
     ...rawContent,
     hero: { ...defaultContent.hero, ...rawContent.hero },
     mission: { ...defaultContent.mission, ...rawContent.mission },
-    ventureProcess: { ...defaultContent.ventureProcess, ...rawContent.ventureProcess },
-    approach: { ...defaultContent.approach, ...rawContent.approach },
+    ventureProcess: {
+      ...mergedVentureProcess,
+      title: cleanText(mergedVentureProcess.title, defaultContent.ventureProcess.title),
+      result: cleanText(mergedVentureProcess.result, defaultContent.ventureProcess.result),
+      steps: mergedSteps,
+    },
+    approach: {
+      ...mergedApproach,
+      badge: cleanText(mergedApproach.badge, defaultContent.approach.badge),
+      title: cleanText(mergedApproach.title, defaultContent.approach.title),
+      description: cleanText(mergedApproach.description, defaultContent.approach.description),
+    },
     team: { ...defaultContent.team, ...rawContent.team },
     values: rawContent.values && rawContent.values.length > 0 ? rawContent.values : defaultContent.values,
   };
