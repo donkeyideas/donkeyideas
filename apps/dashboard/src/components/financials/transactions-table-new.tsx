@@ -164,18 +164,18 @@ export function TransactionsTableNew({ transactions, onEdit, onDelete, onDuplica
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <div className="mb-2 text-xs text-white/40">
+            <div className="mb-2 text-xs text-white/40 [.light_&]:text-slate-600">
               Showing {localTransactions.length} transaction{localTransactions.length !== 1 ? 's' : ''}
             </div>
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse min-w-[1200px]">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left p-4 text-xs text-white/60 uppercase font-medium">Date</th>
-                  <th className="text-left p-4 text-xs text-white/60 uppercase font-medium">Type</th>
-                  <th className="text-left p-4 text-xs text-white/60 uppercase font-medium">Category</th>
-                  <th className="text-right p-4 text-xs text-white/60 uppercase font-medium">Amount</th>
-                  <th className="text-left p-4 text-xs text-white/60 uppercase font-medium">Description</th>
-                  <th className="text-center p-4 text-xs text-white/60 uppercase font-medium">Actions</th>
+                <tr className="border-b border-white/10 [.light_&]:border-slate-300">
+                  <th className="text-left p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase font-medium">Date</th>
+                  <th className="text-left p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase font-medium">Type</th>
+                  <th className="text-left p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase font-medium">Category</th>
+                  <th className="text-right p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase font-medium">Amount</th>
+                  <th className="text-left p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase font-medium">Description</th>
+                  <th className="text-center p-4 text-xs text-white/60 [.light_&]:text-slate-600 uppercase font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -187,23 +187,23 @@ export function TransactionsTableNew({ transactions, onEdit, onDelete, onDuplica
                   const dateStr = formatDate(transaction.date);
                   
                   return (
-                    <tr 
-                      key={transaction.id} 
-                      className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                    <tr
+                      key={transaction.id}
+                      className="border-b border-white/5 hover:bg-white/5 [.light_&]:border-slate-200 [.light_&]:hover:bg-slate-100 transition-colors"
                     >
-                      <td className="p-4 text-white/90">{dateStr}</td>
+                      <td className="p-4 text-white/90 [.light_&]:text-slate-900">{dateStr}</td>
                       <td className={`p-4 font-semibold capitalize ${getTypeColor(transaction.type)}`}>
                         {formatTypeForDisplay(transaction.type)}
                       </td>
-                      <td className="p-4 text-white/80 capitalize">
+                      <td className="p-4 text-white/80 [.light_&]:text-slate-800 capitalize">
                         {transaction.category?.replace(/_/g, ' ') || '-'}
                       </td>
                       <td className={`p-4 text-right font-semibold ${getTypeColor(transaction.type)}`}>
                         {formatCurrency(amount || 0)}
                       </td>
-                      <td className="p-4 text-white/60">
-                        <div 
-                          className="max-w-md truncate" 
+                      <td className="p-4 text-white/60 [.light_&]:text-slate-600">
+                        <div
+                          className="max-w-md truncate"
                           title={transaction.description || ''}
                         >
                           {transaction.description || '-'}

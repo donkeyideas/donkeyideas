@@ -418,12 +418,12 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
         <CardContent className="p-0">
           <div className="max-h-[70vh] overflow-x-auto overflow-y-auto w-full">
             <table className="w-full border-collapse">
-                <thead className="bg-black/30 sticky top-0 z-20">
+                <thead className="bg-black/30 [.light_&]:bg-slate-200 sticky top-0 z-20">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap min-w-[180px] w-[180px] sticky left-0 z-30 bg-[#0b1220]">
+                    <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 [.light_&]:text-slate-700 border-r border-white/10 [.light_&]:border-slate-300 whitespace-nowrap min-w-[180px] w-[180px] sticky left-0 z-30 bg-[#0b1220] [.light_&]:bg-slate-200">
                       Date
                     </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 border-r border-white/10 whitespace-nowrap min-w-[140px] w-[140px] sticky left-[180px] z-30 bg-[#0b1220]">
+                    <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 [.light_&]:text-slate-700 border-r border-white/10 [.light_&]:border-slate-300 whitespace-nowrap min-w-[140px] w-[140px] sticky left-[180px] z-30 bg-[#0b1220] [.light_&]:bg-slate-200">
                       Balance
                     </th>
                     {selectedCategories.map(catId => {
@@ -431,7 +431,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                       return (
                         <th
                           key={catId}
-                          className="px-4 py-3 text-right text-sm font-medium text-white border-r border-white/10 min-w-[150px] w-[150px] bg-[#0b1220]"
+                          className="px-4 py-3 text-right text-sm font-medium text-white [.light_&]:text-slate-900 border-r border-white/10 [.light_&]:border-slate-300 min-w-[150px] w-[150px] bg-[#0b1220] [.light_&]:bg-slate-200"
                         >
                           <div className="flex items-center justify-end gap-2">
                             <span
@@ -453,24 +453,24 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                     return (
                       <tr
                         key={date}
-                        className={`border-t border-white/10 hover:bg-white/5 ${
-                          isWeekend ? 'bg-black/20' : ''
+                        className={`border-t border-white/10 [.light_&]:border-slate-300 hover:bg-white/5 [.light_&]:hover:bg-slate-100 ${
+                          isWeekend ? 'bg-black/20 [.light_&]:bg-slate-100' : ''
                         }`}
                       >
-                        <td className={`px-4 py-2 text-sm text-slate-300 border-r border-white/10 whitespace-nowrap min-w-[180px] w-[180px] sticky left-0 z-20 ${
-                          isWeekend ? 'bg-black/20' : 'bg-[#0b1220]'
+                        <td className={`px-4 py-2 text-sm text-slate-300 [.light_&]:text-slate-800 border-r border-white/10 [.light_&]:border-slate-300 whitespace-nowrap min-w-[180px] w-[180px] sticky left-0 z-20 ${
+                          isWeekend ? 'bg-black/20 [.light_&]:bg-slate-100' : 'bg-[#0b1220] [.light_&]:bg-[#F5F5DC]'
                         }`}>
                           <div className="font-medium">
                             {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </div>
                         </td>
-                        <td className={`px-4 py-2 text-right text-sm font-medium text-white border-r border-white/10 whitespace-nowrap min-w-[140px] w-[140px] sticky left-[180px] z-20 ${
-                          isWeekend ? 'bg-black/20' : 'bg-[#0b1220]'
+                        <td className={`px-4 py-2 text-right text-sm font-medium text-white [.light_&]:text-slate-900 border-r border-white/10 [.light_&]:border-slate-300 whitespace-nowrap min-w-[140px] w-[140px] sticky left-[180px] z-20 ${
+                          isWeekend ? 'bg-black/20 [.light_&]:bg-slate-100' : 'bg-[#0b1220] [.light_&]:bg-[#F5F5DC]'
                         }`}>
                           ${getBalance(date)}
                         </td>
                         {selectedCategories.map(catId => (
-                          <td key={`${date}_${catId}`} className="px-2 py-1 border-r border-white/10 min-w-[150px] w-[150px]">
+                          <td key={`${date}_${catId}`} className="px-2 py-1 border-r border-white/10 [.light_&]:border-slate-300 min-w-[150px] w-[150px]">
                             <input
                               type="text"
                               value={getDisplayValue(date, catId)}
@@ -498,7 +498,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
                                   return rest;
                                 });
                               }}
-                              className="w-full px-2 py-1 bg-transparent text-right text-sm text-white focus:bg-black/30 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+                              className="w-full px-2 py-1 bg-transparent text-right text-sm text-white [.light_&]:text-slate-900 focus:bg-black/30 [.light_&]:focus:bg-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
                               placeholder="$0.00"
                             />
                           </td>
@@ -512,7 +512,7 @@ export default function BudgetEntryPage({ params }: { params: { id: string } }) 
         </CardContent>
       </Card>
 
-      <div className="flex justify-between items-center text-sm text-slate-400">
+      <div className="flex justify-between items-center text-sm text-slate-400 [.light_&]:text-slate-600">
         <div>
           {dates.length} days • {selectedCategories.length} categories • {Object.keys(lines).length} entries
         </div>

@@ -12,7 +12,7 @@
   --background: #F5F5DC; /* Cream color */
   --foreground: #1e293b; /* Dark slate for text */
   --border: rgba(30, 41, 59, 0.1);
-  --card-bg: #ffffff;
+  --card-bg: #F5F5DC; /* Cream color to match background */
   --input-bg: rgba(30, 41, 59, 0.05);
   --input-border: rgba(30, 41, 59, 0.2);
 }
