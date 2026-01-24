@@ -52,9 +52,7 @@ export function BalanceSheetTable({ balanceSheets }: BalanceSheetTableProps) {
 
                   return (
                     <tr className={`${balances ? 'bg-green-500/10' : 'bg-red-500/10'} border-b border-white/20 font-semibold`}>
-                      <td className="p-4 text-blue-400">
-                        {new Date(latest.period).toLocaleDateString()}
-                      </td>
+                      <td className="p-4 text-blue-400">Total</td>
                       <td className="p-4 text-right text-blue-400" colSpan={3}>
                         Total Assets: {formatCurrency(totalAssets)}
                       </td>
