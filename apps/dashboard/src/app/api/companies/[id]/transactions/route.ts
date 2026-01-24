@@ -4,7 +4,7 @@ import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { Decimal } from '@prisma/client/runtime/library';
-import { calculateFinancials, Transaction as FinancialTransaction } from '@donkey-ideas/financial-engine';
+import { calculateFinancialsByPeriod, Transaction as FinancialTransaction } from '@donkey-ideas/financial-engine';
 
 const createTransactionSchema = z.object({
   date: z.string(),
@@ -164,25 +164,26 @@ export async function POST(
       },
     });
     
-    // FIX: Instead of incremental updates (which cause validation errors),
-    // trigger a full recalculation using the financial engine
-    // This ensures consistency and correct calculations
+    // PHASE 2 FIX: Use financial engine for ALL calculations (period-based)
+    // This ensures consistency with bulk upload and proper carry-forward
     try {
+      console.log(`🔄 Recalculating financials for company ${params.id}...`);
+
       // Get all transactions
       const allTransactions = await prisma.transaction.findMany({
         where: { companyId: params.id },
         orderBy: { date: 'asc' },
       });
-      
+
       // Delete old statements
       await Promise.all([
         prisma.pLStatement.deleteMany({ where: { companyId: params.id } }),
         prisma.balanceSheet.deleteMany({ where: { companyId: params.id } }),
         prisma.cashFlow.deleteMany({ where: { companyId: params.id } }),
       ]);
-      
+
       // Transform for financial engine
-      const transactions: FinancialTransaction[] = allTransactions.map(tx => ({
+      const financialTxs: FinancialTransaction[] = allTransactions.map(tx => ({
         id: tx.id,
         date: new Date(tx.date),
         type: tx.type as any,
@@ -193,54 +194,65 @@ export async function POST(
         affectsCashFlow: tx.affectsCashFlow ?? true,
         affectsBalance: tx.affectsBalance ?? true,
       }));
-      
-      // Calculate using financial engine
-      const statements = calculateFinancials(transactions, 0);
-      
-      // Store new statements
-      await prisma.pLStatement.create({
-        data: {
-          companyId: params.id,
-          period,
-          productRevenue: new Decimal(statements.pl.revenue),
-          serviceRevenue: new Decimal(0),
-          otherRevenue: new Decimal(0),
-          directCosts: new Decimal(statements.pl.cogs),
-          infrastructureCosts: new Decimal(0),
-          salesMarketing: new Decimal(statements.pl.operatingExpenses),
-          rdExpenses: new Decimal(0),
-          adminExpenses: new Decimal(0),
-        },
-      });
-      
-      await prisma.balanceSheet.create({
-        data: {
-          companyId: params.id,
-          period,
-          cashEquivalents: new Decimal(statements.balanceSheet.cash),
-          accountsReceivable: new Decimal(statements.balanceSheet.accountsReceivable),
-          fixedAssets: new Decimal(statements.balanceSheet.fixedAssets),
-          accountsPayable: new Decimal(statements.balanceSheet.accountsPayable),
-          shortTermDebt: new Decimal(statements.balanceSheet.shortTermDebt),
-          longTermDebt: new Decimal(statements.balanceSheet.longTermDebt),
-        },
-      });
-      
-      await prisma.cashFlow.create({
-        data: {
-          companyId: params.id,
-          period,
-          beginningCash: new Decimal(statements.cashFlow.beginningCash),
-          operatingCashFlow: new Decimal(statements.cashFlow.operatingCashFlow),
-          investingCashFlow: new Decimal(statements.cashFlow.investingCashFlow),
-          financingCashFlow: new Decimal(statements.cashFlow.financingCashFlow),
-          netCashFlow: new Decimal(statements.cashFlow.netCashFlow),
-          endingCash: new Decimal(statements.cashFlow.endingCash),
-        },
-      });
+
+      // Calculate financials period-by-period (monthly) with carry-forward
+      const periodStatements = calculateFinancialsByPeriod(financialTxs, 'month', 0, 0);
+
+      console.log(`📊 Calculated ${periodStatements.length} periods`);
+
+      // Store each period's statements
+      for (const periodData of periodStatements) {
+        const { statements, period: periodDate } = periodData;
+
+        // Store P&L
+        await prisma.pLStatement.create({
+          data: {
+            companyId: params.id,
+            period: periodDate,
+            productRevenue: new Decimal(statements.pl.revenue),
+            serviceRevenue: new Decimal(0),
+            otherRevenue: new Decimal(0),
+            directCosts: new Decimal(statements.pl.cogs),
+            infrastructureCosts: new Decimal(0),
+            salesMarketing: new Decimal(statements.pl.operatingExpenses),
+            rdExpenses: new Decimal(0),
+            adminExpenses: new Decimal(0),
+          },
+        });
+
+        // Store Balance Sheet
+        await prisma.balanceSheet.create({
+          data: {
+            companyId: params.id,
+            period: periodDate,
+            cashEquivalents: new Decimal(statements.balanceSheet.cash),
+            accountsReceivable: new Decimal(statements.balanceSheet.accountsReceivable),
+            fixedAssets: new Decimal(statements.balanceSheet.fixedAssets),
+            accountsPayable: new Decimal(statements.balanceSheet.accountsPayable),
+            shortTermDebt: new Decimal(statements.balanceSheet.shortTermDebt),
+            longTermDebt: new Decimal(statements.balanceSheet.longTermDebt),
+          },
+        });
+
+        // Store Cash Flow
+        await prisma.cashFlow.create({
+          data: {
+            companyId: params.id,
+            period: periodDate,
+            beginningCash: new Decimal(statements.cashFlow.beginningCash),
+            operatingCashFlow: new Decimal(statements.cashFlow.operatingCashFlow),
+            investingCashFlow: new Decimal(statements.cashFlow.investingCashFlow),
+            financingCashFlow: new Decimal(statements.cashFlow.financingCashFlow),
+            netCashFlow: new Decimal(statements.cashFlow.netCashFlow),
+            endingCash: new Decimal(statements.cashFlow.endingCash),
+          },
+        });
+      }
+
+      console.log(`✅ Successfully recalculated financials for ${periodStatements.length} periods`);
     } catch (recalcError: any) {
       // Log but don't fail transaction creation
-      console.error('Failed to recalculate financial statements after transaction creation:', recalcError);
+      console.error('❌ Failed to recalculate financial statements after transaction creation:', recalcError);
     }
     
     return NextResponse.json({ transaction: { ...transaction, amount: transaction.amount.toNumber() } }, { status: 201 });

@@ -3,6 +3,8 @@ import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { Decimal } from '@prisma/client/runtime/library';
+import { calculateFinancialsByPeriod, Transaction as FinancialTransaction } from '@donkey-ideas/financial-engine';
 
 const bulkTransactionSchema = z.object({
   transactions: z.array(z.object({
@@ -17,210 +19,28 @@ const bulkTransactionSchema = z.object({
     isIntercompany: z.boolean().optional(),
     targetCompanyId: z.string().optional(),
   }))
+}).superRefine((data, ctx) => {
+  // PHASE 3 FIX: Enforce target company for intercompany transfers (strict mode)
+  data.transactions.forEach((tx, index) => {
+    if (tx.type === 'intercompany_transfer' && !tx.targetCompanyId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Intercompany transfers require a Target Company ID',
+        path: ['transactions', index, 'targetCompanyId'],
+      });
+    }
+  });
 });
 
-// Helper function to update P&L statement
-async function updatePLStatement(companyId: string, transaction: any, operation: 'add' | 'subtract') {
-  if (transaction.affectsPL === false) return;
-
-  const txDate = new Date(transaction.date);
-  const period = new Date(txDate.getFullYear(), txDate.getMonth(), 1);
-  const amount = typeof transaction.amount === 'string' ? parseFloat(transaction.amount) : transaction.amount;
-  const multiplier = operation === 'add' ? 1 : -1;
-
-  let updateData: any = {};
-
-  if (transaction.type === 'revenue') {
-    const category = (transaction.category || '').toLowerCase().trim();
-    if (category === 'product_sales' || category === 'product sales') {
-      updateData.productRevenue = { increment: amount * multiplier };
-    } else if (category === 'service_revenue' || category === 'service revenue') {
-      updateData.serviceRevenue = { increment: amount * multiplier };
-    } else {
-      updateData.otherRevenue = { increment: amount * multiplier };
-    }
-  } else if (transaction.type === 'expense') {
-    const category = (transaction.category || '').toLowerCase().trim();
-    if (category === 'direct_costs' || category === 'direct costs') {
-      updateData.directCosts = { increment: amount * multiplier };
-    } else if (category === 'infrastructure' || category === 'infrastructure costs') {
-      updateData.infrastructureCosts = { increment: amount * multiplier };
-    } else if (category === 'sales_marketing' || category === 'sales marketing') {
-      updateData.salesMarketing = { increment: amount * multiplier };
-    } else if (category === 'rd' || category === 'r&d' || category === 'research development') {
-      updateData.rdExpenses = { increment: amount * multiplier };
-    } else if (category === 'admin' || category === 'legal' || category === 'travel') {
-      updateData.adminExpenses = { increment: amount * multiplier };
-    } else {
-      updateData.adminExpenses = { increment: amount * multiplier };
-    }
-  }
-
-  if (Object.keys(updateData).length > 0) {
-    // Convert increment operations to actual values for create
-    const createData: any = {
-      companyId,
-      period,
-      productRevenue: 0,
-      serviceRevenue: 0,
-      otherRevenue: 0,
-      directCosts: 0,
-      infrastructureCosts: 0,
-      salesMarketing: 0,
-      rdExpenses: 0,
-      adminExpenses: 0,
-    };
-
-    // Apply the increments as actual values for create
-    Object.keys(updateData).forEach(key => {
-      if (updateData[key].increment !== undefined) {
-        createData[key] = updateData[key].increment;
-      }
-    });
-
-    await prisma.pLStatement.upsert({
-      where: {
-        companyId_period: {
-          companyId,
-          period,
-        },
-      },
-      update: updateData,
-      create: createData,
-    });
-  }
-}
-
-// Helper function to update Balance Sheet
-async function updateBalanceSheet(companyId: string, transaction: any, operation: 'add' | 'subtract') {
-  if (transaction.affectsBalance === false) return;
-
-  const txDate = new Date(transaction.date);
-  const period = new Date(txDate.getFullYear(), txDate.getMonth(), 1);
-  const amount = typeof transaction.amount === 'string' ? parseFloat(transaction.amount) : transaction.amount;
-  const multiplier = operation === 'add' ? 1 : -1;
-
-  let updateData: any = {};
-
-  if (transaction.type === 'asset') {
-    const category = (transaction.category || '').toLowerCase().trim();
-    if (category === 'cash') {
-      updateData.cashEquivalents = { increment: amount * multiplier };
-    } else if (category === 'accounts_receivable' || category === 'accounts receivable') {
-      updateData.accountsReceivable = { increment: amount * multiplier };
-    } else if (category === 'equipment' || category === 'inventory' || category === 'fixed_assets') {
-      updateData.fixedAssets = { increment: amount * multiplier };
-    }
-  } else if (transaction.type === 'liability') {
-    const category = (transaction.category || '').toLowerCase().trim();
-    if (category === 'accounts_payable' || category === 'accounts payable') {
-      updateData.accountsPayable = { increment: amount * multiplier };
-    } else if (category === 'short_term_debt' || category === 'short term debt') {
-      updateData.shortTermDebt = { increment: amount * multiplier };
-    } else if (category === 'long_term_debt' || category === 'long term debt') {
-      updateData.longTermDebt = { increment: amount * multiplier };
-    }
-  }
-
-  if (Object.keys(updateData).length > 0) {
-    // Convert increment operations to actual values for create
-    const createData: any = {
-      companyId,
-      period,
-      cashEquivalents: 0,
-      accountsReceivable: 0,
-      fixedAssets: 0,
-      accountsPayable: 0,
-      shortTermDebt: 0,
-      longTermDebt: 0,
-      totalEquity: 0,
-    };
-
-    // Apply the increments as actual values for create
-    Object.keys(updateData).forEach(key => {
-      if (updateData[key].increment !== undefined) {
-        createData[key] = updateData[key].increment;
-      }
-    });
-
-    await prisma.balanceSheet.upsert({
-      where: {
-        companyId_period: {
-          companyId,
-          period,
-        },
-      },
-      update: updateData,
-      create: createData,
-    });
-  }
-}
-
-// Helper function to update Cash Flow
-async function updateCashFlow(companyId: string, transaction: any, operation: 'add' | 'subtract') {
-  if (transaction.affectsCashFlow === false) return;
-
-  const txDate = new Date(transaction.date);
-  const period = new Date(txDate.getFullYear(), txDate.getMonth(), 1);
-  const amount = typeof transaction.amount === 'string' ? parseFloat(transaction.amount) : transaction.amount;
-  const multiplier = operation === 'add' ? 1 : -1;
-
-  let updateData: any = {};
-
-  if (transaction.type === 'revenue') {
-    updateData.operatingCashFlow = { increment: amount * multiplier };
-  } else if (transaction.type === 'expense') {
-    updateData.operatingCashFlow = { increment: -amount * multiplier };
-  } else if (transaction.type === 'asset') {
-    const category = (transaction.category || '').toLowerCase().trim();
-    if (category === 'equipment' || category === 'inventory') {
-      updateData.investingCashFlow = { increment: -amount * multiplier };
-    } else if (category === 'cash') {
-      updateData.operatingCashFlow = { increment: amount * multiplier };
-    }
-  } else if (transaction.type === 'equity') {
-    updateData.financingCashFlow = { increment: amount * multiplier };
-  } else if (transaction.type === 'liability') {
-    const category = (transaction.category || '').toLowerCase().trim();
-    if (category === 'short_term_debt' || category === 'long_term_debt' || 
-        category === 'short term debt' || category === 'long term debt') {
-      updateData.financingCashFlow = { increment: amount * multiplier };
-    } else if (category === 'accounts_payable' || category === 'accounts payable') {
-      updateData.operatingCashFlow = { increment: -amount * multiplier };
-    }
-  }
-
-  if (Object.keys(updateData).length > 0) {
-    // Convert increment operations to actual values for create
-    const createData: any = {
-      companyId,
-      period,
-      operatingCashFlow: 0,
-      investingCashFlow: 0,
-      financingCashFlow: 0,
-      beginningCash: 0,
-      endingCash: 0,
-    };
-
-    // Apply the increments as actual values for create
-    Object.keys(updateData).forEach(key => {
-      if (updateData[key].increment !== undefined) {
-        createData[key] = updateData[key].increment;
-      }
-    });
-
-    await prisma.cashFlow.upsert({
-      where: {
-        companyId_period: {
-          companyId,
-          period,
-        },
-      },
-      update: updateData,
-      create: createData,
-    });
-  }
-}
+/**
+ * REMOVED: Incremental update functions
+ *
+ * These functions were causing inconsistencies because they calculated
+ * financials differently than the financial engine.
+ *
+ * Now we ONLY use the financial engine for ALL calculations.
+ * See Phase 2 of the plan for details.
+ */
 
 // POST /api/companies/:id/transactions/bulk
 export async function POST(
@@ -306,37 +126,11 @@ export async function POST(
         };
 
         for (const transactionData of batch) {
-          // Handle intercompany transfers
+          // PHASE 3 FIX: Proper intercompany transfer handling with double-entry accounting
           if (transactionData.type === 'intercompany_transfer') {
+            // targetCompanyId is now REQUIRED (validated by schema)
             if (!transactionData.targetCompanyId) {
-              const { isIntercompany, targetCompanyId, ...dbTransactionData } = transactionData;
-              const descText = String(transactionData.description || '').toLowerCase();
-              const categoryText = String(transactionData.category || '').toLowerCase();
-              const rawAmount = Number(transactionData.amount);
-              const hasOutflow = categoryText.includes('transfer_out') ||
-                descText.includes('outflow') ||
-                descText.includes('transfer out') ||
-                descText.includes('to chk') ||
-                descText.includes('from chk');
-              const hasInflow = categoryText.includes('transfer_in') ||
-                descText.includes('inflow') ||
-                descText.includes('transfer in');
-              const normalizedAmount = hasOutflow && rawAmount > 0
-                ? -rawAmount
-                : hasInflow && rawAmount < 0
-                  ? Math.abs(rawAmount)
-                  : rawAmount;
-              const singleTransaction = await tx.transaction.create({
-                data: {
-                  ...dbTransactionData,
-                  companyId: params.id,
-                  date: new Date(transactionData.date),
-                  amount: normalizedAmount,
-                },
-              });
-              results.push(singleTransaction);
-              createdSingle += 1;
-              continue;
+              throw new Error('Intercompany transfers require a Target Company ID (should be caught by validation)');
             }
 
             // Verify target company exists and belongs to the same user
@@ -353,69 +147,104 @@ export async function POST(
 
             const sourceCompany = company;
             const targetCompany = otherCompany;
-
             const transferDate = new Date(transactionData.date);
-            const outgoingAmount = -Math.abs(Number(transactionData.amount));
-            const incomingAmount = Math.abs(Number(transactionData.amount));
+            const transferAmount = Math.abs(Number(transactionData.amount));
             const desc = transactionData.description || 'Intercompany transfer';
 
-            const existingOutgoing = await tx.transaction.findFirst({
+            // PHASE 3 FIX: Create FOUR transactions for proper double-entry accounting
+            // Source Company:
+            //   1. Cash decrease (outflow)
+            //   2. Intercompany Receivable increase (asset - what we're owed)
+            // Target Company:
+            //   3. Cash increase (inflow)
+            //   4. Intercompany Payable increase (liability - what we owe)
+
+            const transferKey = `${transferDate.toISOString()}_${transferAmount}_${sourceCompany.id}_${targetCompany.id}`;
+
+            // Check if this exact transfer already exists (deduplication)
+            const existingSourceCash = await tx.transaction.findFirst({
               where: {
                 companyId: sourceCompany.id,
                 date: transferDate,
-                type: 'intercompany_transfer',
-                category: transactionData.category,
-                amount: outgoingAmount,
-                description: desc ? { contains: desc } : undefined,
+                type: 'asset',
+                category: 'cash',
+                amount: -transferAmount,
+                description: { contains: transferKey },
               },
             });
 
-            const existingIncoming = await tx.transaction.findFirst({
-              where: {
+            if (existingSourceCash) {
+              skippedExisting += 1;
+              continue; // Already processed
+            }
+
+            // Source Company: Cash outflow
+            const sourceCashTx = await tx.transaction.create({
+              data: {
+                companyId: sourceCompany.id,
+                date: transferDate,
+                type: 'asset',
+                category: 'cash',
+                amount: -transferAmount, // Negative = cash decrease
+                description: `${desc} [IC OUTFLOW to ${targetCompany.name}] ${transferKey}`,
+                affectsPL: false,
+                affectsBalance: true,
+                affectsCashFlow: true,
+              },
+            });
+            results.push(sourceCashTx);
+            createdOutgoing += 1;
+
+            // Source Company: Intercompany Receivable
+            const sourceReceivableTx = await tx.transaction.create({
+              data: {
+                companyId: sourceCompany.id,
+                date: transferDate,
+                type: 'asset',
+                category: 'intercompany_receivable',
+                amount: transferAmount, // Positive = asset increase
+                description: `${desc} [IC RECEIVABLE from ${targetCompany.name}] ${transferKey}`,
+                affectsPL: false,
+                affectsBalance: true,
+                affectsCashFlow: false,
+              },
+            });
+            results.push(sourceReceivableTx);
+            createdOutgoing += 1;
+
+            // Target Company: Cash inflow
+            const targetCashTx = await tx.transaction.create({
+              data: {
                 companyId: targetCompany.id,
                 date: transferDate,
-                type: 'intercompany_transfer',
-                category: transactionData.category,
-                amount: incomingAmount,
-                description: desc ? { contains: desc } : undefined,
+                type: 'asset',
+                category: 'cash',
+                amount: transferAmount, // Positive = cash increase
+                description: `${desc} [IC INFLOW from ${sourceCompany.name}] ${transferKey}`,
+                affectsPL: false,
+                affectsBalance: true,
+                affectsCashFlow: true,
               },
             });
+            results.push(targetCashTx);
+            createdIncoming += 1;
 
-            if (existingOutgoing && existingIncoming) {
-              skippedExisting += 1;
-              continue;
-            }
-
-            // Prepare transaction data without fields that don't exist in the database
-            const { isIntercompany, targetCompanyId, ...dbTransactionData } = transactionData;
-
-            if (!existingOutgoing) {
-              const outgoingTransaction = await tx.transaction.create({
-                data: {
-                  ...dbTransactionData,
-                  companyId: sourceCompany.id,
-                  date: transferDate,
-                  description: `${desc} [INTERCOMPANY CASH OUTFLOW to ${targetCompany.name}]`,
-                  amount: outgoingAmount, // Negative for outgoing
-                },
-              });
-              results.push(outgoingTransaction);
-              createdOutgoing += 1;
-            }
-
-            if (!existingIncoming) {
-              const incomingTransaction = await tx.transaction.create({
-                data: {
-                  ...dbTransactionData,
-                  companyId: targetCompany.id,
-                  date: transferDate,
-                  description: `${desc} [INTERCOMPANY CASH INFLOW from ${sourceCompany.name}]`,
-                  amount: incomingAmount, // Positive for incoming
-                },
-              });
-              results.push(incomingTransaction);
-              createdIncoming += 1;
-            }
+            // Target Company: Intercompany Payable
+            const targetPayableTx = await tx.transaction.create({
+              data: {
+                companyId: targetCompany.id,
+                date: transferDate,
+                type: 'liability',
+                category: 'intercompany_payable',
+                amount: transferAmount, // Positive = liability increase
+                description: `${desc} [IC PAYABLE to ${sourceCompany.name}] ${transferKey}`,
+                affectsPL: false,
+                affectsBalance: true,
+                affectsCashFlow: false,
+              },
+            });
+            results.push(targetPayableTx);
+            createdIncoming += 1;
           } else {
             // Create regular transaction - remove fields that don't exist in database
             const { isIntercompany, targetCompanyId, ...dbTransactionData } = transactionData;
@@ -437,15 +266,105 @@ export async function POST(
       }, {
         timeout: 15000, // 15 second timeout
       });
-      
+
       createdTransactions.push(...batchResults);
-      
-      // Update financial statements outside of the main transaction
-      for (const transactionData of batch) {
-        await updatePLStatement(params.id, transactionData, 'add');
-        await updateBalanceSheet(params.id, transactionData, 'add');
-        await updateCashFlow(params.id, transactionData, 'add');
+
+      // Small delay between batches to prevent server overload
+      if (i + batchSize < transactions.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
+    }
+
+    // PHASE 2 FIX: Use financial engine for ALL calculations
+    // After all transactions are created, recalculate financial statements
+    // This ensures consistency with the same engine used everywhere
+    try {
+      console.log(`🔄 Recalculating financials for company ${params.id}...`);
+
+      // Get all transactions for this company
+      const allTransactions = await prisma.transaction.findMany({
+        where: { companyId: params.id },
+        orderBy: { date: 'asc' },
+      });
+
+      // Delete existing financial statements
+      await Promise.all([
+        prisma.pLStatement.deleteMany({ where: { companyId: params.id } }),
+        prisma.balanceSheet.deleteMany({ where: { companyId: params.id } }),
+        prisma.cashFlow.deleteMany({ where: { companyId: params.id } }),
+      ]);
+
+      // Transform transactions for financial engine
+      const financialTxs: FinancialTransaction[] = allTransactions.map(tx => ({
+        id: tx.id,
+        date: new Date(tx.date),
+        type: tx.type as any,
+        category: tx.category || 'Uncategorized',
+        amount: Number(tx.amount),
+        description: tx.description || undefined,
+        affectsPL: tx.affectsPL ?? true,
+        affectsCashFlow: tx.affectsCashFlow ?? true,
+        affectsBalance: tx.affectsBalance ?? true,
+      }));
+
+      // Calculate financials period-by-period (monthly)
+      const periodStatements = calculateFinancialsByPeriod(financialTxs, 'month', 0, 0);
+
+      console.log(`📊 Calculated ${periodStatements.length} periods`);
+
+      // Store each period's statements
+      for (const periodData of periodStatements) {
+        const { statements, period } = periodData;
+
+        // Store P&L
+        await prisma.pLStatement.create({
+          data: {
+            companyId: params.id,
+            period,
+            productRevenue: new Decimal(statements.pl.revenue),
+            serviceRevenue: new Decimal(0),
+            otherRevenue: new Decimal(0),
+            directCosts: new Decimal(statements.pl.cogs),
+            infrastructureCosts: new Decimal(0),
+            salesMarketing: new Decimal(statements.pl.operatingExpenses),
+            rdExpenses: new Decimal(0),
+            adminExpenses: new Decimal(0),
+          },
+        });
+
+        // Store Balance Sheet
+        await prisma.balanceSheet.create({
+          data: {
+            companyId: params.id,
+            period,
+            cashEquivalents: new Decimal(statements.balanceSheet.cash),
+            accountsReceivable: new Decimal(statements.balanceSheet.accountsReceivable),
+            fixedAssets: new Decimal(statements.balanceSheet.fixedAssets),
+            accountsPayable: new Decimal(statements.balanceSheet.accountsPayable),
+            shortTermDebt: new Decimal(statements.balanceSheet.shortTermDebt),
+            longTermDebt: new Decimal(statements.balanceSheet.longTermDebt),
+          },
+        });
+
+        // Store Cash Flow
+        await prisma.cashFlow.create({
+          data: {
+            companyId: params.id,
+            period,
+            beginningCash: new Decimal(statements.cashFlow.beginningCash),
+            operatingCashFlow: new Decimal(statements.cashFlow.operatingCashFlow),
+            investingCashFlow: new Decimal(statements.cashFlow.investingCashFlow),
+            financingCashFlow: new Decimal(statements.cashFlow.financingCashFlow),
+            netCashFlow: new Decimal(statements.cashFlow.netCashFlow),
+            endingCash: new Decimal(statements.cashFlow.endingCash),
+          },
+        });
+      }
+
+      console.log(`✅ Successfully recalculated financials for ${periodStatements.length} periods`);
+    } catch (recalcError: any) {
+      console.error('❌ Failed to recalculate financial statements:', recalcError);
+      // Continue - transactions were created successfully
     }
 
     // Format response
