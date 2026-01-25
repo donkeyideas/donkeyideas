@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@donkey-ideas/ui';
 import api from '@/lib/api-client';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -327,7 +328,19 @@ export function AIAssistantFull() {
                     : 'bg-white/5 text-white [.light_&]:bg-slate-100 [.light_&]:text-slate-900'
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                {message.role === 'user' ? (
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                ) : (
+                  <div className="text-sm leading-relaxed prose prose-sm prose-invert max-w-none [.light_&]:prose-slate
+                    prose-headings:font-semibold prose-headings:text-white [.light_&]:prose-headings:text-slate-900
+                    prose-h3:text-base prose-h3:mt-4 prose-h3:mb-2
+                    prose-p:my-2 prose-p:text-white/90 [.light_&]:prose-p:text-slate-700
+                    prose-strong:text-white [.light_&]:prose-strong:text-slate-900
+                    prose-ul:my-2 prose-li:my-0.5
+                    prose-a:text-blue-400 [.light_&]:prose-a:text-blue-600">
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
           ))}
