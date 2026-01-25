@@ -48,8 +48,6 @@ export default function ConsolidatedViewPage() {
   const [monthFilter, setMonthFilter] = useState<string>(''); // Format: YYYY-MM or empty for all
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [clearAllLoading, setClearAllLoading] = useState(false);
-  const [cleanupLoading, setCleanupLoading] = useState(false);
-  const [fixSignsLoading, setFixSignsLoading] = useState(false);
   const [notification, setNotification] = useState<{ isOpen: boolean; title: string; message: string; type: 'success' | 'error' }>({
     isOpen: false,
     title: '',
@@ -147,100 +145,6 @@ export default function ConsolidatedViewPage() {
     }
   };
 
-  const handleCleanupDuplicates = async () => {
-    if (companies.length === 0) {
-      return;
-    }
-
-    setCleanupLoading(true);
-    try {
-      const results = await Promise.allSettled(
-        companies.map((company) =>
-          api.post(`/companies/${company.id}/transactions/cleanup-duplicates`)
-        )
-      );
-
-      let totalDeleted = 0;
-      const failures: string[] = [];
-
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          totalDeleted += Number(result.value.data?.deleted ?? 0);
-        } else {
-          failures.push(companies[index]?.name || 'Unknown company');
-        }
-      });
-
-      setNotification({
-        isOpen: true,
-        title: failures.length ? 'Cleanup completed with issues' : 'Cleanup completed',
-        message: failures.length
-          ? `Deleted ${totalDeleted} duplicate intercompany transfers. Failed for: ${failures.join(', ')}.`
-          : `Deleted ${totalDeleted} duplicate intercompany transfers across all companies.`,
-        type: failures.length ? 'error' : 'success',
-      });
-
-      await loadConsolidatedFinancials();
-      await queryClient.invalidateQueries({ queryKey: ['consolidated', 'financials'] });
-    } catch (error: any) {
-      setNotification({
-        isOpen: true,
-        title: 'Error',
-        message: error.response?.data?.error || 'Failed to cleanup duplicate transfers',
-        type: 'error',
-      });
-    } finally {
-      setCleanupLoading(false);
-    }
-  };
-
-  const handleFixIntercompanySigns = async () => {
-    if (companies.length === 0) {
-      return;
-    }
-
-    setFixSignsLoading(true);
-    try {
-      const results = await Promise.allSettled(
-        companies.map((company) =>
-          api.post(`/companies/${company.id}/transactions/fix-intercompany-signs`)
-        )
-      );
-
-      let totalUpdated = 0;
-      const failures: string[] = [];
-
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          totalUpdated += Number(result.value.data?.updated ?? 0);
-        } else {
-          failures.push(companies[index]?.name || 'Unknown company');
-        }
-      });
-
-      setNotification({
-        isOpen: true,
-        title: failures.length ? 'Intercompany fix completed with issues' : 'Intercompany signs fixed',
-        message: failures.length
-          ? `Updated ${totalUpdated} intercompany transfers. Failed for: ${failures.join(', ')}.`
-          : `Updated ${totalUpdated} intercompany transfers across all companies.`,
-        type: failures.length ? 'error' : 'success',
-      });
-
-      await loadConsolidatedFinancials();
-      await queryClient.invalidateQueries({ queryKey: ['consolidated', 'financials'] });
-    } catch (error: any) {
-      setNotification({
-        isOpen: true,
-        title: 'Error',
-        message: error.response?.data?.error || 'Failed to fix intercompany signs',
-        type: 'error',
-      });
-    } finally {
-      setFixSignsLoading(false);
-    }
-  };
-
   if (loading) {
     return <div className="text-white/60 [.light_&]:text-slate-600">Loading consolidated financials...</div>;
   }
@@ -289,29 +193,13 @@ export default function ConsolidatedViewPage() {
               })}
             </select>
           </div>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={() => setShowClearAllConfirm(true)}
             className="bg-red-500/20 hover:bg-red-500/30 text-red-400 border-red-500/30"
             disabled={clearAllLoading}
           >
             {clearAllLoading ? 'Deleting...' : 'Clear All Data'}
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={handleCleanupDuplicates}
-            className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border-yellow-500/30"
-            disabled={cleanupLoading}
-          >
-            {cleanupLoading ? 'Cleaning...' : 'Cleanup Duplicates'}
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={handleFixIntercompanySigns}
-            className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-500/30"
-            disabled={fixSignsLoading}
-          >
-            {fixSignsLoading ? 'Fixing...' : 'Fix Intercompany Signs'}
           </Button>
           <Button variant="secondary" onClick={loadConsolidatedFinancials}>
             Refresh
