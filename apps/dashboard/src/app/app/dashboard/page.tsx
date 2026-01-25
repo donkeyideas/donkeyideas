@@ -185,14 +185,14 @@ export default function DashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-xs text-white/50 [.light_&]:text-slate-500 uppercase tracking-wider mb-2">
-              Portfolio Value
+              Total Expenses
             </div>
-            <div className="text-3xl font-bold mb-1 text-white [.light_&]:text-slate-900">
-              {formatCurrency(consolidatedData?.totalValuation || 0)}
+            <div className="text-3xl font-bold mb-1 text-red-400 [.light_&]:text-red-600">
+              {formatCurrency(consolidatedData?.totalExpenses || 0)}
             </div>
-            <div className="text-sm text-green-500 [.light_&]:text-green-600">
-              {consolidatedData && consolidatedData.totalValuation > 0
-                ? '↑ Combined valuation'
+            <div className="text-sm text-white/60 [.light_&]:text-slate-600">
+              {consolidatedData && consolidatedData.totalExpenses > 0
+                ? 'COGS + Operating expenses'
                 : 'No data yet'}
             </div>
           </CardContent>
@@ -215,15 +215,15 @@ export default function DashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-xs text-white/50 [.light_&]:text-slate-500 uppercase tracking-wider mb-2">
-              Team Members
+              Total Cash
             </div>
-            <div className="text-3xl font-bold mb-1 text-white [.light_&]:text-slate-900">
-              {consolidatedData?.totalTeamMembers || 0}
+            <div className="text-3xl font-bold mb-1 text-blue-400 [.light_&]:text-blue-600">
+              {formatCurrency(consolidatedData?.totalCashBalance || 0)}
             </div>
             <div className="text-sm text-white/60 [.light_&]:text-slate-600">
-              {consolidatedData && consolidatedData.totalTeamMembers > 0
-                ? 'Across all companies'
-                : 'No team members'}
+              {consolidatedData && consolidatedData.totalCashBalance > 0
+                ? 'Cash across all companies'
+                : 'No cash data'}
             </div>
           </CardContent>
         </Card>
