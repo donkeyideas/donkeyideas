@@ -326,7 +326,7 @@ export default async function ProcessPage() {
       )}
 
       {/* How It Works - Data-Driven Building */}
-      <section className="py-32 px-8 border-t border-white/10">
+      <section className="py-32 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center mb-16">
             <div className="text-xs uppercase tracking-widest text-blue-400 mb-4 font-medium">
