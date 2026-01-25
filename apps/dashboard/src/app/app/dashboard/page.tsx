@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@donkey-ideas/ui';
 import { EmptyState } from '@donkey-ideas/ui';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -13,6 +13,19 @@ import { StatsGridSkeleton, CardSkeleton } from '@/components/ui/loading-skeleto
 import api from '@/lib/api-client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 
 interface ConsolidatedData {
   totalRevenue: number;
@@ -248,6 +261,9 @@ export default function DashboardPage() {
           <CardContent>
           <div className="grid grid-cols-2 gap-6">
             <div>
+              <h3 className="text-lg font-semibold text-white [.light_&]:text-slate-900 mb-4 pb-2 border-b border-white/10 [.light_&]:border-slate-200">
+                P&L Statement
+              </h3>
               <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Total Revenue</div>
               <div className="text-2xl font-bold mb-4 text-white [.light_&]:text-slate-900">
                 {formatCurrency(consolidatedData?.totalRevenue || 0)}
@@ -266,6 +282,9 @@ export default function DashboardPage() {
               </div>
             </div>
             <div>
+              <h3 className="text-lg font-semibold text-white [.light_&]:text-slate-900 mb-4 pb-2 border-b border-white/10 [.light_&]:border-slate-200">
+                Balance Sheet
+              </h3>
               <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Total Assets</div>
               <div className="text-2xl font-bold mb-4 text-white [.light_&]:text-slate-900">
                 {formatCurrency(consolidatedData?.totalAssets || 0)}
@@ -274,13 +293,15 @@ export default function DashboardPage() {
               <div className="text-xl font-semibold text-red-400 [.light_&]:text-red-600 mb-4">
                 {formatCurrency(consolidatedData?.totalLiabilities || 0)}
               </div>
-              <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Cash Balance</div>
-              <div className="text-xl font-semibold text-blue-400 [.light_&]:text-blue-600 mb-4">
-                {formatCurrency(consolidatedData?.totalCashBalance || 0)}
-              </div>
               <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2">Total Equity</div>
-              <div className="text-xl font-semibold text-green-500 [.light_&]:text-green-600">
+              <div className="text-xl font-semibold text-green-500 [.light_&]:text-green-600 mb-4">
                 {formatCurrency(consolidatedData?.totalEquity || 0)}
+              </div>
+              <div className="text-sm text-white/60 [.light_&]:text-slate-600 mb-2 pt-2 border-t border-white/10 [.light_&]:border-slate-200">
+                Liabilities + Equity
+              </div>
+              <div className="text-xl font-semibold text-white [.light_&]:text-slate-900">
+                {formatCurrency((consolidatedData?.totalLiabilities || 0) + (consolidatedData?.totalEquity || 0))}
               </div>
             </div>
           </div>
@@ -288,37 +309,119 @@ export default function DashboardPage() {
       </Card>
       )}
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4">
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={() => router.push('/app/financials')}
-            >
-              Update Financials
-            </Button>
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={() => router.push('/app/deck-builder')}
-            >
-              Generate Deck
-            </Button>
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={() => router.push('/app/investor-portal')}
-            >
-              Send Update
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Financial Charts */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Revenue vs Expenses Line Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Financial Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart
+                data={useMemo(() => {
+                  const revenue = consolidatedData?.totalRevenue || 0;
+                  const cogs = consolidatedData?.totalCOGS || 0;
+                  const opex = consolidatedData?.totalOperatingExpenses || 0;
+                  const profit = consolidatedData?.netProfit || 0;
+
+                  // Create a simple comparison view
+                  return [
+                    { name: 'Revenue', value: revenue, type: 'Revenue' },
+                    { name: 'COGS', value: cogs, type: 'Expenses' },
+                    { name: 'OpEx', value: opex, type: 'Expenses' },
+                    { name: 'Net Profit', value: profit, type: 'Profit' },
+                  ];
+                }, [consolidatedData])}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis
+                  dataKey="name"
+                  stroke="rgba(255,255,255,0.5)"
+                  tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+                />
+                <YAxis
+                  stroke="rgba(255,255,255,0.5)"
+                  tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '8px',
+                  }}
+                  formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
+                  activeDot={{ r: 8, fill: '#60a5fa' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Expense Breakdown Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Expense Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={useMemo(() => {
+                    const cogs = consolidatedData?.totalCOGS || 0;
+                    const opex = consolidatedData?.totalOperatingExpenses || 0;
+
+                    if (cogs === 0 && opex === 0) {
+                      return [{ name: 'No Data', value: 1 }];
+                    }
+
+                    return [
+                      { name: 'COGS', value: cogs },
+                      { name: 'Operating Expenses', value: opex },
+                    ].filter(item => item.value > 0);
+                  }, [consolidatedData])}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  paddingAngle={5}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                  labelLine={{ stroke: 'rgba(255,255,255,0.5)' }}
+                >
+                  {[
+                    { name: 'COGS', color: '#f97316' },
+                    { name: 'Operating Expenses', color: '#ef4444' },
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '8px',
+                  }}
+                  formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']}
+                />
+                <Legend
+                  wrapperStyle={{ color: 'rgba(255,255,255,0.7)' }}
+                  formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.7)' }}>{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       <CreateCompanyModal
         isOpen={showCreateModal}
