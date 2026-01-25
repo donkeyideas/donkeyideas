@@ -13,19 +13,6 @@ import { StatsGridSkeleton, CardSkeleton } from '@/components/ui/loading-skeleto
 import api from '@/lib/api-client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
 
 interface ConsolidatedData {
   totalRevenue: number;
@@ -71,33 +58,40 @@ export default function DashboardPage() {
     }).format(amount);
   };
 
-  // Chart data - must be at top level, not inside JSX
-  const financialOverviewData = useMemo(() => {
+  // Calculate KPI metrics
+  const kpiMetrics = useMemo(() => {
     const revenue = consolidatedData?.totalRevenue || 0;
     const cogs = consolidatedData?.totalCOGS || 0;
     const opex = consolidatedData?.totalOperatingExpenses || 0;
-    const profit = consolidatedData?.netProfit || 0;
+    const netProfit = consolidatedData?.netProfit || 0;
+    const assets = consolidatedData?.totalAssets || 0;
+    const liabilities = consolidatedData?.totalLiabilities || 0;
+    const cash = consolidatedData?.totalCashBalance || 0;
+    const totalExpenses = consolidatedData?.totalExpenses || 0;
 
-    return [
-      { name: 'Revenue', value: revenue, type: 'Revenue' },
-      { name: 'COGS', value: cogs, type: 'Expenses' },
-      { name: 'OpEx', value: opex, type: 'Expenses' },
-      { name: 'Net Profit', value: profit, type: 'Profit' },
-    ];
-  }, [consolidatedData]);
+    // Profitability Ratios
+    const grossProfit = revenue - cogs;
+    const grossMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+    const netProfitMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+    const operatingMargin = revenue > 0 ? ((revenue - cogs - opex) / revenue) * 100 : 0;
 
-  const expenseBreakdownData = useMemo(() => {
-    const cogs = consolidatedData?.totalCOGS || 0;
-    const opex = consolidatedData?.totalOperatingExpenses || 0;
+    // Financial Health Ratios
+    const currentRatio = liabilities > 0 ? assets / liabilities : 0;
+    const equityRatio = assets > 0 ? ((assets - liabilities) / assets) * 100 : 0;
 
-    if (cogs === 0 && opex === 0) {
-      return [{ name: 'No Data', value: 1 }];
-    }
+    // Cash metrics
+    const monthlyBurn = totalExpenses / 12; // Approximate monthly
+    const cashRunwayMonths = monthlyBurn > 0 ? cash / monthlyBurn : 0;
 
-    return [
-      { name: 'COGS', value: cogs },
-      { name: 'Operating Expenses', value: opex },
-    ].filter(item => item.value > 0);
+    return {
+      grossMargin,
+      netProfitMargin,
+      operatingMargin,
+      currentRatio,
+      equityRatio,
+      cashRunwayMonths,
+      grossProfit,
+    };
   }, [consolidatedData]);
 
   const handleRebuildAll = async () => {
@@ -338,91 +332,139 @@ export default function DashboardPage() {
       </Card>
       )}
 
-      {/* Financial Charts */}
+      {/* Key Performance Indicators */}
       <div className="grid grid-cols-2 gap-6">
-        {/* Revenue vs Expenses Line Chart */}
+        {/* Profitability KPIs */}
         <Card>
           <CardHeader>
-            <CardTitle>Financial Overview</CardTitle>
+            <CardTitle>Profitability Metrics</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart
-                data={financialOverviewData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis
-                  dataKey="name"
-                  stroke="rgba(255,255,255,0.5)"
-                  tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
-                />
-                <YAxis
-                  stroke="rgba(255,255,255,0.5)"
-                  tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
-                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
-                  activeDot={{ r: 8, fill: '#60a5fa' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              {/* Gross Margin */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-white/60 [.light_&]:text-slate-600">Gross Margin</span>
+                  <span className={`text-lg font-bold ${kpiMetrics.grossMargin >= 50 ? 'text-green-500' : kpiMetrics.grossMargin >= 25 ? 'text-yellow-500' : 'text-red-500'}`}>
+                    {kpiMetrics.grossMargin.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-white/10 [.light_&]:bg-slate-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${kpiMetrics.grossMargin >= 50 ? 'bg-green-500' : kpiMetrics.grossMargin >= 25 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                    style={{ width: `${Math.min(kpiMetrics.grossMargin, 100)}%` }}
+                  />
+                </div>
+                <div className="text-xs text-white/40 [.light_&]:text-slate-500 mt-1">
+                  Gross Profit: {formatCurrency(kpiMetrics.grossProfit)}
+                </div>
+              </div>
+
+              {/* Operating Margin */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-white/60 [.light_&]:text-slate-600">Operating Margin</span>
+                  <span className={`text-lg font-bold ${kpiMetrics.operatingMargin >= 20 ? 'text-green-500' : kpiMetrics.operatingMargin >= 10 ? 'text-yellow-500' : 'text-red-500'}`}>
+                    {kpiMetrics.operatingMargin.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-white/10 [.light_&]:bg-slate-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${kpiMetrics.operatingMargin >= 20 ? 'bg-green-500' : kpiMetrics.operatingMargin >= 10 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                    style={{ width: `${Math.min(Math.max(kpiMetrics.operatingMargin, 0), 100)}%` }}
+                  />
+                </div>
+                <div className="text-xs text-white/40 [.light_&]:text-slate-500 mt-1">
+                  Revenue minus COGS and OpEx
+                </div>
+              </div>
+
+              {/* Net Profit Margin */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-white/60 [.light_&]:text-slate-600">Net Profit Margin</span>
+                  <span className={`text-lg font-bold ${kpiMetrics.netProfitMargin >= 15 ? 'text-green-500' : kpiMetrics.netProfitMargin >= 5 ? 'text-yellow-500' : 'text-red-500'}`}>
+                    {kpiMetrics.netProfitMargin.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-white/10 [.light_&]:bg-slate-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${kpiMetrics.netProfitMargin >= 15 ? 'bg-green-500' : kpiMetrics.netProfitMargin >= 5 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                    style={{ width: `${Math.min(Math.max(kpiMetrics.netProfitMargin, 0), 100)}%` }}
+                  />
+                </div>
+                <div className="text-xs text-white/40 [.light_&]:text-slate-500 mt-1">
+                  Final profit after all expenses
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Expense Breakdown Pie Chart */}
+        {/* Financial Health KPIs */}
         <Card>
           <CardHeader>
-            <CardTitle>Expense Breakdown</CardTitle>
+            <CardTitle>Financial Health</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={expenseBreakdownData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-                  labelLine={{ stroke: 'rgba(255,255,255,0.5)' }}
-                >
-                  {[
-                    { name: 'COGS', color: '#f97316' },
-                    { name: 'Operating Expenses', color: '#ef4444' },
-                  ].map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']}
-                />
-                <Legend
-                  wrapperStyle={{ color: 'rgba(255,255,255,0.7)' }}
-                  formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.7)' }}>{value}</span>}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              {/* Current Ratio */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-white/60 [.light_&]:text-slate-600">Current Ratio</span>
+                  <span className={`text-lg font-bold ${kpiMetrics.currentRatio >= 2 ? 'text-green-500' : kpiMetrics.currentRatio >= 1 ? 'text-yellow-500' : 'text-red-500'}`}>
+                    {kpiMetrics.currentRatio.toFixed(2)}x
+                  </span>
+                </div>
+                <div className="w-full bg-white/10 [.light_&]:bg-slate-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${kpiMetrics.currentRatio >= 2 ? 'bg-green-500' : kpiMetrics.currentRatio >= 1 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                    style={{ width: `${Math.min(kpiMetrics.currentRatio * 25, 100)}%` }}
+                  />
+                </div>
+                <div className="text-xs text-white/40 [.light_&]:text-slate-500 mt-1">
+                  Assets / Liabilities (healthy: {'>'} 1.5x)
+                </div>
+              </div>
+
+              {/* Equity Ratio */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-white/60 [.light_&]:text-slate-600">Equity Ratio</span>
+                  <span className={`text-lg font-bold ${kpiMetrics.equityRatio >= 50 ? 'text-green-500' : kpiMetrics.equityRatio >= 30 ? 'text-yellow-500' : 'text-red-500'}`}>
+                    {kpiMetrics.equityRatio.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-white/10 [.light_&]:bg-slate-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${kpiMetrics.equityRatio >= 50 ? 'bg-green-500' : kpiMetrics.equityRatio >= 30 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                    style={{ width: `${Math.min(Math.max(kpiMetrics.equityRatio, 0), 100)}%` }}
+                  />
+                </div>
+                <div className="text-xs text-white/40 [.light_&]:text-slate-500 mt-1">
+                  Equity / Total Assets
+                </div>
+              </div>
+
+              {/* Cash Runway */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-white/60 [.light_&]:text-slate-600">Cash Runway</span>
+                  <span className={`text-lg font-bold ${kpiMetrics.cashRunwayMonths >= 12 ? 'text-green-500' : kpiMetrics.cashRunwayMonths >= 6 ? 'text-yellow-500' : 'text-red-500'}`}>
+                    {kpiMetrics.cashRunwayMonths >= 99 ? '99+' : kpiMetrics.cashRunwayMonths.toFixed(1)} mo
+                  </span>
+                </div>
+                <div className="w-full bg-white/10 [.light_&]:bg-slate-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${kpiMetrics.cashRunwayMonths >= 12 ? 'bg-green-500' : kpiMetrics.cashRunwayMonths >= 6 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                    style={{ width: `${Math.min(kpiMetrics.cashRunwayMonths * 8.33, 100)}%` }}
+                  />
+                </div>
+                <div className="text-xs text-white/40 [.light_&]:text-slate-500 mt-1">
+                  Months of cash at current burn rate
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
