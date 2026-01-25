@@ -65,7 +65,8 @@ export default function ConsolidatedBudgetPage() {
         throw new Error('Failed to load companies');
       }
       const companiesData = await companiesRes.json();
-      const validCompanies = Array.isArray(companiesData) ? companiesData : [];
+      // API returns { companies: [...] }, not a direct array
+      const validCompanies = companiesData.companies || [];
       setCompanies(validCompanies);
 
       if (validCompanies.length === 0) {
