@@ -71,6 +71,35 @@ export default function DashboardPage() {
     }).format(amount);
   };
 
+  // Chart data - must be at top level, not inside JSX
+  const financialOverviewData = useMemo(() => {
+    const revenue = consolidatedData?.totalRevenue || 0;
+    const cogs = consolidatedData?.totalCOGS || 0;
+    const opex = consolidatedData?.totalOperatingExpenses || 0;
+    const profit = consolidatedData?.netProfit || 0;
+
+    return [
+      { name: 'Revenue', value: revenue, type: 'Revenue' },
+      { name: 'COGS', value: cogs, type: 'Expenses' },
+      { name: 'OpEx', value: opex, type: 'Expenses' },
+      { name: 'Net Profit', value: profit, type: 'Profit' },
+    ];
+  }, [consolidatedData]);
+
+  const expenseBreakdownData = useMemo(() => {
+    const cogs = consolidatedData?.totalCOGS || 0;
+    const opex = consolidatedData?.totalOperatingExpenses || 0;
+
+    if (cogs === 0 && opex === 0) {
+      return [{ name: 'No Data', value: 1 }];
+    }
+
+    return [
+      { name: 'COGS', value: cogs },
+      { name: 'Operating Expenses', value: opex },
+    ].filter(item => item.value > 0);
+  }, [consolidatedData]);
+
   const handleRebuildAll = async () => {
     setRebuildLoading(true);
     try {
@@ -319,20 +348,7 @@ export default function DashboardPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart
-                data={useMemo(() => {
-                  const revenue = consolidatedData?.totalRevenue || 0;
-                  const cogs = consolidatedData?.totalCOGS || 0;
-                  const opex = consolidatedData?.totalOperatingExpenses || 0;
-                  const profit = consolidatedData?.netProfit || 0;
-
-                  // Create a simple comparison view
-                  return [
-                    { name: 'Revenue', value: revenue, type: 'Revenue' },
-                    { name: 'COGS', value: cogs, type: 'Expenses' },
-                    { name: 'OpEx', value: opex, type: 'Expenses' },
-                    { name: 'Net Profit', value: profit, type: 'Profit' },
-                  ];
-                }, [consolidatedData])}
+                data={financialOverviewData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -376,19 +392,7 @@ export default function DashboardPage() {
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
-                  data={useMemo(() => {
-                    const cogs = consolidatedData?.totalCOGS || 0;
-                    const opex = consolidatedData?.totalOperatingExpenses || 0;
-
-                    if (cogs === 0 && opex === 0) {
-                      return [{ name: 'No Data', value: 1 }];
-                    }
-
-                    return [
-                      { name: 'COGS', value: cogs },
-                      { name: 'Operating Expenses', value: opex },
-                    ].filter(item => item.value > 0);
-                  }, [consolidatedData])}
+                  data={expenseBreakdownData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
