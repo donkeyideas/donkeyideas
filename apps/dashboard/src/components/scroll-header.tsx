@@ -74,10 +74,10 @@ export default function ScrollHeader() {
         >
           <Link
             href="/login"
-            className={`text-sm transition-all ${
+            className={`text-sm px-4 py-2 rounded-full transition-all duration-500 ease-out text-white/90 hover:text-white ${
               isScrolled
-                ? 'text-white/90 hover:text-white'
-                : 'px-4 py-2 border border-white/20 rounded-full text-white/90 hover:text-white hover:border-white/40'
+                ? 'border border-transparent'
+                : 'border border-white/20 hover:border-white/40'
             }`}
           >
             Sign in
