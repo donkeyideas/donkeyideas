@@ -230,11 +230,6 @@ export default function ConsolidatedAnalyticsPage() {
             />
           </div>
 
-          {/* Company Breakdown Table */}
-          <div className="mb-6">
-            <GACompanyTable data={analyticsData.aggregated?.companyBreakdown || []} />
-          </div>
-
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <GASessionsChart
@@ -245,6 +240,11 @@ export default function ConsolidatedAnalyticsPage() {
               data={analyticsData.aggregated?.trafficSources || []}
               title="Portfolio Traffic Sources"
             />
+          </div>
+
+          {/* Company Breakdown Table */}
+          <div className="mb-6">
+            <GACompanyTable data={analyticsData.aggregated?.companyBreakdown || []} />
           </div>
 
           {/* Not Connected Companies */}
