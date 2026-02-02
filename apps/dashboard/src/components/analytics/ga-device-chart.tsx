@@ -8,6 +8,7 @@ interface DeviceData {
   device: string;
   sessions: number;
   percentage: number;
+  [key: string]: string | number; // Required for Recharts compatibility
 }
 
 interface GADeviceChartProps {

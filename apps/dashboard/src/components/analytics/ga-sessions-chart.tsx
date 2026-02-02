@@ -20,6 +20,7 @@ interface SessionData {
   sessions: number;
   users: number;
   pageviews?: number;
+  [key: string]: string | number | undefined; // Required for Recharts compatibility
 }
 
 interface GASessionsChartProps {
