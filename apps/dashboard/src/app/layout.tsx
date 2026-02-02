@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { Providers } from './providers';
+
+const GA_MEASUREMENT_ID = 'G-N12TK3KWF4';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.donkeyideas.com'),
@@ -70,6 +73,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
+      </head>
       <body>
         <Providers>{children}</Providers>
       </body>
