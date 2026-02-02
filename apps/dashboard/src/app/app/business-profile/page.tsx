@@ -36,6 +36,8 @@ export default function BusinessProfilePage() {
     teamSize: 0,
     totalFunding: 0,
     keyAchievements: '',
+    // Google Analytics
+    gaPropertyId: '',
   });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -151,6 +153,7 @@ export default function BusinessProfilePage() {
         teamSize: profileData.teamSize || 0,
         totalFunding: profileData.totalFunding || 0,
         keyAchievements: profileData.keyAchievements || '',
+        gaPropertyId: profileData.gaPropertyId || '',
       };
       
       setFormData(updatedFormData);
@@ -709,6 +712,63 @@ export default function BusinessProfilePage() {
               className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
               placeholder="Competitor 1, Competitor 2, Competitor 3"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Google Analytics Integration */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Google Analytics Integration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">GA4 Property ID</label>
+            <input
+              type="text"
+              value={formData.gaPropertyId}
+              onChange={(e) => setFormData({ ...formData, gaPropertyId: e.target.value })}
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
+              placeholder="123456789"
+            />
+            <p className="text-xs text-white/40 [.light_&]:text-slate-500 mt-1">
+              Find your Property ID in Google Analytics: Admin → Property Settings → Property ID
+            </p>
+          </div>
+
+          {formData.gaPropertyId && (
+            <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-green-400">
+                Property ID configured. View analytics on the{' '}
+                <a href="/app/google-analytics" className="underline hover:text-green-300">
+                  Google Analytics page
+                </a>
+              </span>
+            </div>
+          )}
+
+          {!formData.gaPropertyId && (
+            <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-yellow-400">
+                Enter your GA4 Property ID to enable analytics tracking
+              </span>
+            </div>
+          )}
+
+          <div className="pt-2">
+            <h4 className="text-sm font-medium mb-2 text-white/80 [.light_&]:text-slate-700">How to find your Property ID:</h4>
+            <ol className="text-xs text-white/50 [.light_&]:text-slate-500 space-y-1 list-decimal list-inside">
+              <li>Go to <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Google Analytics</a></li>
+              <li>Click the gear icon (Admin) in the bottom left</li>
+              <li>In the Property column, click "Property Settings"</li>
+              <li>Copy the "Property ID" (numeric value like 123456789)</li>
+            </ol>
           </div>
         </CardContent>
       </Card>

@@ -243,6 +243,13 @@ model BusinessProfile {
   totalFunding         Decimal?
   keyAchievements      String?
   projectStatus        String? // Production, Beta, Alpha, Development, Idea
+
+  // Google Analytics Integration
+  gaPropertyId         String?   // GA4 Property ID (e.g., "123456789")
+  gaRefreshToken       String?   // Encrypted OAuth refresh token (optional)
+  gaConnectedAt        DateTime? // When GA was connected
+  gaConnectionStatus   String?   // "connected", "pending", "error"
+
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 

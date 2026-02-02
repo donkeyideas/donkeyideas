@@ -15,6 +15,7 @@ const donkeyIdeasNavigation = [
       { name: 'Dashboard', href: '/app/dashboard', icon: '' },
       { name: 'Consolidated View', href: '/app/consolidated', icon: '' },
       { name: 'Consolidated Budget', href: '/app/budget/consolidated', icon: '' },
+      { name: 'Consolidated Analytics', href: '/app/consolidated-analytics', icon: '' },
       { name: 'Analytics & Reports', href: '/app/analytics', icon: '' },
       { name: 'Project Board', href: '/app/consolidated-projects', icon: '' },
     ],
@@ -49,6 +50,7 @@ const activeCompanyNavigation = [
     section: 'Operations',
     items: [
       { name: 'Business Profile', href: '/app/business-profile', icon: '' },
+      { name: 'Google Analytics', href: '/app/google-analytics', icon: '' },
       { name: 'Whitepaper', href: '/app/whitepaper', icon: '' },
       { name: 'Project Board', href: '/app/projects', icon: '' },
       { name: 'Document Library', href: '/app/documents', icon: '' },

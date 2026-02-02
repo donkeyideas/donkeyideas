@@ -22,6 +22,8 @@ const profileSchema = z.object({
   teamSize: z.number().int().min(0).optional().nullable(),
   totalFunding: z.number().min(0).optional().nullable(),
   keyAchievements: z.string().optional().nullable(),
+  // Google Analytics
+  gaPropertyId: z.string().optional().nullable(),
 });
 
 // GET /api/companies/:id/profile
@@ -136,6 +138,9 @@ export async function PUT(
     // Convert empty string to null for projectStatus
     const projectStatus = validated.projectStatus === '' ? null : validated.projectStatus;
     
+    // Convert empty string to null for gaPropertyId
+    const gaPropertyId = validated.gaPropertyId === '' ? null : validated.gaPropertyId;
+
     const profile = await prisma.businessProfile.upsert({
       where: { companyId: params.id },
       create: {
@@ -159,6 +164,7 @@ export async function PUT(
           ? new Decimal(validated.totalFunding)
           : null,
         keyAchievements: validated.keyAchievements,
+        gaPropertyId: gaPropertyId,
       },
       update: {
         mission: validated.mission,
@@ -180,6 +186,7 @@ export async function PUT(
           ? new Decimal(validated.totalFunding)
           : null,
         keyAchievements: validated.keyAchievements,
+        gaPropertyId: gaPropertyId,
       },
     });
     
