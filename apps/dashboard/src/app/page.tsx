@@ -298,11 +298,11 @@ export default async function HomePage() {
             </div>
 
             {/* Right - Large Image */}
-            <div className="relative rounded-2xl overflow-hidden">
+            <div className="relative rounded-2xl overflow-hidden bg-slate-900">
               <img
                 src={engageContent.ventureCanvas?.imageUrl || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop'}
                 alt="Venture Canvas Platform"
-                className="w-full h-auto"
+                className="w-full h-auto object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
             </div>
