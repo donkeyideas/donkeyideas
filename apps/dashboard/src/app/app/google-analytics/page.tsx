@@ -11,6 +11,7 @@ import {
   GATrafficSources,
   GATopPages,
   GADeviceChart,
+  GARecommendationsCard,
 } from '@/components/analytics';
 
 type DateRange = '7d' | '30d' | '90d';
@@ -200,6 +201,11 @@ export default function GoogleAnalyticsPage() {
       {/* KPI Cards */}
       <div className="mb-6">
         <GAKPICards data={data.overview} />
+      </div>
+
+      {/* AI Recommendations */}
+      <div className="mb-6">
+        <GARecommendationsCard companyId={currentCompany.id} />
       </div>
 
       {/* Charts Row 1 */}

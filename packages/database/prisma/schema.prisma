@@ -97,24 +97,25 @@ model Company {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plStatements     PLStatement[]
-  balanceSheets    BalanceSheet[]
-  cashFlows        CashFlow[]
-  transactions     Transaction[]
-  kpis             KPI[]
-  businessProfile  BusinessProfile?
-  boards           Board[]
-  documents        Document[]
-  decks            Deck[]
-  pages            Page[]
-  teamMembers      TeamMember[]
-  investorAccess   InvestorAccess[]
-  valuations       Valuation[]
-  whitepaper       Whitepaper?
-  budgetCategories BudgetCategory[]
-  budgetPeriods    BudgetPeriod[]
-  budgetLines      BudgetLine[]
+  user                      User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plStatements              PLStatement[]
+  balanceSheets             BalanceSheet[]
+  cashFlows                 CashFlow[]
+  transactions              Transaction[]
+  kpis                      KPI[]
+  businessProfile           BusinessProfile?
+  boards                    Board[]
+  documents                 Document[]
+  decks                     Deck[]
+  pages                     Page[]
+  teamMembers               TeamMember[]
+  investorAccess            InvestorAccess[]
+  valuations                Valuation[]
+  whitepaper                Whitepaper?
+  budgetCategories          BudgetCategory[]
+  budgetPeriods             BudgetPeriod[]
+  budgetLines               BudgetLine[]
+  analyticsRecommendations  AnalyticsRecommendation[]
 
   @@map("companies")
 }
@@ -563,6 +564,36 @@ model ContactSubmission {
   createdAt DateTime @default(now())
 
   @@map("contact_submissions")
+}
+
+// AI Analytics Recommendations
+model AnalyticsRecommendation {
+  id            String   @id @default(cuid())
+  companyId     String
+  date          DateTime @db.Date // Date the recommendation was generated for
+
+  // Analytics snapshot at generation time
+  analyticsData Json     // Store the GA data used for analysis
+
+  // AI-generated content
+  summary       String   // Brief summary of analytics performance
+  pros          Json     // Array of positive insights: [{title, description}]
+  cons          Json     // Array of areas for improvement: [{title, description}]
+  recommendations Json   // Array of actionable recommendations: [{title, description, priority}]
+
+  // Metadata
+  tokensUsed    Int?     // For cost tracking
+  cost          Decimal? // Cost of this analysis
+  model         String   @default("deepseek-chat")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, date]) // One recommendation per company per day
+  @@index([companyId, date])
+  @@map("analytics_recommendations")
 }
 
 // AI Chat History
