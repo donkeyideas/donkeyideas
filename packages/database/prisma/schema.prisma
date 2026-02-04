@@ -561,8 +561,11 @@ model ContactSubmission {
   company   String?
   message   String
   interest  String // platform, services, partnership, other
+  read      Boolean  @default(false)
+  readAt    DateTime?
   createdAt DateTime @default(now())
 
+  @@index([read, createdAt])
   @@map("contact_submissions")
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
@@ -24,6 +24,7 @@ const donkeyIdeasNavigation = [
     section: 'Content & Systems',
     items: [
       { name: 'Website Manager', href: '/app/website', icon: '' },
+      { name: 'Contact Messages', href: '/app/messages', icon: '', showBadge: true },
     ],
   },
   {
@@ -72,12 +73,33 @@ export function Sidebar() {
   const { companies: companiesFromStore, currentCompany, setCurrentCompany, setCompanies } = useAppStore();
   const { data: companiesData, isLoading: companiesLoading } = useCompanies();
   const { theme } = useTheme();
-  
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+
   // Use companies from React Query if available, fallback to store
   // Ensure companies is always an array
-  const companies = Array.isArray(companiesData) 
-    ? companiesData 
+  const companies = Array.isArray(companiesData)
+    ? companiesData
     : (Array.isArray(companiesFromStore) ? companiesFromStore : []);
+
+  // Fetch unread message count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await fetch('/api/admin/messages/unread-count');
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadMessageCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchUnreadCount, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Update Zustand store when companies load
   useEffect(() => {
@@ -124,8 +146,9 @@ export function Sidebar() {
             <div className={`text-xs ${sectionTextClass} uppercase tracking-wider px-4 mb-2`}>
               {section.section}
             </div>
-            {section.items.map((item) => {
+            {section.items.map((item: any) => {
               const isActive = pathname === item.href;
+              const showBadge = item.showBadge && unreadMessageCount > 0;
               return (
                 <Link
                   key={item.href}
@@ -137,6 +160,11 @@ export function Sidebar() {
                   }`}
                 >
                   <span className="text-sm">{item.name}</span>
+                  {showBadge && (
+                    <span className="px-2 py-0.5 bg-blue-500 text-white text-xs font-medium rounded-full min-w-[20px] text-center">
+                      {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
