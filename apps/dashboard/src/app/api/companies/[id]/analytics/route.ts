@@ -2,6 +2,203 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { BetaAnalyticsDataClient } from '@google-analytics/data';
+
+// Initialize GA4 Data API client with service account credentials
+function getAnalyticsClient() {
+  const clientEmail = process.env.GA_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (!clientEmail || !privateKey) {
+    return null;
+  }
+
+  return new BetaAnalyticsDataClient({
+    credentials: {
+      client_email: clientEmail,
+      private_key: privateKey,
+    },
+  });
+}
+
+// Calculate date range
+function getDateRange(range: string): { startDate: string; endDate: string } {
+  const endDate = new Date();
+  const startDate = new Date();
+
+  switch (range) {
+    case '7d':
+      startDate.setDate(endDate.getDate() - 7);
+      break;
+    case '90d':
+      startDate.setDate(endDate.getDate() - 90);
+      break;
+    case '30d':
+    default:
+      startDate.setDate(endDate.getDate() - 30);
+      break;
+  }
+
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+  };
+}
+
+// Fetch real GA4 data
+async function fetchRealAnalytics(propertyId: string, dateRange: string) {
+  const client = getAnalyticsClient();
+  if (!client) {
+    throw new Error('Google Analytics credentials not configured');
+  }
+
+  const { startDate, endDate } = getDateRange(dateRange);
+  const property = `properties/${propertyId}`;
+
+  // Fetch overview metrics
+  const [overviewResponse] = await client.runReport({
+    property,
+    dateRanges: [{ startDate, endDate }],
+    metrics: [
+      { name: 'totalUsers' },
+      { name: 'newUsers' },
+      { name: 'sessions' },
+      { name: 'screenPageViews' },
+      { name: 'averageSessionDuration' },
+      { name: 'bounceRate' },
+      { name: 'engagementRate' },
+    ],
+  });
+
+  // Fetch sessions over time
+  const [sessionsOverTimeResponse] = await client.runReport({
+    property,
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: 'date' }],
+    metrics: [
+      { name: 'sessions' },
+      { name: 'totalUsers' },
+      { name: 'screenPageViews' },
+    ],
+    orderBys: [{ dimension: { dimensionName: 'date' } }],
+  });
+
+  // Fetch traffic sources
+  const [trafficSourcesResponse] = await client.runReport({
+    property,
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+    metrics: [{ name: 'sessions' }],
+    orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+    limit: 5,
+  });
+
+  // Fetch top pages
+  const [topPagesResponse] = await client.runReport({
+    property,
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
+    metrics: [
+      { name: 'screenPageViews' },
+      { name: 'averageSessionDuration' },
+    ],
+    orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+    limit: 5,
+  });
+
+  // Fetch device breakdown
+  const [devicesResponse] = await client.runReport({
+    property,
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: 'deviceCategory' }],
+    metrics: [{ name: 'sessions' }],
+    orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+  });
+
+  // Parse overview data
+  const overviewRow = overviewResponse.rows?.[0];
+  const totalUsers = parseInt(overviewRow?.metricValues?.[0]?.value || '0');
+  const newUsers = parseInt(overviewRow?.metricValues?.[1]?.value || '0');
+  const sessions = parseInt(overviewRow?.metricValues?.[2]?.value || '0');
+  const pageviews = parseInt(overviewRow?.metricValues?.[3]?.value || '0');
+  const avgSessionDuration = Math.round(parseFloat(overviewRow?.metricValues?.[4]?.value || '0'));
+  const bounceRate = Math.round(parseFloat(overviewRow?.metricValues?.[5]?.value || '0') * 100);
+  const engagementRate = Math.round(parseFloat(overviewRow?.metricValues?.[6]?.value || '0') * 100);
+
+  // Parse sessions over time
+  const sessionsOverTime = (sessionsOverTimeResponse.rows || []).map((row) => {
+    const dateStr = row.dimensionValues?.[0]?.value || '';
+    // Format YYYYMMDD to YYYY-MM-DD
+    const formattedDate = dateStr.length === 8
+      ? `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`
+      : dateStr;
+    return {
+      date: formattedDate,
+      sessions: parseInt(row.metricValues?.[0]?.value || '0'),
+      users: parseInt(row.metricValues?.[1]?.value || '0'),
+      pageviews: parseInt(row.metricValues?.[2]?.value || '0'),
+    };
+  });
+
+  // Parse traffic sources
+  const totalTrafficSessions = (trafficSourcesResponse.rows || []).reduce(
+    (sum, row) => sum + parseInt(row.metricValues?.[0]?.value || '0'),
+    0
+  );
+  const trafficSources = (trafficSourcesResponse.rows || []).map((row) => {
+    const sourceSessions = parseInt(row.metricValues?.[0]?.value || '0');
+    return {
+      source: row.dimensionValues?.[0]?.value || 'Unknown',
+      sessions: sourceSessions,
+      percentage: totalTrafficSessions > 0
+        ? Math.round((sourceSessions / totalTrafficSessions) * 100)
+        : 0,
+    };
+  });
+
+  // Parse top pages
+  const topPages = (topPagesResponse.rows || []).map((row) => ({
+    page: row.dimensionValues?.[0]?.value || '/',
+    title: row.dimensionValues?.[1]?.value || 'Unknown',
+    pageviews: parseInt(row.metricValues?.[0]?.value || '0'),
+    avgTimeOnPage: Math.round(parseFloat(row.metricValues?.[1]?.value || '0')),
+  }));
+
+  // Parse devices
+  const totalDeviceSessions = (devicesResponse.rows || []).reduce(
+    (sum, row) => sum + parseInt(row.metricValues?.[0]?.value || '0'),
+    0
+  );
+  const devices = (devicesResponse.rows || []).map((row) => {
+    const deviceSessions = parseInt(row.metricValues?.[0]?.value || '0');
+    const deviceName = row.dimensionValues?.[0]?.value || 'Unknown';
+    return {
+      device: deviceName.charAt(0).toUpperCase() + deviceName.slice(1),
+      sessions: deviceSessions,
+      percentage: totalDeviceSessions > 0
+        ? Math.round((deviceSessions / totalDeviceSessions) * 100)
+        : 0,
+    };
+  });
+
+  return {
+    overview: {
+      totalUsers,
+      newUsers,
+      returningUsers: totalUsers - newUsers,
+      sessions,
+      pageviews,
+      avgSessionDuration,
+      bounceRate,
+      engagementRate,
+    },
+    sessionsOverTime,
+    trafficSources,
+    topPages,
+    devices,
+    countries: [], // Would need additional API call
+  };
+}
 
 // GET /api/companies/:id/analytics
 // Returns Google Analytics data for a company
@@ -28,10 +225,12 @@ export async function GET(
       );
     }
 
+    const { id: companyId } = await params;
+
     // Verify company ownership
     const company = await prisma.company.findFirst({
       where: {
-        id: params.id,
+        id: companyId,
         userId: user.id,
       },
       include: {
@@ -60,21 +259,30 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const dateRange = searchParams.get('dateRange') || '30d';
 
-    // TODO: Replace with actual Google Analytics Data API call
-    // For now, return demo data structure
-    // When implementing real API:
-    // 1. Import @google-analytics/data
-    // 2. Use OAuth2 or service account credentials
-    // 3. Call runReport with propertyId
+    try {
+      // Fetch real GA4 data
+      const realData = await fetchRealAnalytics(gaPropertyId, dateRange);
 
-    const demoData = generateDemoAnalytics(dateRange, company.name);
+      return NextResponse.json({
+        connected: true,
+        propertyId: gaPropertyId,
+        dateRange,
+        data: realData,
+        isRealData: true,
+      });
+    } catch (gaError: any) {
+      console.error('GA API error:', gaError);
 
-    return NextResponse.json({
-      connected: true,
-      propertyId: gaPropertyId,
-      dateRange,
-      data: demoData,
-    });
+      // Return error with specific message
+      return NextResponse.json({
+        connected: true,
+        propertyId: gaPropertyId,
+        dateRange,
+        data: null,
+        isRealData: false,
+        error: gaError.message || 'Failed to fetch analytics data. Please check that the service account has access to this property.',
+      });
+    }
   } catch (error: any) {
     console.error('Analytics API error:', error);
     return NextResponse.json(
@@ -82,70 +290,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
-
-// Generate demo analytics data
-function generateDemoAnalytics(dateRange: string, companyName: string) {
-  const days = dateRange === '7d' ? 7 : dateRange === '90d' ? 90 : 30;
-
-  // Generate random but consistent data based on company name
-  const seed = companyName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const baseUsers = (seed % 500) + 100;
-  const baseSessions = Math.floor(baseUsers * 1.3);
-  const basePageviews = Math.floor(baseSessions * 2.5);
-
-  // Generate daily sessions data
-  const sessionsOverTime = [];
-  const now = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    const variance = 0.7 + Math.random() * 0.6; // 70% to 130% variance
-    sessionsOverTime.push({
-      date: date.toISOString().split('T')[0],
-      sessions: Math.floor((baseSessions / days) * variance),
-      users: Math.floor((baseUsers / days) * variance),
-      pageviews: Math.floor((basePageviews / days) * variance),
-    });
-  }
-
-  return {
-    overview: {
-      totalUsers: baseUsers,
-      newUsers: Math.floor(baseUsers * 0.6),
-      returningUsers: Math.floor(baseUsers * 0.4),
-      sessions: baseSessions,
-      pageviews: basePageviews,
-      avgSessionDuration: Math.floor(120 + Math.random() * 180), // 2-5 minutes in seconds
-      bounceRate: Math.floor(35 + Math.random() * 25), // 35-60%
-      engagementRate: Math.floor(40 + Math.random() * 30), // 40-70%
-    },
-    sessionsOverTime,
-    trafficSources: [
-      { source: 'Organic Search', sessions: Math.floor(baseSessions * 0.35), percentage: 35 },
-      { source: 'Direct', sessions: Math.floor(baseSessions * 0.28), percentage: 28 },
-      { source: 'Social', sessions: Math.floor(baseSessions * 0.18), percentage: 18 },
-      { source: 'Referral', sessions: Math.floor(baseSessions * 0.12), percentage: 12 },
-      { source: 'Email', sessions: Math.floor(baseSessions * 0.07), percentage: 7 },
-    ],
-    topPages: [
-      { page: '/', title: 'Home', pageviews: Math.floor(basePageviews * 0.25), avgTimeOnPage: 45 },
-      { page: '/products', title: 'Products', pageviews: Math.floor(basePageviews * 0.18), avgTimeOnPage: 120 },
-      { page: '/about', title: 'About Us', pageviews: Math.floor(basePageviews * 0.12), avgTimeOnPage: 90 },
-      { page: '/contact', title: 'Contact', pageviews: Math.floor(basePageviews * 0.10), avgTimeOnPage: 60 },
-      { page: '/blog', title: 'Blog', pageviews: Math.floor(basePageviews * 0.08), avgTimeOnPage: 180 },
-    ],
-    devices: [
-      { device: 'Desktop', sessions: Math.floor(baseSessions * 0.55), percentage: 55 },
-      { device: 'Mobile', sessions: Math.floor(baseSessions * 0.38), percentage: 38 },
-      { device: 'Tablet', sessions: Math.floor(baseSessions * 0.07), percentage: 7 },
-    ],
-    countries: [
-      { country: 'United States', sessions: Math.floor(baseSessions * 0.40), percentage: 40 },
-      { country: 'United Kingdom', sessions: Math.floor(baseSessions * 0.15), percentage: 15 },
-      { country: 'Canada', sessions: Math.floor(baseSessions * 0.10), percentage: 10 },
-      { country: 'Germany', sessions: Math.floor(baseSessions * 0.08), percentage: 8 },
-      { country: 'Australia', sessions: Math.floor(baseSessions * 0.07), percentage: 7 },
-    ],
-  };
 }

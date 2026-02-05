@@ -141,6 +141,61 @@ export default function GoogleAnalyticsPage() {
     );
   }
 
+  // Handle case where connected but no data (API error)
+  if (analyticsData?.connected && !analyticsData?.data) {
+    return (
+      <div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">
+            Google Analytics
+          </h1>
+          <p className="text-white/60 [.light_&]:text-slate-600">
+            {currentCompany.name} — Website traffic and user analytics
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center max-w-md mx-auto">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-8 h-8 text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-white [.light_&]:text-slate-900 mb-2">
+                Unable to Fetch Analytics Data
+              </h2>
+              <p className="text-white/60 [.light_&]:text-slate-600 mb-4">
+                {analyticsData?.error || 'Could not retrieve data from Google Analytics.'}
+              </p>
+              <p className="text-sm text-white/40 [.light_&]:text-slate-500 mb-6">
+                Property ID: {analyticsData?.propertyId}
+              </p>
+              <div className="space-y-3">
+                <Button variant="primary" onClick={loadAnalytics}>
+                  Try Again
+                </Button>
+                <p className="text-xs text-white/40 [.light_&]:text-slate-400">
+                  Make sure the service account has Viewer access to this GA4 property.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const { data } = analyticsData;
 
   return (
