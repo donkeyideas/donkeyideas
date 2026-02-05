@@ -2,6 +2,133 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { BetaAnalyticsDataClient } from '@google-analytics/data';
+
+// Initialize GA4 Data API client with service account credentials
+function getAnalyticsClient() {
+  const clientEmail = process.env.GA_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (!clientEmail || !privateKey) {
+    return null;
+  }
+
+  return new BetaAnalyticsDataClient({
+    credentials: {
+      client_email: clientEmail,
+      private_key: privateKey,
+    },
+  });
+}
+
+// Calculate date range
+function getDateRange(range: string): { startDate: string; endDate: string } {
+  const endDate = new Date();
+  const startDate = new Date();
+
+  switch (range) {
+    case '7d':
+      startDate.setDate(endDate.getDate() - 7);
+      break;
+    case '90d':
+      startDate.setDate(endDate.getDate() - 90);
+      break;
+    case '30d':
+    default:
+      startDate.setDate(endDate.getDate() - 30);
+      break;
+  }
+
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+  };
+}
+
+// Fetch real GA4 data for a single company
+async function fetchCompanyAnalytics(
+  client: BetaAnalyticsDataClient,
+  propertyId: string,
+  dateRange: string
+) {
+  const { startDate, endDate } = getDateRange(dateRange);
+  const property = `properties/${propertyId}`;
+
+  // Fetch overview metrics
+  const [overviewResponse] = await client.runReport({
+    property,
+    dateRanges: [{ startDate, endDate }],
+    metrics: [
+      { name: 'totalUsers' },
+      { name: 'newUsers' },
+      { name: 'sessions' },
+      { name: 'screenPageViews' },
+      { name: 'averageSessionDuration' },
+      { name: 'bounceRate' },
+    ],
+  });
+
+  // Fetch sessions over time
+  const [sessionsOverTimeResponse] = await client.runReport({
+    property,
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: 'date' }],
+    metrics: [
+      { name: 'sessions' },
+      { name: 'totalUsers' },
+    ],
+    orderBys: [{ dimension: { dimensionName: 'date' } }],
+  });
+
+  // Fetch traffic sources
+  const [trafficSourcesResponse] = await client.runReport({
+    property,
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+    metrics: [{ name: 'sessions' }],
+    orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+    limit: 5,
+  });
+
+  // Parse overview data
+  const overviewRow = overviewResponse.rows?.[0];
+  const totalUsers = parseInt(overviewRow?.metricValues?.[0]?.value || '0');
+  const newUsers = parseInt(overviewRow?.metricValues?.[1]?.value || '0');
+  const sessions = parseInt(overviewRow?.metricValues?.[2]?.value || '0');
+  const pageviews = parseInt(overviewRow?.metricValues?.[3]?.value || '0');
+  const avgSessionDuration = Math.round(parseFloat(overviewRow?.metricValues?.[4]?.value || '0'));
+  const bounceRate = Math.round(parseFloat(overviewRow?.metricValues?.[5]?.value || '0') * 100);
+
+  // Parse sessions over time
+  const sessionsOverTime = (sessionsOverTimeResponse.rows || []).map((row) => {
+    const dateStr = row.dimensionValues?.[0]?.value || '';
+    const formattedDate = dateStr.length === 8
+      ? `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`
+      : dateStr;
+    return {
+      date: formattedDate,
+      sessions: parseInt(row.metricValues?.[0]?.value || '0'),
+      users: parseInt(row.metricValues?.[1]?.value || '0'),
+    };
+  });
+
+  // Parse traffic sources
+  const trafficSources = (trafficSourcesResponse.rows || []).map((row) => ({
+    source: row.dimensionValues?.[0]?.value || 'Unknown',
+    sessions: parseInt(row.metricValues?.[0]?.value || '0'),
+  }));
+
+  return {
+    totalUsers,
+    newUsers,
+    sessions,
+    pageviews,
+    avgSessionDuration,
+    bounceRate,
+    sessionsOverTime,
+    trafficSources,
+  };
+}
 
 // GET /api/companies/consolidated/analytics
 // Returns aggregated Google Analytics data across all companies
@@ -49,37 +176,68 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const dateRange = searchParams.get('dateRange') || '30d';
 
-    // Generate analytics for each company
-    const companiesAnalytics = companies.map((company) => {
-      const gaPropertyId = company.businessProfile?.gaPropertyId;
-      const hasGa = !!gaPropertyId;
+    // Initialize GA client
+    const client = getAnalyticsClient();
 
-      if (!hasGa) {
-        return {
-          id: company.id,
-          name: company.name,
-          logo: company.logo,
-          connected: false,
-          gaPropertyId: null,
-          data: null,
-        };
-      }
+    // Fetch analytics for each company
+    const companiesAnalytics = await Promise.all(
+      companies.map(async (company) => {
+        const gaPropertyId = company.businessProfile?.gaPropertyId;
+        const hasGa = !!gaPropertyId;
 
-      // TODO: Replace with actual Google Analytics Data API calls
-      // For now, generate demo data
-      const data = generateCompanyAnalytics(dateRange, company.name);
+        if (!hasGa) {
+          return {
+            id: company.id,
+            name: company.name,
+            logo: company.logo,
+            connected: false,
+            gaPropertyId: null,
+            data: null,
+            error: null,
+          };
+        }
 
-      return {
-        id: company.id,
-        name: company.name,
-        logo: company.logo,
-        connected: true,
-        gaPropertyId,
-        data,
-      };
-    });
+        // If no GA client configured, return as not connected
+        if (!client) {
+          return {
+            id: company.id,
+            name: company.name,
+            logo: company.logo,
+            connected: false,
+            gaPropertyId,
+            data: null,
+            error: 'Google Analytics credentials not configured',
+          };
+        }
 
-    // Aggregate data from connected companies
+        try {
+          // Fetch real GA data
+          const data = await fetchCompanyAnalytics(client, gaPropertyId, dateRange);
+          return {
+            id: company.id,
+            name: company.name,
+            logo: company.logo,
+            connected: true,
+            gaPropertyId,
+            data,
+            error: null,
+          };
+        } catch (err: any) {
+          console.error(`Failed to fetch GA data for ${company.name}:`, err.message);
+          return {
+            id: company.id,
+            name: company.name,
+            logo: company.logo,
+            connected: true,
+            gaPropertyId,
+            data: null,
+            error: err.message || 'Failed to fetch analytics',
+          };
+        }
+      })
+    );
+
+    // Aggregate data from connected companies with data
     const connectedCompanies = companiesAnalytics.filter((c) => c.connected && c.data);
 
     let aggregated = null;
@@ -93,6 +251,7 @@ export async function GET(request: NextRequest) {
       connectedCompanies: connectedCompanies.length,
       companies: companiesAnalytics,
       aggregated,
+      isRealData: true,
     });
   } catch (error: any) {
     console.error('Consolidated Analytics API error:', error);
@@ -101,48 +260,6 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Generate analytics data for a single company
-function generateCompanyAnalytics(dateRange: string, companyName: string) {
-  const days = dateRange === '7d' ? 7 : dateRange === '90d' ? 90 : 30;
-
-  // Generate random but consistent data based on company name
-  const seed = companyName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const baseUsers = (seed % 500) + 100;
-  const baseSessions = Math.floor(baseUsers * 1.3);
-  const basePageviews = Math.floor(baseSessions * 2.5);
-
-  // Generate daily sessions data
-  const sessionsOverTime = [];
-  const now = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    const variance = 0.7 + Math.random() * 0.6;
-    sessionsOverTime.push({
-      date: date.toISOString().split('T')[0],
-      sessions: Math.floor((baseSessions / days) * variance),
-      users: Math.floor((baseUsers / days) * variance),
-    });
-  }
-
-  return {
-    totalUsers: baseUsers,
-    newUsers: Math.floor(baseUsers * 0.6),
-    sessions: baseSessions,
-    pageviews: basePageviews,
-    avgSessionDuration: Math.floor(120 + Math.random() * 180),
-    bounceRate: Math.floor(35 + Math.random() * 25),
-    sessionsOverTime,
-    trafficSources: [
-      { source: 'Organic Search', sessions: Math.floor(baseSessions * 0.35) },
-      { source: 'Direct', sessions: Math.floor(baseSessions * 0.28) },
-      { source: 'Social', sessions: Math.floor(baseSessions * 0.18) },
-      { source: 'Referral', sessions: Math.floor(baseSessions * 0.12) },
-      { source: 'Email', sessions: Math.floor(baseSessions * 0.07) },
-    ],
-  };
 }
 
 // Aggregate analytics from multiple companies
