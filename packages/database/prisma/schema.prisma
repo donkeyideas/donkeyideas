@@ -21,6 +21,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Two-Factor Authentication
+  totpSecret  String?  // Encrypted TOTP secret
+  totpEnabled Boolean  @default(false)
+
   companies  Company[]
   sessions   Session[]
   activities Activity[]

@@ -16,6 +16,12 @@ interface ApiConfig {
   twilioApiSecret: string;
 }
 
+interface TwoFASetup {
+  secret: string;
+  qrCode: string;
+  otpauthUrl: string;
+}
+
 export default function SettingsPage() {
   const [apiConfig, setApiConfig] = useState<ApiConfig>({
     deepSeekApiKey: '',
@@ -41,8 +47,18 @@ export default function SettingsPage() {
     type: 'info',
   });
 
+  // 2FA State
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [twoFALoading, setTwoFALoading] = useState(false);
+  const [twoFASetup, setTwoFASetup] = useState<TwoFASetup | null>(null);
+  const [verifyCode, setVerifyCode] = useState('');
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disableCode, setDisableCode] = useState('');
+  const [showDisableForm, setShowDisableForm] = useState(false);
+
   useEffect(() => {
     loadSettings();
+    load2FAStatus();
   }, []);
 
   const loadSettings = async () => {
@@ -58,6 +74,91 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const load2FAStatus = async () => {
+    try {
+      const response = await api.get('/auth/2fa/status');
+      setTwoFAEnabled(response.data.enabled);
+    } catch (error: any) {
+      console.error('Failed to load 2FA status:', error);
+    }
+  };
+
+  const handleSetup2FA = async () => {
+    try {
+      setTwoFALoading(true);
+      const response = await api.post('/auth/2fa/setup');
+      setTwoFASetup(response.data);
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error?.message || 'Failed to setup 2FA',
+        type: 'error',
+      });
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const handleVerify2FA = async () => {
+    try {
+      setTwoFALoading(true);
+      await api.post('/auth/2fa/verify', { code: verifyCode });
+      setTwoFAEnabled(true);
+      setTwoFASetup(null);
+      setVerifyCode('');
+      setNotification({
+        isOpen: true,
+        title: 'Success',
+        message: 'Two-factor authentication enabled successfully',
+        type: 'success',
+      });
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error?.message || 'Invalid verification code',
+        type: 'error',
+      });
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    try {
+      setTwoFALoading(true);
+      await api.post('/auth/2fa/disable', {
+        password: disablePassword,
+        code: disableCode,
+      });
+      setTwoFAEnabled(false);
+      setShowDisableForm(false);
+      setDisablePassword('');
+      setDisableCode('');
+      setNotification({
+        isOpen: true,
+        title: 'Success',
+        message: 'Two-factor authentication disabled',
+        type: 'success',
+      });
+    } catch (error: any) {
+      setNotification({
+        isOpen: true,
+        title: 'Error',
+        message: error.response?.data?.error?.message || 'Failed to disable 2FA',
+        type: 'error',
+      });
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const cancelSetup = () => {
+    setTwoFASetup(null);
+    setVerifyCode('');
   };
 
   const updateApiConfig = (data: any) => {
@@ -260,6 +361,141 @@ export default function SettingsPage() {
               {saving ? 'Saving...' : 'Save API Keys'}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Two-Factor Authentication Section */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Two-Factor Authentication (2FA)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {twoFAEnabled ? (
+            /* 2FA is enabled */
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                <span className="text-emerald-400 font-medium">Two-factor authentication is enabled</span>
+              </div>
+              <p className="text-white/60 [.light_&]:text-slate-600 text-sm mb-4">
+                Your account is protected with an authenticator app. You&apos;ll need to enter a code from your app when signing in.
+              </p>
+
+              {showDisableForm ? (
+                <div className="space-y-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <p className="text-red-400 text-sm font-medium">
+                    To disable 2FA, please enter your password and current 2FA code:
+                  </p>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Password</label>
+                    <input
+                      type="password"
+                      value={disablePassword}
+                      onChange={(e) => setDisablePassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-red-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">2FA Code</label>
+                    <input
+                      type="text"
+                      value={disableCode}
+                      onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      maxLength={6}
+                      placeholder="000000"
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white font-mono tracking-wider text-center focus:outline-none focus:border-red-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowDisableForm(false);
+                        setDisablePassword('');
+                        setDisableCode('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDisable2FA}
+                      disabled={twoFALoading || !disablePassword || disableCode.length !== 6}
+                    >
+                      {twoFALoading ? 'Disabling...' : 'Disable 2FA'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button variant="outline" onClick={() => setShowDisableForm(true)}>
+                  Disable Two-Factor Authentication
+                </Button>
+              )}
+            </div>
+          ) : twoFASetup ? (
+            /* Setup in progress - show QR code */
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold mb-2">Scan QR Code</h3>
+                <p className="text-white/60 [.light_&]:text-slate-600 text-sm mb-4">
+                  Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                </p>
+                <div className="inline-block p-4 bg-white rounded-lg mb-4">
+                  <img src={twoFASetup.qrCode} alt="2FA QR Code" className="w-48 h-48" />
+                </div>
+                <p className="text-white/40 [.light_&]:text-slate-500 text-xs">
+                  Or enter this code manually: <code className="bg-white/10 px-2 py-1 rounded">{twoFASetup.secret}</code>
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Enter the 6-digit code from your app to verify
+                </label>
+                <input
+                  type="text"
+                  value={verifyCode}
+                  onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  maxLength={6}
+                  placeholder="000000"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-white text-center text-xl font-mono tracking-[0.5em] focus:outline-none focus:border-emerald-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={cancelSetup}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleVerify2FA}
+                  disabled={twoFALoading || verifyCode.length !== 6}
+                >
+                  {twoFALoading ? 'Verifying...' : 'Verify & Enable 2FA'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* 2FA not enabled - show setup button */
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <span className="text-yellow-400 font-medium">Two-factor authentication is not enabled</span>
+              </div>
+              <p className="text-white/60 [.light_&]:text-slate-600 text-sm mb-4">
+                Add an extra layer of security to your account by requiring a verification code from your authenticator app when signing in.
+              </p>
+              <Button variant="primary" onClick={handleSetup2FA} disabled={twoFALoading}>
+                {twoFALoading ? 'Setting up...' : 'Enable Two-Factor Authentication'}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
