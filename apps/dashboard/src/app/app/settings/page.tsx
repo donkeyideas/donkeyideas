@@ -414,7 +414,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex gap-3">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => {
                         setShowDisableForm(false);
                         setDisablePassword('');
@@ -424,7 +424,7 @@ export default function SettingsPage() {
                       Cancel
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="danger"
                       onClick={handleDisable2FA}
                       disabled={twoFALoading || !disablePassword || disableCode.length !== 6}
                     >
@@ -433,7 +433,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               ) : (
-                <Button variant="outline" onClick={() => setShowDisableForm(true)}>
+                <Button variant="secondary" onClick={() => setShowDisableForm(true)}>
                   Disable Two-Factor Authentication
                 </Button>
               )}
@@ -469,7 +469,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={cancelSetup}>
+                <Button variant="secondary" onClick={cancelSetup}>
                   Cancel
                 </Button>
                 <Button
