@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { fetchRealAnalytics } from '@/lib/google-analytics';
 
 // Deep Seek pricing
 const PRICING = {
@@ -147,40 +148,45 @@ export async function GET(
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    let recommendation = null;
-    try {
-      recommendation = await prisma.analyticsRecommendation.findFirst({
-        where: {
-          companyId,
-          date: today,
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-    } catch (dbError: any) {
-      // Table might not exist yet
-      if (dbError.code !== 'P2021' && !dbError.message?.includes('does not exist')) {
-        throw dbError;
-      }
-    }
+    const { searchParams: cacheParams } = new URL(request.url);
+    const forceRegenerate = cacheParams.get('force') === 'true';
 
-    // Check if recommendation is fresh (< 24 hours old)
-    if (recommendation) {
-      const age = Date.now() - new Date(recommendation.createdAt).getTime();
-      const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-
-      if (age < maxAge) {
-        return NextResponse.json({
-          recommendation: {
-            id: recommendation.id,
-            date: recommendation.date,
-            summary: recommendation.summary,
-            pros: recommendation.pros,
-            cons: recommendation.cons,
-            recommendations: recommendation.recommendations,
-            createdAt: recommendation.createdAt,
+    if (!forceRegenerate) {
+      let recommendation = null;
+      try {
+        recommendation = await prisma.analyticsRecommendation.findFirst({
+          where: {
+            companyId,
+            date: today,
           },
-          cached: true,
+          orderBy: { createdAt: 'desc' },
         });
+      } catch (dbError: any) {
+        // Table might not exist yet
+        if (dbError.code !== 'P2021' && !dbError.message?.includes('does not exist')) {
+          throw dbError;
+        }
+      }
+
+      // Check if recommendation is fresh (< 24 hours old)
+      if (recommendation) {
+        const age = Date.now() - new Date(recommendation.createdAt).getTime();
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (age < maxAge) {
+          return NextResponse.json({
+            recommendation: {
+              id: recommendation.id,
+              date: recommendation.date,
+              summary: recommendation.summary,
+              pros: recommendation.pros,
+              cons: recommendation.cons,
+              recommendations: recommendation.recommendations,
+              createdAt: recommendation.createdAt,
+            },
+            cached: true,
+          });
+        }
       }
     }
 
@@ -212,12 +218,41 @@ export async function GET(
       }, { status: 400 });
     }
 
-    // Fetch current analytics data
+    // Fetch current analytics data from real GA4
     const { searchParams } = new URL(request.url);
     const dateRange = searchParams.get('dateRange') || '30d';
 
-    // Generate demo analytics (or fetch real data in production)
-    const analyticsData = generateDemoAnalytics(dateRange, company.name);
+    let analyticsData;
+    try {
+      analyticsData = await fetchRealAnalytics(gaPropertyId, dateRange);
+    } catch (gaError: any) {
+      console.error('Failed to fetch GA data for recommendations:', gaError);
+      return NextResponse.json({
+        error: { message: 'Failed to fetch Google Analytics data. Please check your GA configuration.' },
+      }, { status: 500 });
+    }
+
+    // Check if there's enough data to analyze
+    const { totalUsers, sessions } = analyticsData.overview;
+    if (totalUsers === 0 && sessions === 0) {
+      return NextResponse.json({
+        recommendation: {
+          id: 'no-data',
+          date: today,
+          summary: 'Not enough analytics data to generate recommendations. Your Google Analytics property has no recorded traffic for this period. Make sure your GA tracking code is properly installed on your website.',
+          pros: [],
+          cons: [{ title: 'No Traffic Data', description: 'Your Google Analytics property is not recording any visitors. Verify that the GA4 tracking code is installed correctly on all pages of your website.' }],
+          recommendations: [
+            { title: 'Verify GA4 Installation', description: 'Check that your Google Analytics 4 measurement ID is correctly added to your website. Use the Google Tag Assistant browser extension to verify.', priority: 'high' },
+            { title: 'Check Property ID', description: 'Ensure the GA4 Property ID in your Business Profile matches the one in your Google Analytics account.', priority: 'high' },
+            { title: 'Wait for Data Collection', description: 'If you recently installed GA4, it may take 24-48 hours for data to start appearing.', priority: 'medium' },
+          ],
+          createdAt: new Date(),
+        },
+        cached: false,
+        noData: true,
+      });
+    }
 
     // Call DeepSeek API
     const prompt = buildAnalyticsPrompt(analyticsData, company.name);
@@ -361,65 +396,3 @@ export async function POST(
   return GET(getRequest, { params });
 }
 
-// Demo analytics generator (same as main analytics route)
-function generateDemoAnalytics(dateRange: string, companyName: string) {
-  const days = dateRange === '7d' ? 7 : dateRange === '90d' ? 90 : 30;
-  const seed = companyName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const baseUsers = (seed % 500) + 100;
-  const baseSessions = Math.floor(baseUsers * 1.3);
-  const basePageviews = Math.floor(baseSessions * 2.5);
-
-  const sessionsOverTime = [];
-  const now = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    const variance = 0.7 + Math.random() * 0.6;
-    sessionsOverTime.push({
-      date: date.toISOString().split('T')[0],
-      sessions: Math.floor((baseSessions / days) * variance),
-      users: Math.floor((baseUsers / days) * variance),
-      pageviews: Math.floor((basePageviews / days) * variance),
-    });
-  }
-
-  return {
-    overview: {
-      totalUsers: baseUsers,
-      newUsers: Math.floor(baseUsers * 0.6),
-      returningUsers: Math.floor(baseUsers * 0.4),
-      sessions: baseSessions,
-      pageviews: basePageviews,
-      avgSessionDuration: Math.floor(120 + Math.random() * 180),
-      bounceRate: Math.floor(35 + Math.random() * 25),
-      engagementRate: Math.floor(40 + Math.random() * 30),
-    },
-    sessionsOverTime,
-    trafficSources: [
-      { source: 'Organic Search', sessions: Math.floor(baseSessions * 0.35), percentage: 35 },
-      { source: 'Direct', sessions: Math.floor(baseSessions * 0.28), percentage: 28 },
-      { source: 'Social', sessions: Math.floor(baseSessions * 0.18), percentage: 18 },
-      { source: 'Referral', sessions: Math.floor(baseSessions * 0.12), percentage: 12 },
-      { source: 'Email', sessions: Math.floor(baseSessions * 0.07), percentage: 7 },
-    ],
-    topPages: [
-      { page: '/', title: 'Home', pageviews: Math.floor(basePageviews * 0.25), avgTimeOnPage: 45 },
-      { page: '/products', title: 'Products', pageviews: Math.floor(basePageviews * 0.18), avgTimeOnPage: 120 },
-      { page: '/about', title: 'About Us', pageviews: Math.floor(basePageviews * 0.12), avgTimeOnPage: 90 },
-      { page: '/contact', title: 'Contact', pageviews: Math.floor(basePageviews * 0.10), avgTimeOnPage: 60 },
-      { page: '/blog', title: 'Blog', pageviews: Math.floor(basePageviews * 0.08), avgTimeOnPage: 180 },
-    ],
-    devices: [
-      { device: 'Desktop', sessions: Math.floor(baseSessions * 0.55), percentage: 55 },
-      { device: 'Mobile', sessions: Math.floor(baseSessions * 0.38), percentage: 38 },
-      { device: 'Tablet', sessions: Math.floor(baseSessions * 0.07), percentage: 7 },
-    ],
-    countries: [
-      { country: 'United States', sessions: Math.floor(baseSessions * 0.40), percentage: 40 },
-      { country: 'United Kingdom', sessions: Math.floor(baseSessions * 0.15), percentage: 15 },
-      { country: 'Canada', sessions: Math.floor(baseSessions * 0.10), percentage: 10 },
-      { country: 'Germany', sessions: Math.floor(baseSessions * 0.08), percentage: 8 },
-      { country: 'Australia', sessions: Math.floor(baseSessions * 0.07), percentage: 7 },
-    ],
-  };
-}
