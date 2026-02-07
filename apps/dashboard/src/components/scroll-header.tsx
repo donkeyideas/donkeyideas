@@ -56,6 +56,12 @@ export default function ScrollHeader() {
               Approach
             </Link>
             <Link
+              href="/blog"
+              className="text-sm text-white/80 hover:text-white transition-colors"
+            >
+              Blog
+            </Link>
+            <Link
               href="/about"
               className="text-sm text-white/80 hover:text-white transition-colors"
             >

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import api from '@/lib/api-client';
 import { useTheme } from '@/contexts/theme-context';
+import BlogEditor from '@/components/blog/blog-editor';
 
 interface BlogPost {
   id: string;
@@ -20,12 +20,12 @@ interface BlogPost {
 }
 
 export default function BlogListingPage() {
-  const router = useRouter();
   const { theme } = useTheme();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const loadPosts = async () => {
     try {
@@ -79,12 +79,12 @@ export default function BlogListingPage() {
           </h1>
           <p className={`mt-1 ${textMuted}`}>Create and manage blog posts</p>
         </div>
-        <Link
-          href="/app/blog/new"
+        <button
+          onClick={() => setShowCreateModal(true)}
           className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
         >
           + New Post
-        </Link>
+        </button>
       </div>
 
       {error && (
@@ -101,17 +101,16 @@ export default function BlogListingPage() {
         </div>
       ) : posts.length === 0 ? (
         <div className={`rounded-xl border p-16 text-center ${cardBg}`}>
-          <div className="text-5xl mb-4">📝</div>
           <h3 className={`text-xl font-medium mb-2 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>
             No blog posts yet
           </h3>
           <p className={`mb-6 ${textMuted}`}>Create your first post to start building your content library.</p>
-          <Link
-            href="/app/blog/new"
+          <button
+            onClick={() => setShowCreateModal(true)}
             className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 inline-flex items-center gap-2"
           >
             + Create First Post
-          </Link>
+          </button>
         </div>
       ) : (
         <div className={`rounded-xl border overflow-hidden ${cardBg}`}>
@@ -158,7 +157,7 @@ export default function BlogListingPage() {
                     </button>
                   </td>
                   <td className={`px-6 py-4 text-sm ${textMuted}`}>
-                    {post.category || '—'}
+                    {post.category || '\u2014'}
                   </td>
                   <td className={`px-6 py-4 text-sm ${textMuted}`}>
                     {post.wordCount}
@@ -197,6 +196,18 @@ export default function BlogListingPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Create Post Modal */}
+      {showCreateModal && (
+        <BlogEditor
+          mode="create"
+          onClose={() => setShowCreateModal(false)}
+          onSaved={() => {
+            setShowCreateModal(false);
+            loadPosts();
+          }}
+        />
       )}
     </div>
   );

@@ -24,6 +24,8 @@ interface BlogEditorProps {
   mode: 'create' | 'edit';
   postId?: string;
   initialData?: BlogPostData;
+  onClose?: () => void;
+  onSaved?: () => void;
 }
 
 function calculateSeoScore(data: BlogPostData): { score: number; suggestions: string[] } {
@@ -132,14 +134,16 @@ function generateSlug(title: string): string {
     .replace(/-+/g, '-');
 }
 
-export default function BlogEditor({ mode, postId, initialData }: BlogEditorProps) {
+export default function BlogEditor({ mode, postId, initialData, onClose, onSaved }: BlogEditorProps) {
   const router = useRouter();
   const { theme } = useTheme();
   const contentRef = useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<'content' | 'seo'>('content');
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [seoKeywordInput, setSeoKeywordInput] = useState('');
@@ -215,6 +219,14 @@ export default function BlogEditor({ mode, postId, initialData }: BlogEditorProp
     }
   };
 
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      router.push('/app/blog');
+    }
+  };
+
   const handleSave = async (publish?: boolean) => {
     setSaving(true);
     setError(null);
@@ -231,11 +243,41 @@ export default function BlogEditor({ mode, postId, initialData }: BlogEditorProp
         await api.post('/blog', payload);
       }
 
-      router.push('/app/blog');
+      if (onSaved) {
+        onSaved();
+      } else {
+        router.push('/app/blog');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error?.message || 'Failed to save post');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+
+      const response = await api.post('/blog/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setFormData(prev => ({ ...prev, featuredImage: response.data.imageUrl }));
+    } catch (err: any) {
+      setError(err.response?.data?.error?.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+      if (imageInputRef.current) {
+        imageInputRef.current.value = '';
+      }
     }
   };
 
@@ -320,66 +362,116 @@ export default function BlogEditor({ mode, postId, initialData }: BlogEditorProp
     setFormData(prev => ({ ...prev, seoKeywords: prev.seoKeywords.filter(k => k !== kw) }));
   };
 
-  const inputClass = `w-full px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${
+  const inputClass = `w-full px-3 py-2 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 text-sm ${
     theme === 'light'
       ? 'bg-white border-gray-300 text-gray-900 placeholder-gray-400'
       : 'bg-black/30 border-white/20 text-white placeholder-white/40'
   }`;
 
-  const labelClass = `block text-sm font-medium mb-2 ${theme === 'light' ? 'text-gray-700' : 'text-white/70'}`;
+  const labelClass = `block text-xs font-medium mb-1 ${theme === 'light' ? 'text-gray-700' : 'text-white/70'}`;
 
-  return (
+  const editorBody = (
     <div className="flex flex-col h-full">
+      {/* Hidden file input for image upload */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+
       {/* Error Banner */}
       {error && (
-        <div className="mx-6 mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+        <div className="mx-4 mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
           <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar */}
-        <div className={`w-72 flex-shrink-0 p-6 border-r overflow-y-auto ${
-          theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-white/10 bg-black/20'
-        }`}>
-          {/* SEO Score */}
-          <div className={`rounded-xl p-6 mb-6 ${getSeoScoreBg(seoScore)}`}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className={`text-sm font-semibold ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>SEO Score</h3>
-              <button
-                className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs ${
-                  theme === 'light' ? 'border-gray-400 text-gray-400' : 'border-white/40 text-white/40'
-                }`}
-                title="SEO Score is calculated based on title, content, keywords, and metadata optimization"
-              >
-                i
-              </button>
-            </div>
-            <div className={`text-5xl font-bold text-center mb-1 ${getSeoScoreColor(seoScore)}`}>
-              {seoScore}
-            </div>
-            <div className={`text-xs text-center ${theme === 'light' ? 'text-gray-500' : 'text-white/50'}`}>SEO Score</div>
+      {/* Tabs + SEO Score inline */}
+      <div className={`flex items-center justify-between px-4 pt-3 border-b ${
+        theme === 'light' ? 'border-gray-200' : 'border-white/10'
+      }`}>
+        <div className="flex gap-1">
+          <button
+            onClick={() => setActiveTab('content')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-t-lg text-sm font-medium transition-colors ${
+              activeTab === 'content'
+                ? theme === 'light'
+                  ? 'bg-white text-blue-600 border border-b-0 border-gray-200'
+                  : 'bg-blue-500/20 text-blue-400 border border-b-0 border-white/10'
+                : theme === 'light'
+                  ? 'text-gray-500 hover:text-gray-700'
+                  : 'text-white/50 hover:text-white/80'
+            }`}
+          >
+            Content
+          </button>
+          <button
+            onClick={() => setActiveTab('seo')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-t-lg text-sm font-medium transition-colors ${
+              activeTab === 'seo'
+                ? theme === 'light'
+                  ? 'bg-white text-blue-600 border border-b-0 border-gray-200'
+                  : 'bg-blue-500/20 text-blue-400 border border-b-0 border-white/10'
+                : theme === 'light'
+                  ? 'text-gray-500 hover:text-gray-700'
+                  : 'text-white/50 hover:text-white/80'
+            }`}
+          >
+            SEO
+          </button>
+        </div>
+        <div className={`flex items-center gap-2 pb-2 ${getSeoScoreColor(seoScore)}`}>
+          <span className="text-xs font-medium">SEO: {seoScore}/100</span>
+          <div className={`w-16 h-1.5 rounded-full ${theme === 'light' ? 'bg-gray-200' : 'bg-white/10'}`}>
+            <div
+              className={`h-full rounded-full transition-all ${
+                seoScore >= 80 ? 'bg-green-500' : seoScore >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+              }`}
+              style={{ width: `${seoScore}%` }}
+            />
           </div>
+        </div>
+      </div>
 
-          {/* AI Suggestions */}
-          {suggestions.length > 0 && (
-            <div className="mb-6">
-              <h3 className={`text-sm font-semibold mb-3 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>AI Suggestions</h3>
-              <div className="space-y-2">
-                {suggestions.slice(0, 3).map((s, i) => (
-                  <div key={i} className="flex gap-2 text-xs">
-                    <span className="text-yellow-400 mt-0.5">💡</span>
-                    <span className={theme === 'light' ? 'text-gray-600' : 'text-white/60'}>{s}</span>
-                  </div>
-                ))}
+      {/* Tab Content */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {activeTab === 'content' ? (
+          <div className="space-y-4">
+            {/* Title + Generate */}
+            <div>
+              <label className={labelClass}>Title *</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  className={`${inputClass} flex-1`}
+                  placeholder="Enter blog post title"
+                />
+                <button
+                  onClick={handleGenerateAI}
+                  disabled={generating}
+                  className="px-3 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg text-xs font-medium hover:from-purple-600 hover:to-blue-600 disabled:opacity-50 whitespace-nowrap flex items-center gap-1.5"
+                >
+                  {generating ? 'Generating...' : 'Generate with AI'}
+                </button>
               </div>
             </div>
-          )}
 
-          {/* Post Settings */}
-          <div className="mb-6">
-            <h3 className={`text-sm font-semibold mb-3 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>Post Settings</h3>
-            <div className="space-y-3">
+            {/* Slug + Category in 2 columns */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className={labelClass}>Slug</label>
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={e => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  className={inputClass}
+                  placeholder="url-friendly-slug"
+                />
+              </div>
               <div>
                 <label className={labelClass}>Category</label>
                 <input
@@ -387,9 +479,13 @@ export default function BlogEditor({ mode, postId, initialData }: BlogEditorProp
                   value={formData.category}
                   onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
                   className={inputClass}
-                  placeholder="e.g., Investing, Finance, Educ"
+                  placeholder="e.g., Investing, Finance"
                 />
               </div>
+            </div>
+
+            {/* Tags + Featured Image in 2 columns */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelClass}>Tags</label>
                 <input
@@ -401,7 +497,7 @@ export default function BlogEditor({ mode, postId, initialData }: BlogEditorProp
                   placeholder="Add tag and press Enter"
                 />
                 {formData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
+                  <div className="flex flex-wrap gap-1 mt-1.5">
                     {formData.tags.map(tag => (
                       <span
                         key={tag}
@@ -418,339 +514,293 @@ export default function BlogEditor({ mode, postId, initialData }: BlogEditorProp
                   </div>
                 )}
               </div>
+              <div>
+                <label className={labelClass}>Featured Image</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.featuredImage}
+                    onChange={e => setFormData(prev => ({ ...prev, featuredImage: e.target.value }))}
+                    className={`${inputClass} flex-1`}
+                    placeholder="Image URL"
+                  />
+                  <button
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploading}
+                    className={`px-3 py-2 rounded-lg border border-dashed text-xs whitespace-nowrap ${
+                      theme === 'light'
+                        ? 'border-gray-300 text-blue-600 hover:bg-gray-100'
+                        : 'border-white/20 text-blue-400 hover:bg-white/5'
+                    } disabled:opacity-50`}
+                  >
+                    {uploading ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
+                {formData.featuredImage && (
+                  <img
+                    src={formData.featuredImage}
+                    alt="Preview"
+                    className="mt-1.5 w-full h-20 object-cover rounded-lg"
+                    onError={e => (e.currentTarget.style.display = 'none')}
+                  />
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Featured Image */}
-          <div>
-            <h3 className={`text-sm font-semibold mb-3 ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>Featured Image</h3>
-            <button className={`w-full px-4 py-2 rounded-lg border border-dashed text-sm mb-2 ${
-              theme === 'light'
-                ? 'border-gray-300 text-blue-600 hover:bg-gray-100'
-                : 'border-white/20 text-blue-400 hover:bg-white/5'
-            }`}>
-              Upload Image
-            </button>
-            <div className={`text-xs mb-2 ${theme === 'light' ? 'text-gray-500' : 'text-white/40'}`}>Or enter image URL</div>
-            <input
-              type="text"
-              value={formData.featuredImage}
-              onChange={e => setFormData(prev => ({ ...prev, featuredImage: e.target.value }))}
-              className={`${inputClass} text-xs`}
-              placeholder="https://example.com/image.jpg"
-            />
-            {formData.featuredImage && (
-              <div className="mt-2">
-                <div className={`text-xs mb-1 ${theme === 'light' ? 'text-gray-500' : 'text-white/40'}`}>Preview</div>
-                <img
-                  src={formData.featuredImage}
-                  alt="Preview"
-                  className="w-full h-32 object-cover rounded-lg"
-                  onError={e => (e.currentTarget.style.display = 'none')}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Tabs */}
-          <div className={`flex gap-1 px-6 pt-4 border-b ${
-            theme === 'light' ? 'border-gray-200' : 'border-white/10'
-          }`}>
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
-                activeTab === 'content'
-                  ? theme === 'light'
-                    ? 'bg-white text-blue-600 border border-b-0 border-gray-200'
-                    : 'bg-blue-500/20 text-blue-400 border border-b-0 border-white/10'
-                  : theme === 'light'
-                    ? 'text-gray-500 hover:text-gray-700'
-                    : 'text-white/50 hover:text-white/80'
-              }`}
-            >
-              📄 Content
-            </button>
-            <button
-              onClick={() => setActiveTab('seo')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
-                activeTab === 'seo'
-                  ? theme === 'light'
-                    ? 'bg-white text-blue-600 border border-b-0 border-gray-200'
-                    : 'bg-blue-500/20 text-blue-400 border border-b-0 border-white/10'
-                  : theme === 'light'
-                    ? 'text-gray-500 hover:text-gray-700'
-                    : 'text-white/50 hover:text-white/80'
-              }`}
-            >
-              ⚙️ SEO
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {activeTab === 'content' ? (
-              <div className="space-y-5 max-w-3xl">
-                {/* Title + Generate */}
-                <div>
-                  <label className={labelClass}>Title *</label>
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className={`${inputClass} flex-1`}
-                      placeholder="Enter blog post title"
-                    />
-                    <button
-                      onClick={handleGenerateAI}
-                      disabled={generating}
-                      className="px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-blue-600 disabled:opacity-50 whitespace-nowrap flex items-center gap-2"
-                    >
-                      ✨ {generating ? 'Generating...' : 'Generate with AI'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Slug */}
-                <div>
-                  <label className={labelClass}>Slug</label>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={e => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                    className={inputClass}
-                    placeholder="url-friendly-slug"
-                  />
-                </div>
-
-                {/* Excerpt */}
-                <div>
-                  <label className={labelClass}>Excerpt</label>
-                  <textarea
-                    value={formData.excerpt}
-                    onChange={e => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
-                    className={`${inputClass} resize-none`}
-                    rows={3}
-                    placeholder="Brief description of the post"
-                  />
-                </div>
-
-                {/* Content */}
-                <div>
-                  <label className={labelClass}>Content *</label>
-                  {/* Toolbar */}
-                  <div className={`flex items-center gap-1 p-2 rounded-t-lg border border-b-0 ${
-                    theme === 'light' ? 'border-gray-300 bg-gray-100' : 'border-white/20 bg-white/5'
-                  }`}>
-                    <button
-                      onClick={() => insertFormatting('link')}
-                      className={`px-3 py-1.5 rounded text-xs font-medium ${
-                        theme === 'light'
-                          ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                          : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
-                      }`}
-                    >
-                      🔗 Add Link
-                    </button>
-                    <button
-                      onClick={() => insertFormatting('bold')}
-                      className={`px-3 py-1.5 rounded text-xs font-bold ${
-                        theme === 'light' ? 'hover:bg-gray-200 text-gray-700' : 'hover:bg-white/10 text-white/70'
-                      }`}
-                    >
-                      B
-                    </button>
-                    <button
-                      onClick={() => insertFormatting('italic')}
-                      className={`px-3 py-1.5 rounded text-xs italic ${
-                        theme === 'light' ? 'hover:bg-gray-200 text-gray-700' : 'hover:bg-white/10 text-white/70'
-                      }`}
-                    >
-                      I
-                    </button>
-                    <button
-                      onClick={() => insertFormatting('list')}
-                      className={`px-3 py-1.5 rounded text-xs ${
-                        theme === 'light'
-                          ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                          : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
-                      }`}
-                    >
-                      ≡ List
-                    </button>
-                    <button
-                      onClick={() => insertFormatting('image')}
-                      className={`px-3 py-1.5 rounded text-xs ${
-                        theme === 'light'
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                          : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                      }`}
-                    >
-                      🖼 Image
-                    </button>
-                    <button
-                      onClick={() => insertFormatting('h2')}
-                      className={`px-3 py-1.5 rounded text-xs ${
-                        theme === 'light'
-                          ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                          : 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30'
-                      }`}
-                    >
-                      H2
-                    </button>
-                  </div>
-                  <div className={`p-2 border border-t-0 rounded-b-lg text-xs ${
-                    theme === 'light' ? 'border-gray-300 bg-yellow-50 text-yellow-700' : 'border-white/20 bg-yellow-500/10 text-yellow-400'
-                  }`}>
-                    💡 Tip: To add a hyperlink, click &quot;Add Link&quot; and enter the URL. You can also select text first to use it as the link text.
-                  </div>
-                  <textarea
-                    ref={contentRef}
-                    value={formData.content}
-                    onChange={e => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                    className={`${inputClass} rounded-t-none border-t-0 resize-y font-mono text-sm`}
-                    rows={16}
-                    placeholder="Write your blog post content here... Use the toolbar above to add links and formatting."
-                  />
-                </div>
-              </div>
-            ) : (
-              /* SEO Tab */
-              <div className="space-y-5 max-w-3xl">
-                <div>
-                  <label className={labelClass}>Meta Title</label>
-                  <input
-                    type="text"
-                    value={formData.seoTitle}
-                    onChange={e => setFormData(prev => ({ ...prev, seoTitle: e.target.value }))}
-                    className={inputClass}
-                    placeholder="SEO optimized title (defaults to post title)"
-                  />
-                  <div className={`text-xs mt-1 ${theme === 'light' ? 'text-gray-500' : 'text-white/40'}`}>
-                    {(formData.seoTitle || formData.title).length}/60 characters
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Meta Description</label>
-                  <textarea
-                    value={formData.seoDescription}
-                    onChange={e => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}
-                    className={`${inputClass} resize-none`}
-                    rows={3}
-                    placeholder="Brief meta description for search engines (defaults to excerpt)"
-                  />
-                  <div className={`text-xs mt-1 ${theme === 'light' ? 'text-gray-500' : 'text-white/40'}`}>
-                    {(formData.seoDescription || formData.excerpt).length}/160 characters
-                  </div>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Focus Keyword</label>
-                  <input
-                    type="text"
-                    value={formData.focusKeyword}
-                    onChange={e => setFormData(prev => ({ ...prev, focusKeyword: e.target.value }))}
-                    className={inputClass}
-                    placeholder="Main keyword to optimize for"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>SEO Keywords</label>
-                  <input
-                    type="text"
-                    value={seoKeywordInput}
-                    onChange={e => setSeoKeywordInput(e.target.value)}
-                    onKeyDown={handleSeoKeywordKeyDown}
-                    className={inputClass}
-                    placeholder="Add keyword and press Enter"
-                  />
-                  {formData.seoKeywords.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {formData.seoKeywords.map(kw => (
-                        <span
-                          key={kw}
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
-                            theme === 'light'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-green-500/20 text-green-300'
-                          }`}
-                        >
-                          {kw}
-                          <button onClick={() => removeSeoKeyword(kw)} className="hover:text-red-400">&times;</button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Google Preview */}
-                <div>
-                  <label className={labelClass}>Google Preview</label>
-                  <div className={`p-4 rounded-lg border ${
-                    theme === 'light' ? 'border-gray-200 bg-white' : 'border-white/10 bg-white/5'
-                  }`}>
-                    <div className="text-blue-500 text-lg truncate">
-                      {formData.seoTitle || formData.title || 'Page Title'}
-                    </div>
-                    <div className="text-green-600 text-sm truncate">
-                      donkeyideas.com/blog/{formData.slug || 'post-slug'}
-                    </div>
-                    <div className={`text-sm mt-1 line-clamp-2 ${theme === 'light' ? 'text-gray-600' : 'text-white/60'}`}>
-                      {formData.seoDescription || formData.excerpt || 'Meta description will appear here...'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Bottom Bar */}
-          <div className={`flex items-center justify-between px-6 py-4 border-t ${
-            theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-white/10 bg-black/20'
-          }`}>
-            <div className={`text-sm ${theme === 'light' ? 'text-gray-500' : 'text-white/50'}`}>
-              {wordCount} words &bull; ~{readTime} min read
+            {/* Excerpt */}
+            <div>
+              <label className={labelClass}>Excerpt</label>
+              <textarea
+                value={formData.excerpt}
+                onChange={e => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
+                className={`${inputClass} resize-none`}
+                rows={2}
+                placeholder="Brief description of the post"
+              />
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => router.push('/app/blog')}
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium border ${
-                  theme === 'light'
-                    ? 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                    : 'border-white/20 text-white/70 hover:bg-white/5'
-                }`}
-              >
-                Cancel
-              </button>
-              {mode === 'edit' && (
+
+            {/* Content */}
+            <div>
+              <label className={labelClass}>Content *</label>
+              {/* Toolbar */}
+              <div className={`flex items-center gap-1 p-1.5 rounded-t-lg border border-b-0 ${
+                theme === 'light' ? 'border-gray-300 bg-gray-100' : 'border-white/20 bg-white/5'
+              }`}>
                 <button
-                  onClick={() => handleSave(!formData.published)}
-                  disabled={saving}
-                  className={`px-5 py-2.5 rounded-lg text-sm font-medium border ${
+                  onClick={() => insertFormatting('link')}
+                  className={`px-2 py-1 rounded text-xs font-medium ${
                     theme === 'light'
-                      ? 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                      : 'border-white/20 text-white/70 hover:bg-white/5'
+                      ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
                   }`}
                 >
-                  {formData.published ? 'Unpublish' : 'Publish'}
+                  Link
                 </button>
+                <button
+                  onClick={() => insertFormatting('bold')}
+                  className={`px-2 py-1 rounded text-xs font-bold ${
+                    theme === 'light' ? 'hover:bg-gray-200 text-gray-700' : 'hover:bg-white/10 text-white/70'
+                  }`}
+                >
+                  B
+                </button>
+                <button
+                  onClick={() => insertFormatting('italic')}
+                  className={`px-2 py-1 rounded text-xs italic ${
+                    theme === 'light' ? 'hover:bg-gray-200 text-gray-700' : 'hover:bg-white/10 text-white/70'
+                  }`}
+                >
+                  I
+                </button>
+                <button
+                  onClick={() => insertFormatting('list')}
+                  className={`px-2 py-1 rounded text-xs ${
+                    theme === 'light'
+                      ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                      : 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+                  }`}
+                >
+                  List
+                </button>
+                <button
+                  onClick={() => insertFormatting('image')}
+                  className={`px-2 py-1 rounded text-xs ${
+                    theme === 'light'
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                  }`}
+                >
+                  Image
+                </button>
+                <button
+                  onClick={() => insertFormatting('h2')}
+                  className={`px-2 py-1 rounded text-xs ${
+                    theme === 'light'
+                      ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                      : 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30'
+                  }`}
+                >
+                  H2
+                </button>
+              </div>
+              <textarea
+                ref={contentRef}
+                value={formData.content}
+                onChange={e => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                className={`${inputClass} rounded-t-none border-t-0 resize-y text-sm`}
+                rows={12}
+                placeholder="Write your blog post content here... Use the toolbar above to add links and formatting."
+              />
+            </div>
+
+            {/* AI Suggestions */}
+            {suggestions.length > 0 && (
+              <div className={`p-3 rounded-lg border ${
+                theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-white/10 bg-white/5'
+              }`}>
+                <h4 className={`text-xs font-semibold mb-2 ${theme === 'light' ? 'text-gray-700' : 'text-white/70'}`}>
+                  Suggestions
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.slice(0, 4).map((s, i) => (
+                    <span key={i} className={`text-xs px-2 py-1 rounded ${
+                      theme === 'light' ? 'bg-yellow-100 text-yellow-700' : 'bg-yellow-500/10 text-yellow-400'
+                    }`}>
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* SEO Tab */
+          <div className="space-y-4">
+            <div>
+              <label className={labelClass}>Meta Title</label>
+              <input
+                type="text"
+                value={formData.seoTitle}
+                onChange={e => setFormData(prev => ({ ...prev, seoTitle: e.target.value }))}
+                className={inputClass}
+                placeholder="SEO optimized title (defaults to post title)"
+              />
+              <div className={`text-xs mt-1 ${theme === 'light' ? 'text-gray-500' : 'text-white/40'}`}>
+                {(formData.seoTitle || formData.title).length}/60 characters
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>Meta Description</label>
+              <textarea
+                value={formData.seoDescription}
+                onChange={e => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}
+                className={`${inputClass} resize-none`}
+                rows={3}
+                placeholder="Brief meta description for search engines (defaults to excerpt)"
+              />
+              <div className={`text-xs mt-1 ${theme === 'light' ? 'text-gray-500' : 'text-white/40'}`}>
+                {(formData.seoDescription || formData.excerpt).length}/160 characters
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>Focus Keyword</label>
+              <input
+                type="text"
+                value={formData.focusKeyword}
+                onChange={e => setFormData(prev => ({ ...prev, focusKeyword: e.target.value }))}
+                className={inputClass}
+                placeholder="Main keyword to optimize for"
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>SEO Keywords</label>
+              <input
+                type="text"
+                value={seoKeywordInput}
+                onChange={e => setSeoKeywordInput(e.target.value)}
+                onKeyDown={handleSeoKeywordKeyDown}
+                className={inputClass}
+                placeholder="Add keyword and press Enter"
+              />
+              {formData.seoKeywords.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {formData.seoKeywords.map(kw => (
+                    <span
+                      key={kw}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
+                        theme === 'light'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-green-500/20 text-green-300'
+                      }`}
+                    >
+                      {kw}
+                      <button onClick={() => removeSeoKeyword(kw)} className="hover:text-red-400">&times;</button>
+                    </span>
+                  ))}
+                </div>
               )}
-              <button
-                onClick={() => handleSave()}
-                disabled={saving || !formData.title || !formData.content}
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                📋 {saving ? 'Saving...' : mode === 'create' ? 'Create Post' : 'Update Post'}
-              </button>
+            </div>
+
+            {/* Google Preview */}
+            <div>
+              <label className={labelClass}>Google Preview</label>
+              <div className={`p-4 rounded-lg border ${
+                theme === 'light' ? 'border-gray-200 bg-white' : 'border-white/10 bg-white/5'
+              }`}>
+                <div className="text-blue-500 text-lg truncate">
+                  {formData.seoTitle || formData.title || 'Page Title'}
+                </div>
+                <div className="text-green-600 text-sm truncate">
+                  donkeyideas.com/blog/{formData.slug || 'post-slug'}
+                </div>
+                <div className={`text-sm mt-1 line-clamp-2 ${theme === 'light' ? 'text-gray-600' : 'text-white/60'}`}>
+                  {formData.seoDescription || formData.excerpt || 'Meta description will appear here...'}
+                </div>
+              </div>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Bottom Bar */}
+      <div className={`flex items-center justify-between px-4 py-3 border-t ${
+        theme === 'light' ? 'border-gray-200 bg-gray-50' : 'border-white/10 bg-black/20'
+      }`}>
+        <div className={`text-xs ${theme === 'light' ? 'text-gray-500' : 'text-white/50'}`}>
+          {wordCount} words &bull; ~{readTime} min read
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleClose}
+            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+              theme === 'light'
+                ? 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                : 'border-white/20 text-white/70 hover:bg-white/5'
+            }`}
+          >
+            Cancel
+          </button>
+          {mode === 'edit' && (
+            <button
+              onClick={() => handleSave(!formData.published)}
+              disabled={saving}
+              className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+                theme === 'light'
+                  ? 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                  : 'border-white/20 text-white/70 hover:bg-white/5'
+              }`}
+            >
+              {formData.published ? 'Unpublish' : 'Publish'}
+            </button>
+          )}
+          <button
+            onClick={() => handleSave()}
+            disabled={saving || !formData.title || !formData.content}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Saving...' : mode === 'create' ? 'Create Post' : 'Update Post'}
+          </button>
         </div>
       </div>
     </div>
   );
+
+  // Modal wrapper when onClose is provided
+  if (onClose) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className={`w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl overflow-hidden ${
+          theme === 'light' ? 'bg-white' : 'bg-[#1a1a2e]'
+        }`}>
+          {editorBody}
+        </div>
+      </div>
+    );
+  }
+
+  // Inline rendering (edit page, /app/blog/new)
+  return editorBody;
 }
