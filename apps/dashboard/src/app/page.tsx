@@ -4,7 +4,7 @@ import ScrollHeader from '@/components/scroll-header';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import { OrganizationStructuredData, WebsiteStructuredData, ServiceStructuredData } from '@/components/seo/structured-data';
+import { OrganizationStructuredData, WebsiteStructuredData, ServiceStructuredData, BreadcrumbStructuredData, FAQStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
   title: 'Donkey Ideas — Transform Your Vision Into Reality',
@@ -141,6 +141,16 @@ export default async function HomePage() {
       />
       <WebsiteStructuredData />
       <ServiceStructuredData />
+      <BreadcrumbStructuredData items={[
+        { name: 'Home', url: 'https://www.donkeyideas.com' },
+      ]} />
+      <FAQStructuredData items={[
+        { question: 'What is Donkey Ideas?', answer: 'Donkey Ideas is an AI-powered venture builder that partners with founders and enterprises to take ideas from concept to production. We handle product strategy, technical architecture, and go-to-market execution, helping ventures reach market fit faster.' },
+        { question: 'What services does Donkey Ideas offer?', answer: 'We offer venture building, strategic consulting, AI and technology advisory, and enterprise partnerships. Our team provides hands-on expertise in growth strategy, financial modeling, technical architecture, product development, and AI integration.' },
+        { question: 'How long does it take to build an MVP?', answer: 'Most ventures in our portfolio go from concept to MVP in 6 to 12 weeks. Our AI-powered Venture Operating System reduces time-to-market by up to 70 percent while maintaining production-grade quality.' },
+        { question: 'Where is Donkey Ideas located?', answer: 'Donkey Ideas operates out of New York and Miami. We work with founders and enterprises globally, combining in-person collaboration with remote partnership models.' },
+        { question: 'How can I work with Donkey Ideas?', answer: 'You can get started by reaching out through our contact page or scheduling a call. We evaluate every concept within 48 hours and most partnerships begin shortly after. Whether you have a napkin sketch or an enterprise innovation initiative, we can help.' },
+      ]} />
 
       {/* Navigation - Giga.ai style with scroll behavior */}
       <ScrollHeader />
@@ -308,6 +318,58 @@ export default async function HomePage() {
                 className="w-full h-full object-cover scale-125"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-32 px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-xs uppercase tracking-widest text-blue-400 mb-6 font-medium text-center">
+            Common Questions
+          </div>
+          <h2 className="text-5xl md:text-6xl font-light mb-16 leading-tight text-white text-center">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-8">
+            <div className="border-b border-slate-700/50 pb-8">
+              <h3 className="text-xl font-medium text-white mb-3">What is Donkey Ideas?</h3>
+              <p className="text-slate-300 leading-relaxed">
+                Donkey Ideas is an AI-powered venture builder that partners with founders and enterprises to take ideas from concept to production. We handle product strategy, technical architecture, and go-to-market execution, helping ventures reach market fit faster. Our portfolio spans multiple industries, from fintech and healthcare to enterprise SaaS and consumer platforms.
+              </p>
+            </div>
+            <div className="border-b border-slate-700/50 pb-8">
+              <h3 className="text-xl font-medium text-white mb-3">What services does Donkey Ideas offer?</h3>
+              <p className="text-slate-300 leading-relaxed">
+                We offer venture building, strategic consulting, AI and technology advisory, and enterprise partnerships. Our team provides hands-on expertise in growth strategy, financial modeling, technical architecture, product development, and AI integration. Whether you need a co-founder-level partner or specialized consulting on a specific challenge, we tailor our engagement to your needs.
+              </p>
+            </div>
+            <div className="border-b border-slate-700/50 pb-8">
+              <h3 className="text-xl font-medium text-white mb-3">How long does it take to build an MVP?</h3>
+              <p className="text-slate-300 leading-relaxed">
+                Most ventures in our portfolio go from concept to MVP in 6 to 12 weeks. Our AI-powered Venture Operating System reduces time-to-market by up to 70 percent while maintaining production-grade quality. The exact timeline depends on scope and complexity, but we prioritize speed without sacrificing engineering standards.
+              </p>
+            </div>
+            <div className="border-b border-slate-700/50 pb-8">
+              <h3 className="text-xl font-medium text-white mb-3">Where is Donkey Ideas located?</h3>
+              <p className="text-slate-300 leading-relaxed">
+                Donkey Ideas operates out of New York and Miami. We work with founders and enterprises globally, combining in-person collaboration with remote partnership models to deliver results regardless of geography.
+              </p>
+            </div>
+            <div className="pb-8">
+              <h3 className="text-xl font-medium text-white mb-3">How can I work with Donkey Ideas?</h3>
+              <p className="text-slate-300 leading-relaxed">
+                You can get started by reaching out through our{' '}
+                <Link href="/contact" className="text-blue-400 hover:text-blue-300 transition-colors">
+                  contact page
+                </Link>{' '}
+                or{' '}
+                <a href="https://calendar.app.google/uAubRuERACDqXYTU6" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                  scheduling a call
+                </a>
+                . We evaluate every concept within 48 hours and most partnerships begin shortly after. Whether you have a napkin sketch or an enterprise innovation initiative, we are ready to help you build something extraordinary.
+              </p>
             </div>
           </div>
         </div>
