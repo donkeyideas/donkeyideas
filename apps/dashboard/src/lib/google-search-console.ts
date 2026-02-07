@@ -18,7 +18,8 @@ function getSearchConsoleClient() {
   return google.searchconsole({ version: 'v1', auth });
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.donkeyideas.com';
+// GSC domain properties use 'sc-domain:' prefix, URL prefix properties use the full URL
+const SITE_URL = process.env.GSC_SITE_URL || 'sc-domain:donkeyideas.com';
 
 export interface GSCOverview {
   totalClicks: number;
