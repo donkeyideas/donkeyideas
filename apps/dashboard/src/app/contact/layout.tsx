@@ -3,15 +3,17 @@ import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
   title: 'Contact Us — Get in Touch',
-  description: 'Contact Donkey Ideas to discuss venture building, partnerships, or learn how we can help scale your business.',
+  description: 'Contact Donkey Ideas for venture building, strategic consulting, AI advisory, or partnership opportunities.',
   alternates: {
     canonical: 'https://www.donkeyideas.com/contact',
   },
   keywords: [
     'contact donkey ideas',
     'venture builder contact',
-    'startup help',
+    'startup consulting',
     'business consultation',
+    'AI advisory',
+    'strategic consulting',
   ],
   openGraph: {
     title: 'Contact Us — Get in Touch | Donkey Ideas',

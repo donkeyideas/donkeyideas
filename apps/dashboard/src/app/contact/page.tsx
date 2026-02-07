@@ -94,13 +94,46 @@ export default function ContactPage() {
         </div>
       </section>
 
+      {/* How We Can Help Section */}
+      <section className="py-16 px-8">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-light text-center mb-12">How We Can Help</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
+              <h3 className="text-lg font-medium mb-3 text-white">Venture Building</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                We partner with founders to take ideas from concept to production. Our team handles product strategy, technical architecture, and go-to-market execution so you can focus on what matters most: building a business that lasts.
+              </p>
+            </div>
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
+              <h3 className="text-lg font-medium mb-3 text-white">Strategic Consulting</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Whether you need help with growth strategy, financial modeling, or operational efficiency, our consulting team brings real-world experience scaling ventures across industries. We work alongside your team to deliver measurable results.
+              </p>
+            </div>
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
+              <h3 className="text-lg font-medium mb-3 text-white">AI & Technology Advisory</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                From evaluating AI integration opportunities to designing data pipelines and automation workflows, we help businesses leverage the right technology at the right time. We cut through the hype and focus on practical, revenue-driving implementations.
+              </p>
+            </div>
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
+              <h3 className="text-lg font-medium mb-3 text-white">Enterprise Partnerships</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                We collaborate with established companies looking to innovate through venture building. Whether it is launching internal startups, building new product lines, or exploring adjacent markets, our venture studio approach brings startup speed to enterprise ambitions.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Contact Form Section */}
       <section className="py-32 px-8">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-light mb-4">Let's build something together</h2>
             <p className="text-lg text-slate-400">
-              Tell us about your idea and we'll get back to you within 24 hours.
+              Tell us about your idea, consulting needs, or partnership opportunity and we'll get back to you within 24 hours.
             </p>
           </div>
 

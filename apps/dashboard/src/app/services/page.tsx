@@ -6,17 +6,19 @@ import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
   title: 'Services — Comprehensive Venture Building',
-  description: 'Venture building services including financial management, strategic planning, pitch decks, and project management tools.',
+  description: 'Venture building and consulting services: strategic planning, financial modeling, AI strategy, and technical architecture.',
   alternates: {
     canonical: 'https://www.donkeyideas.com/services',
   },
   keywords: [
     'venture building services',
-    'startup services',
-    'financial management services',
-    'pitch deck services',
-    'business planning',
+    'startup consulting',
     'strategic consulting',
+    'AI strategy consulting',
+    'technical architecture consulting',
+    'financial modeling',
+    'growth strategy',
+    'startup advisory',
   ],
   openGraph: {
     title: 'Services — Comprehensive Venture Building | Donkey Ideas',
@@ -313,6 +315,115 @@ export default async function ServicesPage() {
           </div>
         </section>
       )}
+
+      {/* Consulting & Advisory Section */}
+      <section className="py-32 px-8 border-t border-slate-800">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-amber-500/10">
+              <div className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+              <span className="text-xs uppercase tracking-widest text-amber-400 font-medium">
+                Consulting & Advisory
+              </span>
+            </div>
+            <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+              Strategic consulting for ventures at every stage
+            </h2>
+            <p className="text-xl text-slate-300 leading-relaxed">
+              Beyond our platform, Donkey Ideas is a hands-on consulting partner. We work directly with founders, executives, and enterprise teams to solve complex business challenges, define go-to-market strategies, and build operational systems that scale.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
+              <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium mb-3 text-white">Growth Strategy</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                We help companies identify growth levers, optimize acquisition channels, and build repeatable revenue engines. Our consultants bring hands-on experience scaling ventures from zero to millions in ARR.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
+              <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium mb-3 text-white">Technical Architecture</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                From system design and cloud infrastructure to AI integration and data pipelines, we advise engineering teams on building production-grade systems that handle scale without breaking the bank.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
+              <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium mb-3 text-white">Financial Modeling & Fundraising</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                We build investor-ready financial models, craft compelling pitch narratives, and prepare founders for due diligence. Our team has helped ventures raise from pre-seed through Series B rounds.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
+              <div className="w-12 h-12 rounded-lg bg-teal-500/10 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium mb-3 text-white">Product & Operations</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                We help teams establish product development workflows, hiring frameworks, and operational playbooks. Whether you need to ship faster, hire smarter, or streamline your operations, we bring proven systems.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
+              <div className="w-12 h-12 rounded-lg bg-rose-500/10 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium mb-3 text-white">Market Entry & Expansion</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Entering a new market or expanding internationally? We provide competitive analysis, localization strategy, partnership development, and go-to-market execution plans tailored to your industry.
+              </p>
+            </div>
+
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 hover:bg-slate-800/50 transition-all">
+              <div className="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium mb-3 text-white">AI & Automation Strategy</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                We assess where AI and automation can drive the most value in your business, build implementation roadmaps, and guide teams through adoption. From LLM integrations to workflow automation, we deliver practical AI solutions.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-16 text-center">
+            <p className="text-lg text-slate-300 mb-6">
+              Ready to explore how consulting can accelerate your business?
+            </p>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-900 rounded-full hover:bg-white/90 transition-all text-base font-medium shadow-xl hover:shadow-2xl hover:scale-105 transform"
+            >
+              Book a Consultation
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="py-16 px-8 border-t border-slate-800">
