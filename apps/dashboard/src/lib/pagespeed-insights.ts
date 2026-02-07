@@ -39,24 +39,31 @@ export async function fetchPageSpeedInsights(
   const params = new URLSearchParams({
     url,
     strategy,
-    category: 'performance',
     ...(apiKey ? { key: apiKey } : {}),
   });
 
-  // Fetch performance + seo + accessibility categories
+  // Add multiple category params (URLSearchParams only keeps last value for same key)
   const categories = ['performance', 'seo', 'accessibility', 'best-practices'];
-  const categoryParams = categories.map(c => `category=${c}`).join('&');
-  const fullUrl = `${PAGESPEED_API_URL}?${params.toString()}&${categoryParams}`;
+  for (const cat of categories) {
+    params.append('category', cat);
+  }
+  const fullUrl = `${PAGESPEED_API_URL}?${params.toString()}`;
 
-  const res = await fetch(fullUrl, { next: { revalidate: 3600 } });
+  const res = await fetch(fullUrl, { cache: 'no-store' });
 
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
+    console.error('PageSpeed API error:', res.status, errData);
     throw new Error(errData.error?.message || `PageSpeed API error: ${res.status}`);
   }
 
   const data = await res.json();
   const lighthouse = data.lighthouseResult;
+
+  if (!lighthouse) {
+    console.error('PageSpeed API returned no lighthouse data for', url, strategy);
+    throw new Error('PageSpeed API did not return Lighthouse results');
+  }
 
   // Extract Core Web Vitals from field data or lab data
   const fieldMetrics = data.loadingExperience?.metrics || {};

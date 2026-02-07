@@ -130,8 +130,9 @@ export async function auditPage(url: string): Promise<PageAuditResult> {
     issues.push({ type: 'warning', message: `Meta description too long: ${metaDescLength} chars`, element: 'meta description' });
   }
 
-  // H1 analysis
-  const h1Values = extractAll(html, /<h1[^>]*>([^<]*)<\/h1>/gi);
+  // H1 analysis - use [\s\S]*? to capture content with nested tags like <br />, <span>, etc.
+  const h1RawValues = extractAll(html, /<h1[^>]*>([\s\S]*?)<\/h1>/gi);
+  const h1Values = h1RawValues.map(v => v.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
   const h1Count = h1Values.length;
   const h1Result = { count: h1Count, values: h1Values, hasIssue: false as boolean, issue: undefined as string | undefined };
 

@@ -43,12 +43,13 @@ export default function SeoGeoPage() {
     loadData();
   }, [dateRange]);
 
-  const loadData = async () => {
+  const loadData = async (forceRefresh = false) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await api.get(`/seo-geo?dateRange=${dateRange}`);
+      const refreshParam = forceRefresh ? '&refresh=true' : '';
+      const response = await api.get(`/seo-geo?dateRange=${dateRange}${refreshParam}`);
       setData(response.data);
     } catch (err: any) {
       console.error('Failed to load SEO/GEO data:', err);
@@ -95,7 +96,7 @@ export default function SeoGeoPage() {
           <CardContent className="p-6">
             <div className="text-center">
               <p className="text-red-400 mb-4">{error}</p>
-              <Button onClick={loadData}>Retry</Button>
+              <Button onClick={() => loadData()}>Retry</Button>
             </div>
           </CardContent>
         </Card>
@@ -134,7 +135,7 @@ export default function SeoGeoPage() {
               </button>
             ))}
           </div>
-          <Button onClick={() => { loadData(); setRecommendations(null); }} variant="secondary">
+          <Button onClick={() => { loadData(true); setRecommendations(null); }} variant="secondary">
             Refresh
           </Button>
         </div>

@@ -738,10 +738,11 @@ model SeoGeoSnapshot {
   accessibilityScore  Int?     // 0-100 Lighthouse accessibility
 
   // GEO scores (computed by audit engine)
-  geoOverallScore     Int?     // 0-100
-  structuredDataScore Int?     // 0-100
-  llmAccessScore      Int?     // 0-100
-  contentQualityScore Int?     // 0-100
+  geoOverallScore       Int?     // 0-100
+  structuredDataScore   Int?     // 0-100
+  llmAccessScore        Int?     // 0-100
+  contentQualityScore   Int?     // 0-100
+  technicalSignalsScore Int?     // 0-100
 
   // On-page SEO audit
   seoAuditScore       Int?     // 0-100

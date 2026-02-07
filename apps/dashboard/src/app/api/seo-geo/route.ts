@@ -9,6 +9,9 @@ import { auditGeoReadiness } from '@/lib/geo-audit';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.donkeyideas.com';
 
+// Allow up to 60 seconds for PageSpeed Insights API calls
+export const maxDuration = 60;
+
 // GET /api/seo-geo?dateRange=30d
 export async function GET(request: NextRequest) {
   try {
@@ -76,6 +79,7 @@ export async function GET(request: NextRequest) {
             structuredDataScore: geoAuditResult?.structuredData.score,
             llmAccessScore: geoAuditResult?.llmAccessibility.score,
             contentQualityScore: geoAuditResult?.contentQuality.score,
+            technicalSignalsScore: geoAuditResult?.technicalSignals.score,
             seoAuditScore: seoAuditResult?.overallScore,
             issuesFound: seoAuditResult
               ? seoAuditResult.totalIssues.errors + seoAuditResult.totalIssues.warnings + seoAuditResult.totalIssues.info
@@ -100,6 +104,7 @@ export async function GET(request: NextRequest) {
             structuredDataScore: geoAuditResult?.structuredData.score,
             llmAccessScore: geoAuditResult?.llmAccessibility.score,
             contentQualityScore: geoAuditResult?.contentQuality.score,
+            technicalSignalsScore: geoAuditResult?.technicalSignals.score,
             seoAuditScore: seoAuditResult?.overallScore,
             issuesFound: seoAuditResult
               ? seoAuditResult.totalIssues.errors + seoAuditResult.totalIssues.warnings + seoAuditResult.totalIssues.info
@@ -172,7 +177,7 @@ export async function GET(request: NextRequest) {
         structuredData: { score: snapshot.structuredDataScore || 0, checks: [], issues: [] },
         llmAccessibility: { score: snapshot.llmAccessScore || 0, checks: [], issues: [] },
         contentQuality: { score: snapshot.contentQualityScore || 0, checks: [], issues: [] },
-        technicalSignals: { score: 0, checks: [], issues: [] },
+        technicalSignals: { score: snapshot.technicalSignalsScore || 0, checks: [], issues: [] },
         recommendations: [],
       } : null),
       history,
