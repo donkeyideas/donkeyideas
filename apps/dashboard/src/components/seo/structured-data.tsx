@@ -126,3 +126,50 @@ export function ServiceStructuredData() {
     />
   );
 }
+
+interface ArticleData {
+  title: string;
+  description: string;
+  url: string;
+  image: string;
+  datePublished: string;
+  dateModified: string;
+  authorName: string;
+}
+
+export function ArticleStructuredData({ data }: { data: ArticleData }) {
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: data.title,
+    description: data.description,
+    url: data.url,
+    image: data.image,
+    datePublished: data.datePublished,
+    dateModified: data.dateModified,
+    author: {
+      '@type': 'Person',
+      name: data.authorName,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Donkey Ideas',
+      url: 'https://www.donkeyideas.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.donkeyideas.com/logo.png',
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': data.url,
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
