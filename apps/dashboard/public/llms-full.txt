@@ -1,0 +1,70 @@
+# Donkey Ideas - Full Documentation
+
+> Donkey Ideas is a comprehensive venture builder platform and operating system that helps entrepreneurs build, manage, and scale ventures from idea to exit.
+
+## Company Overview
+Donkey Ideas is a venture builder and operating system designed for entrepreneurs, startup founders, and venture builders. The platform consolidates financial management, project tracking, analytics, pitch decks, whitepapers, team management, and AI-powered insights into a single unified dashboard.
+
+## Platform Features
+
+### Financial Management
+- **P&L Statements**: Track revenue (product, service, other) and expenses (direct costs, infrastructure, sales/marketing, R&D, admin) by period
+- **Balance Sheets**: Monitor assets (cash, receivables, fixed assets) and liabilities (payables, short-term and long-term debt)
+- **Cash Flow Analysis**: Operating, investing, and financing cash flows with beginning/ending balances
+- **Budget & Forecast**: Category-based budgeting with income/expense tracking, period management (monthly/quarterly), and budget vs actuals comparison
+- **Consolidated View**: Multi-company financial aggregation with intercompany transaction handling
+
+### Analytics & Intelligence
+- **Google Analytics Integration**: Real GA4 data including sessions, pageviews, bounce rate, traffic sources, top pages, and device breakdown
+- **AI-Powered Recommendations**: DeepSeek-driven analytics insights with daily cached recommendations including pros, cons, and actionable suggestions
+- **Consolidated Analytics**: Portfolio-wide analytics aggregation across all companies
+- **SEO & GEO Analytics**: Search engine optimization and generative engine optimization monitoring
+
+### Venture Management
+- **Business Profile**: Mission, target market, competitive advantage, key achievements, and operational metrics
+- **Valuation Engine**: Multiple valuation methods (revenue multiples, DCF, market comparables) with AI scoring
+- **Project Management**: Kanban-style boards with columns and cards, drag-and-drop task management
+- **Document Library**: Version-controlled document storage with file type support
+
+### Content & Communications
+- **Pitch Deck Builder**: AI-generated investor, sales, and partnership presentations with slide-by-slide editing
+- **Whitepaper Generator**: Comprehensive business documentation including executive summary, technology stack, market analysis, financial projections, and roadmap
+- **Website Manager**: CMS for managing public website content, SEO settings, and domain configuration
+- **Contact Management**: Form submission tracking with read/unread status
+
+### Team & Access
+- **Team Management**: Role-based access (owner, admin, member, viewer) with granular permissions
+- **Investor Portal**: Investor access management with investment tracking and update notifications
+- **Activity Logs**: Comprehensive audit trail of all actions across the platform
+- **Two-Factor Authentication**: TOTP-based 2FA support for enhanced security
+
+### AI Integration
+- **AI Assistant**: Conversational AI for business guidance, analysis, and strategic planning
+- **Multiple AI Providers**: Support for DeepSeek, OpenAI, Anthropic, and Google AI APIs
+- **Smart Recommendations**: AI-driven insights across analytics, financials, and business strategy
+
+## Technology
+- Built with Next.js 14, React 18, TypeScript, and Tailwind CSS
+- PostgreSQL database with Prisma ORM
+- Real-time Google Analytics Data API integration
+- Multi-theme support (dark, light, blue)
+- Responsive design for desktop and mobile
+
+## Target Audience
+- Entrepreneurs and startup founders
+- Venture builders managing multiple companies
+- Small business owners seeking comprehensive management tools
+- Investors looking for portfolio oversight capabilities
+
+## Key Pages
+- Home: https://www.donkeyideas.com/
+- Ventures: https://www.donkeyideas.com/ventures
+- Services: https://www.donkeyideas.com/services
+- Process: https://www.donkeyideas.com/process
+- About: https://www.donkeyideas.com/about
+- Contact: https://www.donkeyideas.com/contact
+- Privacy Policy: https://www.donkeyideas.com/privacy
+
+## Contact
+- Website: https://www.donkeyideas.com
+- Contact Form: https://www.donkeyideas.com/contact

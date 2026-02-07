@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import './globals.css';
 import { Providers } from './providers';
+import { OrganizationStructuredData, WebsiteStructuredData } from '@/components/seo/structured-data';
 
 const GA_MEASUREMENT_ID = 'G-N12TK3KWF4';
 
@@ -88,6 +89,13 @@ export default function RootLayout({
         </Script>
       </head>
       <body>
+        <OrganizationStructuredData data={{
+          name: 'Donkey Ideas',
+          url: 'https://www.donkeyideas.com',
+          logo: 'https://www.donkeyideas.com/logo.png',
+          description: 'Comprehensive venture builder platform and operating system for entrepreneurs.',
+        }} />
+        <WebsiteStructuredData />
         <Providers>{children}</Providers>
       </body>
     </html>

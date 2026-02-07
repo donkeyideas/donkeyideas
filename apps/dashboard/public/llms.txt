@@ -1,0 +1,31 @@
+# Donkey Ideas
+
+> Donkey Ideas is a comprehensive venture builder platform and operating system that helps entrepreneurs build, manage, and scale ventures.
+
+## About
+Donkey Ideas provides an all-in-one operating system for venture builders. The platform includes financial management, project tracking, pitch deck generation, business analytics, AI-powered insights, and strategic tools for entrepreneurs and startups.
+
+## Services
+- Venture Building: End-to-end venture creation and management
+- Financial Hub: P&L statements, balance sheets, cash flow analysis, budgeting and forecasting
+- Analytics: Google Analytics integration with AI-powered recommendations
+- Pitch Deck Builder: AI-generated investor presentations
+- Whitepaper Generator: Professional documentation for ventures
+- Team Management: Collaboration, access control, and activity tracking
+- Investor Portal: Investor updates, access management, and reporting
+- Valuation Engine: Revenue multiples, DCF, and market comparables
+- Project Management: Kanban boards, task tracking, and document library
+- AI Assistant: Intelligent business guidance and analysis
+
+## Key Pages
+- Home: https://www.donkeyideas.com/
+- Ventures: https://www.donkeyideas.com/ventures
+- Services: https://www.donkeyideas.com/services
+- Process: https://www.donkeyideas.com/process
+- About: https://www.donkeyideas.com/about
+- Contact: https://www.donkeyideas.com/contact
+- Privacy: https://www.donkeyideas.com/privacy
+
+## Contact
+- Website: https://www.donkeyideas.com
+- Email: Available via contact form at https://www.donkeyideas.com/contact

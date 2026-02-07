@@ -24,6 +24,7 @@ const donkeyIdeasNavigation = [
     section: 'Content & Systems',
     items: [
       { name: 'Website Manager', href: '/app/website', icon: '' },
+      { name: 'SEO & GEO Analytics', href: '/app/seo-geo', icon: '' },
       { name: 'Contact Messages', href: '/app/messages', icon: '', showBadge: true },
     ],
   },

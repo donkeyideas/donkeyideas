@@ -715,3 +715,85 @@ enum CategoryType {
   INCOME
   EXPENSE
 }
+
+// SEO & GEO Analytics
+model SeoGeoSnapshot {
+  id                  String   @id @default(cuid())
+  date                DateTime @db.Date
+
+  // Google Search Console metrics
+  totalClicks         Int?
+  totalImpressions    Int?
+  avgCtr              Decimal?
+  avgPosition         Decimal?
+
+  // Core Web Vitals (from PageSpeed Insights)
+  lcp                 Decimal? // Largest Contentful Paint (ms)
+  fid                 Decimal? // First Input Delay (ms)
+  cls                 Decimal? // Cumulative Layout Shift
+  fcp                 Decimal? // First Contentful Paint (ms)
+  ttfb                Decimal? // Time to First Byte (ms)
+  performanceScore    Int?     // 0-100 Lighthouse performance
+  seoScore            Int?     // 0-100 Lighthouse SEO
+  accessibilityScore  Int?     // 0-100 Lighthouse accessibility
+
+  // GEO scores (computed by audit engine)
+  geoOverallScore     Int?     // 0-100
+  structuredDataScore Int?     // 0-100
+  llmAccessScore      Int?     // 0-100
+  contentQualityScore Int?     // 0-100
+
+  // On-page SEO audit
+  seoAuditScore       Int?     // 0-100
+  issuesFound         Int?
+  auditDetails        Json?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([date])
+  @@index([date])
+  @@map("seo_geo_snapshots")
+}
+
+model KeywordTracking {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  keyword     String
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  ctr         Decimal  @default(0)
+  position    Decimal  @default(0)
+  page        String?
+
+  createdAt   DateTime @default(now())
+
+  @@unique([date, keyword])
+  @@index([date])
+  @@index([keyword])
+  @@map("keyword_tracking")
+}
+
+model SeoGeoRecommendation {
+  id           String   @id @default(cuid())
+  date         DateTime @db.Date
+
+  snapshotData Json
+
+  summary      String
+  seoInsights  Json     // [{title, description, priority, category}]
+  geoInsights  Json     // [{title, description, priority, category}]
+  actionItems  Json     // [{title, description, priority, effort, impact}]
+  overallGrade String   // A+, A, B+, B, C+, C, D, F
+
+  tokensUsed   Int?
+  cost         Decimal?
+  model        String   @default("deepseek-chat")
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([date])
+  @@index([date])
+  @@map("seo_geo_recommendations")
+}
