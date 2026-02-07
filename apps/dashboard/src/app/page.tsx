@@ -8,7 +8,10 @@ import { OrganizationStructuredData, WebsiteStructuredData, ServiceStructuredDat
 
 export const metadata: Metadata = {
   title: 'Donkey Ideas — Transform Your Vision Into Reality',
-  description: 'Build and scale your ventures with Donkey Ideas. Comprehensive tools for financial management, project tracking, pitch decks, and strategic planning for entrepreneurs and venture builders.',
+  description: 'Build and scale ventures with Donkey Ideas. Financial management, project tracking, pitch decks, and strategic planning for entrepreneurs.',
+  alternates: {
+    canonical: 'https://www.donkeyideas.com',
+  },
   keywords: [
     'venture builder',
     'startup platform',

@@ -2,10 +2,14 @@ import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
 import ScrollHeader from '@/components/scroll-header';
 import { Metadata } from 'next';
+import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
   title: 'About Us — Our Mission & Vision',
   description: 'Learn about Donkey Ideas\' mission to empower entrepreneurs with innovative venture building tools and strategic support.',
+  alternates: {
+    canonical: 'https://www.donkeyideas.com/about',
+  },
   keywords: [
     'about donkey ideas',
     'venture builder',
@@ -164,6 +168,10 @@ export default async function AboutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      <BreadcrumbStructuredData items={[
+        { name: 'Home', url: 'https://www.donkeyideas.com' },
+        { name: 'About', url: 'https://www.donkeyideas.com/about' },
+      ]} />
       {/* Navigation with scroll effect */}
       <ScrollHeader />
 

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
 import { Metadata } from 'next';
+import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
   title: 'Our Ventures — Portfolio of Innovation',
@@ -14,6 +15,9 @@ export const metadata: Metadata = {
     'startup showcase',
     'venture builder portfolio',
   ],
+  alternates: {
+    canonical: 'https://www.donkeyideas.com/ventures',
+  },
   openGraph: {
     title: 'Our Ventures — Portfolio of Innovation | Donkey Ideas',
     description: 'Explore our portfolio of innovative ventures and startups across various industries.',
@@ -113,6 +117,10 @@ export default async function VenturesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      <BreadcrumbStructuredData items={[
+        { name: 'Home', url: 'https://www.donkeyideas.com' },
+        { name: 'Ventures', url: 'https://www.donkeyideas.com/ventures' },
+      ]} />
       {/* Navigation */}
       <ScrollHeader />
 
@@ -131,6 +139,7 @@ export default async function VenturesPage() {
       {/* Feature Cards Section */}
       <section className="py-16 px-8">
         <div className="max-w-[1400px] mx-auto">
+          <h2 className="text-3xl md:text-4xl font-light text-center mb-12">What We Build</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:bg-slate-800/50 transition-all">
               <h3 className="text-xl font-medium mb-3 text-white">Built for Scale</h3>
@@ -157,6 +166,7 @@ export default async function VenturesPage() {
       {/* Venture Showcase Sections - Giga Agent Canvas Style */}
       <section className="py-24 px-8">
         <div className="max-w-[1400px] mx-auto space-y-32">
+          <h2 className="text-3xl md:text-4xl font-light text-center">Our Portfolio</h2>
           {ventures.map((venture: any, index: number) => {
             const statusColors: Record<string, string> = {
               teal: 'bg-cyan-400/20 border-cyan-400/30 text-cyan-300',

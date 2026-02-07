@@ -2,10 +2,14 @@ import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
 import ScrollHeader from '@/components/scroll-header';
 import { Metadata } from 'next';
+import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
   title: 'Services — Comprehensive Venture Building',
-  description: 'Discover Donkey Ideas\' full suite of venture building services including financial management, strategic planning, pitch deck creation, and project management tools.',
+  description: 'Venture building services including financial management, strategic planning, pitch decks, and project management tools.',
+  alternates: {
+    canonical: 'https://www.donkeyideas.com/services',
+  },
   keywords: [
     'venture building services',
     'startup services',
@@ -97,6 +101,10 @@ export default async function ServicesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      <BreadcrumbStructuredData items={[
+        { name: 'Home', url: 'https://www.donkeyideas.com' },
+        { name: 'Services', url: 'https://www.donkeyideas.com/services' },
+      ]} />
       {/* Navigation with scroll effect */}
       <ScrollHeader />
 

@@ -2,18 +2,30 @@ import Link from 'next/link';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
 import { Metadata } from 'next';
+import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy',
-  description: 'Donkey Ideas privacy policy. Learn how we collect, use, and protect your data.',
+  title: 'Privacy Policy — How We Protect Your Data',
+  description: 'Donkey Ideas privacy policy. Learn how we collect, use, and protect your personal data and information.',
+  alternates: {
+    canonical: 'https://www.donkeyideas.com/privacy',
+  },
   robots: {
     index: true,
     follow: true,
   },
   openGraph: {
-    title: 'Privacy Policy | Donkey Ideas',
+    title: 'Privacy Policy — How We Protect Your Data | Donkey Ideas',
     description: 'Learn how we collect, use, and protect your data.',
     url: 'https://www.donkeyideas.com/privacy',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Donkey Ideas Privacy Policy',
+      },
+    ],
   },
 };
 
@@ -83,6 +95,10 @@ export default async function PrivacyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      <BreadcrumbStructuredData items={[
+        { name: 'Home', url: 'https://www.donkeyideas.com' },
+        { name: 'Privacy Policy', url: 'https://www.donkeyideas.com/privacy' },
+      ]} />
       {/* Navigation */}
       <ScrollHeader />
 

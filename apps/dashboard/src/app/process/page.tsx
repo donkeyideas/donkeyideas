@@ -2,10 +2,14 @@ import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
 import ScrollHeader from '@/components/scroll-header';
 import { Metadata } from 'next';
+import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
   title: 'Our Approach — Venture Building Process',
   description: 'Learn about Donkey Ideas\' proven approach to venture building, from ideation to scale. Our systematic process helps entrepreneurs succeed.',
+  alternates: {
+    canonical: 'https://www.donkeyideas.com/process',
+  },
   keywords: [
     'venture building process',
     'startup methodology',
@@ -120,6 +124,10 @@ export default async function ProcessPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+      <BreadcrumbStructuredData items={[
+        { name: 'Home', url: 'https://www.donkeyideas.com' },
+        { name: 'Our Approach', url: 'https://www.donkeyideas.com/process' },
+      ]} />
       {/* Navigation with scroll effect */}
       <ScrollHeader />
 
