@@ -15,10 +15,11 @@ import {
   SeoAuditCard,
   GeoReadinessCard,
   SeoGeoRecommendations,
+  DeveloperRecommendations,
 } from '@/components/seo-geo';
 
 type DateRange = '7d' | '30d' | '90d';
-type TabId = 'overview' | 'search-console' | 'web-vitals' | 'seo-audit' | 'geo-readiness';
+type TabId = 'overview' | 'search-console' | 'web-vitals' | 'seo-audit' | 'geo-readiness' | 'recommendations';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -26,6 +27,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'web-vitals', label: 'Web Vitals' },
   { id: 'seo-audit', label: 'SEO Audit' },
   { id: 'geo-readiness', label: 'GEO Readiness' },
+  { id: 'recommendations', label: 'Recommendations' },
 ];
 
 export default function SeoGeoPage() {
@@ -69,7 +71,7 @@ export default function SeoGeoPage() {
   };
 
   useEffect(() => {
-    if (activeTab === 'overview' && !recommendations) {
+    if ((activeTab === 'overview' || activeTab === 'recommendations') && !recommendations) {
       loadRecommendations();
     }
   }, [activeTab]);
@@ -345,6 +347,16 @@ export default function SeoGeoPage() {
       {/* ==================== GEO READINESS TAB ==================== */}
       {activeTab === 'geo-readiness' && (
         <GeoReadinessCard audit={geoAudit} />
+      )}
+
+      {/* ==================== RECOMMENDATIONS TAB ==================== */}
+      {activeTab === 'recommendations' && (
+        <DeveloperRecommendations
+          seoAudit={seoAudit}
+          geoAudit={geoAudit}
+          pageSpeed={pageSpeed}
+          recommendations={recommendations}
+        />
       )}
     </div>
   );

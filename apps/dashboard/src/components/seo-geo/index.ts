@@ -9,3 +9,4 @@ export { LighthouseScores } from './lighthouse-scores';
 export { SeoAuditCard } from './seo-audit-card';
 export { GeoReadinessCard } from './geo-readiness-card';
 export { SeoGeoRecommendations } from './seo-geo-recommendations';
+export { DeveloperRecommendations } from './developer-recommendations';

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import './globals.css';
 import { Providers } from './providers';
-import { OrganizationStructuredData, WebsiteStructuredData } from '@/components/seo/structured-data';
+import { OrganizationStructuredData, WebsiteStructuredData, ServiceStructuredData } from '@/components/seo/structured-data';
 
 const GA_MEASUREMENT_ID = 'G-N12TK3KWF4';
 
@@ -54,6 +54,9 @@ export const metadata: Metadata = {
     images: ['/og-image.png'],
     creator: '@donkeyideas',
   },
+  alternates: {
+    canonical: 'https://www.donkeyideas.com',
+  },
   robots: {
     index: true,
     follow: true,
@@ -96,6 +99,7 @@ export default function RootLayout({
           description: 'Comprehensive venture builder platform and operating system for entrepreneurs.',
         }} />
         <WebsiteStructuredData />
+        <ServiceStructuredData />
         <Providers>{children}</Providers>
       </body>
     </html>

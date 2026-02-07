@@ -1,5 +1,3 @@
-import Script from 'next/script';
-
 interface OrganizationData {
   name: string;
   url: string;
@@ -25,8 +23,7 @@ export function OrganizationStructuredData({ data }: { data: OrganizationData })
   };
 
   return (
-    <Script
-      id="organization-structured-data"
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
     />
@@ -51,8 +48,7 @@ export function WebsiteStructuredData() {
   };
 
   return (
-    <Script
-      id="website-structured-data"
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
     />
@@ -72,8 +68,7 @@ export function BreadcrumbStructuredData({ items }: { items: BreadcrumbItem[] })
   };
 
   return (
-    <Script
-      id="breadcrumb-structured-data"
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
     />
@@ -103,8 +98,7 @@ export function ServiceStructuredData() {
   };
 
   return (
-    <Script
-      id="service-structured-data"
+    <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
     />
