@@ -50,15 +50,19 @@ export default async function BlogPage() {
                   href={`/blog/${post.slug}`}
                   className="group block bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/50 transition-all hover:translate-y-[-2px]"
                 >
-                  {post.featuredImage && (
-                    <div className="aspect-video overflow-hidden">
+                  <div className="aspect-video overflow-hidden">
+                    {post.featuredImage ? (
                       <img
                         src={post.featuredImage}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                        <span className="text-4xl font-light text-slate-500">{post.title.charAt(0)}</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="p-6">
                     {post.category && (
                       <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 mb-3">

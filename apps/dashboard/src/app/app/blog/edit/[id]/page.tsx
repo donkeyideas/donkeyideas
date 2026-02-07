@@ -61,8 +61,12 @@ export default function EditBlogPostPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)]">
-      <BlogEditor mode="edit" postId={postId} initialData={initialData} />
-    </div>
+    <BlogEditor
+      mode="edit"
+      postId={postId}
+      initialData={initialData}
+      onClose={() => window.history.back()}
+      onSaved={() => window.history.back()}
+    />
   );
 }
