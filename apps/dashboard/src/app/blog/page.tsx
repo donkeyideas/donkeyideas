@@ -1,24 +1,45 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { Metadata } from 'next';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
 
-async function getPublishedPosts() {
+export const dynamic = 'force-dynamic';
+
+const POSTS_PER_PAGE = 9;
+
+export const metadata: Metadata = {
+  title: 'Blog | Donkey Ideas',
+  description: 'Insights on venture building, AI strategy, and scaling businesses from Donkey Ideas.',
+  alternates: {
+    canonical: 'https://www.donkeyideas.com/blog',
+  },
+};
+
+async function getPaginatedPosts(page: number) {
   try {
-    const posts = await prisma.blogPost.findMany({
-      where: { published: true },
-      orderBy: { publishedAt: 'desc' },
-      include: { author: { select: { name: true } } },
-    });
-    return posts;
+    const [posts, total] = await Promise.all([
+      prisma.blogPost.findMany({
+        where: { published: true },
+        orderBy: { publishedAt: 'desc' },
+        skip: (page - 1) * POSTS_PER_PAGE,
+        take: POSTS_PER_PAGE,
+        include: { author: { select: { name: true } } },
+      }),
+      prisma.blogPost.count({ where: { published: true } }),
+    ]);
+    return { posts, total };
   } catch (error) {
     console.error('Failed to load blog posts:', error);
-    return [];
+    return { posts: [], total: 0 };
   }
 }
 
-export default async function BlogPage() {
-  const posts = await getPublishedPosts();
+export default async function BlogPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1);
+  const { posts, total } = await getPaginatedPosts(currentPage);
+  const totalPages = Math.ceil(total / POSTS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
@@ -31,13 +52,13 @@ export default async function BlogPage() {
             Blog
           </h1>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Insights on venture building, AI strategy, and scaling businesses from the Donkey Ideas team.
+            Insights on venture building, AI strategy, and scaling businesses from Donkey Ideas.
           </p>
         </div>
       </section>
 
       {/* Posts Grid */}
-      <section className="pb-32 px-8">
+      <section className="pb-16 px-8">
         <div className="max-w-[1200px] mx-auto">
           {posts.length === 0 ? (
             <div className="text-center py-24">
@@ -81,7 +102,7 @@ export default async function BlogPage() {
                       </p>
                     )}
                     <div className="flex items-center gap-3 text-xs text-slate-500">
-                      <span>{post.author.name}</span>
+                      <span>Donkey Ideas</span>
                       <span>&bull;</span>
                       <span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
                       <span>&bull;</span>
@@ -94,6 +115,50 @@ export default async function BlogPage() {
           )}
         </div>
       </section>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <section className="pb-32 px-8">
+          <div className="max-w-[1200px] mx-auto">
+            <nav aria-label="Blog pagination" className="flex items-center justify-center gap-2">
+              {currentPage > 1 && (
+                <Link
+                  href={currentPage === 2 ? '/blog' : `/blog?page=${currentPage - 1}`}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 hover:text-white transition-all"
+                >
+                  Previous
+                </Link>
+              )}
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Link
+                  key={page}
+                  href={page === 1 ? '/blog' : `/blog?page=${page}`}
+                  className={`w-10 h-10 rounded-lg text-sm font-medium flex items-center justify-center transition-all ${
+                    page === currentPage
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                      : 'text-slate-400 bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 hover:text-white'
+                  }`}
+                >
+                  {page}
+                </Link>
+              ))}
+
+              {currentPage < totalPages && (
+                <Link
+                  href={`/blog?page=${currentPage + 1}`}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 hover:text-white transition-all"
+                >
+                  Next
+                </Link>
+              )}
+            </nav>
+            <p className="text-center text-xs text-slate-500 mt-4">
+              Showing {(currentPage - 1) * POSTS_PER_PAGE + 1}–{Math.min(currentPage * POSTS_PER_PAGE, total)} of {total} posts
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="py-16 px-8 border-t border-slate-800">

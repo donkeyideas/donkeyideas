@@ -148,13 +148,12 @@ export function ArticleStructuredData({ data }: { data: ArticleData }) {
     datePublished: data.datePublished,
     dateModified: data.dateModified,
     author: {
-      '@type': 'Person',
+      '@type': 'Organization',
       name: data.authorName,
-      url: 'https://www.donkeyideas.com/about',
-      worksFor: {
-        '@type': 'Organization',
-        name: 'Donkey Ideas',
-        url: 'https://www.donkeyideas.com',
+      url: 'https://www.donkeyideas.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.donkeyideas.com/logo.png',
       },
     },
     publisher: {

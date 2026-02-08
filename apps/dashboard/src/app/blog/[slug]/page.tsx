@@ -6,6 +6,8 @@ import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
 import { ArticleStructuredData } from '@/components/seo/structured-data';
 
+export const dynamic = 'force-dynamic';
+
 async function getPostBySlug(slug: string) {
   try {
     const post = await prisma.blogPost.findUnique({
@@ -61,7 +63,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: 'article',
       publishedTime: post.publishedAt?.toISOString(),
       modifiedTime: post.updatedAt.toISOString(),
-      authors: [post.author.name],
+      authors: ['Donkey Ideas'],
       images: post.featuredImage ? [{ url: post.featuredImage, width: 1200, height: 630, alt: post.title }] : [{ url: '/og-image.png', width: 1200, height: 630 }],
     },
     twitter: {
@@ -82,6 +84,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   }
 
   const relatedPosts = await getRelatedPosts(slug, post.category);
+  const authorName = 'Donkey Ideas';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
@@ -93,7 +96,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           image: post.featuredImage || 'https://www.donkeyideas.com/og-image.png',
           datePublished: post.publishedAt?.toISOString() || post.createdAt.toISOString(),
           dateModified: post.updatedAt.toISOString(),
-          authorName: post.author.name,
+          authorName: authorName,
         }}
       />
 
@@ -123,10 +126,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {/* Author */}
           <div className="flex items-center gap-4 mb-10 pb-10 border-b border-slate-700/50">
             <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-semibold text-lg">
-              {post.author.name.charAt(0)}
+              {authorName.charAt(0)}
             </div>
             <div>
-              <div className="text-base font-medium text-white">{post.author.name}</div>
+              <div className="text-base font-medium text-white">{authorName}</div>
               <div className="text-sm text-slate-400">Venture Builder & AI Strategist at Donkey Ideas</div>
             </div>
           </div>
@@ -180,14 +183,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div className="mt-12 p-6 bg-slate-800/30 border border-slate-700/50 rounded-xl">
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-semibold text-xl flex-shrink-0">
-                {post.author.name.charAt(0)}
+                {authorName.charAt(0)}
               </div>
               <div>
                 <div className="text-base font-medium text-white mb-1">
-                  Written by {post.author.name}
+                  Written by {authorName}
                 </div>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  {post.author.name} is part of the Donkey Ideas team, building AI-powered ventures and sharing insights on startup strategy, technical architecture, and growth. Donkey Ideas partners with founders and enterprises to take ideas from concept to production.
+                  Donkey Ideas is a venture builder creating AI-powered companies and sharing insights on startup strategy, technical architecture, and growth. We partner with founders and enterprises to take ideas from concept to production.
                 </p>
               </div>
             </div>
