@@ -95,7 +95,7 @@ export function BudgetMonthlyTable({ data }: BudgetMonthlyTableProps) {
                   {expandedMonth === row.monthKey && row.dailyBreakdown.map((day) => (
                     <tr key={day.date} className={`border-b ${borderClass} ${expandedBg}`}>
                       <td className="px-4 py-2 text-xs text-white/60 [.light_&]:text-slate-500 pl-10">
-                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </td>
                       <td className="px-4 py-2 text-right text-xs text-green-400/70 [.light_&]:text-green-600/70">{formatCurrency(day.income)}</td>
                       <td className="px-4 py-2 text-right text-xs text-red-400/70 [.light_&]:text-red-600/70">{formatCurrency(day.expenses)}</td>

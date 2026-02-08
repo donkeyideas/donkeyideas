@@ -275,7 +275,7 @@ export function BudgetEntryTable({
   // Delete entry handler
   const handleDelete = async (entry: typeof sortedEntries[0]) => {
     if (!entry.id) return;
-    if (!window.confirm(`Delete ${entry.categoryName} entry for ${new Date(entry.date).toLocaleDateString()}?`)) return;
+    if (!window.confirm(`Delete ${entry.categoryName} entry for ${new Date(entry.date + 'T12:00:00').toLocaleDateString()}?`)) return;
 
     try {
       setDeletingId(entry.id);
@@ -492,7 +492,7 @@ export function BudgetEntryTable({
                   {sortedEntries.map((entry) => (
                     <tr key={entry.key} className={`border-b ${borderClass} ${hoverClass} transition-colors`}>
                       <td className="px-4 py-2.5 text-sm text-white [.light_&]:text-slate-900">
-                        {new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                        {new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
                       <td className="px-4 py-2.5 text-sm">
                         <div className="flex items-center gap-2">

@@ -183,7 +183,7 @@ export function ConsolidatedEntriesTable({
                   {sortedEntries.map((entry) => (
                     <tr key={entry.key} className={`border-b ${borderClass} ${hoverClass} transition-colors`}>
                       <td className="px-4 py-2.5 text-sm text-white [.light_&]:text-slate-900">
-                        {new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                        {new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
                       <td className="px-4 py-2.5 text-sm">
                         <div className="flex items-center gap-2">

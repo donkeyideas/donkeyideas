@@ -33,7 +33,7 @@ export function BudgetBalanceChart({ data, title = 'Cash Balance Trend' }: Budge
 
   const formattedData = data.map((item) => ({
     ...item,
-    displayDate: new Date(item.date).toLocaleDateString('en-US', {
+    displayDate: new Date(item.date + 'T12:00:00').toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
     }),
