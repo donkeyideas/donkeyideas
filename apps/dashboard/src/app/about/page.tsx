@@ -1,5 +1,6 @@
 import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
+import Image from 'next/image';
 import ScrollHeader from '@/components/scroll-header';
 import { Metadata } from 'next';
 import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
@@ -238,11 +239,13 @@ export default async function AboutPage() {
             
             <div className="relative">
               <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
-                <div className="aspect-[4/3] bg-gradient-to-br from-blue-900/20 to-purple-900/20">
-                  <img
+                <div className="aspect-[4/3] bg-gradient-to-br from-blue-900/20 to-purple-900/20 relative">
+                  <Image
                     src={pageContent.mission?.imageUrl || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop'}
                     alt="Team Collaboration"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
               </div>
@@ -373,11 +376,13 @@ export default async function AboutPage() {
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="relative">
               <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
-                <div className="aspect-[4/3] bg-gradient-to-br from-teal-900/20 to-cyan-900/20">
-                  <img
+                <div className="aspect-[4/3] bg-gradient-to-br from-teal-900/20 to-cyan-900/20 relative">
+                  <Image
                     src={pageContent.team?.imageUrl || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop'}
                     alt="Our Team"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
               </div>

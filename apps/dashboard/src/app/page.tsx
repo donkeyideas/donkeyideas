@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
 import { cookies } from 'next/headers';
@@ -120,7 +121,7 @@ export default async function HomePage() {
       text1: 'Ready to transform your idea into a market-dominating venture? Our team of AI engineers, product strategists, and growth experts is standing by to evaluate your concept.',
       text2: 'We move fast—most partnerships begin within 48 hours of first contact. From writing code and designing systems to acquiring customers and raising capital, we provide hands-on expertise across every dimension of venture building. Let\'s build something extraordinary together.',
       ctaText: 'Explore Venture Canvas',
-      imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
+      imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop',
     },
   };
 
@@ -159,11 +160,14 @@ export default async function HomePage() {
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url('${heroContent.backgroundImage}')`,
-            }}
+          <Image
+            src={heroContent.backgroundImage}
+            alt="Hero background"
+            fill
+            className="object-cover object-center"
+            priority
+            sizes="100vw"
+            quality={80}
           />
           {/* Gradient overlays for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/40 to-slate-900/80" />
@@ -312,10 +316,13 @@ export default async function HomePage() {
 
             {/* Right - Large Image */}
             <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-[4/5]">
-              <img
-                src={engageContent.ventureCanvas?.imageUrl || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop'}
+              <Image
+                src={engageContent.ventureCanvas?.imageUrl || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop'}
                 alt="Venture Canvas Platform"
-                className="w-full h-full object-cover scale-125"
+                fill
+                className="object-cover scale-125"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                quality={80}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
             </div>

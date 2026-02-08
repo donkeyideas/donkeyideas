@@ -1,5 +1,6 @@
 import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
+import Image from 'next/image';
 import ScrollHeader from '@/components/scroll-header';
 import { Metadata } from 'next';
 import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
@@ -138,11 +139,14 @@ export default async function ServicesPage() {
       <section className="py-16 px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
-            <div className="aspect-video bg-gradient-to-br from-slate-800 via-slate-900 to-black flex items-center justify-center">
-              <img
+            <div className="aspect-video bg-gradient-to-br from-slate-800 via-slate-900 to-black relative">
+              <Image
                 src={pageContent.dashboardImage || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'}
                 alt="Venture Operating System Dashboard"
-                className="w-full h-full object-cover opacity-80"
+                fill
+                className="object-cover opacity-80"
+                sizes="(max-width: 768px) 100vw, 1400px"
+                priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
             </div>
@@ -187,11 +191,13 @@ export default async function ServicesPage() {
               
               <div className="relative">
                 <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-blue-900/20 to-purple-900/20 flex items-center justify-center">
-                    <img
+                  <div className="aspect-[4/3] bg-gradient-to-br from-blue-900/20 to-purple-900/20 relative">
+                    <Image
                       src={pageContent.sections[0].imageUrl || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop'}
                       alt="Analytics Dashboard"
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
                 </div>
@@ -208,11 +214,13 @@ export default async function ServicesPage() {
             <div className="grid md:grid-cols-2 gap-16 items-center">
               <div className="order-2 md:order-1 relative">
                 <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-teal-900/20 to-cyan-900/20 flex items-center justify-center">
-                    <img
+                  <div className="aspect-[4/3] bg-gradient-to-br from-teal-900/20 to-cyan-900/20 relative">
+                    <Image
                       src={pageContent.sections[1].imageUrl || 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop'}
                       alt="AI Insights"
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
                 </div>
@@ -302,11 +310,13 @@ export default async function ServicesPage() {
               
               <div className="relative">
                 <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-green-900/20 to-emerald-900/20 flex items-center justify-center">
-                    <img
+                  <div className="aspect-[4/3] bg-gradient-to-br from-green-900/20 to-emerald-900/20 relative">
+                    <Image
                       src={pageContent.sections[2].imageUrl || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop'}
                       alt="Implementation Dashboard"
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
                 </div>

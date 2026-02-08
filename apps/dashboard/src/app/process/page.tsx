@@ -1,5 +1,6 @@
 import { prisma } from '@donkey-ideas/database';
 import Link from 'next/link';
+import Image from 'next/image';
 import ScrollHeader from '@/components/scroll-header';
 import { Metadata } from 'next';
 import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
@@ -207,11 +208,13 @@ export default async function ProcessPage() {
             
             <div className="relative">
               <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
-                <div className="aspect-[4/3] bg-gradient-to-br from-blue-900/20 to-cyan-900/20 flex items-center justify-center">
-                  <img
+                <div className="aspect-[4/3] bg-gradient-to-br from-blue-900/20 to-cyan-900/20 relative">
+                  <Image
                     src={pageContent.sections[0].imageUrl || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'}
                     alt="AI Validation Dashboard"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
               </div>
@@ -228,11 +231,13 @@ export default async function ProcessPage() {
             <div className="grid md:grid-cols-2 gap-16 items-center">
               <div className="order-2 md:order-1 relative">
                 <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-purple-900/20 to-pink-900/20 flex items-center justify-center">
-                    <img
+                  <div className="aspect-[4/3] bg-gradient-to-br from-purple-900/20 to-pink-900/20 relative">
+                    <Image
                       src={pageContent.sections[1].imageUrl || 'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=2006&auto=format&fit=crop'}
                       alt="Multi-Market Launch"
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
                 </div>
@@ -319,11 +324,13 @@ export default async function ProcessPage() {
             
             <div className="relative">
               <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
-                <div className="aspect-[4/3] bg-gradient-to-br from-green-900/20 to-emerald-900/20 flex items-center justify-center">
-                  <img
+                <div className="aspect-[4/3] bg-gradient-to-br from-green-900/20 to-emerald-900/20 relative">
+                  <Image
                     src={pageContent.sections[2].imageUrl || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop'}
                     alt="Team Collaboration"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
               </div>

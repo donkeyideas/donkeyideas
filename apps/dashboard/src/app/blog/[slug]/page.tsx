@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Metadata } from 'next';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
@@ -120,23 +121,27 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </h1>
 
           {/* Author */}
-          <div className="flex items-center gap-3 mb-10 pb-10 border-b border-slate-700/50">
-            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-medium">
+          <div className="flex items-center gap-4 mb-10 pb-10 border-b border-slate-700/50">
+            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-semibold text-lg">
               {post.author.name.charAt(0)}
             </div>
             <div>
-              <div className="text-sm font-medium text-white">{post.author.name}</div>
-              <div className="text-xs text-slate-500">Donkey Ideas</div>
+              <div className="text-base font-medium text-white">{post.author.name}</div>
+              <div className="text-sm text-slate-400">Venture Builder & AI Strategist at Donkey Ideas</div>
             </div>
           </div>
 
           {/* Featured Image */}
           {post.featuredImage && (
             <div className="mb-10 rounded-xl overflow-hidden">
-              <img
+              <Image
                 src={post.featuredImage}
                 alt={post.title}
+                width={1200}
+                height={630}
                 className="w-full h-auto"
+                sizes="(max-width: 768px) 100vw, 768px"
+                priority
               />
             </div>
           )}
@@ -170,6 +175,23 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </div>
             </div>
           )}
+
+          {/* Author Bio */}
+          <div className="mt-12 p-6 bg-slate-800/30 border border-slate-700/50 rounded-xl">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-semibold text-xl flex-shrink-0">
+                {post.author.name.charAt(0)}
+              </div>
+              <div>
+                <div className="text-base font-medium text-white mb-1">
+                  Written by {post.author.name}
+                </div>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  {post.author.name} is part of the Donkey Ideas team, building AI-powered ventures and sharing insights on startup strategy, technical architecture, and growth. Donkey Ideas partners with founders and enterprises to take ideas from concept to production.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </article>
 

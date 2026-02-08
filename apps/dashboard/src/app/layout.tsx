@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 import { Providers } from './providers';
 import { OrganizationStructuredData, WebsiteStructuredData, ServiceStructuredData } from '@/components/seo/structured-data';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 const GA_MEASUREMENT_ID = 'G-N12TK3KWF4';
 
@@ -76,7 +83,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <head>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
@@ -91,7 +98,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body>
+      <body className={inter.className}>
         <OrganizationStructuredData data={{
           name: 'Donkey Ideas',
           url: 'https://www.donkeyideas.com',

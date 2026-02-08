@@ -150,6 +150,12 @@ export function ArticleStructuredData({ data }: { data: ArticleData }) {
     author: {
       '@type': 'Person',
       name: data.authorName,
+      url: 'https://www.donkeyideas.com/about',
+      worksFor: {
+        '@type': 'Organization',
+        name: 'Donkey Ideas',
+        url: 'https://www.donkeyideas.com',
+      },
     },
     publisher: {
       '@type': 'Organization',
