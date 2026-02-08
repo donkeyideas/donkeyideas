@@ -3,6 +3,8 @@ import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
+export const maxDuration = 60;
+
 const PRICING = {
   'deepseek-chat': {
     input: 0.00014,
@@ -128,10 +130,18 @@ Return this exact JSON structure:
     });
 
     if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      console.error('DeepSeek API error:', response.status, errData);
+      const errText = await response.text().catch(() => '');
+      console.error('DeepSeek API error:', response.status, errText);
+      let errMessage = `DeepSeek API error (${response.status})`;
+      try {
+        const errData = JSON.parse(errText);
+        errMessage = errData.error?.message || errMessage;
+      } catch {}
+      if (response.status === 401) errMessage = 'DeepSeek API key is invalid or expired. Check Settings.';
+      if (response.status === 429) errMessage = 'DeepSeek rate limit exceeded. Please wait a moment and try again.';
+      if (response.status === 402) errMessage = 'DeepSeek account has insufficient balance. Please top up.';
       return NextResponse.json(
-        { error: { message: errData.error?.message || `DeepSeek API error: ${response.status}` } },
+        { error: { message: errMessage } },
         { status: 502 }
       );
     }
@@ -166,15 +176,22 @@ Return this exact JSON structure:
     // Parse the JSON response
     let generated;
     try {
-      // Try to extract JSON from the response (DeepSeek sometimes wraps in ```json blocks)
       let jsonStr = rawContent.trim();
+      // Remove ```json ... ``` wrapping
       const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) {
         jsonStr = jsonMatch[1].trim();
       }
+      // Try to find JSON object if there's text before/after it
+      if (!jsonStr.startsWith('{')) {
+        const objMatch = jsonStr.match(/\{[\s\S]*\}/);
+        if (objMatch) {
+          jsonStr = objMatch[0];
+        }
+      }
       generated = JSON.parse(jsonStr);
     } catch (e) {
-      console.error('Failed to parse DeepSeek response:', rawContent);
+      console.error('Failed to parse DeepSeek response:', rawContent.substring(0, 500));
       return NextResponse.json(
         { error: { message: 'Failed to parse AI response. Please try again.' } },
         { status: 502 }
