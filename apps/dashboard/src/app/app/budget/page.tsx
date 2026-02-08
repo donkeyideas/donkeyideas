@@ -11,7 +11,7 @@ import { BudgetIncomeExpenseChart } from '@/components/budget/budget-income-expe
 import { BudgetPeriodTabs } from '@/components/budget/budget-period-tabs';
 import { BudgetCategoryHealth } from '@/components/budget/budget-category-health';
 import { BudgetMonthlyTable } from '@/components/budget/budget-monthly-table';
-import { BudgetDetailTable } from '@/components/budget/budget-detail-table';
+import { BudgetEntryTable } from '@/components/budget/budget-entry-table';
 
 interface BudgetPeriod {
   id: string;
@@ -541,7 +541,7 @@ function BudgetPageContent() {
                     {tab === 'overview' && 'Overview'}
                     {tab === 'monthly' && 'Monthly Summary'}
                     {tab === 'categories' && 'Category Breakdown'}
-                    {tab === 'table' && 'Detailed Table'}
+                    {tab === 'table' && 'Data Entry'}
                   </button>
                 ))}
               </div>
@@ -602,13 +602,14 @@ function BudgetPageContent() {
               )}
 
               {activeTab === 'table' && (
-                <BudgetDetailTable
+                <BudgetEntryTable
                   periodId={selectedPeriod.id}
                   companyId={selectedPeriod.companyId || currentCompany.id}
                   periodType={selectedPeriod.type}
+                  periodStartDate={selectedPeriod.startDate?.split('T')[0] || ''}
+                  periodEndDate={selectedPeriod.endDate?.split('T')[0] || ''}
                   categories={categories}
                   lines={lines}
-                  dates={dates}
                   openingBalance={openingBalance}
                   onLinesUpdate={setLines}
                 />
