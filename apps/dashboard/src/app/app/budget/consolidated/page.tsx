@@ -8,6 +8,7 @@ import { ConsolidatedCompanyCards } from '@/components/budget/consolidated-compa
 import { ConsolidatedComparisonTable } from '@/components/budget/consolidated-comparison-table';
 import { BudgetBalanceChart } from '@/components/budget/budget-balance-chart';
 import { BudgetIncomeExpenseChart } from '@/components/budget/budget-income-expense-chart';
+import { ConsolidatedEntriesTable } from '@/components/budget/consolidated-entries-table';
 
 interface BudgetPeriod {
   id: string;
@@ -35,7 +36,6 @@ export default function ConsolidatedBudgetPage() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [periods, setPeriods] = useState<BudgetPeriod[]>([]);
   const [categories, setCategories] = useState<BudgetCategory[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [lines, setLines] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -110,9 +110,6 @@ export default function ConsolidatedBudgetPage() {
       const uniqueCategories = Array.from(categoryMap.values());
       setCategories(uniqueCategories);
 
-      if (uniqueCategories.length > 0) {
-        setSelectedCategories(uniqueCategories.slice(0, Math.min(5, uniqueCategories.length)).map(c => c.name));
-      }
     } catch (error: any) {
       console.error('Error loading consolidated data:', error);
       setError(error.message || 'Failed to load data');
@@ -307,38 +304,7 @@ export default function ConsolidatedBudgetPage() {
     }));
   }, [companyCardsData]);
 
-  // Consolidated table helpers
-  const balanceByDate = useMemo(() => {
-    if (dates.length === 0) return {};
-    const totalsByDate: Record<string, number> = {};
-    Object.entries(lines).forEach(([key, amount]) => {
-      const dateKey = key.split('_')[0];
-      totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) + amount;
-    });
-    const balances: Record<string, number> = {};
-    let running = openingBalance;
-    dates.forEach((date) => {
-      running += totalsByDate[date] || 0;
-      balances[date] = running;
-    });
-    return balances;
-  }, [dates, lines, openingBalance]);
-
-  const getBalance = (date: string): string => {
-    const value = balanceByDate[date];
-    if (value === undefined) return '0.00';
-    return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
-  const getLineValue = (date: string, categoryName: string): string => {
-    const key = `${date}_${categoryName}`;
-    const amount = lines[key];
-    if (!amount) return '$0.00';
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
   const filteredPeriods = getFilteredPeriods();
-  const selectedCategoryObjects = categories.filter(c => selectedCategories.includes(c.name));
 
   if (loading) {
     return (
@@ -420,7 +386,7 @@ export default function ConsolidatedBudgetPage() {
               >
                 {tab === 'overview' && 'Overview Charts'}
                 {tab === 'comparison' && 'Company Comparison'}
-                {tab === 'table' && 'Consolidated Table'}
+                {tab === 'table' && 'All Entries'}
               </button>
             ))}
           </div>
@@ -438,113 +404,13 @@ export default function ConsolidatedBudgetPage() {
           )}
 
           {activeTab === 'table' && (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Select Categories to Display</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto px-6 py-4 w-full max-w-full">
-                    <div className="flex flex-nowrap gap-2 min-w-max">
-                      {categories.map((category) => (
-                        <button
-                          key={category.name}
-                          onClick={() => {
-                            setSelectedCategories(prev =>
-                              prev.includes(category.name)
-                                ? prev.filter(name => name !== category.name)
-                                : [...prev, category.name]
-                            );
-                          }}
-                          className={`px-3 py-1.5 rounded text-sm transition-all whitespace-nowrap ${
-                            selectedCategories.includes(category.name)
-                              ? 'bg-white/20 text-white border-2 border-white/40'
-                              : 'bg-black/20 text-slate-400 border border-white/10 hover:bg-black/30'
-                          }`}
-                        >
-                          <span
-                            className="inline-block w-2 h-2 rounded-full mr-2"
-                            style={{ backgroundColor: category.color }}
-                          />
-                          {category.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-0">
-                  <div className="max-h-[70vh] overflow-x-auto overflow-y-auto w-full">
-                    <table className="w-full border-collapse">
-                      <thead className="bg-black/30 [.light_&]:bg-slate-200 sticky top-0 z-20">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-sm font-medium text-slate-400 [.light_&]:text-slate-700 border-r border-white/10 [.light_&]:border-slate-300 whitespace-nowrap min-w-[180px] w-[180px] sticky left-0 z-30 bg-[#0b1220] [.light_&]:bg-slate-200">
-                            Date
-                          </th>
-                          <th className="px-4 py-3 text-right text-sm font-medium text-slate-400 [.light_&]:text-slate-700 border-r border-white/10 [.light_&]:border-slate-300 whitespace-nowrap min-w-[140px] w-[140px] sticky left-[180px] z-30 bg-[#0b1220] [.light_&]:bg-slate-200">
-                            Balance
-                          </th>
-                          {selectedCategoryObjects.map(category => (
-                            <th
-                              key={category.name}
-                              className="px-4 py-3 text-right text-sm font-medium text-white [.light_&]:text-slate-900 border-r border-white/10 [.light_&]:border-slate-300 min-w-[150px] w-[150px] bg-[#0b1220] [.light_&]:bg-slate-200"
-                            >
-                              <div className="flex items-center justify-end gap-2">
-                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: category.color }} />
-                                {category.name}
-                              </div>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dates.map((date) => {
-                          const dateObj = new Date(date);
-                          const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-                          return (
-                            <tr
-                              key={date}
-                              className={`border-t border-white/10 [.light_&]:border-slate-300 hover:bg-white/5 [.light_&]:hover:bg-slate-100 ${
-                                isWeekend ? 'bg-black/20 [.light_&]:bg-slate-100' : ''
-                              }`}
-                            >
-                              <td className={`px-4 py-2 text-sm text-slate-300 [.light_&]:text-slate-800 border-r border-white/10 [.light_&]:border-slate-300 whitespace-nowrap min-w-[180px] w-[180px] sticky left-0 z-20 ${
-                                isWeekend ? 'bg-black/20 [.light_&]:bg-slate-100' : 'bg-[#0b1220] [.light_&]:bg-[#F5F5DC]'
-                              }`}>
-                                <div className="font-medium">
-                                  {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </div>
-                              </td>
-                              <td className={`px-4 py-2 text-right text-sm font-medium text-white [.light_&]:text-slate-900 border-r border-white/10 [.light_&]:border-slate-300 whitespace-nowrap min-w-[140px] w-[140px] sticky left-[180px] z-20 ${
-                                isWeekend ? 'bg-black/20 [.light_&]:bg-slate-100' : 'bg-[#0b1220] [.light_&]:bg-[#F5F5DC]'
-                              }`}>
-                                ${getBalance(date)}
-                              </td>
-                              {selectedCategoryObjects.map(category => (
-                                <td key={`${date}_${category.name}`} className="px-4 py-2 text-right text-sm text-slate-300 [.light_&]:text-slate-800 border-r border-white/10 [.light_&]:border-slate-300 min-w-[150px] w-[150px]">
-                                  {getLineValue(date, category.name)}
-                                </td>
-                              ))}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="flex justify-between items-center text-sm text-slate-400 [.light_&]:text-slate-600">
-                <div>
-                  {dates.length} days &bull; {selectedCategories.length} categories &bull; {filteredPeriods.length} periods combined
-                </div>
-                <div>
-                  Opening balance: ${openingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-            </>
+            <ConsolidatedEntriesTable
+              lines={lines}
+              categories={categories}
+              companies={companies}
+              filteredPeriods={filteredPeriods}
+              openingBalance={openingBalance}
+            />
           )}
         </>
       )}
