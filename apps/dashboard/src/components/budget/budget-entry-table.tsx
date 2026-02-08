@@ -55,7 +55,9 @@ export function BudgetEntryTable({
   const [addCategoryId, setAddCategoryId] = useState('');
   const [addAmount, setAddAmount] = useState('');
   const [addNotes, setAddNotes] = useState('');
+  const [addRepeatMonths, setAddRepeatMonths] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [saveProgress, setSaveProgress] = useState('');
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -132,55 +134,96 @@ export function BudgetEntryTable({
     return { income, expenses, net: income - expenses, count: sortedEntries.length };
   }, [sortedEntries]);
 
-  // Add entry handler
+  // Generate dates for repeating entries
+  const generateRepeatDates = (startDate: string, months: number): string[] => {
+    const dates: string[] = [startDate];
+    if (months <= 0) return dates;
+
+    const start = new Date(startDate + 'T12:00:00');
+    const day = start.getDate();
+
+    for (let m = 1; m <= months; m++) {
+      const next = new Date(start);
+      next.setMonth(next.getMonth() + m);
+      // Handle months with fewer days (e.g. Jan 31 -> Feb 28)
+      if (next.getDate() !== day) {
+        next.setDate(0); // last day of previous month
+      }
+      const dateStr = next.toISOString().split('T')[0];
+      // Only include if within period range
+      if (dateStr <= periodEndDate) {
+        dates.push(dateStr);
+      }
+    }
+    return dates;
+  };
+
+  // Add entry handler (supports repeat)
   const handleAddEntry = async () => {
     if (!addDate || !addCategoryId || !addAmount) return;
     const numAmount = parseFloat(addAmount.replace(/[^0-9.-]/g, ''));
     if (isNaN(numAmount) || numAmount === 0) return;
 
+    const datesToCreate = generateRepeatDates(addDate, addRepeatMonths);
+    const totalCount = datesToCreate.length;
+
     try {
       setSaving(true);
-      const key = `${addDate}_${addCategoryId}`;
-      const existingLine = lines[key];
+      const updated = { ...lines };
+
+      // Build all lines to save
+      const linesToSave = datesToCreate.map(date => {
+        const key = `${date}_${addCategoryId}`;
+        const existingLine = lines[key];
+        return {
+          id: existingLine?.id || undefined,
+          periodId,
+          companyId,
+          categoryId: addCategoryId,
+          date,
+          amount: numAmount,
+          notes: addNotes || undefined,
+        };
+      });
+
+      setSaveProgress(`Saving ${totalCount} ${totalCount === 1 ? 'entry' : 'entries'}...`);
 
       const response = await fetch('/api/budget/lines', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lines: [{
-            id: existingLine?.id || undefined,
-            periodId,
-            companyId,
-            categoryId: addCategoryId,
-            date: addDate,
-            amount: numAmount,
-            notes: addNotes || undefined,
-          }],
-        }),
+        body: JSON.stringify({ lines: linesToSave }),
       });
 
       if (response.ok) {
         const saved = await response.json();
-        const savedLine = Array.isArray(saved) ? saved[0] : saved;
-        const updated = { ...lines };
-        updated[key] = {
-          id: savedLine?.id || existingLine?.id || '',
-          date: addDate,
-          amount: String(numAmount),
-          categoryId: addCategoryId,
-          balance: '0',
-          isApproved: false,
-          notes: addNotes,
-        };
+        const savedLines = Array.isArray(saved) ? saved : [saved];
+
+        datesToCreate.forEach((date, i) => {
+          const key = `${date}_${addCategoryId}`;
+          const savedLine = savedLines[i];
+          updated[key] = {
+            id: savedLine?.id || '',
+            date,
+            amount: String(numAmount),
+            categoryId: addCategoryId,
+            balance: '0',
+            isApproved: false,
+            notes: addNotes,
+          };
+        });
+
         onLinesUpdate(updated);
 
         // Reset form
         setAddAmount('');
         setAddNotes('');
-        // Keep date and category for quick repeated entry
+        setAddRepeatMonths(0);
+        setSaveProgress(`Saved ${totalCount} ${totalCount === 1 ? 'entry' : 'entries'}`);
+        setTimeout(() => setSaveProgress(''), 2000);
       }
     } catch (error) {
       console.error('Error adding entry:', error);
+      setSaveProgress('');
     } finally {
       setSaving(false);
     }
@@ -263,7 +306,7 @@ export function BudgetEntryTable({
           <Button onClick={() => setShowAddForm(!showAddForm)}>
             {showAddForm ? 'Close Form' : '+ Add Entry'}
           </Button>
-          {saving && <span className="text-sm text-blue-400">Saving...</span>}
+          {saving && <span className="text-sm text-blue-400">{saveProgress || 'Saving...'}</span>}
         </div>
         <div className="flex items-center gap-3">
           {periodType === 'ACTUALS' && unapprovedCount > 0 && (
@@ -281,7 +324,7 @@ export function BudgetEntryTable({
             <CardTitle className="text-base">Add Entry</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
               <div>
                 <label className="block text-xs text-white/50 [.light_&]:text-slate-500 mb-1">Date</label>
                 <input
@@ -318,6 +361,24 @@ export function BudgetEntryTable({
                 />
               </div>
               <div>
+                <label className="block text-xs text-white/50 [.light_&]:text-slate-500 mb-1">Repeat</label>
+                <select
+                  value={addRepeatMonths}
+                  onChange={(e) => setAddRepeatMonths(Number(e.target.value))}
+                  className={`w-full px-3 py-2 rounded border text-sm focus:outline-none focus:ring-1 ${inputClass}`}
+                >
+                  <option value={0}>No repeat</option>
+                  <option value={1}>2 months</option>
+                  <option value={2}>3 months</option>
+                  <option value={3}>4 months</option>
+                  <option value={5}>6 months</option>
+                  <option value={8}>9 months</option>
+                  <option value={11}>12 months</option>
+                  <option value={17}>18 months</option>
+                  <option value={23}>24 months</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-xs text-white/50 [.light_&]:text-slate-500 mb-1">Notes (optional)</label>
                 <input
                   type="text"
@@ -334,10 +395,18 @@ export function BudgetEntryTable({
                   disabled={!addDate || !addCategoryId || !addAmount || saving}
                   className="w-full"
                 >
-                  {saving ? 'Saving...' : 'Add'}
+                  {saving ? 'Saving...' : addRepeatMonths > 0 ? `Add (${addRepeatMonths + 1}x)` : 'Add'}
                 </Button>
               </div>
             </div>
+            {addRepeatMonths > 0 && addDate && (
+              <p className="mt-2 text-xs text-white/40 [.light_&]:text-slate-500">
+                Will create {addRepeatMonths + 1} entries on day {new Date(addDate + 'T12:00:00').getDate()} of each month{periodEndDate ? `, up to ${new Date(periodEndDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : ''}
+              </p>
+            )}
+            {saveProgress && (
+              <p className="mt-2 text-xs text-blue-400">{saveProgress}</p>
+            )}
           </CardContent>
         </Card>
       )}
