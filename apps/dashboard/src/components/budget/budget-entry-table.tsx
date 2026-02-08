@@ -71,6 +71,7 @@ export function BudgetEntryTable({
 
   // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmEntry, setDeleteConfirmEntry] = useState<typeof sortedEntries[0] | null>(null);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -273,9 +274,10 @@ export function BudgetEntryTable({
   };
 
   // Delete entry handler
-  const handleDelete = async (entry: typeof sortedEntries[0]) => {
-    if (!entry.id) return;
-    if (!window.confirm(`Delete ${entry.categoryName} entry for ${new Date(entry.date + 'T12:00:00').toLocaleDateString()}?`)) return;
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirmEntry?.id) return;
+    const entry = deleteConfirmEntry;
+    setDeleteConfirmEntry(null);
 
     try {
       setDeletingId(entry.id);
@@ -577,7 +579,7 @@ export function BudgetEntryTable({
                                     Edit
                                   </button>
                                   <button
-                                    onClick={() => handleDelete(entry)}
+                                    onClick={() => entry.id ? setDeleteConfirmEntry(entry) : undefined}
                                     disabled={deletingId === entry.id}
                                     className="px-2 py-1 text-xs text-red-400 hover:bg-red-500/10 rounded transition-colors"
                                   >
@@ -617,6 +619,77 @@ export function BudgetEntryTable({
             <span className={`font-medium ${totals.net >= 0 ? 'text-green-400 [.light_&]:text-green-600' : 'text-red-400 [.light_&]:text-red-600'}`}>
               Net: {formatCurrency(totals.net)}
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirmEntry(null)} />
+          <div className={`relative w-full max-w-md mx-4 rounded-xl border shadow-2xl ${
+            theme === 'light'
+              ? 'bg-white border-slate-200'
+              : 'bg-slate-900 border-white/10'
+          }`}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className={`text-lg font-semibold ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                    Delete Entry
+                  </h3>
+                  <p className={`text-sm ${theme === 'light' ? 'text-slate-500' : 'text-white/50'}`}>
+                    This action cannot be undone
+                  </p>
+                </div>
+              </div>
+              <div className={`rounded-lg p-4 mb-6 ${theme === 'light' ? 'bg-slate-50 border border-slate-200' : 'bg-white/5 border border-white/10'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: deleteConfirmEntry.categoryColor }} />
+                    <span className={`text-sm font-medium ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                      {deleteConfirmEntry.categoryName}
+                    </span>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${
+                      deleteConfirmEntry.categoryType === 'INCOME' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {deleteConfirmEntry.categoryType}
+                    </span>
+                  </div>
+                  <span className={`text-sm font-medium ${
+                    deleteConfirmEntry.categoryType === 'INCOME' ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {formatCurrency(deleteConfirmEntry.amount)}
+                  </span>
+                </div>
+                <p className={`text-xs ${theme === 'light' ? 'text-slate-500' : 'text-white/40'}`}>
+                  {new Date(deleteConfirmEntry.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirmEntry(null)}
+                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    theme === 'light'
+                      ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      : 'bg-white/10 text-white/70 hover:bg-white/20'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600 transition-colors"
+                >
+                  Delete Entry
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
