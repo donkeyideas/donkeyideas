@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate totals
     const totalCalls = usage.length;
-    const totalCost = usage.reduce((sum: number, u: any) => sum + Number(u.cost), 0);
+    const totalCost = usage.reduce((sum: number, u: any) => sum + calculateCost(u.provider, u.model, u.promptTokens || 0, u.completionTokens || 0), 0);
     const totalTokens = usage.reduce((sum: number, u: any) => sum + (u.totalTokens || 0), 0);
 
     // Group by provider
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
       const existing = byProviderMap.get(u.provider) || { calls: 0, cost: 0, tokens: 0 };
       byProviderMap.set(u.provider, {
         calls: existing.calls + 1,
-        cost: existing.cost + Number(u.cost),
+        cost: existing.cost + calculateCost(u.provider, u.model, u.promptTokens || 0, u.completionTokens || 0),
         tokens: existing.tokens + (u.totalTokens || 0),
       });
     });
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
       promptTokens: u.promptTokens || 0,
       completionTokens: u.completionTokens || 0,
       totalTokens: u.totalTokens || 0,
-      cost: Number(u.cost),
+      cost: calculateCost(u.provider, u.model, u.promptTokens || 0, u.completionTokens || 0),
       createdAt: u.createdAt.toISOString(),
     }));
 
@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
       const existing = dailyMap.get(date) || { calls: 0, cost: 0, tokens: 0 };
       dailyMap.set(date, {
         calls: existing.calls + 1,
-        cost: existing.cost + Number(u.cost),
+        cost: existing.cost + calculateCost(u.provider, u.model, u.promptTokens || 0, u.completionTokens || 0),
         tokens: existing.tokens + (u.totalTokens || 0),
       });
     });

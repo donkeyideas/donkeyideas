@@ -223,8 +223,42 @@ export default function ApiUsagePage() {
         </CardContent>
       </Card>
 
-      {/* Recent Calls */}
+      {/* Daily Stats Chart */}
       <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Daily Usage Trend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {stats.dailyStats.map((day) => (
+              <div key={day.date} className="flex items-center gap-4">
+                <div className="w-24 text-sm text-white/60">
+                  {new Date(day.date).toLocaleDateString()}
+                </div>
+                <div className="flex-1 flex items-center gap-2">
+                  <div className="flex-1 bg-white/5 rounded h-6 relative overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500/50 rounded"
+                      style={{
+                        width: `${Math.min((day.calls / Math.max(...stats.dailyStats.map((d) => d.calls), 1)) * 100, 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="w-32 text-sm text-right">
+                  {formatNumber(day.calls)} calls
+                </div>
+                <div className="w-32 text-sm text-right text-green-500">
+                  {formatCurrency(day.cost)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Calls */}
+      <Card>
         <CardHeader>
           <CardTitle>Recent API Calls</CardTitle>
         </CardHeader>
@@ -259,40 +293,6 @@ export default function ApiUsagePage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Daily Stats Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daily Usage Trend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {stats.dailyStats.map((day) => (
-              <div key={day.date} className="flex items-center gap-4">
-                <div className="w-24 text-sm text-white/60">
-                  {new Date(day.date).toLocaleDateString()}
-                </div>
-                <div className="flex-1 flex items-center gap-2">
-                  <div className="flex-1 bg-white/5 rounded h-6 relative overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500/50 rounded"
-                      style={{
-                        width: `${Math.min((day.calls / Math.max(...stats.dailyStats.map((d) => d.calls), 1)) * 100, 100)}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="w-32 text-sm text-right">
-                  {formatNumber(day.calls)} calls
-                </div>
-                <div className="w-32 text-sm text-right text-green-500">
-                  {formatCurrency(day.cost)}
-                </div>
-              </div>
-            ))}
           </div>
         </CardContent>
       </Card>
