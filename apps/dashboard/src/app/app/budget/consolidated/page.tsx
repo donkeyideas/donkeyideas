@@ -189,11 +189,12 @@ export default function ConsolidatedBudgetPage() {
           const amount = parseFloat(String(line.amount).replace(/,/g, '')) || 0;
           combinedLines[key] = (combinedLines[key] || 0) + amount;
 
-          perCompany[companyId].totalFlow += amount;
           if (category.type === 'INCOME') {
             perCompany[companyId].income += amount;
+            perCompany[companyId].totalFlow += amount;
           } else if (category.type === 'EXPENSE') {
             perCompany[companyId].expenses += Math.abs(amount);
+            perCompany[companyId].totalFlow -= Math.abs(amount);
           }
         }
       });
@@ -223,14 +224,12 @@ export default function ConsolidatedBudgetPage() {
   const portfolioSummary = useMemo(() => {
     let totalIncome = 0;
     let totalExpenses = 0;
-    let totalFlow = 0;
 
     Object.entries(lines).forEach(([key, amount]) => {
       const categoryName = key.split('_').slice(1).join('_');
       const category = categories.find(c => c.name === categoryName);
       if (category?.type === 'INCOME') totalIncome += amount;
       else if (category?.type === 'EXPENSE') totalExpenses += Math.abs(amount);
-      totalFlow += amount;
     });
 
     const filteredPeriods = getFilteredPeriods();
@@ -240,7 +239,7 @@ export default function ConsolidatedBudgetPage() {
       totalIncome,
       totalExpenses,
       netCashFlow: totalIncome - totalExpenses,
-      portfolioBalance: openingBalance + totalFlow,
+      portfolioBalance: openingBalance + totalIncome - totalExpenses,
       companyCount,
     };
   }, [lines, categories, openingBalance, periods, filterType]);
@@ -278,7 +277,11 @@ export default function ConsolidatedBudgetPage() {
     const totalsByDate: Record<string, number> = {};
     Object.entries(lines).forEach(([key, amount]) => {
       const dateKey = key.split('_')[0];
-      totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) + amount;
+      const categoryName = key.split('_').slice(1).join('_');
+      const category = categories.find(c => c.name === categoryName);
+      // Expenses stored as positive values need to be subtracted
+      const signedAmount = category?.type === 'EXPENSE' ? -Math.abs(amount) : amount;
+      totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) + signedAmount;
     });
 
     const result: { date: string; balance: number }[] = [];

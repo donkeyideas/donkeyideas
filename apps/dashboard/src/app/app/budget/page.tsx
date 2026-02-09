@@ -186,12 +186,8 @@ function BudgetPageContent() {
     });
 
     const netCashFlow = totalIncome - totalExpenses;
-    // Current balance = opening + all line amounts (income positive, expenses negative)
-    let totalFlow = 0;
-    Object.values(lines).forEach(line => {
-      totalFlow += parseFloat(String(line.amount).replace(/,/g, '')) || 0;
-    });
-    const currentBalance = openingBalance + totalFlow;
+    // Current balance = opening + income - expenses
+    const currentBalance = openingBalance + totalIncome - totalExpenses;
 
     return { totalIncome, totalExpenses, netCashFlow, currentBalance };
   }, [lines, categories, openingBalance]);
@@ -200,11 +196,16 @@ function BudgetPageContent() {
   const balanceTrendData = useMemo(() => {
     if (dates.length === 0) return [];
     const totalsByDate: Record<string, number> = {};
-    Object.values(lines).forEach(line => {
+    Object.entries(lines).forEach(([key, line]) => {
       if (!line.date) return;
       const dateKey = line.date.split('T')[0];
-      const amount = parseFloat(String(line.amount).replace(/,/g, ''));
-      totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) + (Number.isNaN(amount) ? 0 : amount);
+      const categoryId = key.split('_')[1];
+      const category = categories.find(c => c.id === categoryId);
+      const rawAmount = parseFloat(String(line.amount).replace(/,/g, ''));
+      const amount = Number.isNaN(rawAmount) ? 0 : rawAmount;
+      // Expenses stored as positive values need to be subtracted
+      const signedAmount = category?.type === 'EXPENSE' ? -Math.abs(amount) : amount;
+      totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) + signedAmount;
     });
 
     const result: { date: string; balance: number }[] = [];
@@ -313,11 +314,12 @@ function BudgetPageContent() {
       const category = categories.find(c => c.id === categoryId);
       const amount = parseFloat(String(line.amount).replace(/,/g, '')) || 0;
 
-      totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) + amount;
       if (category?.type === 'INCOME') {
         dailyIncome[dateKey] = (dailyIncome[dateKey] || 0) + amount;
+        totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) + amount;
       } else if (category?.type === 'EXPENSE') {
         dailyExpenses[dateKey] = (dailyExpenses[dateKey] || 0) + Math.abs(amount);
+        totalsByDate[dateKey] = (totalsByDate[dateKey] || 0) - Math.abs(amount);
       }
     });
 
