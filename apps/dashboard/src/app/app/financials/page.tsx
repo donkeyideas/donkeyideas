@@ -631,6 +631,7 @@ export default function FinancialsPage() {
           grossProfit: data.revenue - data.cogs,
           operatingExpenses: data.operatingExpenses,
           netIncome: data.revenue - data.cogs - data.operatingExpenses,
+          netProfit: data.revenue - data.cogs - data.operatingExpenses,
           createdAt: data.period,
         });
         
