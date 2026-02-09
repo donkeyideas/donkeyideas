@@ -32,32 +32,32 @@ interface ApiUsageStats {
   }>;
 }
 
-// Deep Seek pricing (as of 2024)
+// Pricing: dollars per 1M tokens (used with tokens / 1_000_000 * price)
 const PRICING = {
   deepseek: {
     'deepseek-chat': {
-      input: 0.00014, // $0.14 per 1M tokens
-      output: 0.00028, // $0.28 per 1M tokens
+      input: 0.14, // $0.14 per 1M tokens
+      output: 0.28, // $0.28 per 1M tokens
     },
   },
   openai: {
     'gpt-4': {
-      input: 0.03, // $30 per 1M tokens
-      output: 0.06, // $60 per 1M tokens
+      input: 30, // $30 per 1M tokens
+      output: 60, // $60 per 1M tokens
     },
     'gpt-3.5-turbo': {
-      input: 0.0005, // $0.50 per 1M tokens
-      output: 0.0015, // $1.50 per 1M tokens
+      input: 0.5, // $0.50 per 1M tokens
+      output: 1.5, // $1.50 per 1M tokens
     },
   },
   anthropic: {
     'claude-3-opus': {
-      input: 0.015, // $15 per 1M tokens
-      output: 0.075, // $75 per 1M tokens
+      input: 15, // $15 per 1M tokens
+      output: 75, // $75 per 1M tokens
     },
     'claude-3-sonnet': {
-      input: 0.003, // $3 per 1M tokens
-      output: 0.015, // $15 per 1M tokens
+      input: 3, // $3 per 1M tokens
+      output: 15, // $15 per 1M tokens
     },
   },
 };

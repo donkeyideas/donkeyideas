@@ -7,8 +7,8 @@ export const maxDuration = 60;
 
 const PRICING = {
   'deepseek-chat': {
-    input: 0.00014,
-    output: 0.00028,
+    input: 0.14, // $0.14 per 1M tokens
+    output: 0.28, // $0.28 per 1M tokens
   },
 };
 
