@@ -37,8 +37,8 @@ function stripMarkdown(text: string): string {
     .replace(/^>\s+/gm, '')
     // Remove horizontal rules
     .replace(/^[-*_]{3,}$/gm, '')
-    // Remove link syntax but keep text
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Convert markdown links to HTML anchor tags
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
     // Remove image syntax
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
     // Clean up extra whitespace
@@ -84,13 +84,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemPrompt = `You are a professional blog content writer for Donkey Ideas, a venture builder and consulting company.
+    const systemPrompt = `You are a professional blog content writer for Donkey Ideas, a venture builder and consulting company. Website: https://www.donkeyideas.com
 
 Your task is to generate a complete blog post about the given topic.
 
 CRITICAL RULES:
 1. Output ONLY valid JSON. No text before or after the JSON.
-2. Content must be written as plain HTML paragraphs. Use ONLY these HTML tags: <p>, <h2>, <h3>, <strong>, <em>, <ul>, <ol>, <li>
+2. Content must be written as plain HTML. Use ONLY these HTML tags: <p>, <h2>, <h3>, <strong>, <em>, <ul>, <ol>, <li>, <a>
 3. Do NOT use any markdown formatting. No **, ##, *, _, \`\`\`, or any markdown syntax whatsoever.
 4. Write in a professional, engaging, and authoritative tone.
 5. Target 600-1000 words for the content.
@@ -98,12 +98,26 @@ CRITICAL RULES:
 7. The excerpt should be 120-200 characters.
 8. The meta description should be 120-160 characters.
 
+LINKING RULES (important for SEO):
+- Include 2-4 internal links to relevant Donkey Ideas pages using relative paths. Available internal pages:
+  - /services - consulting and venture building services
+  - /ventures - portfolio of ventures and case studies
+  - /about - company mission, team, and values
+  - /process - venture building methodology and approach
+  - /blog - blog listing page
+  - /contact - contact and get in touch page
+- Include 2-3 external links to authoritative sources (industry reports, well-known publications, official documentation) that support claims or add value. Use full URLs with https:// for external links.
+- All links must use <a> tags with descriptive anchor text. Example: <a href="/services">our venture building services</a> or <a href="https://hbr.org/some-article">Harvard Business Review reports</a>
+- Open external links in new tab: <a href="https://example.com" target="_blank" rel="noopener noreferrer">text</a>
+- Internal links should NOT have target="_blank".
+- Weave links naturally into sentences. Do not cluster them.
+
 Return this exact JSON structure:
 {
   "title": "Blog Post Title Here",
   "slug": "blog-post-title-here",
   "excerpt": "A compelling excerpt that summarizes the post...",
-  "content": "<p>First paragraph...</p><h2>Section Title</h2><p>More content...</p>",
+  "content": "<p>First paragraph...</p><h2>Section Title</h2><p>More content with <a href=\\"/services\\">our services</a>...</p>",
   "category": "Category Name",
   "tags": ["tag1", "tag2", "tag3"],
   "seoTitle": "SEO Optimized Title | Donkey Ideas",
