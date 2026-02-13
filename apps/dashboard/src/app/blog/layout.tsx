@@ -2,22 +2,22 @@ import { Metadata } from 'next';
 import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
-  title: 'Blog — Insights on Venture Building & AI',
-  description: 'Expert insights on venture building, startup strategy, AI integration, financial modeling, and technology advisory from Donkey Ideas.',
+  title: 'Blog — Insights on Business Strategy & Creative Consulting',
+  description: 'Expert insights on creative consulting, business strategy, financial modeling, and turning bold ideas into real businesses from Donkey Ideas.',
   alternates: {
     canonical: 'https://www.donkeyideas.com/blog',
   },
   keywords: [
-    'venture building blog',
+    'creative consulting blog',
     'startup insights',
-    'AI strategy',
-    'entrepreneurship',
     'business strategy',
-    'technology advisory',
+    'entrepreneurship',
+    'financial modeling',
+    'project management',
   ],
   openGraph: {
-    title: 'Blog — Insights on Venture Building & AI | Donkey Ideas',
-    description: 'Expert insights on venture building, startup strategy, and AI integration.',
+    title: 'Blog — Insights on Business Strategy & Creative Consulting | Donkey Ideas',
+    description: 'Expert insights on creative consulting, business strategy, and turning ideas into businesses.',
     url: 'https://www.donkeyideas.com/blog',
     images: [
       {

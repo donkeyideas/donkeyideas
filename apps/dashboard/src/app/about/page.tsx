@@ -6,21 +6,23 @@ import { Metadata } from 'next';
 import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
-  title: 'About Us — Our Mission & Vision',
-  description: 'Learn about Donkey Ideas\' mission to empower entrepreneurs with innovative venture building tools and strategic support.',
+  title: 'About Us — Creative Consulting Studio | Donkey Ideas',
+  description: 'Donkey Ideas is a creative consulting studio and think tank that helps entrepreneurs turn bold ideas into real businesses. Learn about our mission, values, and hands-on approach.',
   alternates: {
     canonical: 'https://www.donkeyideas.com/about',
   },
   keywords: [
     'about donkey ideas',
-    'venture builder',
-    'startup platform',
+    'creative consulting studio',
+    'business consulting',
+    'think tank',
     'entrepreneurship',
-    'company mission',
+    'project management consulting',
+    'innovation consulting',
   ],
   openGraph: {
-    title: 'About Us — Our Mission & Vision | Donkey Ideas',
-    description: 'Empowering entrepreneurs with innovative venture building tools and strategic support.',
+    title: 'About Us — Creative Consulting Studio | Donkey Ideas',
+    description: 'A creative consulting studio and think tank helping entrepreneurs turn bold ideas into real businesses.',
     url: 'https://www.donkeyideas.com/about',
     images: [
       {
@@ -50,60 +52,60 @@ export default async function AboutPage() {
   
   const defaultContent = {
     hero: {
-      title: 'Building the future of intelligent ventures',
-      description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering to build ventures that matter. Each product represents a bold bet on ideas others overlook.',
+      title: 'A think tank for people\nwith big ideas',
+      description: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs and businesses turn bold concepts into reality. Part think tank, part project management firm — we plan it, build it, and launch it with you.',
     },
     mission: {
-      title: 'Where bold ideas become reality',
-      description: 'We bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.\n\nOur mission is to transform unconventional concepts that traditional VCs overlook into revenue-generating businesses. We take calculated risks on ideas that sound absurd at first, because we know world-changing innovations often do.',
+      title: 'Where bold ideas become real businesses',
+      description: 'We bridge the gap between a great idea and a real business. Through hands-on consulting, strategic planning, and financial modeling, we help founders and entrepreneurs take their concepts from napkin sketch to launch day.\n\nOur mission is to be the partner that every dreamer needs — someone who doesn\'t just say "great idea" but actually helps you figure out if it works, how to fund it, and how to build it. We take on the projects that traditional consultancies don\'t touch, because we believe the craziest ideas often have the most potential.',
       imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
     },
     values: [
       {
-        title: 'Innovation',
-        description: 'We push boundaries and explore unconventional approaches. While others chase trends, we build foundational technologies that create lasting value.',
+        title: 'Creativity',
+        description: 'We embrace unconventional thinking and approach every project with fresh eyes. The best solutions often come from looking at problems differently.',
       },
       {
         title: 'Excellence',
-        description: 'We maintain the highest standards in engineering and product development. Every venture represents a commitment to meticulously crafted systems.',
+        description: 'We hold ourselves to the highest standards in planning, strategy, and execution. Every deliverable — from a business plan to a financial model — is built to impress.',
       },
       {
         title: 'Impact',
-        description: 'We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.',
+        description: 'We measure success by results. Our projects generate revenue, secure funding, and create real value for the people and communities they serve.',
       },
     ],
     ventureProcess: {
-      title: 'Venture Building Process',
+      title: 'Our Process',
       steps: [
         {
           number: '1',
-          title: 'Unconventional idea submitted',
-          subtitle: 'AI scans market for validation signals',
-          badge: 'Market gap identified',
+          title: 'You bring the idea',
+          subtitle: 'We research the market and validate the concept',
+          badge: 'Opportunity identified',
           actions: [
-            'Technical architecture designed',
-            'MVP built in 6-12 weeks',
-            'Product-market fit validated',
+            'Business plan and strategy developed',
+            'Financial model built in 2-4 weeks',
+            'Go-to-market roadmap created',
           ],
         },
         {
           number: '2',
-          title: 'Production launch & scaling',
-          subtitle: 'AI optimizes growth loops automatically',
+          title: 'Build and launch together',
+          subtitle: 'We manage the project through execution',
           badge: 'Revenue generating',
           actions: [],
         },
       ],
-      result: 'Validated venture ready for scale',
+      result: 'Validated business ready to grow',
     },
     approach: {
       badge: 'Our Approach',
-      title: 'Disciplined build, fast validation',
-      description: 'We run a repeatable loop: identify a real market pain, design the right system, ship a lean MVP, and validate with paying customers.\n\nEvery step is measured. We prototype quickly, test assumptions in days, and double down only when the data proves momentum. That keeps capital efficient and outcomes predictable.',
+      title: 'Plan smart, build fast, launch with confidence',
+      description: 'We run a proven loop: understand the idea, research the market, build the plan, model the numbers, and launch.\n\nEvery step is deliberate. We prototype quickly, test assumptions with real data, and only move forward when the numbers make sense. That keeps your budget lean and your odds of success high.',
     },
     team: {
-      title: 'Builders, engineers & strategists',
-      description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.\n\nWe\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
+      title: 'Project managers, strategists & creative problem-solvers',
+      description: 'We\'re a small, scrappy team of people who love building things. Project managers, business strategists, financial modelers, and creative thinkers — all working together to help you bring your idea to life.\n\nWe\'re not traditional consultants who hand you a report and walk away. We\'re hands-on partners who stick with you through the messy middle — from the first brainstorm to opening day and beyond.',
       imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
     },
   };
@@ -195,20 +197,20 @@ export default async function AboutPage() {
         <div className="max-w-[1400px] mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">87%</div>
-              <div className="text-sm text-slate-400">Ventures reach market fit</div>
+              <div className="text-4xl font-light text-white mb-2">50+</div>
+              <div className="text-sm text-slate-400">Projects delivered</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">$45M+</div>
-              <div className="text-sm text-slate-400">Portfolio valuation</div>
+              <div className="text-4xl font-light text-white mb-2">15+</div>
+              <div className="text-sm text-slate-400">Industries served</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">23</div>
-              <div className="text-sm text-slate-400">AI systems in production</div>
+              <div className="text-4xl font-light text-white mb-2">92%</div>
+              <div className="text-sm text-slate-400">Client retention rate</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-light text-white mb-2">6-12 weeks</div>
-              <div className="text-sm text-slate-400">Average time to MVP</div>
+              <div className="text-sm text-slate-400">Average project timeline</div>
             </div>
           </div>
         </div>
@@ -302,41 +304,33 @@ export default async function AboutPage() {
                   <div className="text-sm text-slate-400 mb-4">{pageContent.ventureProcess.title}</div>
                 
                 <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <span className="text-blue-400 font-medium">1</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-base text-white mb-1">Unconventional idea submitted</div>
-                      <div className="text-sm text-slate-400">AI scans market for validation signals</div>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="px-2 py-1 bg-green-500/10 text-green-400 rounded text-xs">Market gap identified</span>
+                  {pageContent.ventureProcess.steps?.map((step: any, idx: number) => (
+                    <div key={idx}>
+                      <div className="flex items-start gap-4">
+                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg ${idx === 0 ? 'bg-blue-500/10' : 'bg-purple-500/10'} flex items-center justify-center`}>
+                          <span className={`${idx === 0 ? 'text-blue-400' : 'text-purple-400'} font-medium`}>{step.number}</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-base text-white mb-1">{step.title}</div>
+                          <div className="text-sm text-slate-400">{step.subtitle}</div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className={`px-2 py-1 ${idx === 0 ? 'bg-green-500/10 text-green-400' : 'bg-blue-500/10 text-blue-400'} rounded text-xs`}>{step.badge}</span>
+                          </div>
+                        </div>
                       </div>
+                      {step.actions?.length > 0 && (
+                        <div className="border-l-2 border-blue-500/30 pl-4 ml-5 space-y-3 mt-4">
+                          {step.actions.map((action: string, aIdx: number) => (
+                            <div key={aIdx} className="text-sm text-slate-300">→ {action}</div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-
-                  <div className="border-l-2 border-blue-500/30 pl-4 ml-5 space-y-3">
-                    <div className="text-sm text-slate-300">→ Technical architecture designed</div>
-                    <div className="text-sm text-slate-300">→ MVP built in 6-12 weeks</div>
-                    <div className="text-sm text-slate-300">→ Product-market fit validated</div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                      <span className="text-purple-400 font-medium">2</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-base text-white mb-1">Production launch & scaling</div>
-                      <div className="text-sm text-slate-400">AI optimizes growth loops automatically</div>
-                      <div className="mt-2">
-                        <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded text-xs">Revenue generating</span>
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 <div className="pt-4 border-t border-slate-700/50">
-                  <div className="text-sm text-green-400">Result: Validated venture ready for scale</div>
+                  <div className="text-sm text-green-400">Result: {pageContent.ventureProcess.result}</div>
                 </div>
               </div>
               )}

@@ -16,19 +16,19 @@ const GA_MEASUREMENT_ID = 'G-N12TK3KWF4';
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.donkeyideas.com'),
   title: {
-    default: 'Donkey Ideas — Venture Builder & Operating System',
+    default: 'Donkey Ideas — Creative Consulting Studio',
     template: '%s | Donkey Ideas',
   },
-  description: 'Transform your vision into reality with Donkey Ideas, a comprehensive venture builder platform offering financial management, project tracking, and strategic tools for entrepreneurs.',
+  description: 'Donkey Ideas is a creative consulting studio helping entrepreneurs turn bold ideas into real businesses. Strategy, business planning, financial modeling, and hands-on project management.',
   keywords: [
-    'venture builder',
-    'startup platform',
-    'financial management',
+    'creative consulting',
+    'business consulting',
+    'startup consulting',
     'project management',
-    'pitch deck builder',
     'business planning',
+    'financial modeling',
     'entrepreneur tools',
-    'venture operating system',
+    'idea development',
   ],
   authors: [{ name: 'Donkey Ideas' }],
   creator: 'Donkey Ideas',
@@ -42,22 +42,22 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://www.donkeyideas.com',
-    title: 'Donkey Ideas — Venture Builder & Operating System',
-    description: 'Transform your vision into reality with comprehensive venture building and operating tools.',
+    title: 'Donkey Ideas — Creative Consulting Studio',
+    description: 'A creative consulting studio helping entrepreneurs turn bold ideas into real businesses.',
     siteName: 'Donkey Ideas',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Donkey Ideas - Venture Builder Platform',
+        alt: 'Donkey Ideas - Creative Consulting Studio',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Donkey Ideas — Venture Builder & Operating System',
-    description: 'Transform your vision into reality with comprehensive venture building and operating tools.',
+    title: 'Donkey Ideas — Creative Consulting Studio',
+    description: 'A creative consulting studio helping entrepreneurs turn bold ideas into real businesses.',
     images: ['/og-image.png'],
     creator: '@donkeyideas',
   },
@@ -103,7 +103,7 @@ export default function RootLayout({
           name: 'Donkey Ideas',
           url: 'https://www.donkeyideas.com',
           logo: 'https://www.donkeyideas.com/logo.png',
-          description: 'Comprehensive venture builder platform and operating system for entrepreneurs.',
+          description: 'Creative consulting studio helping entrepreneurs turn bold ideas into real businesses through strategy, planning, and hands-on project management.',
         }} />
         <WebsiteStructuredData />
         <ServiceStructuredData />

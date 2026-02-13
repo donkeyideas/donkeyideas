@@ -46,41 +46,41 @@ export function EditContentModal({
       } else if (section.key === 'stats') {
         setFormData(section.content || {
           items: [
-            { value: '87%', label: 'Ventures Reach Market Fit' },
-            { value: '6-12 weeks', label: 'Average Time to MVP' },
-            { value: '$45M+', label: 'Collective Portfolio Valuation' },
-            { value: '23', label: 'AI Systems in Production' },
+            { value: '50+', label: 'Projects Delivered' },
+            { value: '6-12 weeks', label: 'Average Project Timeline' },
+            { value: '15+', label: 'Industries Served' },
+            { value: '92%', label: 'Client Retention Rate' },
           ],
         });
       } else if (section.key === 'about') {
         setFormData(section.content || {
-          title: 'Where Bold Ideas Meet Rigorous Engineering',
-          text: 'At Donkey Ideas, we believe the best ventures emerge from the intersection of unconventional thinking and disciplined execution. While others chase trends, we build foundational technologies that create lasting value. Our AI-powered approach combines cutting-edge machine learning, battle-tested engineering practices, and deep market understanding to transform raw concepts into revenue-generating businesses.\n\nWe\'re not a traditional incubator or consultancy. We\'re builders who get our hands dirty with code, data, and customer conversations. Every venture in our portfolio represents a commitment to excellence—meticulously crafted systems designed to scale, adapt, and dominate their markets. We take calculated risks on ideas others overlook, because we know that world-changing innovations often sound absurd at first.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that reduce time-to-market by 70% while increasing success probability. Whether you\'re a first-time founder with a napkin sketch or an enterprise looking to spin out innovation, we provide the technical firepower and strategic guidance to win.',
+          title: 'Where Crazy Ideas Meet Smart Execution',
+          text: 'Most people with big ideas don\'t need more advice — they need a partner who rolls up their sleeves and builds alongside them. That\'s Donkey Ideas. We\'re a creative consulting studio founded by a project manager who\'s spent years helping entrepreneurs, small businesses, and dreamers turn their wildest concepts into real, functioning ventures.\n\nWe\'re not a traditional consultancy that hands you a deck and disappears. We\'re a think tank that actually builds things. We plan it, model the financials, map out the strategy, prototype it, and help you launch it. From restaurant concepts to tech startups to nonprofit overhauls — if you\'ve got an idea that keeps you up at night, we\'ll help you figure out how to make it work.\n\nOur approach is simple: understand your vision, pressure-test it with real research and financial modeling, then build a clear roadmap to get it done. No jargon, no fluff — just hands-on creative consulting that moves your idea from napkin sketch to reality.',
         });
       } else if (section.key === 'engage-excellence') {
         setFormData(section.content || {
-          badge: { text: 'Innovation First', color: 'yellow' },
+          badge: { text: 'Hands-On Approach', color: 'yellow' },
           title: 'Engage with\nexcellence',
           features: [
             {
-              title: 'AI-First Development',
-              description: 'Every venture leverages AI frameworks giving you an unfair advantage',
+              title: 'Strategy-First Thinking',
+              description: 'Every project starts with deep research, market analysis, and a clear strategic roadmap tailored to your vision',
             },
             {
-              title: 'Venture Operating System',
-              description: 'Battle-tested platform powered by AI insights',
+              title: 'Full-Service Execution',
+              description: 'From business plans and financial models to branding and launch strategy — we handle it all',
             },
             {
-              title: 'Full-Stack Partnership',
-              description: 'Co-builders providing hands-on expertise across every dimension',
+              title: 'Real Partnership',
+              description: 'We work alongside you as hands-on collaborators, not distant advisors watching from the sidelines',
             },
           ],
           ventureCanvas: {
-            title: 'Venture Canvas',
-            text1: 'Ready to transform your idea into a market-dominating venture? Our team of AI engineers, product strategists, and growth experts is standing by to evaluate your concept.',
-            text2: 'We move fast—most partnerships begin within 48 hours of first contact. From writing code and designing systems to acquiring customers and raising capital, we provide hands-on expertise across every dimension of venture building. Let\'s build something extraordinary together.',
-            ctaText: 'Explore Venture Canvas',
-            imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
+            title: 'Project Canvas',
+            text1: 'Ready to turn your idea into something real? Our team of strategists, project managers, and creative problem-solvers is ready to dig into your concept and build a plan that works.',
+            text2: 'We move fast — most engagements kick off within a week of first contact. From building your business plan and financial projections to designing your go-to-market strategy and helping you pitch investors, we\'re with you every step of the way. Let\'s build something worth talking about.',
+            ctaText: 'Start Your Project',
+            imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop',
           },
         });
       } else if (section.key === 'services') {
@@ -154,47 +154,47 @@ export function EditContentModal({
       } else if (section.key === 'about-page') {
         const defaults = {
           hero: {
-            title: 'Building the future of intelligent ventures',
-            description: 'We\'re an AI-powered innovation lab combining unconventional thinking with rigorous engineering to build ventures that matter. Each product represents a bold bet on ideas others overlook.',
+            title: 'A think tank for people with big ideas',
+            description: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs and businesses turn bold concepts into reality. Part think tank, part project management firm — we plan it, build it, and launch it with you.',
           },
           mission: {
-            title: 'Where bold ideas become reality',
-            description: 'We bridge the gap between experimental thinking and production-grade engineering, creating AI-powered solutions that drive measurable impact.\n\nOur mission is to transform unconventional concepts that traditional VCs overlook into revenue-generating businesses. We take calculated risks on ideas that sound absurd at first, because we know world-changing innovations often do.',
+            title: 'Where bold ideas become real businesses',
+            description: 'We bridge the gap between a great idea and a real business. Through hands-on consulting, strategic planning, and financial modeling, we help founders and entrepreneurs take their concepts from napkin sketch to launch day.\n\nOur mission is to be the partner that every dreamer needs — someone who doesn\'t just say "great idea" but actually helps you figure out if it works, how to fund it, and how to build it.',
             imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
           },
           values: [
-            { title: 'Innovation', description: 'We push boundaries and explore unconventional approaches. While others chase trends, we build foundational technologies that create lasting value.' },
-            { title: 'Excellence', description: 'We maintain the highest standards in engineering and product development. Every venture represents a commitment to meticulously crafted systems.' },
-            { title: 'Impact', description: 'We focus on building solutions that create real, measurable value. Our ventures generate revenue, solve real problems, and dominate their markets.' },
+            { title: 'Creativity', description: 'We embrace unconventional thinking and approach every project with fresh eyes. The best solutions often come from looking at problems differently.' },
+            { title: 'Excellence', description: 'We hold ourselves to the highest standards in planning, strategy, and execution. Every deliverable — from a business plan to a financial model — is built to impress.' },
+            { title: 'Impact', description: 'We measure success by results. Our projects generate revenue, secure funding, and create real value for the people and communities they serve.' },
           ],
           ventureProcess: {
-            title: 'Venture Building Process',
+            title: 'Our Process',
             steps: [
               {
                 number: '1',
-                title: 'Unconventional idea submitted',
-                subtitle: 'AI scans market for validation signals',
-                badge: 'Market gap identified',
-                actions: ['Technical architecture designed', 'MVP built in 6-12 weeks', 'Product-market fit validated'],
+                title: 'You bring the idea',
+                subtitle: 'We research the market and validate the concept',
+                badge: 'Opportunity identified',
+                actions: ['Business plan and strategy developed', 'Financial model built in 2-4 weeks', 'Go-to-market roadmap created'],
               },
               {
                 number: '2',
-                title: 'Production launch & scaling',
-                subtitle: 'AI optimizes growth loops automatically',
+                title: 'Build and launch together',
+                subtitle: 'We manage the project through execution',
                 badge: 'Revenue generating',
                 actions: [],
               },
             ],
-            result: 'Validated venture ready for scale',
+            result: 'Validated business ready to grow',
           },
           approach: {
             badge: 'Our Approach',
-            title: 'Disciplined build, fast validation',
-            description: 'We run a repeatable loop: identify a real market pain, design the right system, ship a lean MVP, and validate with paying customers.\n\nEvery step is measured. We prototype quickly, test assumptions in days, and double down only when the data proves momentum. That keeps capital efficient and outcomes predictable.',
+            title: 'Plan smart, build fast, launch with confidence',
+            description: 'We run a proven loop: understand the idea, research the market, build the plan, model the numbers, and launch.\n\nEvery step is deliberate. We prototype quickly, test assumptions with real data, and only move forward when the numbers make sense. That keeps your budget lean and your odds of success high.',
           },
           team: {
-            title: 'Builders, engineers & strategists',
-            description: 'A diverse group of AI engineers, product designers, and venture strategists working together to build the future.\n\nWe\'re not traditional consultants. We\'re technical co-founders who write code, design systems, acquire customers, and raise capital alongside entrepreneurs who dare to think differently.',
+            title: 'Project managers, strategists & creative problem-solvers',
+            description: 'We\'re a small, scrappy team of people who love building things. Project managers, business strategists, financial modelers, and creative thinkers — all working together to help you bring your idea to life.\n\nWe\'re not traditional consultants who hand you a report and walk away. We\'re hands-on partners who stick with you through the messy middle.',
             imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
           },
         };
@@ -303,45 +303,45 @@ export function EditContentModal({
       } else if (section.key === 'services-page') {
         setFormData(section.content || {
           hero: {
-            title: 'The more ventures you build, the better you become',
-            description: 'Go beyond traditional consulting with our AI-powered venture building platform. Track portfolio performance, leverage intelligent insights, and get custom recommendations to accelerate any venture metric.',
+            title: 'The more ideas we build, the sharper we get',
+            description: 'Go beyond advice. We roll up our sleeves and help you plan, build, and launch. Whether you need a full business plan, financial projections, or a launch strategy — we bring the structure and expertise to make your idea real.',
             features: [
-              { title: 'AI-Powered Insights', description: 'Machine learning recommendations based on real portfolio data' },
-              { title: 'Accelerate Any Metric', description: 'Set goals and continuously improve time-to-market' },
-              { title: 'Actionable Intelligence', description: 'Implement and measure improvements instantly' },
+              { title: 'Strategic Planning', description: 'Research-backed roadmaps tailored to your specific idea and market' },
+              { title: 'Financial Modeling', description: 'Investor-ready projections and budgets that actually make sense' },
+              { title: 'Launch Execution', description: 'Hands-on support from concept through opening day' },
             ],
           },
           dashboardImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
           sections: [
             {
-              badge: 'Rapid Deployment',
-              title: 'Quickly validate and launch',
-              description: 'Catch market opportunities and implement solutions before they become missed chances. Our AI-powered platform helps you move from concept to production in weeks, not months.',
+              badge: 'Rapid Execution',
+              title: 'From concept to launch, fast',
+              description: 'Don\'t let your idea sit on the shelf. Our proven project management framework helps you move from concept to launch in weeks, not months.',
               imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
               stats: [
-                { value: '6-12 weeks', label: 'Average time to MVP' },
-                { value: '70% faster', label: 'Than traditional methods' },
+                { value: '6-12 weeks', label: 'Average project timeline' },
+                { value: '50+', label: 'Projects successfully delivered' },
               ],
             },
             {
-              badge: 'Intelligent Platform',
-              title: 'AI-powered recommendations',
-              description: 'Get intelligent suggestions to reduce development time, boost product-market fit, and streamline operations based on real portfolio data and market trends.',
+              badge: 'Strategic Planning',
+              title: 'Roadmaps that actually work',
+              description: 'Get clear, actionable plans built on real market research and financial analysis. We don\'t just tell you what to do — we map out exactly how to do it.',
               imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop',
               features: [
-                { title: 'Real-time Portfolio Analytics', description: 'Track KPIs across all ventures with unified dashboards' },
-                { title: 'Predictive Market Intelligence', description: 'AI-driven insights for strategic decision making' },
-                { title: 'Automated Optimization', description: 'Continuous improvement recommendations you can implement instantly' },
+                { title: 'Market Research & Validation', description: 'Understand your competitive landscape and target market before you invest' },
+                { title: 'Business Plan Development', description: 'Comprehensive plans that work for investors, banks, and your own decision-making' },
+                { title: 'Financial Projections', description: 'Revenue models, cash flow forecasts, and break-even analysis you can trust' },
               ],
             },
             {
-              badge: 'Seamless Integration',
-              title: 'Prioritize what matters most',
-              description: 'See projected outcomes for strategic initiatives so you can focus on the developments that will make the biggest impact on your business goals.',
+              badge: 'Focused Prioritization',
+              title: 'Know exactly what to build first',
+              description: 'See the full picture of your project so you can focus on what moves the needle most. We help you prioritize decisions that drive the biggest impact.',
               imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop',
               insights: [
-                { category: 'Technical Architecture', impact: '+23% efficiency', title: 'Implement microservices architecture', description: 'Reduce deployment time and increase system resilience' },
-                { category: 'Go-to-Market Strategy', impact: '+15% conversion', title: 'Add PLG motion to enterprise sales', description: 'Accelerate customer acquisition and reduce CAC' },
+                { category: 'Go-to-Market Strategy', impact: 'High Impact', title: 'Launch with a targeted local campaign', description: 'Reach your first 100 customers before scaling spend' },
+                { category: 'Financial Planning', impact: 'Critical Path', title: 'Secure initial funding before buildout', description: 'Investor deck and financial model ready for pitch meetings' },
               ],
             },
           ],
@@ -349,70 +349,70 @@ export function EditContentModal({
       } else if (section.key === 'process-page') {
         setFormData(section.content || {
           hero: {
-            title: 'Meet your market with precision at every turn',
-            description: 'Designed to make every venture launch feel inevitable. Our AI-powered approach allows us to navigate rapid market shifts, validate product-market fit, and detect opportunities with precision.',
+            title: 'A process built for real-world ideas',
+            description: 'We\'ve refined our approach through dozens of projects across every kind of industry. Whether you\'re launching a restaurant, building a tech product, or reimagining a nonprofit — our process adapts to your idea.',
             features: [
               { title: 'Tailored Strategies', description: 'Customized to match your unique vision and market' },
-              { title: 'Dynamic Pivots', description: 'Adapted to changing markets and customer feedback' },
-              { title: 'Ultra-Fast Execution', description: 'Industry-leading time from concept to production' },
+              { title: 'Iterative Approach', description: 'Adapted to real feedback and changing conditions' },
+              { title: 'Rapid Execution', description: 'Industry-leading timelines from concept to launch' },
             ],
           },
-          integrationTitle: 'Integration without compromising velocity',
+          integrationTitle: 'Seamless collaboration without the red tape',
           sections: [
             {
-              badge: 'Autonomous Discovery',
-              title: 'AI-driven validation in real-time',
-              description: 'Designed to respond dynamically to market signals and customer behavior patterns with less manual research. Our AI systems continuously monitor trends, validate assumptions, and identify opportunities before competitors.',
+              badge: 'Discovery & Research',
+              title: 'Deep-dive validation before you invest',
+              description: 'We start every project with thorough research — competitive analysis, market sizing, customer interviews, and feasibility studies. No assumptions, just data.',
               imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
               marketAnalysis: {
-                title: 'Market Analysis',
-                status: 'Processing...',
-                task: 'Analyze competitor landscape for fintech space',
-                scanning: 'Scanning 10,000+ data points...',
-                result: 'Found 3 underserved segments with 94% confidence',
-                aiStatus: 'AI Model Active (2.4s)',
+                title: 'Market Research',
+                status: 'Complete',
+                task: 'Competitive landscape analysis for new market entry',
+                scanning: 'Analyzing industry reports, competitor positioning, customer segments...',
+                result: 'Identified 3 underserved segments with strong demand signals',
+                aiStatus: 'Research Complete',
               },
             },
             {
               badge: 'Global Reach',
               title: 'Launch in any market',
-              description: 'Deploy ventures anywhere in the world with localized strategies, compliance frameworks, and market-specific positioning. Our platform adapts to regional nuances automatically.',
+              description: 'Whether you\'re opening a business down the street or expanding internationally, we build strategies that account for local market dynamics and regulatory requirements.',
               imageUrl: 'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=2006&auto=format&fit=crop',
               markets: [
-                'North America - Tech & SaaS ecosystems',
-                'Europe - Enterprise & B2B markets',
-                'Asia-Pacific - Consumer & mobile-first',
-                'Latin America - Emerging tech hubs',
+                'North America — Startups, restaurants, retail, real estate',
+                'Europe — Market entry, localization, partnerships',
+                'Asia-Pacific — E-commerce, manufacturing, supply chain',
+                'Latin America — Emerging markets, nonprofit, community development',
               ],
             },
             {
-              badge: 'Venture Execution',
+              badge: 'Project Execution',
               title: 'Strike the right balance',
-              description: 'A venture approach that understands founder intent and meets it with contextually relevant strategies. This includes natural iteration cycles, adaptive pivots, and strategic decision-making at the right moments.',
+              description: 'Our project management approach adapts to your pace and priorities. We collaborate closely with you at every milestone, making sure the plan evolves with real-world feedback.',
               imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
               founderInput: {
-                quote: '"We need to pivot our B2B strategy"',
-                context: 'Market conditions suggest enterprise focus',
+                quote: '"We need to pivot our go-to-market strategy"',
+                context: 'Customer feedback suggests a different entry point',
               },
               aiResponse: {
-                result: 'Identified 3 enterprise segments with immediate demand',
-                actions: 'Realigned roadmap, adjusted messaging, prioritized features',
+                result: 'Identified 3 alternative market segments with immediate demand',
+                actions: 'Realigned roadmap, adjusted messaging, reprioritized launch milestones',
               },
             },
           ],
           howItWorks: {
-            title: 'Data-driven venture building',
-            description: 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.',
+            title: 'Research-driven project execution',
+            description: 'Every initiative is backed by real data and market intelligence. We identify opportunities, build actionable strategies, and execute with precision.',
             marketSignal: {
               signal: 'Customer acquisition cost rising beyond sustainable levels',
-              urgency: 'Urgency indicator detected',
-              threshold: 'Budget threshold exceeded',
+              urgency: 'Budget threshold approaching',
+              threshold: 'Requires strategic pivot',
               response: [
-                'Triggered product-led growth strategy',
-                'Shifted 40% budget to content marketing',
-                'Implemented referral program with AI optimization',
+                'Shifted to organic growth and referral strategy',
+                'Reallocated 40% of budget to content marketing',
+                'Launched community-driven referral program',
               ],
-              result: 'CAC reduced by 62% within 8 weeks',
+              result: 'Acquisition costs reduced by 62% within 8 weeks',
             },
           },
         });

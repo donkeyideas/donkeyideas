@@ -10,7 +10,7 @@ const POSTS_PER_PAGE = 9;
 
 export const metadata: Metadata = {
   title: 'Blog | Donkey Ideas',
-  description: 'Insights on venture building, AI strategy, and scaling businesses from Donkey Ideas.',
+  description: 'Insights on creative consulting, business strategy, and turning bold ideas into real businesses from Donkey Ideas.',
   alternates: {
     canonical: 'https://www.donkeyideas.com/blog',
   },
@@ -52,7 +52,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
             Blog
           </h1>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Insights on venture building, AI strategy, and scaling businesses from Donkey Ideas.
+            Insights on creative consulting, business strategy, and turning bold ideas into real businesses.
           </p>
         </div>
       </section>

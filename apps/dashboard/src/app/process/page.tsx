@@ -6,21 +6,22 @@ import { Metadata } from 'next';
 import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
-  title: 'Our Approach — Venture Building Process',
-  description: 'Learn about Donkey Ideas\' proven approach to venture building, from ideation to scale. Our systematic process helps entrepreneurs succeed.',
+  title: 'Our Approach — Creative Consulting Process | Donkey Ideas',
+  description: 'Learn about Donkey Ideas\' proven approach to creative consulting, from idea validation to launch. Our hands-on process helps entrepreneurs and businesses succeed.',
   alternates: {
     canonical: 'https://www.donkeyideas.com/process',
   },
   keywords: [
-    'venture building process',
-    'startup methodology',
+    'consulting process',
     'business development approach',
-    'entrepreneurship process',
-    'startup framework',
+    'project management methodology',
+    'idea to launch process',
+    'creative consulting framework',
+    'business planning process',
   ],
   openGraph: {
-    title: 'Our Approach — Venture Building Process | Donkey Ideas',
-    description: 'Our proven approach to venture building, from ideation to scale.',
+    title: 'Our Approach — Creative Consulting Process | Donkey Ideas',
+    description: 'Our proven approach to creative consulting, from idea validation to launch.',
     url: 'https://www.donkeyideas.com/process',
     images: [
       {
@@ -50,70 +51,70 @@ export default async function ProcessPage() {
   
   const defaultContent = {
     hero: {
-      title: 'Meet your market with precision at every turn',
-      description: 'Designed to make every venture launch feel inevitable. Our AI-powered approach allows us to navigate rapid market shifts, validate product-market fit, and detect opportunities with precision.',
+      title: 'A process built for\nreal-world ideas',
+      description: 'We\'ve refined our approach through dozens of projects across every kind of industry. Whether you\'re launching a restaurant, building a tech product, or reimagining a nonprofit — our process adapts to your idea while keeping things on track and on budget.',
       features: [
         { title: 'Tailored Strategies', description: 'Customized to match your unique vision and market' },
-        { title: 'Dynamic Pivots', description: 'Adapted to changing markets and customer feedback' },
-        { title: 'Ultra-Fast Execution', description: 'Industry-leading time from concept to production' },
+        { title: 'Iterative Approach', description: 'Adapted to real feedback and changing conditions' },
+        { title: 'Rapid Execution', description: 'Industry-leading timelines from concept to launch' },
       ],
     },
-    integrationTitle: 'Integration without compromising velocity',
+    integrationTitle: 'Seamless collaboration without the red tape',
     sections: [
       {
-        badge: 'Autonomous Discovery',
-        title: 'AI-driven validation in real-time',
-        description: 'Designed to respond dynamically to market signals and customer behavior patterns with less manual research. Our AI systems continuously monitor trends, validate assumptions, and identify opportunities before competitors.',
+        badge: 'Discovery & Research',
+        title: 'Deep-dive validation\nbefore you invest',
+        description: 'We start every project with thorough research — competitive analysis, market sizing, customer interviews, and feasibility studies. No assumptions, just data. This gives you confidence before you spend a dollar.',
         imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
         marketAnalysis: {
-          title: 'Market Analysis',
-          status: 'Processing...',
-          task: 'Analyze competitor landscape for fintech space',
-          scanning: 'Scanning 10,000+ data points...',
-          result: 'Found 3 underserved segments with 94% confidence',
-          aiStatus: 'AI Model Active (2.4s)',
+          title: 'Market Research',
+          status: 'Complete',
+          task: 'Competitive landscape analysis for new market entry',
+          scanning: 'Analyzing industry reports, competitor positioning, customer segments...',
+          result: 'Identified 3 underserved segments with strong demand signals',
+          aiStatus: 'Research Complete',
         },
       },
       {
         badge: 'Global Reach',
         title: 'Launch in any market',
-        description: 'Deploy ventures anywhere in the world with localized strategies, compliance frameworks, and market-specific positioning. Our platform adapts to regional nuances automatically.',
+        description: 'Whether you\'re opening a business down the street or expanding internationally, we build strategies that account for local market dynamics, regulatory requirements, and cultural nuances.',
         imageUrl: 'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=2006&auto=format&fit=crop',
         markets: [
-          'North America - Tech & SaaS ecosystems',
-          'Europe - Enterprise & B2B markets',
-          'Asia-Pacific - Consumer & mobile-first',
-          'Latin America - Emerging tech hubs',
+          'North America — Startups, restaurants, retail, real estate',
+          'Europe — Market entry, localization, partnerships',
+          'Asia-Pacific — E-commerce, manufacturing, supply chain',
+          'Latin America — Emerging markets, nonprofit, community development',
         ],
       },
       {
-        badge: 'Venture Execution',
+        badge: 'Project Execution',
         title: 'Strike the right balance',
-        description: 'A venture approach that understands founder intent and meets it with contextually relevant strategies. This includes natural iteration cycles, adaptive pivots, and strategic decision-making at the right moments.',
+        description: 'Our project management approach adapts to your pace and priorities. We collaborate closely with you at every milestone, making sure the plan evolves with real-world feedback and your input drives every decision.',
         imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop',
         founderInput: {
-          quote: '"We need to pivot our B2B strategy"',
-          context: 'Market conditions suggest enterprise focus',
+          quote: '"We need to pivot our go-to-market strategy"',
+          context: 'Customer feedback suggests a different entry point',
         },
         aiResponse: {
-          result: 'Identified 3 enterprise segments with immediate demand',
-          actions: 'Realigned roadmap, adjusted messaging, prioritized features',
+          result: 'Identified 3 alternative market segments with immediate demand',
+          actions: 'Realigned roadmap, adjusted messaging, reprioritized launch milestones',
         },
       },
     ],
     howItWorks: {
-      title: 'Data-driven venture building',
-      description: 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.',
+      title: 'Research-driven project execution',
+      description: 'Every initiative is backed by real data and market intelligence. We identify opportunities, build actionable strategies, and execute with precision — so your project has the highest chance of success from day one.',
       marketSignal: {
         signal: 'Customer acquisition cost rising beyond sustainable levels',
-        urgency: 'Urgency indicator detected',
-        threshold: 'Budget threshold exceeded',
+        urgency: 'Budget threshold approaching',
+        threshold: 'Requires strategic pivot',
         response: [
-          'Triggered product-led growth strategy',
-          'Shifted 40% budget to content marketing',
-          'Implemented referral program with AI optimization',
+          'Shifted to organic growth and referral strategy',
+          'Reallocated 40% of budget to content marketing',
+          'Launched community-driven referral program',
         ],
-        result: 'CAC reduced by 62% within 8 weeks',
+        result: 'Acquisition costs reduced by 62% within 8 weeks',
       },
     },
   };
@@ -211,7 +212,7 @@ export default async function ProcessPage() {
                 <div className="aspect-[4/3] bg-gradient-to-br from-blue-900/20 to-cyan-900/20 relative">
                   <Image
                     src={pageContent.sections[0].imageUrl || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'}
-                    alt="AI Validation Dashboard"
+                    alt="Market Research Dashboard"
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 50vw"
@@ -313,7 +314,7 @@ export default async function ProcessPage() {
                 </div>
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-sm text-slate-400">AI Response</div>
+                    <div className="text-sm text-slate-400">Strategic Response</div>
                     <div className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">Adaptive</div>
                   </div>
                   <div className="text-base text-white mb-2">Identified 3 enterprise segments with immediate demand</div>
@@ -348,7 +349,7 @@ export default async function ProcessPage() {
               How It Works
             </div>
             <h2 className="text-5xl md:text-6xl font-light text-white mb-6">
-              {pageContent.howItWorks?.title || 'Data-driven venture building'}
+              {pageContent.howItWorks?.title || 'Research-driven project execution'}
             </h2>
             <p className="text-xl text-slate-300 max-w-2xl mx-auto">
               {pageContent.howItWorks?.description || 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.'}

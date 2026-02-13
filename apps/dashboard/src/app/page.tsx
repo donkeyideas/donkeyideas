@@ -8,38 +8,40 @@ import { Metadata } from 'next';
 import { OrganizationStructuredData, WebsiteStructuredData, ServiceStructuredData, BreadcrumbStructuredData, FAQStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
-  title: 'Donkey Ideas — Transform Your Vision Into Reality',
-  description: 'Build and scale ventures with Donkey Ideas. Financial management, project tracking, pitch decks, and strategic planning for entrepreneurs.',
+  title: 'Donkey Ideas — Creative Consulting Studio | Turn Bold Ideas Into Real Businesses',
+  description: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs and founders turn bold ideas into real businesses. Strategy, business planning, financial modeling, and hands-on project management.',
   alternates: {
     canonical: 'https://www.donkeyideas.com',
   },
   keywords: [
-    'venture builder',
-    'startup platform',
-    'financial management',
-    'pitch deck builder',
-    'business planning tools',
-    'entrepreneur platform',
-    'venture operating system',
-    'startup financial tools',
+    'creative consulting',
+    'business consulting',
+    'startup consulting',
+    'business planning',
+    'financial modeling',
+    'project management',
+    'idea development',
+    'innovation consulting',
+    'concept development',
+    'business strategy',
   ],
   openGraph: {
-    title: 'Donkey Ideas — Transform Your Vision Into Reality',
-    description: 'Build and scale your ventures with comprehensive tools for financial management, project tracking, and strategic planning.',
+    title: 'Donkey Ideas — Creative Consulting Studio',
+    description: 'We help entrepreneurs and founders turn bold ideas into real businesses. Strategy, planning, financials, and execution — all under one roof.',
     url: 'https://www.donkeyideas.com',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Donkey Ideas - Venture Builder Platform',
+        alt: 'Donkey Ideas - Creative Consulting Studio',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Donkey Ideas — Transform Your Vision Into Reality',
-    description: 'Build and scale your ventures with comprehensive tools for financial management, project tracking, and strategic planning.',
+    title: 'Donkey Ideas — Creative Consulting Studio',
+    description: 'We help entrepreneurs and founders turn bold ideas into real businesses. Strategy, planning, financials, and execution — all under one roof.',
     images: ['/og-image.png'],
   },
 };
@@ -75,52 +77,52 @@ export default async function HomePage() {
   
   // Default content if not in database
   const heroContent = content.hero || {
-    label: 'Innovation Laboratory / Venture Builder',
-    headline: 'Transforming\nUnconventional\nIdeas Into\nIntelligent Systems',
-    description: 'We architect and deploy AI-powered products at the intersection of experimental thinking and production-grade engineering.',
+    label: 'Creative Consulting Studio',
+    headline: 'Got a Wild Idea?\nWe\'ll Help You\nBuild It',
+    description: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs, founders, and dreamers turn bold concepts into real businesses. From strategy and planning to financials and execution — we make ideas happen.',
     backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
     cta: {
-      primary: { text: 'EXPLORE VENTURES', link: '#ventures' },
-      secondary: { text: 'VIEW SERVICES', link: '#services' },
+      primary: { text: "LET'S TALK", link: '/contact' },
+      secondary: { text: 'OUR SERVICES', link: '/services' },
     },
   };
 
   const aboutContent = content.about || {
-    title: 'Where Bold Ideas Meet Rigorous Engineering',
-    text: 'At Donkey Ideas, we believe the best ventures emerge from the intersection of unconventional thinking and disciplined execution. While others chase trends, we build foundational technologies that create lasting value. Our AI-powered approach combines cutting-edge machine learning, battle-tested engineering practices, and deep market understanding to transform raw concepts into revenue-generating businesses.\n\nWe\'re not a traditional incubator or consultancy. We\'re builders who get our hands dirty with code, data, and customer conversations. Every venture in our portfolio represents a commitment to excellence—meticulously crafted systems designed to scale, adapt, and dominate their markets. We take calculated risks on ideas others overlook, because we know that world-changing innovations often sound absurd at first.\n\nOur Venture Operating System provides the infrastructure, methodologies, and AI tools that reduce time-to-market by 70% while increasing success probability. Whether you\'re a first-time founder with a napkin sketch or an enterprise looking to spin out innovation, we provide the technical firepower and strategic guidance to win.',
+    title: 'Where Crazy Ideas Meet Smart Execution',
+    text: 'Most people with big ideas don\'t need more advice — they need a partner who rolls up their sleeves and builds alongside them. That\'s Donkey Ideas. We\'re a creative consulting studio founded by a project manager who\'s spent years helping entrepreneurs, small businesses, and dreamers turn their wildest concepts into real, functioning ventures.\n\nWe\'re not a traditional consultancy that hands you a deck and disappears. We\'re a think tank that actually builds things. We plan it, model the financials, map out the strategy, prototype it, and help you launch it. From restaurant concepts to tech startups to nonprofit overhauls — if you\'ve got an idea that keeps you up at night, we\'ll help you figure out how to make it work.\n\nOur approach is simple: understand your vision, pressure-test it with real research and financial modeling, then build a clear roadmap to get it done. No jargon, no fluff — just hands-on creative consulting that moves your idea from napkin sketch to reality.',
   };
 
   const statsContent = content.stats || {
     items: [
-      { value: '87%', label: 'Ventures Reach Market Fit' },
-      { value: '6-12 weeks', label: 'Average Time to MVP' },
-      { value: '$45M+', label: 'Collective Portfolio Valuation' },
-      { value: '23', label: 'AI Systems in Production' },
+      { value: '50+', label: 'Projects Delivered' },
+      { value: '6-12 weeks', label: 'Average Project Timeline' },
+      { value: '15+', label: 'Industries Served' },
+      { value: '92%', label: 'Client Retention Rate' },
     ],
   };
 
   const engageContent = content['engage-excellence'] || {
-    badge: { text: 'Innovation First', color: 'yellow' },
+    badge: { text: 'Hands-On Approach', color: 'yellow' },
     title: 'Engage with\nexcellence',
     features: [
       {
-        title: 'AI-First Development',
-        description: 'Every venture leverages AI frameworks giving you an unfair advantage',
+        title: 'Strategy-First Thinking',
+        description: 'Every project starts with deep research, market analysis, and a clear strategic roadmap tailored to your vision',
       },
       {
-        title: 'Venture Operating System',
-        description: 'Battle-tested platform powered by AI insights',
+        title: 'Full-Service Execution',
+        description: 'From business plans and financial models to branding and launch strategy — we handle it all',
       },
       {
-        title: 'Full-Stack Partnership',
-        description: 'Co-builders providing hands-on expertise across every dimension',
+        title: 'Real Partnership',
+        description: 'We work alongside you as hands-on collaborators, not distant advisors watching from the sidelines',
       },
     ],
     ventureCanvas: {
-      title: 'Venture Canvas',
-      text1: 'Ready to transform your idea into a market-dominating venture? Our team of AI engineers, product strategists, and growth experts is standing by to evaluate your concept.',
-      text2: 'We move fast—most partnerships begin within 48 hours of first contact. From writing code and designing systems to acquiring customers and raising capital, we provide hands-on expertise across every dimension of venture building. Let\'s build something extraordinary together.',
-      ctaText: 'Explore Venture Canvas',
+      title: 'Project Canvas',
+      text1: 'Ready to turn your idea into something real? Our team of strategists, project managers, and creative problem-solvers is ready to dig into your concept and build a plan that works.',
+      text2: 'We move fast — most engagements kick off within a week of first contact. From building your business plan and financial projections to designing your go-to-market strategy and helping you pitch investors, we\'re with you every step of the way. Let\'s build something worth talking about.',
+      ctaText: 'Start Your Project',
       imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop',
     },
   };
@@ -133,7 +135,7 @@ export default async function HomePage() {
           name: 'Donkey Ideas',
           url: 'https://www.donkeyideas.com',
           logo: 'https://www.donkeyideas.com/logo.png',
-          description: 'Transform your vision into reality with Donkey Ideas, a comprehensive venture builder platform.',
+          description: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs and founders turn bold ideas into real businesses through strategic planning, financial modeling, and hands-on project management.',
           sameAs: [
             'https://twitter.com/donkeyideas',
             'https://linkedin.com/company/donkeyideas',
@@ -146,11 +148,11 @@ export default async function HomePage() {
         { name: 'Home', url: 'https://www.donkeyideas.com' },
       ]} />
       <FAQStructuredData items={[
-        { question: 'What is Donkey Ideas?', answer: 'Donkey Ideas is an AI-powered venture builder that partners with founders and enterprises to take ideas from concept to production. We handle product strategy, technical architecture, and go-to-market execution, helping ventures reach market fit faster.' },
-        { question: 'What services does Donkey Ideas offer?', answer: 'We offer venture building, strategic consulting, AI and technology advisory, and enterprise partnerships. Our team provides hands-on expertise in growth strategy, financial modeling, technical architecture, product development, and AI integration.' },
-        { question: 'How long does it take to build an MVP?', answer: 'Most ventures in our portfolio go from concept to MVP in 6 to 12 weeks. Our AI-powered Venture Operating System reduces time-to-market by up to 70 percent while maintaining production-grade quality.' },
-        { question: 'Where is Donkey Ideas located?', answer: 'Donkey Ideas operates out of New York and Miami. We work with founders and enterprises globally, combining in-person collaboration with remote partnership models.' },
-        { question: 'How can I work with Donkey Ideas?', answer: 'You can get started by reaching out through our contact page or scheduling a call. We evaluate every concept within 48 hours and most partnerships begin shortly after. Whether you have a napkin sketch or an enterprise innovation initiative, we can help.' },
+        { question: 'What is Donkey Ideas?', answer: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs, founders, and businesses turn bold ideas into reality. We provide hands-on support with business planning, financial modeling, strategy, and project management — from napkin sketch to launch day.' },
+        { question: 'What services does Donkey Ideas offer?', answer: 'We offer creative consulting, business planning, financial modeling, go-to-market strategy, project management, and launch execution. Whether you need a full business plan, investor-ready financial projections, or a hands-on partner to manage the build — we do it all.' },
+        { question: 'How long does a typical project take?', answer: 'Most projects run 6 to 12 weeks from kickoff to delivery. Timelines depend on scope and complexity, but we pride ourselves on moving fast without cutting corners.' },
+        { question: 'Where is Donkey Ideas located?', answer: 'Donkey Ideas operates out of New York and Miami. We work with clients globally through a mix of in-person and remote collaboration.' },
+        { question: 'How can I work with Donkey Ideas?', answer: 'Reach out through our contact page or schedule a call. We respond within 48 hours and most engagements kick off within a week. Whether you have a napkin sketch or a fully formed concept, we are ready to help you build it.' },
       ]} />
 
       {/* Navigation - Giga.ai style with scroll behavior */}
@@ -343,25 +345,25 @@ export default async function HomePage() {
             <div className="border-b border-slate-700/50 pb-8">
               <h3 className="text-xl font-medium text-white mb-3">What is Donkey Ideas?</h3>
               <p className="text-slate-300 leading-relaxed">
-                Donkey Ideas is an AI-powered venture builder that partners with founders and enterprises to take ideas from concept to production. We handle product strategy, technical architecture, and go-to-market execution, helping ventures reach market fit faster. Our portfolio spans multiple industries, from fintech and healthcare to enterprise SaaS and consumer platforms.
+                Donkey Ideas is a creative consulting studio that helps entrepreneurs, founders, and businesses turn bold ideas into reality. We provide hands-on support with business planning, financial modeling, strategy, and project management — taking you from napkin sketch to launch day.
               </p>
             </div>
             <div className="border-b border-slate-700/50 pb-8">
               <h3 className="text-xl font-medium text-white mb-3">What services does Donkey Ideas offer?</h3>
               <p className="text-slate-300 leading-relaxed">
-                We offer venture building, strategic consulting, AI and technology advisory, and enterprise partnerships. Our team provides hands-on expertise in growth strategy, financial modeling, technical architecture, product development, and AI integration. Whether you need a co-founder-level partner or specialized consulting on a specific challenge, we tailor our engagement to your needs.
+                We offer creative consulting, business planning, financial modeling, go-to-market strategy, project management, and launch execution. Whether you need a full business plan, investor-ready financial projections, or a hands-on partner to manage the build — we tailor our engagement to your needs.
               </p>
             </div>
             <div className="border-b border-slate-700/50 pb-8">
-              <h3 className="text-xl font-medium text-white mb-3">How long does it take to build an MVP?</h3>
+              <h3 className="text-xl font-medium text-white mb-3">How long does a typical project take?</h3>
               <p className="text-slate-300 leading-relaxed">
-                Most ventures in our portfolio go from concept to MVP in 6 to 12 weeks. Our AI-powered Venture Operating System reduces time-to-market by up to 70 percent while maintaining production-grade quality. The exact timeline depends on scope and complexity, but we prioritize speed without sacrificing engineering standards.
+                Most projects run 6 to 12 weeks from kickoff to delivery. Timelines depend on scope and complexity, but we pride ourselves on moving fast without cutting corners. We prioritize speed while maintaining the quality your project deserves.
               </p>
             </div>
             <div className="border-b border-slate-700/50 pb-8">
               <h3 className="text-xl font-medium text-white mb-3">Where is Donkey Ideas located?</h3>
               <p className="text-slate-300 leading-relaxed">
-                Donkey Ideas operates out of New York and Miami. We work with founders and enterprises globally, combining in-person collaboration with remote partnership models to deliver results regardless of geography.
+                Donkey Ideas operates out of New York and Miami. We work with clients globally through a mix of in-person collaboration and remote partnership models.
               </p>
             </div>
             <div className="pb-8">
@@ -375,7 +377,7 @@ export default async function HomePage() {
                 <a href="https://calendar.app.google/uAubRuERACDqXYTU6" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
                   scheduling a call
                 </a>
-                . We evaluate every concept within 48 hours and most partnerships begin shortly after. Whether you have a napkin sketch or an enterprise innovation initiative, we are ready to help you build something extraordinary.
+                . We respond within 48 hours and most engagements kick off within a week. Whether you have a napkin sketch or a fully formed concept, we are ready to help you build it.
               </p>
             </div>
           </div>

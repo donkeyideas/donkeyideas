@@ -67,12 +67,12 @@ export default function ContactPage() {
       <section className="pt-32 pb-24 px-8">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-6xl md:text-7xl lg:text-8xl font-light leading-tight mb-8">
-            AI-powered venture building
+            Creative consulting
             <br />
-            for ambitious founders
+            for ambitious people
           </h1>
           <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-12">
-            From hyper-growth startups to established enterprises, Donkey Ideas powers intelligent ventures at scale.
+            From first-time founders to established businesses, Donkey Ideas helps turn bold ideas into reality.
           </p>
         </div>
       </section>
@@ -82,12 +82,12 @@ export default function ContactPage() {
         <div className="max-w-4xl mx-auto">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-12">
             <blockquote className="text-xl md:text-2xl text-slate-300 leading-relaxed mb-8 font-light">
-              "At our company, we operate at massive scale across services, platforms, and markets. Donkey Ideas leveraged their AI-powered approach to deliver measurable improvements, including faster time-to-market, better product-market fit, and more efficient development workflows. As we continue to grow and serve millions of customers globally, partnerships like this are critical to delivering better outcomes and building ventures that last."
+              "I came to Donkey Ideas with nothing more than a concept and a lot of enthusiasm. They helped me build a business plan, model the financials, and create a launch strategy that actually worked. Their hands-on project management kept everything on track, and within three months we were open for business. I couldn't have done it without them."
             </blockquote>
             <div className="flex items-center gap-4">
               <div>
-                <div className="text-lg font-medium text-white">Portfolio Founder</div>
-                <div className="text-sm text-slate-400">CEO, Tech Startup</div>
+                <div className="text-lg font-medium text-white">Client Partner</div>
+                <div className="text-sm text-slate-400">Founder, Small Business</div>
               </div>
             </div>
           </div>
@@ -100,27 +100,27 @@ export default function ContactPage() {
           <h2 className="text-3xl md:text-4xl font-light text-center mb-12">How We Can Help</h2>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
-              <h3 className="text-lg font-medium mb-3 text-white">Venture Building</h3>
+              <h3 className="text-lg font-medium mb-3 text-white">Idea Development</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                We partner with founders to take ideas from concept to production. Our team handles product strategy, technical architecture, and go-to-market execution so you can focus on what matters most: building a business that lasts.
+                Got a concept that keeps you up at night? We help you validate it, research the market, and build a plan to make it real. From napkin sketch to launch-ready strategy — we turn ideas into actionable projects.
               </p>
             </div>
             <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
               <h3 className="text-lg font-medium mb-3 text-white">Strategic Consulting</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                Whether you need help with growth strategy, financial modeling, or operational efficiency, our consulting team brings real-world experience scaling ventures across industries. We work alongside your team to deliver measurable results.
+                Whether you need help with growth strategy, financial modeling, or operational planning, our team brings real-world experience across industries. We work alongside you to deliver measurable results.
               </p>
             </div>
             <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
-              <h3 className="text-lg font-medium mb-3 text-white">AI & Technology Advisory</h3>
+              <h3 className="text-lg font-medium mb-3 text-white">Technology & Digital Strategy</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                From evaluating AI integration opportunities to designing data pipelines and automation workflows, we help businesses leverage the right technology at the right time. We cut through the hype and focus on practical, revenue-driving implementations.
+                Need help choosing the right tools, platforms, or digital strategy for your business? We evaluate your options, design practical solutions, and help you implement technology that drives real results — no hype, just what works.
               </p>
             </div>
             <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8">
-              <h3 className="text-lg font-medium mb-3 text-white">Enterprise Partnerships</h3>
+              <h3 className="text-lg font-medium mb-3 text-white">Business Partnerships</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                We collaborate with established companies looking to innovate through venture building. Whether it is launching internal startups, building new product lines, or exploring adjacent markets, our venture studio approach brings startup speed to enterprise ambitions.
+                We collaborate with established businesses looking to launch new ventures, explore new markets, or spin up new product lines. Our hands-on approach brings startup energy and creative thinking to established organizations.
               </p>
             </div>
           </div>

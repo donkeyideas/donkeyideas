@@ -36,7 +36,7 @@ export function WebsiteStructuredData() {
     '@type': 'WebSite',
     name: 'Donkey Ideas',
     url: 'https://www.donkeyideas.com',
-    description: 'Transform your vision into reality with Donkey Ideas, a comprehensive venture builder platform.',
+    description: 'Donkey Ideas is a creative consulting studio helping entrepreneurs and founders turn bold ideas into real businesses through strategy, planning, and hands-on project management.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -101,7 +101,7 @@ export function ServiceStructuredData() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    serviceType: 'Venture Builder Platform',
+    serviceType: 'Creative Consulting Services',
     provider: {
       '@type': 'Organization',
       name: 'Donkey Ideas',
@@ -111,7 +111,7 @@ export function ServiceStructuredData() {
       '@type': 'Place',
       name: 'Worldwide',
     },
-    description: 'Comprehensive venture building and operating system for entrepreneurs',
+    description: 'Creative consulting, business planning, financial modeling, and project management for entrepreneurs and businesses',
     offers: {
       '@type': 'Offer',
       availability: 'https://schema.org/InStock',

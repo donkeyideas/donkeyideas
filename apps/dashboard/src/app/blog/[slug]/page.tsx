@@ -130,7 +130,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
             <div>
               <div className="text-base font-medium text-white">{authorName}</div>
-              <div className="text-sm text-slate-400">Venture Builder & AI Strategist at Donkey Ideas</div>
+              <div className="text-sm text-slate-400">Creative Consultant & Strategist at Donkey Ideas</div>
             </div>
           </div>
 
@@ -190,7 +190,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   Written by {authorName}
                 </div>
                 <p className="text-sm text-slate-400 leading-relaxed">
-                  Donkey Ideas is a venture builder creating AI-powered companies and sharing insights on startup strategy, technical architecture, and growth. We partner with founders and enterprises to take ideas from concept to production.
+                  Donkey Ideas is a creative consulting studio that helps entrepreneurs and businesses turn bold ideas into reality. We share insights on business strategy, financial modeling, and project management — and partner with clients to take ideas from concept to launch.
                 </p>
               </div>
             </div>

@@ -6,24 +6,25 @@ import { Metadata } from 'next';
 import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
 export const metadata: Metadata = {
-  title: 'Services — Comprehensive Venture Building',
-  description: 'Venture building and consulting services: strategic planning, financial modeling, AI strategy, and technical architecture.',
+  title: 'Services — Creative Consulting & Business Planning | Donkey Ideas',
+  description: 'Creative consulting services: business planning, financial modeling, go-to-market strategy, project management, and launch execution for entrepreneurs and businesses.',
   alternates: {
     canonical: 'https://www.donkeyideas.com/services',
   },
   keywords: [
-    'venture building services',
+    'creative consulting services',
+    'business planning',
     'startup consulting',
     'strategic consulting',
-    'AI strategy consulting',
-    'technical architecture consulting',
     'financial modeling',
+    'project management',
     'growth strategy',
-    'startup advisory',
+    'launch execution',
+    'business strategy consulting',
   ],
   openGraph: {
-    title: 'Services — Comprehensive Venture Building | Donkey Ideas',
-    description: 'Full suite of venture building services for entrepreneurs and startups.',
+    title: 'Services — Creative Consulting & Business Planning | Donkey Ideas',
+    description: 'Full suite of creative consulting services for entrepreneurs and businesses. Strategy, planning, financials, and execution.',
     url: 'https://www.donkeyideas.com/services',
     images: [
       {
@@ -53,45 +54,45 @@ export default async function ServicesPage() {
   
   const defaultContent = {
     hero: {
-      title: 'The more ventures you build, the better you become',
-      description: 'Go beyond traditional consulting with our AI-powered venture building platform. Track portfolio performance, leverage intelligent insights, and get custom recommendations to accelerate any venture metric.',
+      title: 'The more ideas we build,\nthe sharper we get',
+      description: 'Go beyond advice. We roll up our sleeves and help you plan, build, and launch. Whether you need a full business plan, financial projections, or a launch strategy — we bring the structure and expertise to make your idea real.',
       features: [
-        { title: 'AI-Powered Insights', description: 'Machine learning recommendations based on real portfolio data' },
-        { title: 'Accelerate Any Metric', description: 'Set goals and continuously improve time-to-market' },
-        { title: 'Actionable Intelligence', description: 'Implement and measure improvements instantly' },
+        { title: 'Strategic Planning', description: 'Research-backed roadmaps tailored to your specific idea and market' },
+        { title: 'Financial Modeling', description: 'Investor-ready projections and budgets that actually make sense' },
+        { title: 'Launch Execution', description: 'Hands-on support from concept through opening day' },
       ],
     },
     dashboardImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
     sections: [
       {
-        badge: 'Rapid Deployment',
-        title: 'Quickly validate and launch',
-        description: 'Catch market opportunities and implement solutions before they become missed chances. Our AI-powered platform helps you move from concept to production in weeks, not months.',
+        badge: 'Rapid Execution',
+        title: 'From concept to launch, fast',
+        description: 'Don\'t let your idea sit on the shelf. Our proven project management framework helps you move from concept to launch in weeks, not months. We keep things lean, focused, and moving forward.',
         imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop',
         stats: [
-          { value: '6-12 weeks', label: 'Average time to MVP' },
-          { value: '70% faster', label: 'Than traditional methods' },
+          { value: '6-12 weeks', label: 'Average project timeline' },
+          { value: '50+', label: 'Projects successfully delivered' },
         ],
       },
       {
-        badge: 'Intelligent Platform',
-        title: 'AI-powered recommendations',
-        description: 'Get intelligent suggestions to reduce development time, boost product-market fit, and streamline operations based on real portfolio data and market trends.',
+        badge: 'Strategic Planning',
+        title: 'Roadmaps that\nactually work',
+        description: 'Get clear, actionable plans built on real market research and financial analysis. We don\'t just tell you what to do — we map out exactly how to do it, step by step.',
         imageUrl: 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop',
         features: [
-          { title: 'Real-time Portfolio Analytics', description: 'Track KPIs across all ventures with unified dashboards' },
-          { title: 'Predictive Market Intelligence', description: 'AI-driven insights for strategic decision making' },
-          { title: 'Automated Optimization', description: 'Continuous improvement recommendations you can implement instantly' },
+          { title: 'Market Research & Validation', description: 'Understand your competitive landscape and target market before you invest' },
+          { title: 'Business Plan Development', description: 'Comprehensive plans that work for investors, banks, and your own decision-making' },
+          { title: 'Financial Projections', description: 'Revenue models, cash flow forecasts, and break-even analysis you can actually trust' },
         ],
       },
       {
-        badge: 'Seamless Integration',
-        title: 'Prioritize what matters most',
-        description: 'See projected outcomes for strategic initiatives so you can focus on the developments that will make the biggest impact on your business goals.',
+        badge: 'Focused Prioritization',
+        title: 'Know exactly what\nto build first',
+        description: 'See the full picture of your project so you can focus on what moves the needle most. We help you prioritize decisions that drive the biggest impact on your timeline and budget.',
         imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop',
         insights: [
-          { category: 'Technical Architecture', impact: '+23% efficiency', title: 'Implement microservices architecture', description: 'Reduce deployment time and increase system resilience' },
-          { category: 'Go-to-Market Strategy', impact: '+15% conversion', title: 'Add PLG motion to enterprise sales', description: 'Accelerate customer acquisition and reduce CAC' },
+          { category: 'Go-to-Market Strategy', impact: 'High Impact', title: 'Launch with a targeted local campaign', description: 'Reach your first 100 customers before scaling spend' },
+          { category: 'Financial Planning', impact: 'Critical Path', title: 'Secure initial funding before buildout', description: 'Investor deck and financial model ready for pitch meetings' },
         ],
       },
     ],
@@ -142,7 +143,7 @@ export default async function ServicesPage() {
             <div className="aspect-video bg-gradient-to-br from-slate-800 via-slate-900 to-black relative">
               <Image
                 src={pageContent.dashboardImage || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop'}
-                alt="Venture Operating System Dashboard"
+                alt="Project Management Dashboard"
                 fill
                 className="object-cover opacity-80"
                 sizes="(max-width: 768px) 100vw, 1400px"
@@ -217,7 +218,7 @@ export default async function ServicesPage() {
                   <div className="aspect-[4/3] bg-gradient-to-br from-teal-900/20 to-cyan-900/20 relative">
                     <Image
                       src={pageContent.sections[1].imageUrl || 'https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop'}
-                      alt="AI Insights"
+                      alt="Strategic Insights"
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 50vw"
@@ -337,10 +338,10 @@ export default async function ServicesPage() {
               </span>
             </div>
             <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
-              Strategic consulting for ventures at every stage
+              Hands-on consulting for ideas at every stage
             </h2>
             <p className="text-xl text-slate-300 leading-relaxed">
-              Beyond our platform, Donkey Ideas is a hands-on consulting partner. We work directly with founders, executives, and enterprise teams to solve complex business challenges, define go-to-market strategies, and build operational systems that scale.
+              Donkey Ideas is more than a planning partner — we roll up our sleeves. We work directly with founders, entrepreneurs, and business owners to solve complex challenges, build go-to-market strategies, and create the operational systems needed to launch and grow.
             </p>
           </div>
 
@@ -353,7 +354,7 @@ export default async function ServicesPage() {
               </div>
               <h3 className="text-xl font-medium mb-3 text-white">Growth Strategy</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                We help companies identify growth levers, optimize acquisition channels, and build repeatable revenue engines. Our consultants bring hands-on experience scaling ventures from zero to millions in ARR.
+                We help businesses identify growth levers, optimize customer acquisition, and build repeatable revenue engines. Our team brings hands-on experience scaling projects from zero to profitability.
               </p>
             </div>
 
@@ -363,9 +364,9 @@ export default async function ServicesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-3 text-white">Technical Architecture</h3>
+              <h3 className="text-xl font-medium mb-3 text-white">Business Planning</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                From system design and cloud infrastructure to AI integration and data pipelines, we advise engineering teams on building production-grade systems that handle scale without breaking the bank.
+                We build comprehensive business plans that work for investors, banks, and your own decision-making. From market analysis and competitive positioning to operational roadmaps — we create plans that actually get used.
               </p>
             </div>
 
@@ -411,9 +412,9 @@ export default async function ServicesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-3 text-white">AI & Automation Strategy</h3>
+              <h3 className="text-xl font-medium mb-3 text-white">Technology & Digital Strategy</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                We assess where AI and automation can drive the most value in your business, build implementation roadmaps, and guide teams through adoption. From LLM integrations to workflow automation, we deliver practical AI solutions.
+                We help you choose the right tools, platforms, and digital strategy for your business. From evaluating software solutions to designing workflows and implementation plans — we focus on practical, results-driven technology decisions.
               </p>
             </div>
           </div>
