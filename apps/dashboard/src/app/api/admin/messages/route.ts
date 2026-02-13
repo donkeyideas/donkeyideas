@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
     // Get query params
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('filter') || 'all'; // all, unread, read
+    const source = searchParams.get('source') || ''; // filter by source website
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
@@ -38,9 +39,12 @@ export async function GET(request: NextRequest) {
     } else if (filter === 'read') {
       where.read = true;
     }
+    if (source) {
+      where.source = source;
+    }
 
-    // Fetch messages with pagination
-    const [messages, total, unreadCount] = await Promise.all([
+    // Fetch messages with pagination + distinct sources for filter dropdown
+    const [messages, total, unreadCount, sourcesRaw] = await Promise.all([
       prisma.contactSubmission.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -49,7 +53,14 @@ export async function GET(request: NextRequest) {
       }),
       prisma.contactSubmission.count({ where }),
       prisma.contactSubmission.count({ where: { read: false } }),
+      prisma.contactSubmission.findMany({
+        select: { source: true },
+        distinct: ['source'],
+        orderBy: { source: 'asc' },
+      }),
     ]);
+
+    const sources = sourcesRaw.map(s => s.source).filter(Boolean);
 
     return NextResponse.json({
       messages,
@@ -60,6 +71,7 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
       unreadCount,
+      sources,
     });
   } catch (error: any) {
     console.error('Failed to fetch messages:', error);

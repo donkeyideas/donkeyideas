@@ -11,6 +11,7 @@ interface ContactMessage {
   company: string | null;
   message: string;
   interest: string;
+  source: string;
   read: boolean;
   readAt: string | null;
   createdAt: string;
@@ -29,6 +30,8 @@ export default function MessagesPage() {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>('');
+  const [availableSources, setAvailableSources] = useState<string[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -37,10 +40,11 @@ export default function MessagesPage() {
     setError(null);
 
     try {
-      const response = await api.get(`/admin/messages?filter=${filter}&page=${page}&limit=20`);
+      const response = await api.get(`/admin/messages?filter=${filter}&source=${sourceFilter}&page=${page}&limit=20`);
       setMessages(response.data.messages || []);
       setPagination(response.data.pagination);
       setUnreadCount(response.data.unreadCount || 0);
+      setAvailableSources(response.data.sources || []);
     } catch (err: any) {
       console.error('Failed to load messages:', err);
       setError(err.response?.data?.error?.message || 'Failed to load messages');
@@ -51,7 +55,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     loadMessages();
-  }, [filter]);
+  }, [filter, sourceFilter]);
 
   const handleMarkAsRead = async (id: string, read: boolean) => {
     try {
@@ -123,7 +127,7 @@ export default function MessagesPage() {
             Contact Messages
           </h1>
           <p className="text-white/60 [.light_&]:text-slate-600">
-            Messages from your website contact form
+            Messages from all your website contact forms
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -136,25 +140,43 @@ export default function MessagesPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 mb-6 bg-white/5 [.light_&]:bg-slate-100 rounded-lg p-1 w-fit">
-        {(['all', 'unread', 'read'] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 text-sm rounded-md transition-colors capitalize ${
-              filter === f
-                ? 'bg-blue-500 text-white'
-                : 'text-white/60 [.light_&]:text-slate-600 hover:text-white [.light_&]:hover:text-slate-900'
-            }`}
+      <div className="flex items-center gap-4 mb-6 flex-wrap">
+        <div className="flex items-center gap-2 bg-white/5 [.light_&]:bg-slate-100 rounded-lg p-1 w-fit">
+          {(['all', 'unread', 'read'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 text-sm rounded-md transition-colors capitalize ${
+                filter === f
+                  ? 'bg-blue-500 text-white'
+                  : 'text-white/60 [.light_&]:text-slate-600 hover:text-white [.light_&]:hover:text-slate-900'
+              }`}
+            >
+              {f}
+              {f === 'unread' && unreadCount > 0 && (
+                <span className="ml-2 px-1.5 py-0.5 bg-white/20 rounded text-xs">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Source Filter */}
+        {availableSources.length > 1 && (
+          <select
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value)}
+            className="px-3 py-2 text-sm rounded-lg bg-white/5 [.light_&]:bg-slate-100 border border-white/10 [.light_&]:border-slate-300 text-white [.light_&]:text-slate-900 outline-none"
           >
-            {f}
-            {f === 'unread' && unreadCount > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 bg-white/20 rounded text-xs">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-        ))}
+            <option value="">All Sources</option>
+            {availableSources.map((s) => (
+              <option key={s} value={s}>
+                {s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, ' ')}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {loading ? (
@@ -228,6 +250,11 @@ export default function MessagesPage() {
                 <div className="text-sm text-white/50 [.light_&]:text-slate-500 truncate">
                   {msg.email}
                 </div>
+                {msg.source && msg.source !== 'donkey-ideas' && (
+                  <span className="inline-block mt-1 px-2 py-0.5 bg-emerald-500/20 text-emerald-400 [.light_&]:text-emerald-600 rounded text-xs font-medium">
+                    {msg.source.charAt(0).toUpperCase() + msg.source.slice(1).replace(/-/g, ' ')}
+                  </span>
+                )}
                 <div className="text-sm text-white/60 [.light_&]:text-slate-600 line-clamp-2 mt-1">
                   {msg.message}
                 </div>
@@ -309,10 +336,17 @@ export default function MessagesPage() {
                         </svg>
                         {new Date(selectedMessage.createdAt).toLocaleString()}
                       </div>
+                      {selectedMessage.source && (
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 [.light_&]:text-emerald-600 rounded text-xs">
+                            From: {selectedMessage.source.charAt(0).toUpperCase() + selectedMessage.source.slice(1).replace(/-/g, ' ')}
+                          </span>
+                        </div>
+                      )}
                       {selectedMessage.interest && (
                         <div className="flex items-center gap-2">
                           <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs">
-                            Source: {getInterestLabel(selectedMessage.interest)}
+                            Interest: {getInterestLabel(selectedMessage.interest)}
                           </span>
                         </div>
                       )}
@@ -328,7 +362,7 @@ export default function MessagesPage() {
                     {/* Reply Button */}
                     <div className="pt-4">
                       <a
-                        href={`mailto:${selectedMessage.email}?subject=Re: Your inquiry to Donkey Ideas`}
+                        href={`mailto:${selectedMessage.email}?subject=Re: Your inquiry to ${selectedMessage.source ? selectedMessage.source.charAt(0).toUpperCase() + selectedMessage.source.slice(1).replace(/-/g, ' ') : 'Donkey Ideas'}`}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

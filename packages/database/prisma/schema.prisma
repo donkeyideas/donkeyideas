@@ -566,11 +566,13 @@ model ContactSubmission {
   company   String?
   message   String
   interest  String // platform, services, partnership, other
+  source    String   @default("donkey-ideas") // which website sent this submission
   read      Boolean  @default(false)
   readAt    DateTime?
   createdAt DateTime @default(now())
 
   @@index([read, createdAt])
+  @@index([source, createdAt])
   @@map("contact_submissions")
 }
 
