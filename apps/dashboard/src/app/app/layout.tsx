@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { TopBar } from '@/components/dashboard/top-bar';
 import { AIAssistant } from '@/components/ai/ai-assistant';
@@ -12,7 +12,19 @@ function AppLayoutContent({
   children: React.ReactNode;
 }) {
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { theme } = useTheme();
+
+  // Close sidebar on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Theme classes
   const themeClasses = {
@@ -23,12 +35,12 @@ function AppLayoutContent({
 
   return (
     <div className={`${theme} flex min-h-screen ${themeClasses[theme]}`}>
-      <Sidebar />
-      <div className="flex-1 ml-70">
-        <TopBar />
-        <main className="p-8 max-w-[1600px]">{children}</main>
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <div className="flex-1 lg:ml-70">
+        <TopBar onMenuToggle={() => setIsSidebarOpen(true)} />
+        <main className="p-4 sm:p-6 lg:p-8 max-w-[1600px]">{children}</main>
       </div>
-      
+
       {/* Floating AI Assistant Button */}
       {!showAIAssistant && (
         <button
@@ -51,7 +63,7 @@ function AppLayoutContent({
           </svg>
         </button>
       )}
-      
+
       <AIAssistant isOpen={showAIAssistant} onClose={() => setShowAIAssistant(false)} />
     </div>
   );
@@ -68,5 +80,3 @@ export default function AppLayout({
     </ThemeProvider>
   );
 }
-
-

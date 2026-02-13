@@ -159,7 +159,7 @@ export default async function HomePage() {
       <ScrollHeader />
 
       {/* Hero Section - Giga.ai inspired with background image */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[85vh] md:h-screen flex items-center justify-center overflow-hidden">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -176,32 +176,32 @@ export default async function HomePage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 max-w-5xl mx-auto px-8 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-24 md:pt-0">
           {/* Label Badge */}
-          <div className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+          <div className="inline-flex items-center gap-2 mb-6 md:mb-8 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
             <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
             <span className="text-xs uppercase tracking-widest text-white/90 font-medium">
               {heroContent.label}
             </span>
           </div>
 
-          {/* Main Headline - Giga.ai style */}
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-light leading-[1.1] mb-8 tracking-tight">
+          {/* Main Headline */}
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-light leading-[1.1] mb-6 md:mb-8 tracking-tight">
             {heroContent.headline.split('\n').map((line: string, i: number) => (
               <div key={i}>{line}</div>
             ))}
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
+          <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed font-light">
             {heroContent.description}
           </p>
 
-          {/* CTA Button - Giga.ai style */}
+          {/* CTA Button */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               href="/contact"
-              className="px-10 py-4 bg-white text-slate-900 rounded-full hover:bg-white/90 transition-all text-base font-medium shadow-xl hover:shadow-2xl hover:scale-105 transform"
+              className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-slate-900 rounded-full hover:bg-white/90 transition-all text-base font-medium shadow-xl hover:shadow-2xl hover:scale-105 transform"
             >
               Talk to us
             </Link>
@@ -210,15 +210,15 @@ export default async function HomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-24 px-8">
+      <section className="py-12 md:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12">
             {statsContent.items?.map((stat: any, index: number) => (
               <div key={index} className="text-center">
-                <div className="text-5xl md:text-6xl font-light mb-3 text-white">
+                <div className="text-3xl sm:text-4xl md:text-6xl font-light mb-2 md:mb-3 text-white">
                   {stat.value}
                 </div>
-                <div className="text-slate-400 uppercase text-xs tracking-widest font-medium">
+                <div className="text-slate-400 uppercase text-[10px] sm:text-xs tracking-widest font-medium">
                   {stat.label}
                 </div>
               </div>
@@ -228,15 +228,15 @@ export default async function HomePage() {
       </section>
 
       {/* Philosophy Section */}
-      <section id="about" className="py-32 px-8">
+      <section id="about" className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="text-xs uppercase tracking-widest text-blue-400 mb-6 font-medium">
+          <div className="text-xs uppercase tracking-widest text-blue-400 mb-4 md:mb-6 font-medium">
             Our Philosophy
           </div>
-          <h2 className="text-5xl md:text-6xl font-light mb-8 leading-tight text-white">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-6 md:mb-8 leading-tight text-white">
             {aboutContent.title}
           </h2>
-          <div className="space-y-6 text-lg text-slate-300 leading-relaxed font-light text-left">
+          <div className="space-y-4 md:space-y-6 text-base md:text-lg text-slate-300 leading-relaxed font-light text-left">
             {aboutContent.text.split('\n\n').map((paragraph: string, index: number) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -245,19 +245,19 @@ export default async function HomePage() {
       </section>
 
       {/* Engage with Excellence Section */}
-      <section className="py-32 px-8">
+      <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto">
           {/* Top Section - Title and Features */}
-          <div className="grid md:grid-cols-2 gap-20 items-start mb-24">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-20 items-start mb-12 md:mb-24">
             {/* Left - Title */}
             <div>
-              <div className="inline-flex items-center gap-2 mb-8 px-3 py-1.5 rounded-full bg-yellow-500/10">
+              <div className="inline-flex items-center gap-2 mb-6 md:mb-8 px-3 py-1.5 rounded-full bg-yellow-500/10">
                 <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
                 <span className="text-xs uppercase tracking-widest text-yellow-400 font-medium">
                   {engageContent.badge?.text || 'Innovation First'}
                 </span>
               </div>
-              <h2 className="text-5xl md:text-6xl font-light leading-tight text-white">
+              <h2 className="text-3xl sm:text-4xl md:text-6xl font-light leading-tight text-white">
                 {engageContent.title?.split('\n').map((line: string, i: number) => (
                   <div key={i}>{line}</div>
                 ))}
@@ -265,7 +265,7 @@ export default async function HomePage() {
             </div>
 
             {/* Right - Feature Cards */}
-            <div className="grid grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
               {engageContent.features?.map((feature: any, index: number) => (
                 <div key={index}>
                   <div className="w-12 h-12 rounded-lg bg-slate-800/50 flex items-center justify-center mb-4">
@@ -285,23 +285,23 @@ export default async function HomePage() {
           </div>
 
           {/* Bottom Section - Venture Canvas with Image */}
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
             {/* Left - Description */}
             <div>
-              <div className="flex items-center gap-3 mb-8">
+              <div className="flex items-center gap-3 mb-6 md:mb-8">
                 <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center">
                   <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-medium text-white">{engageContent.ventureCanvas?.title || 'Venture Canvas'}</h3>
+                <h3 className="text-xl md:text-2xl font-medium text-white">{engageContent.ventureCanvas?.title || 'Venture Canvas'}</h3>
               </div>
-              
-              <p className="text-slate-300 text-lg leading-relaxed mb-8">
+
+              <p className="text-slate-300 text-base md:text-lg leading-relaxed mb-6 md:mb-8">
                 {engageContent.ventureCanvas?.text1}
               </p>
 
-              <p className="text-slate-400 leading-relaxed mb-10">
+              <p className="text-slate-400 text-sm md:text-base leading-relaxed mb-8 md:mb-10">
                 {engageContent.ventureCanvas?.text2}
               </p>
 
@@ -322,7 +322,7 @@ export default async function HomePage() {
                 src={engageContent.ventureCanvas?.imageUrl || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop'}
                 alt="Venture Canvas Platform"
                 fill
-                className="object-cover scale-125"
+                className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
                 quality={80}
               />
@@ -333,12 +333,12 @@ export default async function HomePage() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-32 px-8">
+      <section id="faq" className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <div className="text-xs uppercase tracking-widest text-blue-400 mb-6 font-medium text-center">
+          <div className="text-xs uppercase tracking-widest text-blue-400 mb-4 md:mb-6 font-medium text-center">
             Common Questions
           </div>
-          <h2 className="text-5xl md:text-6xl font-light mb-16 leading-tight text-white text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-8 md:mb-16 leading-tight text-white text-center">
             Frequently Asked Questions
           </h2>
           <div className="space-y-8">
@@ -385,13 +385,13 @@ export default async function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-slate-800">
+      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
             <div className="text-xl font-semibold tracking-tight">
               <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
               <Link href="/ventures" className="hover:text-white transition-colors">
                 Ventures
               </Link>

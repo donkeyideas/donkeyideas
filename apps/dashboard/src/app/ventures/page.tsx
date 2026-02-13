@@ -125,19 +125,19 @@ export default async function VenturesPage() {
       <ScrollHeader />
 
       {/* Hero Section - Giga Style */}
-      <section className="pt-32 pb-24 px-8">
+      <section className="pt-24 pb-12 md:pt-32 md:pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-light leading-tight mb-8">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-light leading-tight mb-8">
             Ventures Built for the Future
           </h1>
-          <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-light">
+          <p className="text-base sm:text-lg md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-light">
             {pageContent.hero?.subtitle || 'Each product in our portfolio represents a bold bet on unconventional ideas backed by rigorous engineering'}
           </p>
         </div>
       </section>
 
       {/* Feature Cards Section */}
-      <section className="py-16 px-8">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto">
           <h2 className="text-3xl md:text-4xl font-light text-center mb-12">What We Build</h2>
           <div className="grid md:grid-cols-3 gap-8">
@@ -164,8 +164,8 @@ export default async function VenturesPage() {
       </section>
 
       {/* Venture Showcase Sections - Giga Agent Canvas Style */}
-      <section className="py-24 px-8">
-        <div className="max-w-[1400px] mx-auto space-y-32">
+      <section className="py-12 md:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1400px] mx-auto space-y-16 md:space-y-32">
           <h2 className="text-3xl md:text-4xl font-light text-center">Our Portfolio</h2>
           {ventures.map((venture: any, index: number) => {
             const statusColors: Record<string, string> = {
@@ -188,7 +188,7 @@ export default async function VenturesPage() {
             return (
               <div
                 key={index}
-                className={`grid md:grid-cols-2 gap-16 items-center ${
+                className={`grid md:grid-cols-2 gap-8 md:gap-16 items-center ${
                   index % 2 === 1 ? '' : ''
                 }`}
               >
@@ -205,7 +205,7 @@ export default async function VenturesPage() {
                     {venture.category || 'VENTURE'}
                   </div>
                   
-                  <h3 className="text-4xl md:text-5xl font-light mb-6 text-white leading-tight">
+                  <h3 className="text-2xl sm:text-3xl md:text-5xl font-light mb-6 text-white leading-tight">
                     {venture.title || `Venture ${index + 1}`}
                   </h3>
                   
@@ -282,13 +282,13 @@ export default async function VenturesPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-slate-800">
+      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-[1400px] mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="text-xl font-semibold tracking-tight">
               <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
               <Link href="/ventures" className="hover:text-white transition-colors">
                 Ventures
               </Link>

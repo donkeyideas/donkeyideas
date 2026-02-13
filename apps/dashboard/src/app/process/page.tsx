@@ -134,14 +134,14 @@ export default async function ProcessPage() {
       <ScrollHeader />
 
       {/* Hero Section - Giga Voice Style */}
-      <section className="pt-32 pb-16 px-8">
+      <section className="pt-24 pb-10 md:pt-32 md:pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto text-center">
-          <h1 className="text-6xl md:text-7xl font-light leading-tight mb-8">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-light leading-tight mb-8">
             {pageContent.hero?.title?.split('\n').map((line: string, i: number) => (
               <span key={i}>{line}<br /></span>
             )) || 'Our Process'}
           </h1>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-12">
+          <p className="text-base md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-12">
             {pageContent.hero?.description || ''}
           </p>
           
@@ -158,7 +158,7 @@ export default async function ProcessPage() {
       </section>
 
       {/* Integration Section */}
-      <section className="py-16 px-8">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-light mb-4">
             {pageContent.integrationTitle || 'Integration without compromising velocity'}
@@ -168,9 +168,9 @@ export default async function ProcessPage() {
 
       {/* Feature 1 */}
       {pageContent.sections?.[0] && (
-        <section className="py-32 px-8">
+        <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
           <div className="max-w-[1400px] mx-auto">
-            <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
               <div>
                 <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-blue-500/10">
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
@@ -178,12 +178,12 @@ export default async function ProcessPage() {
                     {pageContent.sections[0].badge}
                   </span>
                 </div>
-                <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-6 leading-tight">
                   {pageContent.sections[0].title?.split('\n').map((line: string, i: number) => (
                     <span key={i}>{line}<br /></span>
                   ))}
                 </h2>
-                <p className="text-xl text-slate-300 mb-8 leading-relaxed">
+                <p className="text-base md:text-xl text-slate-300 mb-8 leading-relaxed">
                   {pageContent.sections[0].description}
                 </p>
 
@@ -227,9 +227,9 @@ export default async function ProcessPage() {
 
       {/* Feature 2 - Multi-Market Support */}
       {pageContent.sections?.[1] && (
-        <section className="py-32 px-8">
+        <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
           <div className="max-w-[1400px] mx-auto">
-            <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
               <div className="order-2 md:order-1 relative">
                 <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
                   <div className="aspect-[4/3] bg-gradient-to-br from-purple-900/20 to-pink-900/20 relative">
@@ -251,12 +251,12 @@ export default async function ProcessPage() {
                     {pageContent.sections[1].badge}
                   </span>
                 </div>
-                <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-6 leading-tight">
                   {pageContent.sections[1].title?.split('\n').map((line: string, i: number) => (
                     <span key={i}>{line}<br /></span>
                   ))}
                 </h2>
-                <p className="text-xl text-slate-300 mb-8 leading-relaxed">
+                <p className="text-base md:text-xl text-slate-300 mb-8 leading-relaxed">
                   {pageContent.sections[1].description}
                 </p>
                 
@@ -279,13 +279,13 @@ export default async function ProcessPage() {
 
       {/* Feature 3 */}
       {pageContent.sections?.[2] && (
-        <section className="py-32 px-8">
+        <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
           <div className="max-w-[1400px] mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-light mb-4">Natural & nuanced</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-light mb-4">Natural & nuanced</h2>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
               <div>
                 <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-green-500/10">
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
@@ -293,12 +293,12 @@ export default async function ProcessPage() {
                     {pageContent.sections[2].badge}
                   </span>
                 </div>
-                <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+                <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-6 leading-tight">
                   {pageContent.sections[2].title?.split('\n').map((line: string, i: number) => (
                     <span key={i}>{line}<br /></span>
                   ))}
                 </h2>
-                <p className="text-xl text-slate-300 mb-8 leading-relaxed">
+                <p className="text-base md:text-xl text-slate-300 mb-8 leading-relaxed">
                   {pageContent.sections[2].description}
                 </p>
               
@@ -342,16 +342,16 @@ export default async function ProcessPage() {
       )}
 
       {/* How It Works - Data-Driven Building */}
-      <section className="py-32 px-8">
+      <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center mb-16">
             <div className="text-xs uppercase tracking-widest text-blue-400 mb-4 font-medium">
               How It Works
             </div>
-            <h2 className="text-5xl md:text-6xl font-light text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-light text-white mb-6">
               {pageContent.howItWorks?.title || 'Research-driven project execution'}
             </h2>
-            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-slate-300 max-w-2xl mx-auto">
               {pageContent.howItWorks?.description || 'Execute every initiative with high probability of success thanks to systems that form decision logic and adapt strategies based on real market signals, customer behavior, and competitive intelligence.'}
             </p>
           </div>
@@ -398,13 +398,13 @@ export default async function ProcessPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-slate-800">
+      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-[1400px] mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="text-xl font-semibold tracking-tight">
               <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
               <Link href="/ventures" className="hover:text-white transition-colors">
                 Ventures
               </Link>

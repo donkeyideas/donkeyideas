@@ -70,12 +70,27 @@ const activeCompanyNavigation = [
   },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { companies: companiesFromStore, currentCompany, setCurrentCompany, setCompanies } = useAppStore();
   const { data: companiesData, isLoading: companiesLoading } = useCompanies();
   const { theme } = useTheme();
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
 
   // Use companies from React Query if available, fallback to store
   // Ensure companies is always an array
@@ -134,11 +149,31 @@ export function Sidebar() {
     : 'hover:bg-white/5 hover:text-white';
 
   return (
-    <div className={`w-70 fixed left-0 top-0 h-screen ${bgClass} border-r ${borderClass} p-6 overflow-y-auto`}>
-      <div className="mb-6">
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+      <div className={`w-70 fixed left-0 top-0 h-screen ${bgClass} border-r ${borderClass} p-6 overflow-y-auto z-50 transition-transform duration-300 lg:translate-x-0 ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+      {/* Mobile close button */}
+      <div className="flex items-center justify-between mb-6">
         <div className={`text-xl font-light tracking-wider ${textClass}`}>
           DONKEY <span className="font-bold">IDEAS</span>
         </div>
+        <button
+          onClick={onClose}
+          className={`lg:hidden p-1.5 rounded-lg ${hoverClasses} ${mutedTextClass}`}
+          aria-label="Close sidebar"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       {/* Donkey Ideas Navigation - Global/Consolidated */}
@@ -155,6 +190,7 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={onClose}
                   className={`flex items-center justify-between px-4 py-2 mb-1 rounded transition-colors ${
                     isActive
                       ? activeClasses
@@ -217,6 +253,7 @@ export function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={onClose}
                     className={`flex items-center justify-between px-4 py-2 mb-1 rounded transition-colors ${
                       isActive
                         ? activeClasses
@@ -263,6 +300,7 @@ export function Sidebar() {
         </button>
       </div>
     </div>
+    </>
   );
 }
 

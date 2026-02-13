@@ -103,7 +103,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <ScrollHeader />
 
       {/* Article */}
-      <article className="pt-32 pb-24 px-8">
+      <article className="pt-24 md:pt-32 pb-12 md:pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           {/* Category & Meta */}
           <div className="flex items-center gap-3 mb-6">
@@ -119,7 +119,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl md:text-5xl font-light leading-tight mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-light leading-tight mb-6 md:mb-8">
             {post.title}
           </h1>
 
@@ -200,7 +200,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       {/* Related Posts */}
       {relatedPosts.length > 0 && (
-        <section className="py-16 px-8 border-t border-slate-800">
+        <section className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
           <div className="max-w-[1200px] mx-auto">
             <h2 className="text-2xl font-light mb-8">Related Posts</h2>
             <div className="grid md:grid-cols-3 gap-6">
@@ -227,13 +227,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       )}
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-slate-800">
+      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
             <div className="text-xl font-semibold tracking-tight">
               <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
               <Link href="/ventures" className="hover:text-white transition-colors">Ventures</Link>
               <Link href="/services" className="hover:text-white transition-colors">Services</Link>
               <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>

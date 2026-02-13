@@ -179,37 +179,37 @@ export default async function AboutPage() {
       <ScrollHeader />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-8">
+      <section className="pt-24 pb-10 md:pt-32 md:pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto text-center">
-          <h1 className="text-6xl md:text-7xl font-light leading-tight mb-8">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-light leading-tight mb-8">
             {pageContent.hero?.title?.split('\n').map((line: string, i: number) => (
               <span key={i}>{line}<br /></span>
             )) || 'About Us'}
           </h1>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
             {pageContent.hero?.description || ''}
           </p>
         </div>
       </section>
 
       {/* Stats Section - HARDCODED */}
-      <section className="py-16 px-8">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">50+</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white mb-2">50+</div>
               <div className="text-sm text-slate-400">Projects delivered</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">15+</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white mb-2">15+</div>
               <div className="text-sm text-slate-400">Industries served</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">92%</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white mb-2">92%</div>
               <div className="text-sm text-slate-400">Client retention rate</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-light text-white mb-2">6-12 weeks</div>
+              <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white mb-2">6-12 weeks</div>
               <div className="text-sm text-slate-400">Average project timeline</div>
             </div>
           </div>
@@ -217,9 +217,9 @@ export default async function AboutPage() {
       </section>
 
       {/* Mission Section */}
-      <section className="py-32 px-8">
+      <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
             <div>
               <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-blue-500/10">
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
@@ -227,7 +227,7 @@ export default async function AboutPage() {
                   Our Mission
                 </span>
               </div>
-              <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-6 leading-tight">
                 {pageContent.mission?.title?.split('\n').map((line: string, i: number) => (
                   <span key={i}>{line}<br /></span>
                 )) || 'Our Mission'}
@@ -257,11 +257,11 @@ export default async function AboutPage() {
       </section>
 
       {/* Values Section */}
-      <section className="py-32 px-8">
+      <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-6xl font-light mb-6">Our Core Values</h2>
-            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-6">Our Core Values</h2>
+            <p className="text-base md:text-xl text-slate-300 max-w-2xl mx-auto">
               The principles that guide everything we build and every decision we make
             </p>
           </div>
@@ -294,9 +294,9 @@ export default async function AboutPage() {
       </section>
 
       {/* Venture Building Process & Approach Section */}
-      <section className="py-32 px-8">
+      <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
             <div className="order-2 md:order-1">
               {/* Venture Building Process Card */}
               {pageContent.ventureProcess && (
@@ -345,14 +345,14 @@ export default async function AboutPage() {
                       {pageContent.approach.badge}
                     </span>
                   </div>
-                  <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+                  <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-6 leading-tight">
                     {pageContent.approach.title?.split('\n').map((line: string, i: number) => (
                       <span key={i}>{line}<br /></span>
                     )) || pageContent.approach.title}
                   </h2>
                   <div className="space-y-6 text-lg leading-relaxed">
                     {pageContent.approach.description?.split('\n\n').map((paragraph: string, index: number) => (
-                      <p key={index} className={index === 0 ? 'text-xl text-slate-300' : 'text-lg text-slate-400'}>
+                      <p key={index} className={index === 0 ? 'text-base md:text-xl text-slate-300' : 'text-lg text-slate-400'}>
                         {paragraph}
                       </p>
                     ))}
@@ -365,9 +365,9 @@ export default async function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="py-32 px-8">
+      <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1400px] mx-auto">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
             <div className="relative">
               <div className="rounded-2xl overflow-hidden border border-slate-700/50 bg-slate-800/30">
                 <div className="aspect-[4/3] bg-gradient-to-br from-teal-900/20 to-cyan-900/20 relative">
@@ -389,14 +389,14 @@ export default async function AboutPage() {
                   Our Team
                 </span>
               </div>
-              <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-6 leading-tight">
                 {pageContent.team?.title?.split('\n').map((line: string, i: number) => (
                   <span key={i}>{line}<br /></span>
                 )) || 'Our Team'}
               </h2>
               <div className="space-y-6 text-lg text-slate-300 leading-relaxed mb-8">
                 {pageContent.team?.description?.split('\n\n').map((paragraph: string, index: number) => (
-                  <p key={index} className={index === 0 ? 'text-xl' : 'text-lg text-slate-400'}>{paragraph}</p>
+                  <p key={index} className={index === 0 ? 'text-base md:text-xl' : 'text-lg text-slate-400'}>{paragraph}</p>
                 ))}
               </div>
 
@@ -417,13 +417,13 @@ export default async function AboutPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-slate-800">
+      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-[1400px] mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="text-xl font-semibold tracking-tight">
               <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
               <Link href="/ventures" className="hover:text-white transition-colors">
                 Ventures
               </Link>

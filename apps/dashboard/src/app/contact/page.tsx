@@ -64,24 +64,24 @@ export default function ContactPage() {
       <ScrollHeader />
 
       {/* Hero Section - Giga Contact Style */}
-      <section className="pt-32 pb-24 px-8">
+      <section className="pt-24 pb-12 md:pt-32 md:pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-light leading-tight mb-8">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-light leading-tight mb-8">
             Creative consulting
             <br />
             for ambitious people
           </h1>
-          <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-12">
+          <p className="text-base sm:text-lg md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-12">
             From first-time founders to established businesses, Donkey Ideas helps turn bold ideas into reality.
           </p>
         </div>
       </section>
 
       {/* Testimonial Section */}
-      <section className="py-16 px-8">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-12">
-            <blockquote className="text-xl md:text-2xl text-slate-300 leading-relaxed mb-8 font-light">
+          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 md:p-12">
+            <blockquote className="text-base sm:text-lg md:text-2xl text-slate-300 leading-relaxed mb-8 font-light">
               "I came to Donkey Ideas with nothing more than a concept and a lot of enthusiasm. They helped me build a business plan, model the financials, and create a launch strategy that actually worked. Their hands-on project management kept everything on track, and within three months we were open for business. I couldn't have done it without them."
             </blockquote>
             <div className="flex items-center gap-4">
@@ -95,7 +95,7 @@ export default function ContactPage() {
       </section>
 
       {/* How We Can Help Section */}
-      <section className="py-16 px-8">
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-light text-center mb-12">How We Can Help</h2>
           <div className="grid md:grid-cols-2 gap-8">
@@ -128,10 +128,10 @@ export default function ContactPage() {
       </section>
 
       {/* Contact Form Section */}
-      <section className="py-32 px-8">
+      <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-light mb-4">Let's build something together</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-light mb-4">Let's build something together</h2>
             <p className="text-lg text-slate-400">
               Tell us about your idea, consulting needs, or partnership opportunity and we'll get back to you within 24 hours.
             </p>
@@ -279,7 +279,7 @@ export default function ContactPage() {
       </section>
 
       {/* Alternative Contact Methods */}
-      <section className="py-16 px-8 border-t border-slate-800">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
@@ -321,13 +321,13 @@ export default function ContactPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-slate-800">
+      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-8">
             <div className="text-xl font-semibold tracking-tight">
               <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
               <Link href="/ventures" className="hover:text-white transition-colors">
                 Ventures
               </Link>

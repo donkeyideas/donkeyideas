@@ -46,19 +46,19 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
       <ScrollHeader />
 
       {/* Hero */}
-      <section className="pt-32 pb-16 px-8">
+      <section className="pt-24 pb-10 md:pt-32 md:pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-6xl md:text-7xl font-light leading-tight mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-light leading-tight mb-6">
             Blog
           </h1>
-          <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+          <p className="text-base md:text-xl text-slate-300 max-w-2xl mx-auto">
             Insights on creative consulting, business strategy, and turning bold ideas into real businesses.
           </p>
         </div>
       </section>
 
       {/* Posts Grid */}
-      <section className="pb-16 px-8">
+      <section className="pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-[1200px] mx-auto">
           {posts.length === 0 ? (
             <div className="text-center py-24">
@@ -118,7 +118,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <section className="pb-32 px-8">
+        <section className="pb-32 px-4 sm:px-6 lg:px-8">
           <div className="max-w-[1200px] mx-auto">
             <nav aria-label="Blog pagination" className="flex items-center justify-center gap-2">
               {currentPage > 1 && (
@@ -161,13 +161,13 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
       )}
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-slate-800">
+      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-8">
             <div className="text-xl font-semibold tracking-tight">
               <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
               <Link href="/ventures" className="hover:text-white transition-colors">Ventures</Link>
               <Link href="/services" className="hover:text-white transition-colors">Services</Link>
               <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>

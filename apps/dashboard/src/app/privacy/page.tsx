@@ -103,26 +103,26 @@ export default async function PrivacyPage() {
       <ScrollHeader />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-8">
+      <section className="pt-24 md:pt-32 pb-10 md:pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-light leading-tight mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-light leading-tight mb-4 md:mb-6">
             {pageContent.title}
           </h1>
-          <p className="text-lg text-slate-400">
+          <p className="text-base md:text-lg text-slate-400">
             Last Updated: {pageContent.lastUpdated}
           </p>
         </div>
       </section>
 
       {/* Content Sections */}
-      <section className="py-16 px-8">
-        <div className="max-w-4xl mx-auto space-y-12">
+      <section className="py-10 md:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto space-y-8 md:space-y-12">
           {pageContent.sections?.map((section: any, index: number) => (
-            <div key={index} className="space-y-4">
-              <h2 className="text-3xl font-light text-white">
+            <div key={index} className="space-y-3 md:space-y-4">
+              <h2 className="text-2xl md:text-3xl font-light text-white">
                 {section.heading}
               </h2>
-              <div className="text-lg text-slate-300 leading-relaxed whitespace-pre-line">
+              <div className="text-base md:text-lg text-slate-300 leading-relaxed whitespace-pre-line">
                 {section.content}
               </div>
             </div>
@@ -131,12 +131,12 @@ export default async function PrivacyPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 px-8">
+      <section className="py-12 md:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-light mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-light mb-4 md:mb-6">
             Questions about your privacy?
           </h2>
-          <p className="text-xl text-slate-300 mb-10 leading-relaxed">
+          <p className="text-base md:text-xl text-slate-300 mb-8 md:mb-10 leading-relaxed">
             We&apos;re here to help. Reach out to us with any concerns.
           </p>
           <Link
@@ -149,13 +149,13 @@ export default async function PrivacyPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-slate-800">
+      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
             <div className="text-xl font-semibold tracking-tight">
               <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
               <Link href="/ventures" className="hover:text-white transition-colors">
                 Ventures
               </Link>

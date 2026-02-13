@@ -2,7 +2,11 @@
 
 import { useTheme } from '@/contexts/theme-context';
 
-export function TopBar() {
+interface TopBarProps {
+  onMenuToggle?: () => void;
+}
+
+export function TopBar({ onMenuToggle }: TopBarProps) {
   const { theme, setTheme } = useTheme();
 
   const themes = [
@@ -23,14 +27,26 @@ export function TopBar() {
   const activeTextClass = theme === 'light' ? 'text-slate-900' : 'text-white';
 
   return (
-    <div className={`sticky top-0 z-50 ${bgClass} backdrop-blur-lg border-b ${borderClass} px-8 py-4 flex justify-between items-center`}>
-      <div className={`flex items-center gap-2 text-sm ${textClass}`}>
-        <span>Home</span>
-        <span>/</span>
-        <span className={`${activeTextClass} font-semibold`}>Dashboard</span>
+    <div className={`sticky top-0 z-30 ${bgClass} backdrop-blur-lg border-b ${borderClass} px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex justify-between items-center`}>
+      <div className="flex items-center gap-3">
+        {/* Mobile hamburger */}
+        <button
+          onClick={onMenuToggle}
+          className={`lg:hidden p-1.5 -ml-1.5 rounded-lg ${textClass} hover:${activeTextClass}`}
+          aria-label="Open sidebar"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <div className={`flex items-center gap-2 text-sm ${textClass}`}>
+          <span className="hidden sm:inline">Home</span>
+          <span className="hidden sm:inline">/</span>
+          <span className={`${activeTextClass} font-semibold`}>Dashboard</span>
+        </div>
       </div>
-      
-      <div className="flex items-center gap-6">
+
+      <div className="flex items-center gap-3 sm:gap-6">
         {/* Theme Toggle */}
         <div className={`flex items-center gap-1 rounded-lg p-1 ${
           theme === 'light' ? 'bg-slate-200/50' : 'bg-black/10 dark:bg-white/5'
@@ -39,7 +55,7 @@ export function TopBar() {
             <button
               key={t.id}
               onClick={() => setTheme(t.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`px-2 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 theme === t.id
                   ? theme === 'light'
                     ? 'bg-white shadow-sm text-slate-900'
@@ -56,7 +72,7 @@ export function TopBar() {
         </div>
 
         {/* Save Status */}
-        <div className={`flex items-center gap-2 text-sm ${textClass}`}>
+        <div className={`hidden sm:flex items-center gap-2 text-sm ${textClass}`}>
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           <span>All changes saved</span>
         </div>
@@ -64,5 +80,3 @@ export function TopBar() {
     </div>
   );
 }
-
-

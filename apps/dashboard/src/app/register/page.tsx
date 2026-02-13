@@ -40,10 +40,10 @@ export default function RegisterPage() {
       <ScrollHeader />
 
       {/* Register Form */}
-      <div className="flex-1 flex items-center justify-center px-8 pt-32 pb-24">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-24 md:pt-32 pb-12 md:pb-24">
         <div className="w-full max-w-md">
           {/* Glass Card */}
-          <div className="bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+          <div className="bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 sm:p-8 shadow-2xl">
             <div className="mb-8 text-center">
               <h1 className="text-3xl font-light tracking-wider mb-2">
                 <span className="font-light">DONKEY</span> <span className="font-bold">IDEAS</span>
@@ -118,13 +118,13 @@ export default function RegisterPage() {
       </div>
 
       {/* Footer */}
-      <footer className="py-16 px-8 border-t border-slate-800">
+      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
             <div className="text-xl font-semibold tracking-tight">
               <span className="font-light">DONKEY</span> IDEAS
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
               <Link href="/ventures" className="hover:text-white transition-colors">
                 Ventures
               </Link>
