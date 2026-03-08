@@ -8,26 +8,41 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Add request interceptor for auth token if needed
+// Track whether we're already redirecting to prevent multiple parallel 401s
+// from all triggering redirects simultaneously
+let isRedirectingToLogin = false;
+
+// Verify the session is truly invalid before redirecting
+async function verifySessionExpired(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    return res.status === 401;
+  } catch {
+    return true;
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-        // Avoid redirect loops:
-        // - Do not force a client redirect when the failing request is the login endpoint itself
-        // - Do not redirect if we're already on the login page
         try {
-          if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined' && !isRedirectingToLogin) {
             const reqUrl = error.config?.url || '';
             const isLoginRequest = reqUrl.includes('/auth/login') || reqUrl.includes('/api/auth/login');
-            const onLoginPage = window.location && window.location.pathname && window.location.pathname.startsWith('/login');
+            const onLoginPage = window.location?.pathname?.startsWith('/login');
 
             if (!isLoginRequest && !onLoginPage) {
-              window.location.href = '/login';
+              // Verify the session is actually expired before redirecting
+              const sessionExpired = await verifySessionExpired();
+              if (sessionExpired && !isRedirectingToLogin) {
+                isRedirectingToLogin = true;
+                window.location.href = '/login';
+              }
             }
           }
         } catch (e) {
-          // If anything goes wrong reading error.config or window, fall back to rejecting the error.
+          // Fall back to rejecting the error
         }
     }
     return Promise.reject(error);
