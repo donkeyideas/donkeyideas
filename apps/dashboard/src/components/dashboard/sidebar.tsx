@@ -27,6 +27,7 @@ const donkeyIdeasNavigation = [
       { name: 'Blog Manager', href: '/app/blog', icon: '' },
       { name: 'SEO & GEO Analytics', href: '/app/seo-geo', icon: '' },
       { name: 'Contact Messages', href: '/app/messages', icon: '', showBadge: true },
+      { name: 'Social Posts', href: '/app/social-posts', icon: '' },
     ],
   },
   {

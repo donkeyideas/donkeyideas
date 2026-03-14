@@ -25,13 +25,16 @@ model User {
   totpSecret  String?  // Encrypted TOTP secret
   totpEnabled Boolean  @default(false)
 
-  companies  Company[]
-  sessions   Session[]
-  activities Activity[]
-  settings   UserSettings?
-  apiUsage   ApiUsage[]
-  chats      Chat[]
-  blogPosts  BlogPost[]
+  companies          Company[]
+  sessions           Session[]
+  activities         Activity[]
+  settings           UserSettings?
+  apiUsage           ApiUsage[]
+  chats              Chat[]
+  blogPosts          BlogPost[]
+  socialPosts        SocialMediaPost[]
+  socialCredentials  SocialMediaCredential[]
+  socialAutomation   SocialMediaAutomation?
 
   @@map("users")
 }
@@ -831,4 +834,86 @@ model BlogPost {
   @@index([published, publishedAt])
   @@index([slug])
   @@map("blog_posts")
+}
+
+// Social Media Posts
+enum SocialPlatform {
+  TWITTER
+  LINKEDIN
+  FACEBOOK
+  INSTAGRAM
+  TIKTOK
+}
+
+enum SocialPostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+
+model SocialMediaPost {
+  id             String           @id @default(cuid())
+  userId         String
+  platform       SocialPlatform
+  content        String           @db.Text
+  hashtags       String[]         @default([])
+  imagePrompt    String?
+  tone           String?
+  topic          String?
+  status         SocialPostStatus @default(DRAFT)
+  scheduledAt    DateTime?
+  publishedAt    DateTime?
+  publishError   String?
+  platformPostId String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, platform])
+  @@index([status, scheduledAt])
+  @@map("social_media_posts")
+}
+
+model SocialMediaCredential {
+  id           String         @id @default(cuid())
+  userId       String
+  platform     SocialPlatform
+  accessToken  String?        @db.Text
+  refreshToken String?        @db.Text
+  tokenSecret  String?
+  appKey       String?
+  appSecret    String?
+  pageId       String?
+  personUrn    String?
+  expiresAt    DateTime?
+  isConnected  Boolean        @default(false)
+  lastTestedAt DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@map("social_media_credentials")
+}
+
+model SocialMediaAutomation {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  enabled         Boolean  @default(false)
+  platforms       Json     @default("[]")
+  cronHour        Int      @default(9)
+  topicPool       Json     @default("[]")
+  tone            String   @default("engaging")
+  requireApproval Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("social_media_automations")
 }
