@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { prisma } from '@donkey-ideas/database';
 import ScrollHeader from '@/components/scroll-header';
+import WebsitePreview from '@/components/ventures/website-preview';
 import { Metadata } from 'next';
 import { BreadcrumbStructuredData } from '@/components/seo/structured-data';
 
@@ -239,41 +240,61 @@ export default async function VenturesPage() {
                   </Link>
                 </div>
 
-                {/* Image/Visual Side */}
+                {/* Website Preview / Image Side */}
                 <div className={index % 2 === 1 ? 'md:order-1' : ''}>
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 aspect-video bg-slate-800/50">
-                    {venture.imageUrl ? (
-                      <>
-                        {venture.imageUrl.startsWith('/') ? (
-                          // Local file - serve unoptimized for perfect quality
-                          <img
-                            src={venture.imageUrl}
-                            alt={venture.title}
-                            className="w-full h-full object-contain p-8"
-                          />
-                        ) : (
-                          // External URL - use Next.js Image optimization
-                          <Image
-                            src={venture.imageUrl}
-                            alt={venture.title}
-                            width={1920}
-                            height={1080}
-                            className="w-full h-full object-cover"
-                            quality={100}
-                            priority={index === 0}
-                            unoptimized={venture.imageUrl?.includes('.png')}
-                          />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent pointer-events-none" />
-                      </>
-                    ) : (
-                      <div className={`relative w-full h-full bg-gradient-to-br ${gradients[gradient]} backdrop-blur-sm flex items-center justify-center`}>
-                        <div className="text-8xl font-light text-white/10">
-                          {(index + 1).toString().padStart(2, '0')}
-                        </div>
+                  {venture.websiteUrl ? (
+                    <a
+                      href={venture.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block relative rounded-2xl overflow-hidden border border-slate-700/50 aspect-video bg-slate-900 group cursor-pointer"
+                    >
+                      <WebsitePreview
+                        url={venture.websiteUrl}
+                        title={venture.title || `Venture ${index + 1}`}
+                        fallbackImageUrl={venture.imageUrl}
+                      />
+                      <div className="absolute inset-0 bg-transparent group-hover:bg-white/5 transition-colors pointer-events-none" />
+                      <div className="absolute bottom-3 right-3 px-3 py-1.5 bg-slate-900/80 backdrop-blur-sm rounded-full text-xs text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center gap-1.5">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Visit Site
                       </div>
-                    )}
-                  </div>
+                    </a>
+                  ) : (
+                    <div className="relative rounded-2xl overflow-hidden border border-slate-700/50 aspect-video bg-slate-800/50">
+                      {venture.imageUrl ? (
+                        <>
+                          {venture.imageUrl.startsWith('/') ? (
+                            <img
+                              src={venture.imageUrl}
+                              alt={venture.title}
+                              className="w-full h-full object-contain p-8"
+                            />
+                          ) : (
+                            <Image
+                              src={venture.imageUrl}
+                              alt={venture.title}
+                              width={1920}
+                              height={1080}
+                              className="w-full h-full object-cover"
+                              quality={100}
+                              priority={index === 0}
+                              unoptimized={venture.imageUrl?.includes('.png')}
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent pointer-events-none" />
+                        </>
+                      ) : (
+                        <div className={`relative w-full h-full bg-gradient-to-br ${gradients[gradient]} backdrop-blur-sm flex items-center justify-center`}>
+                          <div className="text-8xl font-light text-white/10">
+                            {(index + 1).toString().padStart(2, '0')}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );

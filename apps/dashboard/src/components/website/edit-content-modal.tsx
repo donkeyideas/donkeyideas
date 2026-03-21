@@ -1152,6 +1152,25 @@ export function EditContentModal({
                           </div>
                         </div>
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Website URL</label>
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={venture.websiteUrl || ''}
+                            onChange={(e) => {
+                              const newVentures = [...(formData.ventures || formData.sections || [])];
+                              newVentures[index] = { ...newVentures[index], websiteUrl: e.target.value };
+                              setFormData({ ...formData, ventures: newVentures, sections: newVentures });
+                            }}
+                            className="w-full p-3 bg-black/30 border border-white/20 rounded text-white"
+                            placeholder="https://example.com"
+                          />
+                          <div className="text-xs text-slate-400">
+                            If provided, a live website preview will be shown instead of the image. Clicking it opens the site in a new tab.
+                          </div>
+                        </div>
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium mb-2">Status</label>
