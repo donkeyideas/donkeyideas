@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { topic } = body;
+    const { topic, backlink } = body;
 
     if (!topic || typeof topic !== 'string' || topic.trim().length < 3) {
       return NextResponse.json(
@@ -111,7 +111,7 @@ LINKING RULES (important for SEO):
 - Open external links in new tab: <a href="https://example.com" target="_blank" rel="noopener noreferrer">text</a>
 - Internal links should NOT have target="_blank".
 - Weave links naturally into sentences. Do not cluster them.
-
+${backlink ? `\nBACKLINK REQUIREMENT:\n- You MUST include a natural backlink to: ${backlink}\n- Weave it into the content as an external link with descriptive anchor text using <a href="${backlink}" target="_blank" rel="noopener noreferrer">descriptive text</a>\n- Make the link placement feel organic and relevant to the content.\n` : ''}
 Return this exact JSON structure:
 {
   "title": "Blog Post Title Here",
@@ -136,7 +136,7 @@ Return this exact JSON structure:
         model: 'deepseek-chat',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Write a blog post about: ${topic.trim()}` },
+          { role: 'user', content: `Write a blog post about: ${topic.trim()}${backlink ? `. Include a natural backlink to: ${backlink}` : ''}` },
         ],
         temperature: 0.7,
         max_tokens: 4000,
@@ -180,7 +180,7 @@ Return this exact JSON structure:
           completionTokens,
           totalTokens,
           cost,
-          metadata: { topic: topic.trim() },
+          metadata: { topic: topic.trim(), ...(backlink ? { backlink } : {}) },
         },
       });
     } catch (e) {

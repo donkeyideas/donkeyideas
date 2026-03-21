@@ -147,6 +147,7 @@ export default function BlogEditor({ mode, postId, initialData, onClose, onSaved
   const [error, setError] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('');
   const [seoKeywordInput, setSeoKeywordInput] = useState('');
+  const [backlink, setBacklink] = useState('');
 
   const [formData, setFormData] = useState<BlogPostData>(
     initialData || {
@@ -196,7 +197,7 @@ export default function BlogEditor({ mode, postId, initialData, onClose, onSaved
     setError(null);
 
     try {
-      const response = await api.post('/blog/generate', { topic });
+      const response = await api.post('/blog/generate', { topic, backlink: backlink || undefined });
       const { generated } = response.data;
 
       setFormData(prev => ({
@@ -458,6 +459,18 @@ export default function BlogEditor({ mode, postId, initialData, onClose, onSaved
                   {generating ? 'Generating...' : 'Generate with AI'}
                 </button>
               </div>
+            </div>
+
+            {/* Backlink URL (optional) */}
+            <div>
+              <label className={labelClass}>Backlink URL <span className={`font-normal ${theme === 'light' ? 'text-gray-400' : 'text-white/30'}`}>(optional)</span></label>
+              <input
+                type="url"
+                value={backlink}
+                onChange={e => setBacklink(e.target.value)}
+                className={inputClass}
+                placeholder="https://example.com — AI will include this link in the generated post"
+              />
             </div>
 
             {/* Slug + Category in 2 columns */}
