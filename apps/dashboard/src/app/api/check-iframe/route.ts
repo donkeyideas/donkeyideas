@@ -28,8 +28,14 @@ export async function GET(request: NextRequest) {
 
     if (csp) {
       const val = csp.toLowerCase();
-      if (val.includes("frame-ancestors 'none'") || val.includes("frame-ancestors 'self'")) {
-        blocked = true;
+      // Extract the frame-ancestors directive value
+      const faMatch = val.match(/frame-ancestors\s+([^;]+)/);
+      if (faMatch) {
+        const ancestors = faMatch[1].trim();
+        // Only block if frame-ancestors is strictly 'none' or only 'self' with no other origins
+        if (ancestors === "'none'" || ancestors === "'self'") {
+          blocked = true;
+        }
       }
     }
 
