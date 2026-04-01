@@ -79,10 +79,10 @@ export async function PUT(
     // Revalidate the affected pages so changes show immediately
     // Map section names to public page paths
     const pageMap: Record<string, string[]> = {
-      'hero': ['/home', '/'],
-      'stats': ['/home', '/'],
-      'about': ['/home', '/'],
-      'engage-excellence': ['/home', '/'],
+      'hero': ['/'],
+      'stats': ['/'],
+      'about': ['/'],
+      'engage-excellence': ['/'],
       'ventures-page': ['/ventures'],
       'services-page': ['/services'],
       'process-page': ['/process'],
