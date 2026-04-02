@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@donkey-ideas/ui';
 import { EmptyState } from '@donkey-ideas/ui';
 import { useAppStore } from '@/lib/store';
@@ -149,6 +149,7 @@ export default function WhitepaperPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['executiveSummary']));
   const [formData, setFormData] = useState<WhitepaperData>({});
   const [showViewer, setShowViewer] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (currentCompany) {
@@ -438,6 +439,209 @@ export default function WhitepaperPage() {
     });
   };
 
+  // Export a blank JSON template with all fields and example structure
+  const handleExportTemplate = () => {
+    const template = {
+      _instructions: "Fill in the fields below and import this file to populate your whitepaper. Delete this _instructions field before importing. Text fields accept plain text or markdown. Array fields show example entries you can duplicate.",
+      version: "1.0",
+      classification: "Public",
+      publishedDate: "",
+
+      // Executive Summary
+      executiveSummary: "",
+
+      // Company Overview
+      companyOverview: "",
+      legalName: "",
+      founded: "",
+      headquarters: "",
+      website: "",
+      mission: "",
+      vision: "",
+      coreValues: ["Value 1", "Value 2", "Value 3"],
+
+      // Problem & Solution
+      problemStatement: "",
+      marketOpportunity: "",
+      solution: "",
+      productDescription: "",
+
+      // Technology & Architecture
+      architecture: "",
+      technicalDetails: "",
+      technologyStack: ["Technology 1", "Technology 2", "Technology 3"],
+
+      // Business Model
+      businessModel: "",
+      pricingStrategy: "",
+      goToMarket: "",
+      revenueStreams: ["Revenue Stream 1", "Revenue Stream 2"],
+
+      // Market Analysis
+      targetMarket: "",
+      marketSize: "",
+      marketTrends: "",
+      customerSegments: ["Segment 1", "Segment 2"],
+
+      // Competitive Landscape
+      competitiveAnalysis: "",
+      competitiveAdvantage: "",
+      competitors: [
+        { name: "Competitor 1", strengths: "Their strengths", weaknesses: "Their weaknesses" },
+        { name: "Competitor 2", strengths: "Their strengths", weaknesses: "Their weaknesses" },
+      ],
+
+      // Team & Advisors
+      teamDescription: "",
+      keyTeamMembers: [
+        { name: "Full Name", role: "Title/Role", bio: "Brief bio" },
+      ],
+      advisors: [
+        { name: "Advisor Name", role: "Area of expertise", bio: "Brief bio" },
+      ],
+      partners: [
+        { name: "Partner Company", description: "Partnership details" },
+      ],
+
+      // Roadmap & Milestones
+      roadmap: [
+        { quarter: "Q1 2026", description: "Phase description", milestones: ["Milestone 1", "Milestone 2"] },
+        { quarter: "Q2 2026", description: "Phase description", milestones: ["Milestone 1", "Milestone 2"] },
+      ],
+
+      // Financial Projections
+      financialProjections: "",
+      useOfFunds: "",
+      fundingHistory: [
+        { round: "Seed", amount: "$500K", date: "2025", investors: "Investor names" },
+      ],
+      financialHighlights: [
+        { metric: "Revenue", value: "$100K", period: "2025" },
+      ],
+
+      // Tokenomics / Economics (if applicable)
+      tokenomics: "",
+      economics: "",
+      tokenDistribution: [
+        { category: "Team", percentage: "20%" },
+        { category: "Investors", percentage: "30%" },
+        { category: "Community", percentage: "50%" },
+      ],
+
+      // Legal & Regulatory
+      legalConsiderations: "",
+      regulatoryCompliance: "",
+      riskFactors: "",
+      disclaimers: "",
+
+      // Conclusion
+      conclusion: "",
+    };
+
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `whitepaper-template-${currentCompany?.name?.replace(/\s+/g, '-').toLowerCase() || 'company'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    setNotification({
+      isOpen: true,
+      title: 'Template Exported',
+      message: 'Fill in the JSON template and use Import to upload your content.',
+      type: 'success',
+    });
+  };
+
+  // Export current whitepaper data as JSON (backup / edit externally)
+  const handleExportData = () => {
+    if (!formData || Object.keys(formData).length === 0) {
+      setNotification({ isOpen: true, title: 'Nothing to Export', message: 'No whitepaper data to export.', type: 'warning' });
+      return;
+    }
+
+    // Strip image fields and internal fields from export
+    const exportData: Record<string, any> = {};
+    for (const [key, value] of Object.entries(formData)) {
+      if (key === 'id' || key.includes('Image') || key.includes('ImagePosition')) continue;
+      if (value !== null && value !== undefined && value !== '') {
+        exportData[key] = value;
+      }
+    }
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `whitepaper-${currentCompany?.name?.replace(/\s+/g, '-').toLowerCase() || 'company'}-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Import JSON file and populate form
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target?.result as string);
+
+        if (typeof imported !== 'object' || Array.isArray(imported)) {
+          throw new Error('Invalid format: expected a JSON object');
+        }
+
+        // Remove instruction field if present
+        delete imported._instructions;
+
+        // Preserve existing image fields and ID
+        const merged: WhitepaperData = { ...formData };
+        const imageKeys = Object.keys(merged).filter(k => k.includes('Image') || k.includes('ImagePosition'));
+        const preservedImages: Record<string, any> = {};
+        imageKeys.forEach(k => { preservedImages[k] = merged[k as keyof WhitepaperData]; });
+
+        // Apply imported data (skip image and internal fields from import)
+        for (const [key, value] of Object.entries(imported)) {
+          if (key === 'id' || key.includes('Image') || key.includes('ImagePosition')) continue;
+          (merged as any)[key] = value;
+        }
+
+        // Re-apply preserved images
+        Object.assign(merged, preservedImages);
+
+        setFormData(merged);
+        setWhitepaper(merged);
+
+        // Expand all sections so user can see imported content
+        setExpandedSections(new Set([
+          'executiveSummary', 'companyOverview', 'problemSolution', 'technology',
+          'businessModel', 'marketAnalysis', 'competitive', 'team', 'roadmap',
+          'financials', 'tokenomics', 'legal', 'conclusion',
+        ]));
+
+        setNotification({
+          isOpen: true,
+          title: 'Import Successful',
+          message: 'Whitepaper content imported. Review the sections and click Save Whitepaper to persist.',
+          type: 'success',
+        });
+      } catch (err: any) {
+        setNotification({
+          isOpen: true,
+          title: 'Import Failed',
+          message: err.message || 'Could not parse the JSON file. Make sure it matches the template format.',
+          type: 'error',
+        });
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset file input so the same file can be re-imported
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   if (!currentCompany) {
     return (
       <EmptyState
@@ -461,9 +665,25 @@ export default function WhitepaperPage() {
             {currentCompany.name} — Comprehensive company whitepaper
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button 
-            variant="secondary" 
+        <div className="flex gap-2 flex-wrap justify-end">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+          />
+          <Button variant="secondary" onClick={handleExportTemplate}>
+            Export Template
+          </Button>
+          <Button variant="secondary" onClick={handleExportData}>
+            Export Data
+          </Button>
+          <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+            Import JSON
+          </Button>
+          <Button
+            variant="secondary"
             onClick={() => setShowViewer(true)}
             disabled={!whitepaper || Object.keys(whitepaper).length === 0}
           >
