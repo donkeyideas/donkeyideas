@@ -498,6 +498,9 @@ model Whitepaper {
   riskFactors          String?
   disclaimers          String?
 
+  // Conclusion
+  conclusion String?
+
   // Additional Content
   appendices String? // Additional sections/content
   references String? // References and citations

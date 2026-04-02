@@ -566,6 +566,36 @@ export function WhitepaperViewer({ isOpen, onClose, whitepaper, companyName, com
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, pages.length, onClose]);
 
+  const handleExportPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const allPagesHtml = pages
+      .map(
+        (page, i) =>
+          `<div class="page" style="page-break-after: always; padding: 40px; min-height: 100vh; box-sizing: border-box;">${page.content}</div>`
+      )
+      .join('');
+
+    printWindow.document.write(`<!DOCTYPE html>
+<html><head><title>${companyName} - Whitepaper</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Georgia, "Times New Roman", serif; color: #222; background: #fff; line-height: 1.8; }
+  .page { padding: 60px 50px; }
+  .page:last-child { page-break-after: auto; }
+  h1, h2, h3 { color: #111; }
+  img { max-width: 100%; height: auto; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 40px 30px; }
+  }
+</style></head>
+<body>${allPagesHtml.replace(/color:\s*#fff/g, 'color: #111').replace(/color:\s*#ddd/g, 'color: #333').replace(/color:\s*#ccc/g, 'color: #444').replace(/color:\s*#888/g, 'color: #666').replace(/color:\s*#666/g, 'color: #555').replace(/color:\s*#999/g, 'color: #666').replace(/border-bottom:\s*2px solid #333/g, 'border-bottom: 2px solid #ccc').replace(/border-top:\s*1px solid #333/g, 'border-top: 1px solid #ccc').replace(/border-left:\s*4px solid/g, 'border-left: 4px solid').replace(/background:\s*rgba\(59, 130, 246, 0\.05\)/g, 'background: rgba(59, 130, 246, 0.08)').replace(/background:\s*rgba\(59, 130, 246, 0\.1\)/g, 'background: rgba(59, 130, 246, 0.1)').replace(/background:\s*rgba\(16, 185, 129, 0\.1\)/g, 'background: rgba(16, 185, 129, 0.1)')}</body></html>`);
+    printWindow.document.close();
+    setTimeout(() => printWindow.print(), 500);
+  };
+
   // Early return AFTER all hooks
   if (!isOpen) return null;
 
@@ -588,9 +618,7 @@ export function WhitepaperViewer({ isOpen, onClose, whitepaper, companyName, com
           <div className="flex items-center gap-2">
             <Button
               variant="primary"
-              onClick={() => {
-                alert('PDF Export temporarily disabled to prevent infinite loops. Will be fixed soon.');
-              }}
+              onClick={handleExportPDF}
               className="text-sm"
             >
               Export PDF
