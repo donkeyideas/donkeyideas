@@ -7,10 +7,11 @@ import { authenticator } from 'otplib';
 
 export async function registerUser(data: z.infer<typeof registerSchema>) {
   const validated = registerSchema.parse(data);
+  const normalizedEmail = validated.email.toLowerCase();
 
-  // Check if user exists
-  const existingUser = await prisma.user.findUnique({
-    where: { email: validated.email },
+  // Check if user exists (case-insensitive)
+  const existingUser = await prisma.user.findFirst({
+    where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
   });
 
   if (existingUser) {
@@ -20,10 +21,10 @@ export async function registerUser(data: z.infer<typeof registerSchema>) {
   // Hash password
   const passwordHash = await hashPassword(validated.password);
 
-  // Create user
+  // Create user (always store email as lowercase)
   const user = await prisma.user.create({
     data: {
-      email: validated.email,
+      email: normalizedEmail,
       name: validated.name,
       passwordHash,
     },
@@ -40,10 +41,11 @@ export async function registerUser(data: z.infer<typeof registerSchema>) {
 
 export async function loginUser(data: z.infer<typeof loginSchema> & { totpCode?: string }) {
   const validated = loginSchema.parse(data);
+  const normalizedEmail = validated.email.toLowerCase();
 
-  // Find user
-  let user = await prisma.user.findUnique({
-    where: { email: validated.email },
+  // Find user (case-insensitive)
+  let user = await prisma.user.findFirst({
+    where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
   });
 
   // DEV FRIENDLY BEHAVIOR:
@@ -54,8 +56,8 @@ export async function loginUser(data: z.infer<typeof loginSchema> & { totpCode?:
     const passwordHash = await hashPassword(validated.password);
     user = await prisma.user.create({
       data: {
-        email: validated.email,
-        name: validated.email.split('@')[0] || 'User',
+        email: normalizedEmail,
+        name: normalizedEmail.split('@')[0] || 'User',
         passwordHash,
       },
     });

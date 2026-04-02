@@ -197,16 +197,16 @@ export async function GET(request: NextRequest) {
           };
         }
 
-        // If no GA client configured, return as not connected
+        // If no GA client configured, still mark as connected (has property ID)
         if (!client) {
           return {
             id: company.id,
             name: company.name,
             logo: company.logo,
-            connected: false,
+            connected: true,
             gaPropertyId,
             data: null,
-            error: 'Google Analytics credentials not configured',
+            error: 'Google Analytics server credentials not configured',
           };
         }
 
