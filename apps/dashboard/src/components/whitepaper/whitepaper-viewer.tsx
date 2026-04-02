@@ -63,6 +63,7 @@ interface WhitepaperData {
   tokenomicsImagePosition?: 'left' | 'right' | 'center';
   legalImage?: string | null;
   legalImagePosition?: 'left' | 'right' | 'center';
+  roadmap?: Array<{ quarter: string; description: string; milestones: string[] }> | null;
   conclusion?: string | null;
   conclusionImage?: string | null;
   conclusionImagePosition?: 'left' | 'right' | 'center';
@@ -164,6 +165,7 @@ export function WhitepaperViewer({ isOpen, onClose, whitepaper, companyName, com
       { title: 'Competitive Landscape', hasContent: !!(whitepaper.competitiveAnalysis || whitepaper.competitiveAdvantage) },
       { title: 'Team & Advisors', hasContent: !!whitepaper.teamDescription },
       { title: 'Financial Projections', hasContent: !!(whitepaper.financialProjections || whitepaper.useOfFunds) },
+      { title: 'Roadmap & Milestones', hasContent: !!(whitepaper.roadmap && Array.isArray(whitepaper.roadmap) && whitepaper.roadmap.length > 0) },
       { title: 'Tokenomics / Economics', hasContent: !!(whitepaper.tokenomics || whitepaper.economics) },
       { title: 'Legal & Regulatory', hasContent: !!(whitepaper.legalConsiderations || whitepaper.riskFactors) },
       { title: 'Conclusion', hasContent: !!(whitepaper.conclusion || whitepaper.conclusionImage) },
@@ -415,6 +417,40 @@ export function WhitepaperViewer({ isOpen, onClose, whitepaper, companyName, com
               financialContent,
               whitepaper.financialsImage,
               whitepaper.financialsImagePosition || 'center'
+            )}
+          </div>
+        `,
+      });
+    }
+
+    // Roadmap & Milestones
+    if (whitepaper.roadmap && Array.isArray(whitepaper.roadmap) && whitepaper.roadmap.length > 0) {
+      let roadmapContent = '';
+      whitepaper.roadmap.forEach((item: any) => {
+        roadmapContent += `<div style="margin-bottom: 30px; padding: 20px; background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0;">`;
+        roadmapContent += `<h3 style="font-size: 20px; margin-bottom: 10px; color: #3b82f6;">${item.quarter || ''}</h3>`;
+        if (item.description) {
+          roadmapContent += `<p style="line-height: 1.8; font-size: 16px; color: #ddd; margin-bottom: 12px;">${item.description}</p>`;
+        }
+        if (item.milestones && Array.isArray(item.milestones) && item.milestones.length > 0) {
+          roadmapContent += `<ul style="list-style: none; padding: 0; margin: 0;">`;
+          item.milestones.forEach((milestone: string) => {
+            roadmapContent += `<li style="padding: 6px 0; color: #ccc; font-size: 15px;">• ${milestone}</li>`;
+          });
+          roadmapContent += `</ul>`;
+        }
+        roadmapContent += `</div>`;
+      });
+
+      pageList.push({
+        title: 'Roadmap & Milestones',
+        content: `
+          <div style="padding: 40px;">
+            <h2 style="font-size: 32px; font-weight: bold; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 15px;">Roadmap & Milestones</h2>
+            ${renderContentWithImage(
+              roadmapContent,
+              whitepaper.roadmapImage,
+              whitepaper.roadmapImagePosition || 'center'
             )}
           </div>
         `,
