@@ -38,6 +38,8 @@ export default function BusinessProfilePage() {
     keyAchievements: '',
     // Google Analytics
     gaPropertyId: '',
+    // Google Play Console
+    gpPackageName: '',
   });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -154,8 +156,9 @@ export default function BusinessProfilePage() {
         totalFunding: profileData.totalFunding || 0,
         keyAchievements: profileData.keyAchievements || '',
         gaPropertyId: profileData.gaPropertyId || '',
+        gpPackageName: profileData.gpPackageName || '',
       };
-      
+
       setFormData(updatedFormData);
       setLogoPreview(logoUrl || null);
       
@@ -768,6 +771,63 @@ export default function BusinessProfilePage() {
               <li>Click the gear icon (Admin) in the bottom left</li>
               <li>In the Property column, click "Property Settings"</li>
               <li>Copy the "Property ID" (numeric value like 123456789)</li>
+            </ol>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Google Play Console Integration */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Google Play Console Integration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Android Package Name</label>
+            <input
+              type="text"
+              value={formData.gpPackageName}
+              onChange={(e) => setFormData({ ...formData, gpPackageName: e.target.value })}
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
+              placeholder="com.donkeyideas.argufight"
+            />
+            <p className="text-xs text-white/40 [.light_&]:text-slate-500 mt-1">
+              Your app&apos;s package name (e.g., com.donkeyideas.argufight)
+            </p>
+          </div>
+
+          {formData.gpPackageName && (
+            <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-green-400">
+                Package name configured. View vitals on the{' '}
+                <a href="/app/play-store" className="underline hover:text-green-300">
+                  Play Store page
+                </a>
+              </span>
+            </div>
+          )}
+
+          {!formData.gpPackageName && (
+            <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-yellow-400">
+                Enter your Android package name to enable Play Store vitals tracking
+              </span>
+            </div>
+          )}
+
+          <div className="pt-2">
+            <h4 className="text-sm font-medium mb-2 text-white/80 [.light_&]:text-slate-700">How to find your package name:</h4>
+            <ol className="text-xs text-white/50 [.light_&]:text-slate-500 space-y-1 list-decimal list-inside">
+              <li>Go to <a href="https://play.google.com/console" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Google Play Console</a></li>
+              <li>Select your app</li>
+              <li>The package name is shown in the URL and app details (e.g., com.example.myapp)</li>
+              <li>Or find it in your app&apos;s build.gradle / AndroidManifest.xml</li>
             </ol>
           </div>
         </CardContent>

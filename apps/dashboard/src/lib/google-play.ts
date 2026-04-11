@@ -1,0 +1,646 @@
+import { google } from 'googleapis';
+import { Storage } from '@google-cloud/storage';
+import { gunzipSync } from 'zlib';
+
+// Initialize Google Play API clients with service account credentials
+export function getPlayClients() {
+  const clientEmail = process.env.GP_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GP_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (!clientEmail || !privateKey) {
+    return null;
+  }
+
+  const auth = new google.auth.JWT({
+    email: clientEmail,
+    key: privateKey,
+    scopes: [
+      'https://www.googleapis.com/auth/playdeveloperreporting',
+      'https://www.googleapis.com/auth/androidpublisher',
+      'https://www.googleapis.com/auth/devstorage.read_only',
+    ],
+  });
+
+  const reporting = google.playdeveloperreporting({ version: 'v1beta1', auth });
+  const publisher = google.androidpublisher({ version: 'v3', auth });
+  const storage = google.storage({ version: 'v1', auth });
+
+  return { reporting, publisher, storage, auth };
+}
+
+// Calculate date range for Play API (ISO format)
+export function getPlayDateRange(range: string): { startDate: string; endDate: string } {
+  const endDate = new Date();
+  const startDate = new Date();
+
+  switch (range) {
+    case '7d':
+      startDate.setDate(endDate.getDate() - 7);
+      break;
+    case '90d':
+      startDate.setDate(endDate.getDate() - 90);
+      break;
+    case '30d':
+    default:
+      startDate.setDate(endDate.getDate() - 30);
+      break;
+  }
+
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+  };
+}
+
+// Build timeline spec for Play Developer Reporting API
+function buildTimelineSpec(startDate: string, endDate: string) {
+  const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+  const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+
+  return {
+    startTime: {
+      year: startYear,
+      month: startMonth,
+      day: startDay,
+    },
+    endTime: {
+      year: endYear,
+      month: endMonth,
+      day: endDay,
+    },
+    aggregationPeriod: 'DAILY',
+  };
+}
+
+// Safe number extraction from Play API metric values
+function extractMetricValue(row: any, metricIndex: number): number {
+  const val = row?.metrics?.[metricIndex]?.decimalValue;
+  if (val) return parseFloat(val);
+  const val2 = row?.metrics?.[metricIndex]?.decimalValueConfidenceInterval?.lowerBound;
+  if (val2) return parseFloat(val2);
+  return 0;
+}
+
+// Fetch Play Store data for a package
+export async function fetchPlayStoreData(packageName: string, dateRange: string) {
+  const clients = getPlayClients();
+  if (!clients) {
+    throw new Error('Google Play Console credentials not configured');
+  }
+
+  const { reporting, publisher } = clients;
+  const { startDate, endDate } = getPlayDateRange(dateRange);
+  const timelineSpec = buildTimelineSpec(startDate, endDate);
+  const parent = `apps/${packageName}`;
+
+  // Fetch all data in parallel with error tolerance
+  const [
+    crashRateResult,
+    anrRateResult,
+    slowStartResult,
+    slowRenderResult,
+    reviewsResult,
+    crashByDeviceResult,
+    crashByVersionResult,
+    errorIssuesResult,
+  ] = await Promise.allSettled([
+    // 1. Crash rate over time
+    reporting.vitals.crashrate.query({
+      name: `${parent}/crashRateMetricSet`,
+      requestBody: {
+        timelineSpec,
+        metrics: ['crashRate', 'userPerceivedCrashRate', 'distinctUsers'],
+        dimensions: [],
+      },
+    }),
+
+    // 2. ANR rate over time
+    reporting.vitals.anrrate.query({
+      name: `${parent}/anrRateMetricSet`,
+      requestBody: {
+        timelineSpec,
+        metrics: ['anrRate', 'userPerceivedAnrRate', 'distinctUsers'],
+        dimensions: [],
+      },
+    }),
+
+    // 3. Slow start rate
+    reporting.vitals.slowstartrate.query({
+      name: `${parent}/slowStartRateMetricSet`,
+      requestBody: {
+        timelineSpec,
+        metrics: ['slowStartRate', 'distinctUsers'],
+        dimensions: [],
+      },
+    }),
+
+    // 4. Slow rendering rate
+    reporting.vitals.slowrenderingrate.query({
+      name: `${parent}/slowRenderingRateMetricSet`,
+      requestBody: {
+        timelineSpec,
+        metrics: ['slowRenderingRate20Fps', 'distinctUsers'],
+        dimensions: [],
+      },
+    }),
+
+    // 5. Reviews
+    publisher.reviews.list({
+      packageName,
+      maxResults: 50,
+    }),
+
+    // 6. Crash rate by device
+    reporting.vitals.crashrate.query({
+      name: `${parent}/crashRateMetricSet`,
+      requestBody: {
+        timelineSpec,
+        metrics: ['crashRate', 'distinctUsers'],
+        dimensions: ['deviceModel'],
+        pageSize: 10,
+      },
+    }),
+
+    // 7. Crash rate by version
+    reporting.vitals.crashrate.query({
+      name: `${parent}/crashRateMetricSet`,
+      requestBody: {
+        timelineSpec,
+        metrics: ['crashRate', 'distinctUsers'],
+        dimensions: ['versionCode'],
+        pageSize: 10,
+      },
+    }),
+
+    // 8. Error issues
+    reporting.vitals.errors.issues.search({
+      parent,
+      pageSize: 10,
+    }),
+  ]);
+
+  // Parse crash rate time series
+  const crashTimeSeries = parseCrashRateTimeSeries(crashRateResult);
+  const anrTimeSeries = parseAnrRateTimeSeries(anrRateResult);
+
+  // Parse overview KPIs (latest data points)
+  const latestCrash = getLatestValue(crashTimeSeries, 'crashRate');
+  const latestAnr = getLatestValue(anrTimeSeries, 'anrRate');
+  const latestSlowStart = parseLatestMetric(slowStartResult, 'slowStartRate');
+  const latestSlowRender = parseLatestMetric(slowRenderResult, 'slowRenderingRate');
+  const activeDevices = parseActiveDevices(crashRateResult);
+
+  // Parse reviews
+  const reviews = parseReviews(reviewsResult);
+  const { averageRating, ratingDistribution } = calculateRatingStats(reviews);
+
+  // Parse breakdowns
+  const deviceBreakdown = parseDeviceBreakdown(crashByDeviceResult);
+  const versionBreakdown = parseVersionBreakdown(crashByVersionResult);
+
+  // Parse error issues
+  const errorIssues = parseErrorIssues(errorIssuesResult);
+
+  // Build vitals time series (merged crash + ANR)
+  const vitalsTimeSeries = mergeTimeSeries(crashTimeSeries, anrTimeSeries);
+
+  // Fetch GCS install/store reports if bucket configured
+  const gcsData = await fetchGCSReports(packageName, dateRange);
+
+  return {
+    overview: {
+      crashRate: latestCrash,
+      anrRate: latestAnr,
+      slowStartRate: latestSlowStart,
+      slowRenderingRate: latestSlowRender,
+      activeDevices: gcsData?.overview?.activeDeviceInstalls || activeDevices,
+      averageRating,
+      totalReviews: reviews.length,
+      // New GCS metrics
+      totalInstalls: gcsData?.overview?.totalInstalls || 0,
+      dailyInstalls: gcsData?.overview?.dailyInstalls || 0,
+      dailyUninstalls: gcsData?.overview?.dailyUninstalls || 0,
+      dailyUpdates: gcsData?.overview?.dailyUpdates || 0,
+    },
+    vitalsTimeSeries,
+    installTimeSeries: gcsData?.installTimeSeries || [],
+    storeListing: gcsData?.storeListing || { visitors: 0, acquisitions: 0, conversionRate: 0 },
+    ratingDistribution,
+    reviews,
+    deviceBreakdown,
+    versionBreakdown,
+    errorIssues,
+  };
+}
+
+// Parse crash rate time series from API response
+function parseCrashRateTimeSeries(result: PromiseSettledResult<any>) {
+  if (result.status !== 'fulfilled') return [];
+  const rows = result.value?.data?.rows || [];
+  return rows.map((row: any) => ({
+    date: formatTimelineDate(row.startTime),
+    crashRate: extractMetricValue(row, 0) * 100,
+    userPerceivedCrashRate: extractMetricValue(row, 1) * 100,
+    distinctUsers: extractMetricValue(row, 2),
+  }));
+}
+
+// Parse ANR rate time series
+function parseAnrRateTimeSeries(result: PromiseSettledResult<any>) {
+  if (result.status !== 'fulfilled') return [];
+  const rows = result.value?.data?.rows || [];
+  return rows.map((row: any) => ({
+    date: formatTimelineDate(row.startTime),
+    anrRate: extractMetricValue(row, 0) * 100,
+    userPerceivedAnrRate: extractMetricValue(row, 1) * 100,
+    distinctUsers: extractMetricValue(row, 2),
+  }));
+}
+
+// Format timeline date object to YYYY-MM-DD string
+function formatTimelineDate(timeObj: any): string {
+  if (!timeObj) return '';
+  const y = timeObj.year || 0;
+  const m = String(timeObj.month || 1).padStart(2, '0');
+  const d = String(timeObj.day || 1).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// Get latest value from time series
+function getLatestValue(timeSeries: any[], key: string): number {
+  if (!timeSeries.length) return 0;
+  return timeSeries[timeSeries.length - 1]?.[key] || 0;
+}
+
+// Parse latest metric value from a result
+function parseLatestMetric(result: PromiseSettledResult<any>, _key: string): number {
+  if (result.status !== 'fulfilled') return 0;
+  const rows = result.value?.data?.rows || [];
+  if (!rows.length) return 0;
+  const lastRow = rows[rows.length - 1];
+  return extractMetricValue(lastRow, 0) * 100;
+}
+
+// Parse active devices count
+function parseActiveDevices(result: PromiseSettledResult<any>): number {
+  if (result.status !== 'fulfilled') return 0;
+  const rows = result.value?.data?.rows || [];
+  if (!rows.length) return 0;
+  const lastRow = rows[rows.length - 1];
+  return Math.round(extractMetricValue(lastRow, 2));
+}
+
+// Parse reviews from publisher API
+function parseReviews(result: PromiseSettledResult<any>) {
+  if (result.status !== 'fulfilled') return [];
+  const reviews = result.value?.data?.reviews || [];
+  return reviews.map((review: any) => {
+    const comment = review.comments?.[0]?.userComment;
+    const devReply = review.comments?.[1]?.developerComment;
+    return {
+      reviewId: review.reviewId,
+      authorName: review.authorName || 'Anonymous',
+      starRating: comment?.starRating || 0,
+      text: comment?.text || '',
+      device: comment?.device || '',
+      androidOsVersion: comment?.androidOsVersion || '',
+      appVersionCode: comment?.appVersionCode || 0,
+      appVersionName: comment?.appVersionName || '',
+      lastModified: comment?.lastModified?.seconds
+        ? new Date(parseInt(comment.lastModified.seconds) * 1000).toISOString()
+        : new Date().toISOString(),
+      hasReply: !!devReply,
+      replyText: devReply?.text || null,
+    };
+  });
+}
+
+// Calculate rating statistics from reviews
+function calculateRatingStats(reviews: any[]) {
+  const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<number, number>;
+
+  reviews.forEach((r: any) => {
+    const rating = Math.round(r.starRating);
+    if (rating >= 1 && rating <= 5) {
+      distribution[rating]++;
+    }
+  });
+
+  const totalRatings = Object.values(distribution).reduce((a, b) => a + b, 0);
+  const weightedSum = Object.entries(distribution).reduce(
+    (sum, [star, count]) => sum + parseInt(star) * count,
+    0
+  );
+  const averageRating = totalRatings > 0 ? weightedSum / totalRatings : 0;
+
+  const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: distribution[star],
+    percentage: totalRatings > 0 ? Math.round((distribution[star] / totalRatings) * 100) : 0,
+  }));
+
+  return { averageRating: Math.round(averageRating * 10) / 10, ratingDistribution };
+}
+
+// Parse device breakdown
+function parseDeviceBreakdown(result: PromiseSettledResult<any>) {
+  if (result.status !== 'fulfilled') return [];
+  const rows = result.value?.data?.rows || [];
+  return rows
+    .map((row: any) => ({
+      device: row.dimensions?.[0]?.stringValue || 'Unknown',
+      crashRate: extractMetricValue(row, 0) * 100,
+      users: Math.round(extractMetricValue(row, 1)),
+    }))
+    .sort((a: any, b: any) => b.crashRate - a.crashRate)
+    .slice(0, 10);
+}
+
+// Parse version breakdown
+function parseVersionBreakdown(result: PromiseSettledResult<any>) {
+  if (result.status !== 'fulfilled') return [];
+  const rows = result.value?.data?.rows || [];
+  return rows
+    .map((row: any) => ({
+      versionCode: row.dimensions?.[0]?.stringValue || 'Unknown',
+      crashRate: extractMetricValue(row, 0) * 100,
+      users: Math.round(extractMetricValue(row, 1)),
+    }))
+    .sort((a: any, b: any) => b.users - a.users)
+    .slice(0, 10);
+}
+
+// Parse error issues
+function parseErrorIssues(result: PromiseSettledResult<any>) {
+  if (result.status !== 'fulfilled') return [];
+  const issues = result.value?.data?.errorIssues || [];
+  return issues
+    .map((issue: any) => ({
+      name: issue.name || '',
+      type: issue.type || 'CRASH',
+      errorMessage: issue.cause || issue.name || 'Unknown error',
+      location: issue.location || '',
+      issueUri: issue.issueUri || '',
+      distinctUsers: issue.distinctUsers || 0,
+      distinctUsersPercent: issue.distinctUsersPercent
+        ? parseFloat(issue.distinctUsersPercent) * 100
+        : 0,
+      lastOccurrence: issue.lastOsVersion || '',
+    }))
+    .slice(0, 10);
+}
+
+// Merge crash and ANR time series
+function mergeTimeSeries(crashSeries: any[], anrSeries: any[]) {
+  const dateMap = new Map<string, any>();
+
+  crashSeries.forEach((item) => {
+    dateMap.set(item.date, {
+      date: item.date,
+      crashRate: item.crashRate,
+      anrRate: 0,
+      distinctUsers: item.distinctUsers,
+    });
+  });
+
+  anrSeries.forEach((item) => {
+    const existing = dateMap.get(item.date);
+    if (existing) {
+      existing.anrRate = item.anrRate;
+    } else {
+      dateMap.set(item.date, {
+        date: item.date,
+        crashRate: 0,
+        anrRate: item.anrRate,
+        distinctUsers: item.distinctUsers,
+      });
+    }
+  });
+
+  return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// ============================================
+// GCS Cloud Storage Report Parsing
+// ============================================
+
+// Get months to cover for the date range
+function getMonthsForRange(dateRange: string): string[] {
+  const { startDate, endDate } = getPlayDateRange(dateRange);
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const months: string[] = [];
+
+  const current = new Date(start.getFullYear(), start.getMonth(), 1);
+  while (current <= end) {
+    months.push(
+      `${current.getFullYear()}${String(current.getMonth() + 1).padStart(2, '0')}`
+    );
+    current.setMonth(current.getMonth() + 1);
+  }
+  return months;
+}
+
+// Fetch and parse GCS CSV reports
+async function fetchGCSReports(packageName: string, dateRange: string) {
+  const bucketId = process.env.GP_GCS_BUCKET_ID;
+  if (!bucketId) {
+    console.log('[GCS] No GP_GCS_BUCKET_ID configured, skipping GCS reports');
+    return null;
+  }
+
+  const clients = getPlayClients();
+  if (!clients) return null;
+
+  const { storage } = clients;
+  const months = getMonthsForRange(dateRange);
+  const { startDate, endDate } = getPlayDateRange(dateRange);
+
+  console.log(`[GCS] Fetching reports for ${packageName}, bucket: ${bucketId}, months: ${months.join(',')}`);
+
+  try {
+    // Fetch install and store performance reports in parallel
+    const [installRows, storeRows] = await Promise.all([
+      fetchCSVReport(storage, bucketId, packageName, months, 'installs', 'installs_'),
+      fetchCSVReport(storage, bucketId, packageName, months, 'store_performance', 'store_performance_'),
+    ]);
+
+    console.log(`[GCS] Parsed ${installRows.length} install rows, ${storeRows.length} store rows`);
+
+    // Parse install data
+    const filteredInstalls = filterRowsByDateRange(installRows, startDate, endDate);
+    const installTimeSeries = filteredInstalls.map((row) => ({
+      date: row['Date'] || '',
+      installs: parseInt(row['Daily Device Installs'] || row['Daily User Installs'] || '0'),
+      uninstalls: parseInt(row['Daily Device Uninstalls'] || row['Daily User Uninstalls'] || '0'),
+      updates: parseInt(row['Daily Device Upgrades'] || row['Update Events'] || '0'),
+      activeDevices: parseInt(row['Active Device Installs'] || '0'),
+    }));
+
+    // Aggregate install overview
+    const totalInstalls = installTimeSeries.reduce((sum, d) => sum + d.installs, 0);
+    const totalUninstalls = installTimeSeries.reduce((sum, d) => sum + d.uninstalls, 0);
+    const totalUpdates = installTimeSeries.reduce((sum, d) => sum + d.updates, 0);
+    const latestActiveDevices = installTimeSeries.length > 0
+      ? installTimeSeries[installTimeSeries.length - 1].activeDevices
+      : 0;
+    const latestDailyInstalls = installTimeSeries.length > 0
+      ? installTimeSeries[installTimeSeries.length - 1].installs
+      : 0;
+    const latestDailyUninstalls = installTimeSeries.length > 0
+      ? installTimeSeries[installTimeSeries.length - 1].uninstalls
+      : 0;
+
+    // Parse store listing data (country CSV has per-country rows, aggregate them)
+    const filteredStore = filterRowsByDateRange(storeRows, startDate, endDate);
+    const totalVisitors = filteredStore.reduce(
+      (sum, row) => sum + parseInt(row['Store Listing Visitors'] || row['Store listing visitors'] || '0'), 0
+    );
+    const totalAcquisitions = filteredStore.reduce(
+      (sum, row) => sum + parseInt(row['Store Listing Acquisitions'] || row['Store listing acquisitions'] || row['Installers'] || '0'), 0
+    );
+    const conversionRate = totalVisitors > 0
+      ? Math.round((totalAcquisitions / totalVisitors) * 10000) / 100
+      : 0;
+
+    return {
+      overview: {
+        totalInstalls,
+        dailyInstalls: latestDailyInstalls,
+        dailyUninstalls: latestDailyUninstalls,
+        dailyUpdates: totalUpdates,
+        activeDeviceInstalls: latestActiveDevices,
+      },
+      installTimeSeries,
+      storeListing: {
+        visitors: totalVisitors,
+        acquisitions: totalAcquisitions,
+        conversionRate,
+      },
+    };
+  } catch (err: any) {
+    console.error('Failed to fetch GCS reports:', err.message);
+    return null;
+  }
+}
+
+// Create a GCS Storage client (separate from googleapis for better compatibility)
+function getGCSStorage(): Storage | null {
+  const clientEmail = process.env.GP_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GP_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (!clientEmail || !privateKey) return null;
+
+  return new Storage({
+    credentials: {
+      client_email: clientEmail,
+      private_key: privateKey,
+    },
+    projectId: 'donkey-ideas-493014',
+  });
+}
+
+// Download and decompress a GCS file (handles gzip-compressed and UTF-16LE CSVs)
+async function downloadGCSFile(gcs: Storage, bucketId: string, objectPath: string): Promise<string | null> {
+  try {
+    const [buffer] = await gcs.bucket(bucketId).file(objectPath).download();
+    let data: Buffer = buffer;
+    // Check for gzip magic bytes (0x1f 0x8b)
+    if (data.length >= 2 && data[0] === 0x1f && data[1] === 0x8b) {
+      data = gunzipSync(data);
+    }
+    // Check for UTF-16LE BOM (0xFF 0xFE) — Play Console CSVs are often UTF-16LE
+    if (data.length >= 2 && data[0] === 0xff && data[1] === 0xfe) {
+      return data.toString('utf16le').replace(/^\ufeff/, '');
+    }
+    // Check for UTF-16LE without BOM (null bytes between ASCII chars)
+    if (data.length >= 4 && data[1] === 0x00 && data[3] === 0x00) {
+      return data.toString('utf16le').replace(/^\ufeff/, '');
+    }
+    return data.toString('utf-8');
+  } catch (e: any) {
+    return null;
+  }
+}
+
+// Fetch CSV report files from GCS bucket
+async function fetchCSVReport(
+  _storage: any,
+  bucketId: string,
+  packageName: string,
+  months: string[],
+  reportType: string,
+  filePrefix: string
+): Promise<Record<string, string>[]> {
+  const gcs = getGCSStorage();
+  if (!gcs) return [];
+
+  const allRows: Record<string, string>[] = [];
+
+  for (const month of months) {
+    // Try different naming patterns Play Console uses
+    // Also try stats/stats/ prefix (happens when gsutil cp -r creates double prefix)
+    let patterns: string[];
+    if (reportType === 'store_performance') {
+      // Store performance has _country.csv and _traffic_source.csv, no _overview.csv
+      patterns = [
+        `stats/${reportType}/${filePrefix}${packageName}_${month}_country.csv`,
+        `stats/stats/${reportType}/${filePrefix}${packageName}_${month}_country.csv`,
+        `stats/${reportType}/total_${filePrefix}${packageName}_${month}_country.csv`,
+      ];
+    } else {
+      patterns = [
+        `stats/${reportType}/${filePrefix}${packageName}_${month}_overview.csv`,
+        `stats/stats/${reportType}/${filePrefix}${packageName}_${month}_overview.csv`,
+        `stats/${reportType}/${filePrefix}${packageName}_${month}.csv`,
+      ];
+    }
+
+    for (const objectPath of patterns) {
+      console.log(`[GCS] Trying: ${objectPath}`);
+      const content = await downloadGCSFile(gcs, bucketId, objectPath);
+      if (content) {
+        const rows = parseCSV(content);
+        console.log(`[GCS] Success: ${objectPath} - ${rows.length} rows`);
+        allRows.push(...rows);
+        break; // Found the file, skip other patterns
+      } else {
+        console.log(`[GCS] Not found: ${objectPath}`);
+      }
+    }
+  }
+
+  return allRows;
+}
+
+// Simple CSV parser
+function parseCSV(csvContent: string): Record<string, string>[] {
+  const lines = csvContent.trim().split('\n');
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
+  const rows: Record<string, string>[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map((v) => v.trim().replace(/^"|"$/g, ''));
+    const row: Record<string, string> = {};
+    headers.forEach((header, index) => {
+      row[header] = values[index] || '';
+    });
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+// Filter CSV rows by date range
+function filterRowsByDateRange(
+  rows: Record<string, string>[],
+  startDate: string,
+  endDate: string
+): Record<string, string>[] {
+  return rows.filter((row) => {
+    const date = row['Date'] || '';
+    return date >= startDate && date <= endDate;
+  });
+}

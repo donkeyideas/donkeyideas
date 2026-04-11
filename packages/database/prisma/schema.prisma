@@ -124,6 +124,7 @@ model Company {
   budgetPeriods             BudgetPeriod[]
   budgetLines               BudgetLine[]
   analyticsRecommendations  AnalyticsRecommendation[]
+  playStoreRecommendations  PlayStoreRecommendation[]
 
   @@map("companies")
 }
@@ -258,6 +259,11 @@ model BusinessProfile {
   gaRefreshToken       String?   // Encrypted OAuth refresh token (optional)
   gaConnectedAt        DateTime? // When GA was connected
   gaConnectionStatus   String?   // "connected", "pending", "error"
+
+  // Google Play Console Integration
+  gpPackageName        String?   // Android package name (e.g., "com.donkeyideas.argufight")
+  gpConnectedAt        DateTime? // When Play Console was connected
+  gpConnectionStatus   String?   // "connected", "pending", "error"
 
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
@@ -610,6 +616,32 @@ model AnalyticsRecommendation {
   @@unique([companyId, date]) // One recommendation per company per day
   @@index([companyId, date])
   @@map("analytics_recommendations")
+}
+
+model PlayStoreRecommendation {
+  id            String   @id @default(cuid())
+  companyId     String
+  date          DateTime @db.Date
+
+  playStoreData Json     // Store the Play Store data used for analysis
+
+  summary       String
+  pros          Json     // Array of positive insights: [{title, description}]
+  cons          Json     // Array of areas for improvement: [{title, description}]
+  recommendations Json   // Array of actionable recommendations: [{title, description, priority}]
+
+  tokensUsed    Int?
+  cost          Decimal?
+  model         String   @default("deepseek-chat")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, date])
+  @@index([companyId, date])
+  @@map("play_store_recommendations")
 }
 
 // AI Chat History

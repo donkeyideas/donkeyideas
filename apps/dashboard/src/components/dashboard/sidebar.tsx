@@ -16,6 +16,7 @@ const donkeyIdeasNavigation = [
       { name: 'Financials', href: '/app/consolidated', icon: '' },
       { name: 'Budget & Forecast', href: '/app/budget/consolidated', icon: '' },
       { name: 'Analytics', href: '/app/consolidated-analytics', icon: '' },
+      { name: 'Play Store', href: '/app/consolidated-play-store', icon: '' },
       { name: 'Analytics & Reports', href: '/app/analytics', icon: '' },
       { name: 'Project Board', href: '/app/consolidated-projects', icon: '' },
     ],
@@ -55,6 +56,7 @@ const activeCompanyNavigation = [
     items: [
       { name: 'Business Profile', href: '/app/business-profile', icon: '' },
       { name: 'Google Analytics', href: '/app/google-analytics', icon: '' },
+      { name: 'Play Store', href: '/app/play-store', icon: '' },
       { name: 'Whitepaper', href: '/app/whitepaper', icon: '' },
       { name: 'Project Board', href: '/app/projects', icon: '' },
       { name: 'Document Library', href: '/app/documents', icon: '' },
