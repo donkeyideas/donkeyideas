@@ -26,16 +26,23 @@ async function generateASCToken(): Promise<string | null> {
 }
 
 // Make authenticated request to App Store Connect API
-async function ascFetch(endpoint: string, token: string): Promise<any> {
+async function ascFetch(endpoint: string, token: string, method = 'GET', body?: any): Promise<any> {
   const url = endpoint.startsWith('http') ? endpoint : `${ASC_BASE_URL}${endpoint}`;
 
-  const response = await fetch(url, {
+  const options: RequestInit = {
+    method,
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     cache: 'no-store',
-  });
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(url, options);
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => '');
@@ -299,6 +306,104 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string) {
   };
 }
 
+// Find or create an ONGOING analytics report request for an app
+async function findOrCreateReportRequest(appId: string, token: string): Promise<string | null> {
+  // List all existing report requests
+  const existing = await ascFetch('/analyticsReportRequests', token);
+  const requests = existing.data || [];
+
+  // Find one for our app that's ONGOING
+  for (const req of requests) {
+    if (req.attributes?.accessType === 'ONGOING') {
+      // Check if this request belongs to our app
+      const reqAppId = req.relationships?.app?.data?.id;
+      if (reqAppId === appId || !reqAppId) {
+        // If no app ID in response, check by fetching the related app
+        console.log(`[ASC] Found existing report request: ${req.id}`);
+        return req.id;
+      }
+    }
+  }
+
+  // No existing request found — create one
+  try {
+    console.log(`[ASC] Creating new analytics report request for app ${appId}`);
+    const created = await ascFetch('/analyticsReportRequests', token, 'POST', {
+      data: {
+        type: 'analyticsReportRequests',
+        attributes: { accessType: 'ONGOING' },
+        relationships: {
+          app: { data: { type: 'apps', id: appId } }
+        }
+      }
+    });
+    const newId = created.data?.id;
+    console.log(`[ASC] Created report request: ${newId}`);
+    return newId || null;
+  } catch (e: any) {
+    console.error('[ASC] Failed to create report request:', e.message);
+    return null;
+  }
+}
+
+// Navigate the analytics report hierarchy to download a report CSV
+async function downloadAnalyticsReport(
+  requestId: string,
+  category: string,
+  token: string
+): Promise<string | null> {
+  // Step 1: Get reports for this request, filtered by category
+  const reportsData = await ascFetch(
+    `/analyticsReportRequests/${requestId}/reports?filter[category]=${category}`,
+    token
+  );
+  const reports = reportsData.data || [];
+  console.log(`[ASC] Found ${reports.length} reports for category ${category}`);
+
+  if (reports.length === 0) return null;
+
+  // Try each report to find one with data
+  for (const report of reports) {
+    const reportName = report.attributes?.name || 'unknown';
+    console.log(`[ASC] Processing report: ${reportName} (${report.id})`);
+
+    // Step 2: Get instances for this report
+    const instancesUrl = report.relationships?.instances?.links?.related;
+    if (!instancesUrl) continue;
+
+    const instancesData = await ascFetch(instancesUrl, token);
+    const instances = instancesData.data || [];
+    console.log(`[ASC] Found ${instances.length} instances for report ${reportName}`);
+
+    if (instances.length === 0) continue;
+
+    // Get the latest instance
+    const latest = instances[instances.length - 1];
+    console.log(`[ASC] Using instance: ${latest.id} (date: ${latest.attributes?.processingDate || 'unknown'})`);
+
+    // Step 3: Get segments for this instance
+    const segmentsUrl = latest.relationships?.segments?.links?.related;
+    if (!segmentsUrl) continue;
+
+    const segmentsData = await ascFetch(segmentsUrl, token);
+    const segments = segmentsData.data || [];
+    console.log(`[ASC] Found ${segments.length} segments`);
+
+    if (segments.length === 0) continue;
+
+    // Step 4: Download the segment file
+    const fileUrl = segments[0].attributes?.url;
+    if (!fileUrl) continue;
+
+    console.log(`[ASC] Downloading report from: ${fileUrl.slice(0, 80)}...`);
+    const content = await fetchReport(fileUrl, token);
+    console.log(`[ASC] Downloaded ${content.length} chars, first line: ${content.split('\n')[0]?.slice(0, 100)}`);
+    return content;
+  }
+
+  return null;
+}
+
 // Fetch analytics data using the Analytics Reports API
 async function fetchAnalyticsData(
   appId: string,
@@ -311,55 +416,26 @@ async function fetchAnalyticsData(
   dailyInstalls: number;
   activeDevices: number;
 }> {
-  // Try creating an analytics report request
+  const defaults = { timeSeries: [], totalInstalls: 0, dailyInstalls: 0, activeDevices: 0 };
+
   try {
-    // Request app usage report
-    const reportRequest = await ascFetch('/analyticsReportRequests', token);
-    const requests = reportRequest.data || [];
-
-    // Look for existing completed report
-    for (const req of requests) {
-      if (req.attributes?.accessType === 'ONGOING') {
-        // Get report instances
-        const instancesUrl = req.relationships?.reports?.links?.related;
-        if (instancesUrl) {
-          const instancesData = await ascFetch(instancesUrl, token);
-          const reports = instancesData.data || [];
-
-          for (const report of reports) {
-            if (report.attributes?.category === 'APP_USAGE') {
-              const segmentsUrl = report.relationships?.instances?.links?.related;
-              if (segmentsUrl) {
-                const segments = await ascFetch(segmentsUrl, token);
-                // Process segments for install data
-                const instances = segments.data || [];
-                if (instances.length > 0) {
-                  // Download and parse the latest instance
-                  const latest = instances[instances.length - 1];
-                  const downloadUrl = latest.relationships?.segments?.links?.related;
-                  if (downloadUrl) {
-                    const segmentData = await ascFetch(downloadUrl, token);
-                    const segmentItems = segmentData.data || [];
-                    if (segmentItems.length > 0) {
-                      const fileUrl = segmentItems[0].attributes?.url;
-                      if (fileUrl) {
-                        const csvContent = await fetchReport(fileUrl, token);
-                        return parseAnalyticsCSV(csvContent, startDate, endDate);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+    const requestId = await findOrCreateReportRequest(appId, token);
+    if (!requestId) {
+      console.log('[ASC] No report request available');
+      return defaults;
     }
-  } catch (e: any) {
-    console.log('[ASC] Analytics report request failed:', e.message);
-  }
 
-  return { timeSeries: [], totalInstalls: 0, dailyInstalls: 0, activeDevices: 0 };
+    const csvContent = await downloadAnalyticsReport(requestId, 'APP_USAGE', token);
+    if (!csvContent) {
+      console.log('[ASC] No APP_USAGE report data available yet');
+      return defaults;
+    }
+
+    return parseAnalyticsCSV(csvContent, startDate, endDate);
+  } catch (e: any) {
+    console.error('[ASC] Analytics data fetch failed:', e.message);
+    return defaults;
+  }
 }
 
 // Parse analytics CSV from Apple
@@ -420,50 +496,23 @@ async function fetchStoreMetrics(
   startDate: string,
   endDate: string
 ): Promise<{ visitors: number; acquisitions: number; conversionRate: number }> {
-  // Try the analytics reports API for store engagement
+  const defaults = { visitors: 0, acquisitions: 0, conversionRate: 0 };
+
   try {
-    const reportRequest = await ascFetch('/analyticsReportRequests', token);
-    const requests = reportRequest.data || [];
+    const requestId = await findOrCreateReportRequest(appId, token);
+    if (!requestId) return defaults;
 
-    for (const req of requests) {
-      if (req.attributes?.accessType === 'ONGOING') {
-        const reportsUrl = req.relationships?.reports?.links?.related;
-        if (reportsUrl) {
-          const reportsData = await ascFetch(reportsUrl, token);
-          const reports = reportsData.data || [];
-
-          for (const report of reports) {
-            if (report.attributes?.category === 'APP_STORE_ENGAGEMENT') {
-              const instancesUrl = report.relationships?.instances?.links?.related;
-              if (instancesUrl) {
-                const instances = await ascFetch(instancesUrl, token);
-                const items = instances.data || [];
-                if (items.length > 0) {
-                  const latest = items[items.length - 1];
-                  const segmentsUrl = latest.relationships?.segments?.links?.related;
-                  if (segmentsUrl) {
-                    const segments = await ascFetch(segmentsUrl, token);
-                    const segItems = segments.data || [];
-                    if (segItems.length > 0) {
-                      const fileUrl = segItems[0].attributes?.url;
-                      if (fileUrl) {
-                        const csvContent = await fetchReport(fileUrl, token);
-                        return parseStoreEngagementCSV(csvContent, startDate, endDate);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+    const csvContent = await downloadAnalyticsReport(requestId, 'APP_STORE_ENGAGEMENT', token);
+    if (!csvContent) {
+      console.log('[ASC] No APP_STORE_ENGAGEMENT report data available yet');
+      return defaults;
     }
+
+    return parseStoreEngagementCSV(csvContent, startDate, endDate);
   } catch (e: any) {
     console.log('[ASC] Store engagement data not available:', e.message);
+    return defaults;
   }
-
-  return { visitors: 0, acquisitions: 0, conversionRate: 0 };
 }
 
 // Parse store engagement CSV
