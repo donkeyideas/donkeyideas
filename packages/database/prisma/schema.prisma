@@ -125,6 +125,7 @@ model Company {
   budgetLines               BudgetLine[]
   analyticsRecommendations  AnalyticsRecommendation[]
   playStoreRecommendations  PlayStoreRecommendation[]
+  appStoreRecommendations   AppStoreRecommendation[]
 
   @@map("companies")
 }
@@ -264,6 +265,11 @@ model BusinessProfile {
   gpPackageName        String?   // Android package name (e.g., "com.donkeyideas.argufight")
   gpConnectedAt        DateTime? // When Play Console was connected
   gpConnectionStatus   String?   // "connected", "pending", "error"
+
+  // App Store Connect Integration
+  ascBundleId          String?   // iOS bundle ID (e.g., "com.donkeyideas.argufight")
+  ascConnectedAt       DateTime? // When App Store Connect was connected
+  ascConnectionStatus  String?   // "connected", "pending", "error"
 
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
@@ -642,6 +648,32 @@ model PlayStoreRecommendation {
   @@unique([companyId, date])
   @@index([companyId, date])
   @@map("play_store_recommendations")
+}
+
+model AppStoreRecommendation {
+  id            String   @id @default(cuid())
+  companyId     String
+  date          DateTime @db.Date
+
+  appStoreData  Json     // Store the App Store data used for analysis
+
+  summary       String
+  pros          Json     // Array of positive insights: [{title, description}]
+  cons          Json     // Array of areas for improvement: [{title, description}]
+  recommendations Json   // Array of actionable recommendations: [{title, description, priority}]
+
+  tokensUsed    Int?
+  cost          Decimal?
+  model         String   @default("deepseek-chat")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, date])
+  @@index([companyId, date])
+  @@map("app_store_recommendations")
 }
 
 // AI Chat History

@@ -40,6 +40,8 @@ export default function BusinessProfilePage() {
     gaPropertyId: '',
     // Google Play Console
     gpPackageName: '',
+    // App Store Connect
+    ascBundleId: '',
   });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -157,6 +159,7 @@ export default function BusinessProfilePage() {
         keyAchievements: profileData.keyAchievements || '',
         gaPropertyId: profileData.gaPropertyId || '',
         gpPackageName: profileData.gpPackageName || '',
+        ascBundleId: profileData.ascBundleId || '',
       };
 
       setFormData(updatedFormData);
@@ -828,6 +831,63 @@ export default function BusinessProfilePage() {
               <li>Select your app</li>
               <li>The package name is shown in the URL and app details (e.g., com.example.myapp)</li>
               <li>Or find it in your app&apos;s build.gradle / AndroidManifest.xml</li>
+            </ol>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* App Store Connect Integration */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>App Store Connect Integration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">iOS Bundle ID</label>
+            <input
+              type="text"
+              value={formData.ascBundleId}
+              onChange={(e) => setFormData({ ...formData, ascBundleId: e.target.value })}
+              className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-md text-white focus:outline-none focus:border-blue-500 placeholder:text-white/50 [.light_&]:bg-white [.light_&]:border-slate-300 [.light_&]:text-slate-900 [.light_&]:placeholder:text-slate-500"
+              placeholder="com.donkeyideas.argufight"
+            />
+            <p className="text-xs text-white/40 [.light_&]:text-slate-500 mt-1">
+              Your iOS app&apos;s bundle identifier (e.g., com.donkeyideas.argufight)
+            </p>
+          </div>
+
+          {formData.ascBundleId && (
+            <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-green-400">
+                Bundle ID configured. View analytics on the{' '}
+                <a href="/app/app-store" className="underline hover:text-green-300">
+                  App Store page
+                </a>
+              </span>
+            </div>
+          )}
+
+          {!formData.ascBundleId && (
+            <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-yellow-400">
+                Enter your iOS bundle ID to enable App Store analytics
+              </span>
+            </div>
+          )}
+
+          <div className="pt-2">
+            <h4 className="text-sm font-medium mb-2 text-white/80 [.light_&]:text-slate-700">How to find your bundle ID:</h4>
+            <ol className="text-xs text-white/50 [.light_&]:text-slate-500 space-y-1 list-decimal list-inside">
+              <li>Open your Xcode project</li>
+              <li>Select the target → General tab → Bundle Identifier</li>
+              <li>Or find it in <a href="https://appstoreconnect.apple.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">App Store Connect</a> → Apps → Your App → App Information</li>
+              <li>The bundle ID looks like: com.yourcompany.appname</li>
             </ol>
           </div>
         </CardContent>

@@ -26,6 +26,8 @@ const profileSchema = z.object({
   gaPropertyId: z.string().optional().nullable(),
   // Google Play Console
   gpPackageName: z.string().optional().nullable(),
+  // App Store Connect
+  ascBundleId: z.string().optional().nullable(),
 });
 
 // GET /api/companies/:id/profile
@@ -143,6 +145,7 @@ export async function PUT(
     // Convert empty string to null for gaPropertyId
     const gaPropertyId = validated.gaPropertyId === '' ? null : validated.gaPropertyId;
     const gpPackageName = validated.gpPackageName === '' ? null : validated.gpPackageName;
+    const ascBundleId = validated.ascBundleId === '' ? null : validated.ascBundleId;
 
     const profile = await prisma.businessProfile.upsert({
       where: { companyId: params.id },
@@ -169,6 +172,7 @@ export async function PUT(
         keyAchievements: validated.keyAchievements,
         gaPropertyId: gaPropertyId,
         gpPackageName: gpPackageName,
+        ascBundleId: ascBundleId,
       },
       update: {
         mission: validated.mission,
@@ -192,6 +196,7 @@ export async function PUT(
         keyAchievements: validated.keyAchievements,
         gaPropertyId: gaPropertyId,
         gpPackageName: gpPackageName,
+        ascBundleId: ascBundleId,
       },
     });
     
