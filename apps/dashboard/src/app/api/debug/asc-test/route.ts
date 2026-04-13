@@ -7,6 +7,13 @@ export const dynamic = 'force-dynamic';
 
 const BASE = 'https://api.appstoreconnect.apple.com/v1';
 
+// Target report names per category
+const TARGET_REPORTS: Record<string, string[]> = {
+  APP_USAGE: ['App Store Installation and Deletion', 'App Sessions'],
+  COMMERCE: ['App Downloads'],
+  APP_STORE_ENGAGEMENT: ['App Store Discovery and Engagement'],
+};
+
 // ASC diagnostic endpoint — tests every step of the analytics flow
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,10 +21,7 @@ export async function GET(request: Request) {
 
   try {
     if (!hasASCCredentials()) {
-      return NextResponse.json({
-        configured: false,
-        message: 'Set ASC_KEY_ID, ASC_ISSUER_ID, and ASC_PRIVATE_KEY.',
-      });
+      return NextResponse.json({ configured: false, message: 'Set ASC_KEY_ID, ASC_ISSUER_ID, and ASC_PRIVATE_KEY.' });
     }
 
     const keyId = process.env.ASC_KEY_ID!;
@@ -36,7 +40,7 @@ export async function GET(request: Request) {
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
     const result: any = { configured: true, keyId, issuerId, steps: {} };
 
-    // Step 1: Look up app by bundle ID
+    // Step 1: Look up app
     const appResp = await fetch(`${BASE}/apps?filter[bundleId]=${encodeURIComponent(bundleId)}&fields[apps]=name,bundleId`, { headers, cache: 'no-store' });
     const appData = await appResp.json();
     const app = appData.data?.[0];
@@ -44,23 +48,40 @@ export async function GET(request: Request) {
     if (!app) return NextResponse.json(result);
     const appId = app.id;
 
-    // Step 2: List analytics report requests
-    const reqResp = await fetch(`${BASE}/analyticsReportRequests`, { headers, cache: 'no-store' });
-    const reqData = await reqResp.json();
-    const requests = reqData.data || [];
-    result.steps.reportRequests = requests.map((r: any) => ({
-      id: r.id,
-      accessType: r.attributes?.accessType,
-      stoppedDueToInactivity: r.attributes?.stoppedDueToInactivity,
-      appId: r.relationships?.app?.data?.id,
-    }));
-
-    // Find ONGOING request for our app
+    // Step 2: Find report request using app-scoped endpoint
     let requestId: string | null = null;
-    for (const req of requests) {
-      if (req.attributes?.accessType === 'ONGOING') {
-        const reqAppId = req.relationships?.app?.data?.id;
-        if (!reqAppId || reqAppId === appId) {
+
+    // Try app-scoped endpoint first
+    try {
+      const appScopedResp = await fetch(`${BASE}/apps/${appId}/analyticsReportRequests`, { headers, cache: 'no-store' });
+      const appScopedData = await appScopedResp.json();
+      const appRequests = appScopedData.data || [];
+      result.steps.appScopedRequests = {
+        status: appScopedResp.status,
+        count: appRequests.length,
+        items: appRequests.map((r: any) => ({
+          id: r.id,
+          accessType: r.attributes?.accessType,
+          stoppedDueToInactivity: r.attributes?.stoppedDueToInactivity,
+        })),
+      };
+      for (const req of appRequests) {
+        if (req.attributes?.accessType === 'ONGOING') {
+          requestId = req.id;
+          break;
+        }
+      }
+    } catch (e: any) {
+      result.steps.appScopedRequests = { error: e.message };
+    }
+
+    // Fall back to global list
+    if (!requestId) {
+      const globalResp = await fetch(`${BASE}/analyticsReportRequests`, { headers, cache: 'no-store' });
+      const globalData = await globalResp.json();
+      result.steps.globalRequests = { count: (globalData.data || []).length };
+      for (const req of (globalData.data || [])) {
+        if (req.attributes?.accessType === 'ONGOING') {
           requestId = req.id;
           break;
         }
@@ -71,8 +92,7 @@ export async function GET(request: Request) {
     if (!requestId) {
       try {
         const createResp = await fetch(`${BASE}/analyticsReportRequests`, {
-          method: 'POST',
-          headers,
+          method: 'POST', headers,
           body: JSON.stringify({
             data: {
               type: 'analyticsReportRequests',
@@ -92,33 +112,54 @@ export async function GET(request: Request) {
     if (!requestId) return NextResponse.json(result);
     result.steps.activeRequestId = requestId;
 
-    // Step 3: Get reports
+    // Step 3: Get ALL reports and group by category
     const reportsResp = await fetch(`${BASE}/analyticsReportRequests/${requestId}/reports`, { headers, cache: 'no-store' });
     const reportsData = await reportsResp.json();
-    const reports = reportsData.data || [];
-    result.steps.reports = reports.map((r: any) => ({
-      id: r.id,
-      category: r.attributes?.category,
-      name: r.attributes?.name,
-    }));
+    const allReports = reportsData.data || [];
 
-    // Step 4: For first APP_USAGE report, drill into instances → segments → download
-    for (const report of reports) {
-      if (report.attributes?.category === 'APP_USAGE') {
+    // Group by category
+    const byCategory: Record<string, any[]> = {};
+    for (const r of allReports) {
+      const cat = r.attributes?.category || 'UNKNOWN';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push({ id: r.id, name: r.attributes?.name });
+    }
+    result.steps.reportsByCategory = Object.fromEntries(
+      Object.entries(byCategory).map(([k, v]) => [k, { count: v.length, names: v.map((r: any) => r.name) }])
+    );
+
+    // Step 4: Try to download data from target reports
+    for (const [category, targetNames] of Object.entries(TARGET_REPORTS)) {
+      const categoryReports = allReports.filter((r: any) => r.attributes?.category === category);
+      const matchingReports = categoryReports.filter((r: any) =>
+        targetNames.some(t => (r.attributes?.name || '').includes(t))
+      );
+
+      // Prefer "Standard" reports
+      matchingReports.sort((a: any, b: any) => {
+        const aStd = (a.attributes?.name || '').includes('Standard') ? 0 : 1;
+        const bStd = (b.attributes?.name || '').includes('Standard') ? 0 : 1;
+        return aStd - bStd;
+      });
+
+      for (const report of matchingReports) {
+        const reportName = report.attributes?.name || 'unknown';
         const instUrl = report.relationships?.instances?.links?.related;
-        if (!instUrl) { result.steps.appUsage = 'no_instances_url'; break; }
+        if (!instUrl) continue;
 
         const instResp = await fetch(instUrl, { headers, cache: 'no-store' });
         const instData = await instResp.json();
         const instances = instData.data || [];
-        result.steps.appUsage = {
-          reportName: report.attributes?.name,
+
+        const reportResult: any = {
+          reportName,
+          category,
           instanceCount: instances.length,
         };
 
         if (instances.length > 0) {
           const latest = instances[instances.length - 1];
-          result.steps.appUsage.latestInstance = {
+          reportResult.latestInstance = {
             id: latest.id,
             processingDate: latest.attributes?.processingDate,
           };
@@ -128,7 +169,7 @@ export async function GET(request: Request) {
             const segResp = await fetch(segUrl, { headers, cache: 'no-store' });
             const segData = await segResp.json();
             const segments = segData.data || [];
-            result.steps.appUsage.segmentCount = segments.length;
+            reportResult.segmentCount = segments.length;
 
             if (segments.length > 0 && segments[0].attributes?.url) {
               try {
@@ -141,31 +182,31 @@ export async function GET(request: Request) {
                   content = buf.toString('utf-8');
                 }
                 const lines = content.split('\n');
-                result.steps.appUsage.download = {
+                reportResult.download = {
                   totalLines: lines.length,
                   headers: lines[0]?.slice(0, 500),
                   sampleRow: lines[1]?.slice(0, 500),
                   lastDataRow: lines[Math.max(1, lines.length - 2)]?.slice(0, 500),
                 };
               } catch (e: any) {
-                result.steps.appUsage.downloadError = e.message;
+                reportResult.downloadError = e.message;
               }
             }
           }
         }
-        break;
+
+        if (!result.steps.targetReports) result.steps.targetReports = {};
+        result.steps.targetReports[category] = reportResult;
+        break; // Only first matching report per category
       }
     }
 
-    // Step 5: Check reviews
+    // Step 5: Reviews
     try {
       const revResp = await fetch(`${BASE}/apps/${appId}/customerReviews?limit=3&sort=-createdDate`, { headers, cache: 'no-store' });
-      if (revResp.ok) {
-        const revData = await revResp.json();
-        result.steps.reviews = { count: revData.data?.length || 0 };
-      } else {
-        result.steps.reviews = { status: revResp.status };
-      }
+      result.steps.reviews = revResp.ok
+        ? { count: (await revResp.json()).data?.length || 0 }
+        : { status: revResp.status };
     } catch (e: any) {
       result.steps.reviews = { error: e.message };
     }

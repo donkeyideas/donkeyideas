@@ -308,21 +308,31 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string) {
 
 // Find or create an ONGOING analytics report request for an app
 async function findOrCreateReportRequest(appId: string, token: string): Promise<string | null> {
-  // List all existing report requests
-  const existing = await ascFetch('/analyticsReportRequests', token);
-  const requests = existing.data || [];
-
-  // Find one for our app that's ONGOING
-  for (const req of requests) {
-    if (req.attributes?.accessType === 'ONGOING') {
-      // Check if this request belongs to our app
-      const reqAppId = req.relationships?.app?.data?.id;
-      if (reqAppId === appId || !reqAppId) {
-        // If no app ID in response, check by fetching the related app
+  // Use app-scoped endpoint to find report requests for this specific app
+  try {
+    const existing = await ascFetch(`/apps/${appId}/analyticsReportRequests`, token);
+    const requests = existing.data || [];
+    for (const req of requests) {
+      if (req.attributes?.accessType === 'ONGOING') {
         console.log(`[ASC] Found existing report request: ${req.id}`);
         return req.id;
       }
     }
+  } catch (e: any) {
+    console.log('[ASC] App-scoped report request lookup failed:', e.message);
+    // Fall back to global list
+    try {
+      const existing = await ascFetch('/analyticsReportRequests', token);
+      for (const req of (existing.data || [])) {
+        if (req.attributes?.accessType === 'ONGOING') {
+          const reqAppId = req.relationships?.app?.data?.id;
+          if (reqAppId === appId || !reqAppId) {
+            console.log(`[ASC] Found report request via global list: ${req.id}`);
+            return req.id;
+          }
+        }
+      }
+    } catch { /* ignore */ }
   }
 
   // No existing request found — create one
@@ -341,10 +351,27 @@ async function findOrCreateReportRequest(appId: string, token: string): Promise<
     console.log(`[ASC] Created report request: ${newId}`);
     return newId || null;
   } catch (e: any) {
+    // 409 = already exists but list didn't return it — try to extract ID from error
+    if (e.message?.includes('409')) {
+      console.log('[ASC] Report request already exists (409), retrying app-scoped lookup');
+      try {
+        const retry = await ascFetch(`/apps/${appId}/analyticsReportRequests`, token);
+        for (const req of (retry.data || [])) {
+          if (req.attributes?.accessType === 'ONGOING') return req.id;
+        }
+      } catch { /* ignore */ }
+    }
     console.error('[ASC] Failed to create report request:', e.message);
     return null;
   }
 }
+
+// Report names we care about, in priority order per category
+const PREFERRED_REPORTS: Record<string, string[]> = {
+  APP_USAGE: ['App Store Installation and Deletion', 'App Sessions'],
+  COMMERCE: ['App Downloads'],
+  APP_STORE_ENGAGEMENT: ['App Store Discovery and Engagement'],
+};
 
 // Navigate the analytics report hierarchy to download a report CSV
 async function downloadAnalyticsReport(
@@ -362,9 +389,31 @@ async function downloadAnalyticsReport(
 
   if (reports.length === 0) return null;
 
+  // Sort reports: preferred names first ("Standard" before "Detailed"), others last
+  const preferred = PREFERRED_REPORTS[category] || [];
+  const sortedReports = [...reports].sort((a: any, b: any) => {
+    const nameA = a.attributes?.name || '';
+    const nameB = b.attributes?.name || '';
+    const prefA = preferred.findIndex(p => nameA.includes(p));
+    const prefB = preferred.findIndex(p => nameB.includes(p));
+    const scoreA = prefA >= 0 ? prefA : 999;
+    const scoreB = prefB >= 0 ? prefB : 999;
+    if (scoreA !== scoreB) return scoreA - scoreB;
+    // Prefer "Standard" over "Detailed" (less data to download)
+    if (nameA.includes('Standard') && !nameB.includes('Standard')) return -1;
+    if (!nameA.includes('Standard') && nameB.includes('Standard')) return 1;
+    return 0;
+  });
+
   // Try each report to find one with data
-  for (const report of reports) {
+  for (const report of sortedReports) {
     const reportName = report.attributes?.name || 'unknown';
+
+    // Skip irrelevant reports (e.g., "Shortcut App Usage" in APP_USAGE)
+    if (preferred.length > 0 && !preferred.some(p => reportName.includes(p))) {
+      continue;
+    }
+
     console.log(`[ASC] Processing report: ${reportName} (${report.id})`);
 
     // Step 2: Get instances for this report
@@ -425,13 +474,17 @@ async function fetchAnalyticsData(
       return defaults;
     }
 
-    const csvContent = await downloadAnalyticsReport(requestId, 'APP_USAGE', token);
-    if (!csvContent) {
-      console.log('[ASC] No APP_USAGE report data available yet');
-      return defaults;
+    // Try APP_USAGE first (Installation and Deletion reports), then COMMERCE (App Downloads)
+    for (const category of ['APP_USAGE', 'COMMERCE']) {
+      const csvContent = await downloadAnalyticsReport(requestId, category, token);
+      if (csvContent) {
+        console.log(`[ASC] Got analytics data from ${category} category`);
+        return parseAnalyticsCSV(csvContent, startDate, endDate);
+      }
     }
 
-    return parseAnalyticsCSV(csvContent, startDate, endDate);
+    console.log('[ASC] No analytics report data available yet');
+    return defaults;
   } catch (e: any) {
     console.error('[ASC] Analytics data fetch failed:', e.message);
     return defaults;
