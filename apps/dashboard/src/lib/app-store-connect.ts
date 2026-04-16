@@ -130,76 +130,150 @@ async function fetchReviews(appId: string, token: string) {
   }
 }
 
-// Fetch sales reports (daily) for install data
-async function fetchSalesReports(
+// Fetch a single daily sales report (returns gzip TSV, NOT JSON)
+async function fetchSalesReportForDate(
+  token: string,
+  vendorNumber: string,
+  date: string  // YYYY-MM-DD
+): Promise<string | null> {
+  const dateFormatted = date.replace(/-/g, '');
+  const url = `${ASC_BASE_URL}/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=DAILY&filter[reportDate]=${dateFormatted}&filter[vendorNumber]=${vendorNumber}`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/a-gzip, application/json',
+    },
+    cache: 'no-store',
+  });
+
+  // 404 = no data for this date (normal for recent dates or dates with no sales)
+  if (response.status === 404) return null;
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`Sales report ${response.status}: ${errorText.slice(0, 300)}`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.length === 0) return null;
+
+  // Decompress gzip if needed
+  if (buffer.length >= 2 && buffer[0] === 0x1f && buffer[1] === 0x8b) {
+    return gunzipSync(buffer).toString('utf-8');
+  }
+
+  return buffer.toString('utf-8');
+}
+
+// Parse a sales report TSV and extract units for a specific app
+function parseSalesReportForApp(
+  tsv: string,
+  appleId: string
+): { units: number; devices: Record<string, number> } {
+  const lines = tsv.trim().split('\n');
+  if (lines.length < 2) return { units: 0, devices: {} };
+
+  const headers = lines[0].split('\t');
+  const appleIdIdx = headers.indexOf('Apple Identifier');
+  const unitsIdx = headers.indexOf('Units');
+  const typeIdx = headers.indexOf('Product Type Identifier');
+  const deviceIdx = headers.indexOf('Device');
+
+  let totalUnits = 0;
+  const devices: Record<string, number> = {};
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split('\t');
+
+    // Filter by Apple ID (the numeric app ID)
+    if (appleIdIdx >= 0 && cols[appleIdIdx]?.trim() !== appleId) continue;
+
+    // Only count app downloads (not IAP, subscriptions, etc.)
+    const productType = typeIdx >= 0 ? cols[typeIdx]?.trim() : '';
+    if (productType && !['1', '1F', '1T', 'F1', '1-B'].includes(productType)) continue;
+
+    const units = unitsIdx >= 0 ? parseInt(cols[unitsIdx] || '0') : 0;
+    totalUnits += units;
+
+    const device = deviceIdx >= 0 ? cols[deviceIdx]?.trim() || 'Unknown' : 'Unknown';
+    devices[device] = (devices[device] || 0) + units;
+  }
+
+  return { units: totalUnits, devices };
+}
+
+// Fetch sales data for a specific app across a date range
+async function fetchSalesData(
+  appAppleId: string,
   token: string,
   vendorNumber: string,
   startDate: string,
   endDate: string
-): Promise<{ date: string; units: number; device: string }[]> {
-  const rows: { date: string; units: number; device: string }[] = [];
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+): Promise<{
+  timeSeries: { date: string; installs: number; uninstalls: number; updates: number; activeDevices: number }[];
+  totalInstalls: number;
+  dailyInstalls: number;
+  deviceBreakdown: { device: string; count: number }[];
+}> {
+  const timeSeries: any[] = [];
+  let totalInstalls = 0;
+  const deviceTotals: Record<string, number> = {};
 
-  // Sales reports are available per day, fetch last few days
-  // Apple reports have a ~2 day delay
-  const reportEnd = new Date(end);
+  // Apple reports have ~2 day delay
+  const reportEnd = new Date(endDate);
   reportEnd.setDate(reportEnd.getDate() - 2);
 
-  const reportStart = new Date(start);
-  if (reportStart > reportEnd) return rows;
+  const reportStart = new Date(startDate);
+  if (reportStart > reportEnd) {
+    return { timeSeries: [], totalInstalls: 0, dailyInstalls: 0, deviceBreakdown: [] };
+  }
 
-  // Fetch weekly summary instead of daily to reduce API calls
-  try {
-    const dateStr = reportEnd.toISOString().split('T')[0].replace(/-/g, '');
-    const data = await ascFetch(
-      `/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=WEEKLY&filter[reportDate]=${dateStr}&filter[vendorNumber]=${vendorNumber}`,
-      token
+  // Limit to last 14 days to avoid too many API calls
+  const maxDays = 14;
+  const fetchStart = new Date(
+    Math.max(reportStart.getTime(), reportEnd.getTime() - maxDays * 86400000)
+  );
+
+  // Fetch all daily reports in parallel
+  const datePromises: Promise<{ date: string; content: string | null }>[] = [];
+
+  for (let d = new Date(fetchStart); d <= reportEnd; d.setDate(d.getDate() + 1)) {
+    const dateStr = d.toISOString().split('T')[0];
+    datePromises.push(
+      fetchSalesReportForDate(token, vendorNumber, dateStr)
+        .then(content => ({ date: dateStr, content }))
+        .catch(() => ({ date: dateStr, content: null }))
     );
-
-    // Sales reports return gzip TSV
-    if (data) {
-      const content = typeof data === 'string' ? data : JSON.stringify(data);
-      parseSalesTSV(content, rows);
-    }
-  } catch (e: any) {
-    console.log('[ASC] Sales report not available:', e.message);
   }
 
-  return rows;
-}
+  const results = await Promise.all(datePromises);
 
-// Parse TSV sales report
-function parseSalesTSV(content: string, rows: { date: string; units: number; device: string }[]) {
-  const lines = content.trim().split('\n');
-  if (lines.length < 2) return;
+  for (const { date, content } of results) {
+    if (!content) {
+      // Include zero-data days in time series for chart continuity
+      timeSeries.push({ date, installs: 0, uninstalls: 0, updates: 0, activeDevices: 0 });
+      continue;
+    }
 
-  const headers = lines[0].split('\t');
-  const dateIdx = headers.indexOf('Begin Date');
-  const unitsIdx = headers.indexOf('Units');
-  const deviceIdx = headers.indexOf('Device');
-  const typeIdx = headers.indexOf('Product Type Identifier');
+    const { units, devices } = parseSalesReportForApp(content, appAppleId);
+    totalInstalls += units;
+    timeSeries.push({ date, installs: units, uninstalls: 0, updates: 0, activeDevices: 0 });
 
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split('\t');
-    const productType = typeIdx >= 0 ? cols[typeIdx] : '';
-
-    // Only count app downloads (not IAP)
-    if (productType && !['1', '1F', '1T', 'F1', '1-B'].includes(productType)) continue;
-
-    const dateRaw = dateIdx >= 0 ? cols[dateIdx] : '';
-    const units = unitsIdx >= 0 ? parseInt(cols[unitsIdx] || '0') : 0;
-    const device = deviceIdx >= 0 ? cols[deviceIdx] || '' : '';
-
-    if (dateRaw && units) {
-      // Convert MM/DD/YYYY to YYYY-MM-DD
-      const parts = dateRaw.split('/');
-      const date = parts.length === 3
-        ? `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`
-        : dateRaw;
-      rows.push({ date, units, device });
+    for (const [device, count] of Object.entries(devices)) {
+      deviceTotals[device] = (deviceTotals[device] || 0) + count;
     }
   }
+
+  // Sort by date
+  timeSeries.sort((a: any, b: any) => a.date.localeCompare(b.date));
+
+  const dailyInstalls = timeSeries.length > 0 ? timeSeries[timeSeries.length - 1].installs : 0;
+  const deviceBreakdown = Object.entries(deviceTotals)
+    .map(([device, count]) => ({ device, count }))
+    .sort((a, b) => b.count - a.count);
+
+  return { timeSeries, totalInstalls, dailyInstalls, deviceBreakdown };
 }
 
 // Fetch performance metrics (crashes)
@@ -256,20 +330,43 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string) {
     percentage: totalRatings > 0 ? Math.round((distribution[star] / totalRatings) * 100) : 0,
   }));
 
-  // Try to get install data from Analytics Reports API
+  // Try to get install data
   let installTimeSeries: any[] = [];
   let totalInstalls = 0;
   let dailyInstalls = 0;
   let activeDevices = 0;
+  let deviceBreakdown: { device: string; count: number }[] = [];
 
-  try {
-    const analyticsData = await fetchAnalyticsData(app.id, token, startDate, endDate);
-    installTimeSeries = analyticsData.timeSeries;
-    totalInstalls = analyticsData.totalInstalls;
-    dailyInstalls = analyticsData.dailyInstalls;
-    activeDevices = analyticsData.activeDevices;
-  } catch (e: any) {
-    console.log('[ASC] Analytics data not available:', e.message);
+  // Strategy 1: Sales Reports API (requires ASC_VENDOR_NUMBER, most reliable)
+  const vendorNumber = process.env.ASC_VENDOR_NUMBER;
+  if (vendorNumber) {
+    try {
+      console.log('[ASC] Trying Sales Reports API with vendor number');
+      const salesData = await fetchSalesData(app.id, token, vendorNumber, startDate, endDate);
+      installTimeSeries = salesData.timeSeries;
+      totalInstalls = salesData.totalInstalls;
+      dailyInstalls = salesData.dailyInstalls;
+      deviceBreakdown = salesData.deviceBreakdown;
+      console.log(`[ASC] Sales Reports: ${totalInstalls} total installs from ${installTimeSeries.length} days`);
+    } catch (e: any) {
+      console.log('[ASC] Sales Reports not available:', e.message);
+    }
+  }
+
+  // Strategy 2: Analytics Reports API (async, may not have data yet)
+  if (installTimeSeries.length === 0 || totalInstalls === 0) {
+    try {
+      const analyticsData = await fetchAnalyticsData(app.id, token, startDate, endDate);
+      if (analyticsData.totalInstalls > 0) {
+        installTimeSeries = analyticsData.timeSeries;
+        totalInstalls = analyticsData.totalInstalls;
+        dailyInstalls = analyticsData.dailyInstalls;
+        activeDevices = analyticsData.activeDevices;
+        console.log(`[ASC] Analytics Reports: ${totalInstalls} total installs`);
+      }
+    } catch (e: any) {
+      console.log('[ASC] Analytics data not available:', e.message);
+    }
   }
 
   // Try store listing metrics
@@ -283,8 +380,8 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string) {
 
   return {
     overview: {
-      crashRate: 0, // Will be populated if perf metrics available
-      anrRate: 0,   // iOS doesn't have ANR, map to hang rate
+      crashRate: 0,
+      anrRate: 0,
       slowStartRate: 0,
       slowRenderingRate: 0,
       activeDevices,
@@ -292,7 +389,7 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string) {
       totalReviews: reviews.length,
       totalInstalls,
       dailyInstalls,
-      dailyUninstalls: 0, // Apple doesn't expose uninstalls
+      dailyUninstalls: 0,
       dailyUpdates: 0,
     },
     vitalsTimeSeries: [],
@@ -300,7 +397,11 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string) {
     storeListing,
     ratingDistribution,
     reviews,
-    deviceBreakdown: [],
+    deviceBreakdown: deviceBreakdown.map(d => ({
+      device: d.device,
+      percentage: totalInstalls > 0 ? Math.round((d.count / totalInstalls) * 100) : 0,
+      count: d.count,
+    })),
     versionBreakdown: [],
     errorIssues: [],
   };
