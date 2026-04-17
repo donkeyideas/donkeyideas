@@ -620,6 +620,10 @@ async function fetchAnalyticsData(
 }
 
 // Parse analytics CSV from Apple
+// Apple's format uses dimensional rows with a "Counts" column:
+//   Date \t App Name \t App Apple Identifier \t Download Type \t ... \t Counts
+//   2026-04-14 \t BASKETBALL \t 6760516741 \t First-time download \t ... \t 1
+// We aggregate the Counts column by date, optionally filtering by Download Type.
 function parseAnalyticsCSV(
   content: string,
   startDate: string,
@@ -634,16 +638,25 @@ function parseAnalyticsCSV(
   if (lines.length < 2) return { timeSeries: [], totalInstalls: 0, dailyInstalls: 0, activeDevices: 0 };
 
   const headers = lines[0].split('\t').map((h) => h.trim());
-  const dateIdx = headers.findIndex((h) => h.toLowerCase().includes('date'));
-  const installIdx = headers.findIndex((h) =>
-    h.toLowerCase().includes('installation') || h.toLowerCase().includes('download') || h.toLowerCase().includes('first time')
-  );
+  const dateIdx = headers.findIndex((h) => h.toLowerCase() === 'date');
+  const countsIdx = headers.findIndex((h) => h.toLowerCase() === 'counts');
+  const downloadTypeIdx = headers.findIndex((h) => h.toLowerCase() === 'download type');
   const activeIdx = headers.findIndex((h) =>
     h.toLowerCase().includes('active') && h.toLowerCase().includes('device')
   );
 
-  const timeSeries: any[] = [];
-  let totalInstalls = 0;
+  // If no "Counts" column, fall back to looking for numeric-named columns
+  const valueIdx = countsIdx >= 0 ? countsIdx : headers.findIndex((h) =>
+    h.toLowerCase().includes('installation') || h.toLowerCase() === 'units'
+  );
+
+  if (valueIdx < 0) {
+    console.log(`[ASC] parseAnalyticsCSV: Could not find Counts column. Headers: ${headers.join(', ')}`);
+    return { timeSeries: [], totalInstalls: 0, dailyInstalls: 0, activeDevices: 0 };
+  }
+
+  // Aggregate counts by date (multiple rows per date due to dimensional breakdown)
+  const dailyMap: Record<string, { installs: number; activeDevices: number }> = {};
 
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split('\t');
@@ -651,22 +664,35 @@ function parseAnalyticsCSV(
 
     if (!date || date < startDate || date > endDate) continue;
 
-    const installs = installIdx >= 0 ? parseInt(cols[installIdx] || '0') : 0;
-    const active = activeIdx >= 0 ? parseInt(cols[activeIdx] || '0') : 0;
+    // For COMMERCE reports with Download Type, only count first-time downloads
+    if (downloadTypeIdx >= 0) {
+      const dlType = cols[downloadTypeIdx]?.trim().toLowerCase() || '';
+      if (dlType && !dlType.includes('first') && !dlType.includes('download')) continue;
+    }
 
-    totalInstalls += installs;
-    timeSeries.push({
-      date,
-      installs,
-      uninstalls: 0,
-      updates: 0,
-      activeDevices: active,
-    });
+    const count = parseInt(cols[valueIdx] || '0') || 0;
+    const active = activeIdx >= 0 ? (parseInt(cols[activeIdx] || '0') || 0) : 0;
+
+    if (!dailyMap[date]) dailyMap[date] = { installs: 0, activeDevices: 0 };
+    dailyMap[date].installs += count;
+    dailyMap[date].activeDevices = Math.max(dailyMap[date].activeDevices, active);
   }
 
+  const timeSeries = Object.entries(dailyMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, data]) => ({
+      date,
+      installs: data.installs,
+      uninstalls: 0,
+      updates: 0,
+      activeDevices: data.activeDevices,
+    }));
+
+  const totalInstalls = timeSeries.reduce((sum, d) => sum + d.installs, 0);
   const latestDaily = timeSeries.length > 0 ? timeSeries[timeSeries.length - 1].installs : 0;
   const latestActive = timeSeries.length > 0 ? timeSeries[timeSeries.length - 1].activeDevices : 0;
 
+  console.log(`[ASC] parseAnalyticsCSV: ${timeSeries.length} days, ${totalInstalls} total installs`);
   return { timeSeries, totalInstalls, dailyInstalls: latestDaily, activeDevices: latestActive };
 }
 
@@ -700,6 +726,10 @@ async function fetchStoreMetrics(
 }
 
 // Parse store engagement CSV
+// Apple's format uses dimensional rows with Event + Counts columns:
+//   Date \t App Name \t App Apple Identifier \t Event \t ... \t Counts \t Unique Counts
+//   2026-04-14 \t BASKETBALL \t 6760516741 \t Impression \t ... \t 5 \t 3
+// We filter by Event type and sum the Counts column.
 function parseStoreEngagementCSV(
   content: string,
   startDate: string,
@@ -709,16 +739,21 @@ function parseStoreEngagementCSV(
   if (lines.length < 2) return { visitors: 0, acquisitions: 0, conversionRate: 0 };
 
   const headers = lines[0].split('\t').map((h) => h.trim());
-  const dateIdx = headers.findIndex((h) => h.toLowerCase().includes('date'));
-  const impressionIdx = headers.findIndex((h) =>
-    h.toLowerCase().includes('impression') || h.toLowerCase().includes('product page view')
-  );
-  const downloadIdx = headers.findIndex((h) =>
-    h.toLowerCase().includes('download') || h.toLowerCase().includes('conversion')
-  );
+  const dateIdx = headers.findIndex((h) => h.toLowerCase() === 'date');
+  const eventIdx = headers.findIndex((h) => h.toLowerCase() === 'event');
+  const countsIdx = headers.findIndex((h) => h.toLowerCase() === 'counts');
+  const uniqueCountsIdx = headers.findIndex((h) => h.toLowerCase() === 'unique counts');
 
-  let totalVisitors = 0;
-  let totalAcquisitions = 0;
+  // Use unique counts if available (better metric for "visitors"), otherwise counts
+  const valueIdx = uniqueCountsIdx >= 0 ? uniqueCountsIdx : countsIdx;
+
+  if (valueIdx < 0) {
+    console.log(`[ASC] parseStoreEngagementCSV: No Counts column. Headers: ${headers.join(', ')}`);
+    return { visitors: 0, acquisitions: 0, conversionRate: 0 };
+  }
+
+  let totalImpressions = 0;
+  let totalTaps = 0;
 
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split('\t');
@@ -726,13 +761,21 @@ function parseStoreEngagementCSV(
 
     if (date && (date < startDate || date > endDate)) continue;
 
-    totalVisitors += impressionIdx >= 0 ? parseInt(cols[impressionIdx] || '0') : 0;
-    totalAcquisitions += downloadIdx >= 0 ? parseInt(cols[downloadIdx] || '0') : 0;
+    const event = eventIdx >= 0 ? cols[eventIdx]?.trim().toLowerCase() : '';
+    const count = parseInt(cols[valueIdx] || '0') || 0;
+
+    if (event.includes('impression')) {
+      totalImpressions += count;
+    } else if (event.includes('tap') || event.includes('product page view')) {
+      totalTaps += count;
+    }
   }
 
-  const conversionRate = totalVisitors > 0
-    ? Math.round((totalAcquisitions / totalVisitors) * 10000) / 100
+  // Visitors = impressions, Acquisitions = taps (product page views)
+  const conversionRate = totalImpressions > 0
+    ? Math.round((totalTaps / totalImpressions) * 10000) / 100
     : 0;
 
-  return { visitors: totalVisitors, acquisitions: totalAcquisitions, conversionRate };
+  console.log(`[ASC] parseStoreEngagementCSV: ${totalImpressions} impressions, ${totalTaps} taps`);
+  return { visitors: totalImpressions, acquisitions: totalTaps, conversionRate };
 }
