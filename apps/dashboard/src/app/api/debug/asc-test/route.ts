@@ -41,12 +41,31 @@ export async function GET(request: Request) {
     const headers: Record<string, string> = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
     const result: any = { configured: true, keyId, issuerId, vendorNumber: vendorNumber || 'NOT SET', steps: {} };
 
-    // Step 1: Look up app
+    // Step 1: Look up app (or list all apps if not found)
     const appResp = await fetch(`${BASE}/apps?filter[bundleId]=${encodeURIComponent(bundleId)}&fields[apps]=name,bundleId`, { headers, cache: 'no-store' });
-    const appData = await appResp.json();
-    const app = appData.data?.[0];
-    result.steps.appLookup = app ? { id: app.id, name: app.attributes?.name } : 'NOT_FOUND';
-    if (!app) return NextResponse.json(result);
+    const appRaw = await appResp.text();
+    let appData: any;
+    try { appData = JSON.parse(appRaw); } catch { appData = { raw: appRaw.slice(0, 500) }; }
+    let app = appData.data?.[0];
+    if (!app) {
+      // List all apps so we can discover correct bundle IDs
+      const allAppsResp = await fetch(`${BASE}/apps?fields[apps]=name,bundleId&limit=50`, { headers, cache: 'no-store' });
+      const allAppsRaw = await allAppsResp.text();
+      let allAppsData: any;
+      try { allAppsData = JSON.parse(allAppsRaw); } catch { allAppsData = { raw: allAppsRaw.slice(0, 500) }; }
+      const allApps = (allAppsData.data || []).map((a: any) => ({
+        id: a.id, name: a.attributes?.name, bundleId: a.attributes?.bundleId,
+      }));
+      result.steps.appLookup = {
+        status: 'NOT_FOUND', searched: bundleId,
+        lookupStatus: appResp.status, lookupResponse: appData.errors || appData.raw || `${(appData.data || []).length} results`,
+        allAppsStatus: allAppsResp.status, allAppsCount: allApps.length,
+        allAppsErrors: allAppsData.errors || null,
+        allApps,
+      };
+      return NextResponse.json(result);
+    }
+    result.steps.appLookup = { id: app.id, name: app.attributes?.name, bundleId: app.attributes?.bundleId };
     const appId = app.id;
 
     // =============================================
