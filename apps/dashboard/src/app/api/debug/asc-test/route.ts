@@ -221,7 +221,7 @@ export async function GET(request: Request) {
           const instData = await instResp.json();
           const instances = instData.data || [];
 
-          reportInfo.targets[category] = {
+          const targetInfo: any = {
             reportName: report.attributes?.name,
             instanceCount: instances.length,
             latestInstance: instances.length > 0 ? {
@@ -229,6 +229,48 @@ export async function GET(request: Request) {
               processingDate: instances[instances.length - 1].attributes?.processingDate,
             } : null,
           };
+
+          // Try full download if instances exist
+          if (instances.length > 0) {
+            const latest = instances[instances.length - 1];
+            const segUrl = latest.relationships?.segments?.links?.related;
+            if (segUrl) {
+              try {
+                const segResp = await fetch(segUrl, { headers, cache: 'no-store' });
+                const segData = await segResp.json();
+                const segments = segData.data || [];
+                targetInfo.segmentCount = segments.length;
+
+                if (segments.length > 0 && segments[0].attributes?.url) {
+                  const dlUrl = segments[0].attributes.url;
+                  targetInfo.downloadUrl = dlUrl.slice(0, 100) + '...';
+                  const dlResp = await fetch(dlUrl);
+                  targetInfo.downloadStatus = dlResp.status;
+
+                  if (dlResp.ok) {
+                    const buf = Buffer.from(await dlResp.arrayBuffer());
+                    let content: string;
+                    if (buf.length >= 2 && buf[0] === 0x1f && buf[1] === 0x8b) {
+                      content = gunzipSync(buf).toString('utf-8');
+                    } else {
+                      content = buf.toString('utf-8');
+                    }
+                    const lines = content.split('\n');
+                    targetInfo.download = {
+                      totalLines: lines.length,
+                      headers: lines[0]?.slice(0, 500),
+                      sampleRows: lines.slice(1, 4).map((l: string) => l.slice(0, 300)),
+                      lastRow: lines[Math.max(1, lines.length - 2)]?.slice(0, 300),
+                    };
+                  }
+                }
+              } catch (e: any) {
+                targetInfo.downloadError = e.message;
+              }
+            }
+          }
+
+          reportInfo.targets[category] = targetInfo;
           break;
         }
       }
