@@ -53,10 +53,9 @@ async function ascFetch(endpoint: string, token: string, method = 'GET', body?: 
 }
 
 // Fetch gzip-compressed report from URL
-async function fetchReport(url: string, token: string): Promise<string> {
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+// Note: S3 pre-signed URLs must NOT include an Authorization header
+async function fetchReport(url: string): Promise<string> {
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(`Report download failed: ${response.status}`);
@@ -566,7 +565,7 @@ async function downloadAnalyticsReport(
     if (!fileUrl) continue;
 
     console.log(`[ASC] Downloading report from: ${fileUrl.slice(0, 80)}...`);
-    const content = await fetchReport(fileUrl, token);
+    const content = await fetchReport(fileUrl);
     console.log(`[ASC] Downloaded ${content.length} chars, first line: ${content.split('\n')[0]?.slice(0, 100)}`);
     return content;
   }
