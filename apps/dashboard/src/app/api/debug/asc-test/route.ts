@@ -138,8 +138,9 @@ export async function GET(request: Request) {
     // ANALYTICS REPORTS TEST (fallback)
     // =============================================
 
-    // Step 2: Find report request using app-scoped endpoint
-    let requestId: string | null = null;
+    // Find all report requests (ONGOING + ONE_TIME_SNAPSHOT)
+    let ongoingId: string | null = null;
+    let snapshotId: string | null = null;
 
     try {
       const appScopedResp = await fetch(`${BASE}/apps/${appId}/analyticsReportRequests`, { headers, cache: 'no-store' });
@@ -154,34 +155,58 @@ export async function GET(request: Request) {
         })),
       };
       for (const req of appRequests) {
-        if (req.attributes?.accessType === 'ONGOING') {
-          requestId = req.id;
-          break;
-        }
+        if (req.attributes?.accessType === 'ONGOING' && !ongoingId) ongoingId = req.id;
+        if (req.attributes?.accessType === 'ONE_TIME_SNAPSHOT' && !snapshotId) snapshotId = req.id;
       }
     } catch (e: any) {
       result.steps.analyticsReportRequests = { error: e.message };
     }
 
-    if (requestId) {
-      result.steps.activeRequestId = requestId;
+    // Create ONE_TIME_SNAPSHOT if it doesn't exist (gets historical data!)
+    if (!snapshotId) {
+      try {
+        const createResp = await fetch(`${BASE}/analyticsReportRequests`, {
+          method: 'POST', headers,
+          body: JSON.stringify({
+            data: {
+              type: 'analyticsReportRequests',
+              attributes: { accessType: 'ONE_TIME_SNAPSHOT' },
+              relationships: { app: { data: { type: 'apps', id: appId } } }
+            }
+          }),
+        });
+        const createData = await createResp.json();
+        result.steps.createSnapshot = { status: createResp.status, response: createData };
+        if (createResp.ok) {
+          snapshotId = createData.data?.id;
+        } else if (createResp.status === 409) {
+          // Already exists — retry lookup
+          result.steps.createSnapshot.note = 'Already exists, retrying lookup';
+          try {
+            const retry = await fetch(`${BASE}/apps/${appId}/analyticsReportRequests`, { headers, cache: 'no-store' });
+            const retryData = await retry.json();
+            for (const req of (retryData.data || [])) {
+              if (req.attributes?.accessType === 'ONE_TIME_SNAPSHOT') { snapshotId = req.id; break; }
+            }
+          } catch { /* ignore */ }
+        }
+      } catch (e: any) {
+        result.steps.createSnapshot = { error: e.message };
+      }
+    }
 
-      // Get reports and check for data
+    result.steps.requestIds = { ongoing: ongoingId, snapshot: snapshotId };
+
+    // Check each request for data
+    for (const [label, requestId] of [['snapshot', snapshotId], ['ongoing', ongoingId]] as const) {
+      if (!requestId) continue;
+
       const reportsResp = await fetch(`${BASE}/analyticsReportRequests/${requestId}/reports`, { headers, cache: 'no-store' });
       const reportsData = await reportsResp.json();
       const allReports = reportsData.data || [];
 
-      const byCategory: Record<string, any[]> = {};
-      for (const r of allReports) {
-        const cat = r.attributes?.category || 'UNKNOWN';
-        if (!byCategory[cat]) byCategory[cat] = [];
-        byCategory[cat].push({ id: r.id, name: r.attributes?.name });
-      }
-      result.steps.reportsByCategory = Object.fromEntries(
-        Object.entries(byCategory).map(([k, v]) => [k, { count: v.length, names: v.map((r: any) => r.name) }])
-      );
+      const reportInfo: any = { totalReports: allReports.length, targets: {} };
 
-      // Check target reports for instances
       for (const [category, targetNames] of Object.entries(TARGET_REPORTS)) {
         const matchingReports = allReports.filter((r: any) =>
           r.attributes?.category === category &&
@@ -196,8 +221,7 @@ export async function GET(request: Request) {
           const instData = await instResp.json();
           const instances = instData.data || [];
 
-          if (!result.steps.analyticsTargetReports) result.steps.analyticsTargetReports = {};
-          result.steps.analyticsTargetReports[category] = {
+          reportInfo.targets[category] = {
             reportName: report.attributes?.name,
             instanceCount: instances.length,
             latestInstance: instances.length > 0 ? {
@@ -208,6 +232,9 @@ export async function GET(request: Request) {
           break;
         }
       }
+
+      if (!result.steps.analyticsData) result.steps.analyticsData = {};
+      result.steps.analyticsData[label] = reportInfo;
     }
 
     // Reviews

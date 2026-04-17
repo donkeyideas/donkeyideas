@@ -407,64 +407,84 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string) {
   };
 }
 
-// Find or create an ONGOING analytics report request for an app
-async function findOrCreateReportRequest(appId: string, token: string): Promise<string | null> {
-  // Use app-scoped endpoint to find report requests for this specific app
+// Find or create analytics report requests for an app
+// Returns { ongoingId, snapshotId } — either or both may be set
+async function findOrCreateReportRequests(appId: string, token: string): Promise<{ ongoingId: string | null; snapshotId: string | null }> {
+  let ongoingId: string | null = null;
+  let snapshotId: string | null = null;
+
+  // Use app-scoped endpoint to find existing report requests
   try {
     const existing = await ascFetch(`/apps/${appId}/analyticsReportRequests`, token);
     const requests = existing.data || [];
     for (const req of requests) {
-      if (req.attributes?.accessType === 'ONGOING') {
-        console.log(`[ASC] Found existing report request: ${req.id}`);
-        return req.id;
+      const accessType = req.attributes?.accessType;
+      if (accessType === 'ONGOING' && !ongoingId) {
+        ongoingId = req.id;
+        console.log(`[ASC] Found existing ONGOING request: ${req.id}`);
+      }
+      if (accessType === 'ONE_TIME_SNAPSHOT' && !snapshotId) {
+        snapshotId = req.id;
+        console.log(`[ASC] Found existing ONE_TIME_SNAPSHOT request: ${req.id}`);
       }
     }
   } catch (e: any) {
     console.log('[ASC] App-scoped report request lookup failed:', e.message);
-    // Fall back to global list
-    try {
-      const existing = await ascFetch('/analyticsReportRequests', token);
-      for (const req of (existing.data || [])) {
-        if (req.attributes?.accessType === 'ONGOING') {
-          const reqAppId = req.relationships?.app?.data?.id;
-          if (reqAppId === appId || !reqAppId) {
-            console.log(`[ASC] Found report request via global list: ${req.id}`);
-            return req.id;
-          }
-        }
-      }
-    } catch { /* ignore */ }
   }
 
-  // No existing request found — create one
-  try {
-    console.log(`[ASC] Creating new analytics report request for app ${appId}`);
-    const created = await ascFetch('/analyticsReportRequests', token, 'POST', {
-      data: {
-        type: 'analyticsReportRequests',
-        attributes: { accessType: 'ONGOING' },
-        relationships: {
-          app: { data: { type: 'apps', id: appId } }
+  // Create ONGOING if not found (for future data)
+  if (!ongoingId) {
+    try {
+      console.log(`[ASC] Creating ONGOING report request for app ${appId}`);
+      const created = await ascFetch('/analyticsReportRequests', token, 'POST', {
+        data: {
+          type: 'analyticsReportRequests',
+          attributes: { accessType: 'ONGOING' },
+          relationships: { app: { data: { type: 'apps', id: appId } } }
         }
+      });
+      ongoingId = created.data?.id || null;
+    } catch (e: any) {
+      if (e.message?.includes('409')) {
+        // Already exists — retry lookup
+        try {
+          const retry = await ascFetch(`/apps/${appId}/analyticsReportRequests`, token);
+          for (const req of (retry.data || [])) {
+            if (req.attributes?.accessType === 'ONGOING') { ongoingId = req.id; break; }
+          }
+        } catch { /* ignore */ }
       }
-    });
-    const newId = created.data?.id;
-    console.log(`[ASC] Created report request: ${newId}`);
-    return newId || null;
-  } catch (e: any) {
-    // 409 = already exists but list didn't return it — try to extract ID from error
-    if (e.message?.includes('409')) {
-      console.log('[ASC] Report request already exists (409), retrying app-scoped lookup');
-      try {
-        const retry = await ascFetch(`/apps/${appId}/analyticsReportRequests`, token);
-        for (const req of (retry.data || [])) {
-          if (req.attributes?.accessType === 'ONGOING') return req.id;
-        }
-      } catch { /* ignore */ }
+      console.log('[ASC] ONGOING request create:', e.message);
     }
-    console.error('[ASC] Failed to create report request:', e.message);
-    return null;
   }
+
+  // Create ONE_TIME_SNAPSHOT if not found (for historical data!)
+  if (!snapshotId) {
+    try {
+      console.log(`[ASC] Creating ONE_TIME_SNAPSHOT report request for app ${appId}`);
+      const created = await ascFetch('/analyticsReportRequests', token, 'POST', {
+        data: {
+          type: 'analyticsReportRequests',
+          attributes: { accessType: 'ONE_TIME_SNAPSHOT' },
+          relationships: { app: { data: { type: 'apps', id: appId } } }
+        }
+      });
+      snapshotId = created.data?.id || null;
+      console.log(`[ASC] Created ONE_TIME_SNAPSHOT request: ${snapshotId}`);
+    } catch (e: any) {
+      if (e.message?.includes('409')) {
+        try {
+          const retry = await ascFetch(`/apps/${appId}/analyticsReportRequests`, token);
+          for (const req of (retry.data || [])) {
+            if (req.attributes?.accessType === 'ONE_TIME_SNAPSHOT') { snapshotId = req.id; break; }
+          }
+        } catch { /* ignore */ }
+      }
+      console.log('[ASC] ONE_TIME_SNAPSHOT request create:', e.message);
+    }
+  }
+
+  return { ongoingId, snapshotId };
 }
 
 // Report names we care about, in priority order per category
@@ -555,6 +575,7 @@ async function downloadAnalyticsReport(
 }
 
 // Fetch analytics data using the Analytics Reports API
+// Tries both ONGOING and ONE_TIME_SNAPSHOT requests
 async function fetchAnalyticsData(
   appId: string,
   token: string,
@@ -569,18 +590,24 @@ async function fetchAnalyticsData(
   const defaults = { timeSeries: [], totalInstalls: 0, dailyInstalls: 0, activeDevices: 0 };
 
   try {
-    const requestId = await findOrCreateReportRequest(appId, token);
-    if (!requestId) {
-      console.log('[ASC] No report request available');
+    const { ongoingId, snapshotId } = await findOrCreateReportRequests(appId, token);
+
+    // Try each request ID (snapshot first since it has historical data)
+    const requestIds = [snapshotId, ongoingId].filter(Boolean) as string[];
+    if (requestIds.length === 0) {
+      console.log('[ASC] No report requests available');
       return defaults;
     }
 
-    // Try APP_USAGE first (Installation and Deletion reports), then COMMERCE (App Downloads)
-    for (const category of ['APP_USAGE', 'COMMERCE']) {
-      const csvContent = await downloadAnalyticsReport(requestId, category, token);
-      if (csvContent) {
-        console.log(`[ASC] Got analytics data from ${category} category`);
-        return parseAnalyticsCSV(csvContent, startDate, endDate);
+    for (const requestId of requestIds) {
+      console.log(`[ASC] Trying request ${requestId}`);
+      // Try APP_USAGE first (Installation and Deletion reports), then COMMERCE (App Downloads)
+      for (const category of ['APP_USAGE', 'COMMERCE']) {
+        const csvContent = await downloadAnalyticsReport(requestId, category, token);
+        if (csvContent) {
+          console.log(`[ASC] Got analytics data from ${category} category (request: ${requestId})`);
+          return parseAnalyticsCSV(csvContent, startDate, endDate);
+        }
       }
     }
 
@@ -653,16 +680,19 @@ async function fetchStoreMetrics(
   const defaults = { visitors: 0, acquisitions: 0, conversionRate: 0 };
 
   try {
-    const requestId = await findOrCreateReportRequest(appId, token);
-    if (!requestId) return defaults;
+    const { ongoingId, snapshotId } = await findOrCreateReportRequests(appId, token);
+    const requestIds = [snapshotId, ongoingId].filter(Boolean) as string[];
+    if (requestIds.length === 0) return defaults;
 
-    const csvContent = await downloadAnalyticsReport(requestId, 'APP_STORE_ENGAGEMENT', token);
-    if (!csvContent) {
-      console.log('[ASC] No APP_STORE_ENGAGEMENT report data available yet');
-      return defaults;
+    for (const requestId of requestIds) {
+      const csvContent = await downloadAnalyticsReport(requestId, 'APP_STORE_ENGAGEMENT', token);
+      if (csvContent) {
+        return parseStoreEngagementCSV(csvContent, startDate, endDate);
+      }
     }
 
-    return parseStoreEngagementCSV(csvContent, startDate, endDate);
+    console.log('[ASC] No APP_STORE_ENGAGEMENT report data available yet');
+    return defaults;
   } catch (e: any) {
     console.log('[ASC] Store engagement data not available:', e.message);
     return defaults;
