@@ -12,7 +12,7 @@ import {
   GPAppBreakdownChart,
 } from '@/components/play-store';
 
-type DateRange = '7d' | '30d' | '90d';
+type DateRange = '7d' | '30d' | '90d' | 'all' | 'custom';
 type StoreFilter = 'all' | 'google' | 'apple';
 
 function mergeTimeSeries(playSeries: any[], appleSeries: any[]): any[] {
@@ -70,22 +70,32 @@ export default function ConsolidatedAppStoresPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>('30d');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
   const [storeFilter, setStoreFilter] = useState<StoreFilter>('all');
   const [playData, setPlayData] = useState<any>(null);
   const [appleData, setAppleData] = useState<any>(null);
 
   useEffect(() => {
-    loadData();
+    if (dateRange !== 'custom') {
+      loadData();
+    }
   }, [dateRange]);
 
   const loadData = async () => {
     setLoading(true);
     setError(null);
 
+    let params = `dateRange=${dateRange}`;
+    if (dateRange === 'custom' && customFrom && customTo) {
+      params += `&dateFrom=${customFrom}&dateTo=${customTo}`;
+    }
+
     try {
       const [playResp, appleResp] = await Promise.all([
-        api.get(`/companies/consolidated/play-store?dateRange=${dateRange}`).catch(() => ({ data: null })),
-        api.get(`/companies/consolidated/app-store?dateRange=${dateRange}`).catch(() => ({ data: null })),
+        api.get(`/companies/consolidated/play-store?${params}`).catch(() => ({ data: null })),
+        api.get(`/companies/consolidated/app-store?${params}`).catch(() => ({ data: null })),
       ]);
       setPlayData(playResp.data);
       setAppleData(appleResp.data);
@@ -93,6 +103,13 @@ export default function ConsolidatedAppStoresPage() {
       setError('Failed to load store data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCustomApply = () => {
+    if (customFrom && customTo) {
+      setShowCustomPicker(false);
+      loadData();
     }
   };
 
@@ -226,19 +243,45 @@ export default function ConsolidatedAppStoresPage() {
 
           {/* Date Range */}
           <div className="flex items-center gap-2 bg-white/5 [.light_&]:bg-slate-100 rounded-lg p-1">
-            {(['7d', '30d', '90d'] as DateRange[]).map((range) => (
+            {([
+              { key: '7d' as DateRange, label: '7 Days' },
+              { key: '30d' as DateRange, label: '30 Days' },
+              { key: '90d' as DateRange, label: '90 Days' },
+              { key: 'all' as DateRange, label: 'All' },
+            ]).map(({ key, label }) => (
               <button
-                key={range}
-                onClick={() => setDateRange(range)}
+                key={key}
+                onClick={() => { setDateRange(key); setShowCustomPicker(false); }}
                 className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  dateRange === range
+                  dateRange === key
                     ? 'bg-blue-500 text-white'
                     : 'text-white/60 [.light_&]:text-slate-600 hover:text-white [.light_&]:hover:text-slate-900'
                 }`}
               >
-                {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : '90 Days'}
+                {label}
               </button>
             ))}
+            <button
+              onClick={() => {
+                setDateRange('custom');
+                setShowCustomPicker(true);
+                if (!customFrom) {
+                  const d = new Date();
+                  d.setDate(d.getDate() - 30);
+                  setCustomFrom(d.toISOString().split('T')[0]);
+                }
+                if (!customTo) {
+                  setCustomTo(new Date().toISOString().split('T')[0]);
+                }
+              }}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                dateRange === 'custom'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-white/60 [.light_&]:text-slate-600 hover:text-white [.light_&]:hover:text-slate-900'
+              }`}
+            >
+              Custom
+            </button>
           </div>
 
           <Button variant="secondary" onClick={loadData}>
@@ -249,6 +292,29 @@ export default function ConsolidatedAppStoresPage() {
           </Button>
         </div>
       </div>
+
+      {/* Custom Date Picker */}
+      {showCustomPicker && dateRange === 'custom' && (
+        <div className="mb-6 flex items-center gap-3 flex-wrap">
+          <label className="text-sm text-white/60 [.light_&]:text-slate-600">From:</label>
+          <input
+            type="date"
+            value={customFrom}
+            onChange={(e) => setCustomFrom(e.target.value)}
+            className="px-3 py-1.5 text-sm rounded-md bg-white/10 [.light_&]:bg-slate-100 border border-white/20 [.light_&]:border-slate-300 text-white [.light_&]:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <label className="text-sm text-white/60 [.light_&]:text-slate-600">To:</label>
+          <input
+            type="date"
+            value={customTo}
+            onChange={(e) => setCustomTo(e.target.value)}
+            className="px-3 py-1.5 text-sm rounded-md bg-white/10 [.light_&]:bg-slate-100 border border-white/20 [.light_&]:border-slate-300 text-white [.light_&]:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <Button variant="primary" onClick={handleCustomApply} className="text-sm">
+            Apply
+          </Button>
+        </div>
+      )}
 
       {/* Aggregated Data */}
       {displayData ? (

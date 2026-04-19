@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const dateRange = searchParams.get('dateRange') || '30d';
+    const dateFrom = searchParams.get('dateFrom') || undefined;
+    const dateTo = searchParams.get('dateTo') || undefined;
     const hasCredentials = hasASCCredentials();
 
     const companiesAppData = await Promise.all(
@@ -52,7 +54,7 @@ export async function GET(request: NextRequest) {
         }
 
         try {
-          const data = await fetchAppStoreData(ascBundleId, dateRange);
+          const data = await fetchAppStoreData(ascBundleId, dateRange, dateFrom, dateTo);
           return {
             id: company.id, name: company.name, logo: company.logo,
             connected: true, bundleId: ascBundleId, data, error: null,

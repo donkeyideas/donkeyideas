@@ -89,12 +89,17 @@ async function getAppByBundleId(bundleId: string, token: string): Promise<{ id: 
 }
 
 // Calculate date range
-function getDateRange(range: string): { startDate: string; endDate: string } {
+function getDateRange(range: string, dateFrom?: string, dateTo?: string): { startDate: string; endDate: string } {
+  if (range === 'custom' && dateFrom && dateTo) {
+    return { startDate: dateFrom, endDate: dateTo };
+  }
+
   const end = new Date();
   const start = new Date();
   switch (range) {
     case '7d': start.setDate(end.getDate() - 7); break;
     case '90d': start.setDate(end.getDate() - 90); break;
+    case 'all': start.setFullYear(end.getFullYear() - 3); break;
     default: start.setDate(end.getDate() - 30); break;
   }
   return {
@@ -290,7 +295,7 @@ async function fetchPerfMetrics(appId: string, token: string) {
 }
 
 // Main fetch function — mirrors fetchPlayStoreData return shape
-export async function fetchAppStoreData(bundleId: string, dateRange: string) {
+export async function fetchAppStoreData(bundleId: string, dateRange: string, dateFrom?: string, dateTo?: string) {
   const token = await generateASCToken();
   if (!token) {
     throw new Error('App Store Connect credentials not configured');
@@ -301,7 +306,7 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string) {
     throw new Error(`App not found for bundle ID: ${bundleId}`);
   }
 
-  const { startDate, endDate } = getDateRange(dateRange);
+  const { startDate, endDate } = getDateRange(dateRange, dateFrom, dateTo);
 
   // Fetch all data in parallel
   const [reviews, perfMetrics] = await Promise.all([

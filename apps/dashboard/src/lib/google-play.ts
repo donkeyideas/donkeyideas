@@ -29,7 +29,11 @@ export function getPlayClients() {
 }
 
 // Calculate date range for Play API (ISO format)
-export function getPlayDateRange(range: string): { startDate: string; endDate: string } {
+export function getPlayDateRange(range: string, dateFrom?: string, dateTo?: string): { startDate: string; endDate: string } {
+  if (range === 'custom' && dateFrom && dateTo) {
+    return { startDate: dateFrom, endDate: dateTo };
+  }
+
   const endDate = new Date();
   const startDate = new Date();
 
@@ -39,6 +43,9 @@ export function getPlayDateRange(range: string): { startDate: string; endDate: s
       break;
     case '90d':
       startDate.setDate(endDate.getDate() - 90);
+      break;
+    case 'all':
+      startDate.setFullYear(endDate.getFullYear() - 3);
       break;
     case '30d':
     default:
@@ -82,14 +89,14 @@ function extractMetricValue(row: any, metricIndex: number): number {
 }
 
 // Fetch Play Store data for a package
-export async function fetchPlayStoreData(packageName: string, dateRange: string) {
+export async function fetchPlayStoreData(packageName: string, dateRange: string, dateFrom?: string, dateTo?: string) {
   const clients = getPlayClients();
   if (!clients) {
     throw new Error('Google Play Console credentials not configured');
   }
 
   const { reporting, publisher } = clients;
-  const { startDate, endDate } = getPlayDateRange(dateRange);
+  const { startDate, endDate } = getPlayDateRange(dateRange, dateFrom, dateTo);
   const timelineSpec = buildTimelineSpec(startDate, endDate);
   const parent = `apps/${packageName}`;
 
@@ -205,7 +212,7 @@ export async function fetchPlayStoreData(packageName: string, dateRange: string)
   const vitalsTimeSeries = mergeTimeSeries(crashTimeSeries, anrTimeSeries);
 
   // Fetch GCS install/store reports if bucket configured
-  const gcsData = await fetchGCSReports(packageName, dateRange);
+  const gcsData = await fetchGCSReports(packageName, dateRange, dateFrom, dateTo);
 
   return {
     overview: {
@@ -425,8 +432,8 @@ function mergeTimeSeries(crashSeries: any[], anrSeries: any[]) {
 // ============================================
 
 // Get months to cover for the date range
-function getMonthsForRange(dateRange: string): string[] {
-  const { startDate, endDate } = getPlayDateRange(dateRange);
+function getMonthsForRange(dateRange: string, dateFrom?: string, dateTo?: string): string[] {
+  const { startDate, endDate } = getPlayDateRange(dateRange, dateFrom, dateTo);
   const start = new Date(startDate);
   const end = new Date(endDate);
   const months: string[] = [];
@@ -442,7 +449,7 @@ function getMonthsForRange(dateRange: string): string[] {
 }
 
 // Fetch and parse GCS CSV reports
-async function fetchGCSReports(packageName: string, dateRange: string) {
+async function fetchGCSReports(packageName: string, dateRange: string, dateFrom?: string, dateTo?: string) {
   const bucketId = process.env.GP_GCS_BUCKET_ID;
   if (!bucketId) {
     console.log('[GCS] No GP_GCS_BUCKET_ID configured, skipping GCS reports');
@@ -453,8 +460,8 @@ async function fetchGCSReports(packageName: string, dateRange: string) {
   if (!clients) return null;
 
   const { storage } = clients;
-  const months = getMonthsForRange(dateRange);
-  const { startDate, endDate } = getPlayDateRange(dateRange);
+  const months = getMonthsForRange(dateRange, dateFrom, dateTo);
+  const { startDate, endDate } = getPlayDateRange(dateRange, dateFrom, dateTo);
 
   console.log(`[GCS] Fetching reports for ${packageName}, bucket: ${bucketId}, months: ${months.join(',')}`);
 

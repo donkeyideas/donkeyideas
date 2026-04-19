@@ -80,6 +80,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const dateRange = searchParams.get('dateRange') || '30d';
+    const dateFrom = searchParams.get('dateFrom') || undefined;
+    const dateTo = searchParams.get('dateTo') || undefined;
 
     const clients = getPlayClients();
 
@@ -112,7 +114,7 @@ export async function GET(request: NextRequest) {
         }
 
         try {
-          const data = await fetchPlayStoreData(gpPackageName, dateRange);
+          const data = await fetchPlayStoreData(gpPackageName, dateRange, dateFrom, dateTo);
           return {
             id: company.id,
             name: company.name,
