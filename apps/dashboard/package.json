@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev -p 3001 -H 0.0.0.0",
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "next lint",
@@ -21,6 +21,7 @@
     "@google-analytics/data": "^5.2.1",
     "@google-cloud/storage": "^7.19.0",
     "@hookform/resolvers": "^3.3.2",
+    "@supabase/supabase-js": "^2.103.3",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.14.2",
     "@types/jsonwebtoken": "^9.0.10",
@@ -32,6 +33,7 @@
     "next": "^14.0.4",
     "next-auth": "^5.0.0-beta.15",
     "otplib": "^12.0.1",
+    "pg": "^8.20.0",
     "qrcode": "^1.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -46,6 +48,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "@types/pg": "^8.20.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",

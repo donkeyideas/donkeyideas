@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create response with user data
-    const response = NextResponse.json({ user: result.user });
+    // Create response with user data + token (token used by mobile apps)
+    const response = NextResponse.json({ user: result.user, token: result.token });
 
     // Set HTTP-only cookie using NextResponse
     response.cookies.set('auth-token', result.token!, {

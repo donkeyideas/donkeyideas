@@ -891,9 +891,9 @@ export default function FinancialsPage() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-4 flex justify-between items-start">
         <div>
-        <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Financial Hub</h1>
+        <h1 className="text-xl font-bold mb-1 text-white [.light_&]:text-slate-900">Financial Hub</h1>
         <p className="text-white/60 [.light_&]:text-slate-600">{currentCompany.name} — Financial data</p>
         </div>
         <div className="flex gap-3 items-center">
@@ -954,7 +954,7 @@ export default function FinancialsPage() {
       {summary && <FinancialSummaryCards summary={summary} />}
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-white/10 [.light_&]:border-slate-300">
+      <div className="mb-4 border-b border-white/10 [.light_&]:border-slate-300">
         <div className="flex gap-6">
           <button
             onClick={() => setActiveTab('pl')}

@@ -36,9 +36,9 @@ function AppLayoutContent({
   return (
     <div className={`${theme} flex min-h-screen ${themeClasses[theme]}`}>
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <div className="flex-1 lg:ml-70">
+      <div className="flex-1 min-w-0 lg:ml-60">
         <TopBar onMenuToggle={() => setIsSidebarOpen(true)} />
-        <main className="p-4 sm:p-6 lg:p-8 max-w-[1600px]">{children}</main>
+        <main className="p-3 sm:p-4 lg:p-6">{children}</main>
       </div>
 
       {/* Floating AI Assistant Button */}

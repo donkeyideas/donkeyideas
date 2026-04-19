@@ -19,6 +19,7 @@ const donkeyIdeasNavigation = [
       { name: 'App Stores', href: '/app/app-stores', icon: '' },
       { name: 'Analytics & Reports', href: '/app/analytics', icon: '' },
       { name: 'Project Board', href: '/app/consolidated-projects', icon: '' },
+      { name: 'User Management', href: '/app/users', icon: '' },
     ],
   },
   {
@@ -160,12 +161,12 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           onClick={onClose}
         />
       )}
-      <div className={`w-70 fixed left-0 top-0 h-screen ${bgClass} border-r ${borderClass} p-6 overflow-y-auto z-50 transition-transform duration-300 lg:translate-x-0 ${
+      <div className={`w-60 fixed left-0 top-0 h-screen ${bgClass} border-r ${borderClass} p-4 overflow-y-auto z-50 transition-transform duration-300 lg:translate-x-0 ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
       {/* Mobile close button */}
-      <div className="flex items-center justify-between mb-6">
-        <div className={`text-xl font-light tracking-wider ${textClass}`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className={`text-lg font-light tracking-wider ${textClass}`}>
           DONKEY <span className="font-bold">IDEAS</span>
         </div>
         <button

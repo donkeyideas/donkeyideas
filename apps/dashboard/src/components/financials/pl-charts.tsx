@@ -34,13 +34,13 @@ export function PLCharts({ plStatements }: PLChartsProps) {
   const tooltipBorder = theme === 'light' ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)';
 
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-2 gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Revenue & Expenses Trend</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
               <XAxis dataKey="period" stroke={axisColor} />
@@ -81,7 +81,7 @@ export function PLCharts({ plStatements }: PLChartsProps) {
           <CardTitle>Net Profit Trend</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
               <XAxis dataKey="period" stroke={axisColor} />

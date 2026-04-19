@@ -27,7 +27,7 @@ export function TopBar({ onMenuToggle }: TopBarProps) {
   const activeTextClass = theme === 'light' ? 'text-slate-900' : 'text-white';
 
   return (
-    <div className={`sticky top-0 z-30 ${bgClass} backdrop-blur-lg border-b ${borderClass} px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex justify-between items-center`}>
+    <div className={`sticky top-0 z-30 ${bgClass} backdrop-blur-lg border-b ${borderClass} px-3 sm:px-4 lg:px-6 py-3 flex justify-between items-center`}>
       <div className="flex items-center gap-3">
         {/* Mobile hamburger */}
         <button

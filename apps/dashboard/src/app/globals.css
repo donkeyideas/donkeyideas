@@ -62,14 +62,6 @@ body {
     text-wrap: balance;
   }
 
-  .ml-70 {
-    margin-left: 280px;
-  }
-
-  .w-70 {
-    width: 280px;
-  }
-
   /* Theme-aware text colors */
   .theme-text {
     color: var(--foreground);
