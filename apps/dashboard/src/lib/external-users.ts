@@ -67,6 +67,19 @@ interface ProjectConfig {
   envSupabaseKey?: string;
   supabaseTable?: string; // for 'supabase-table' type
   hasBotProfiles?: boolean; // if true, filter bots from profiles table (CFB Social)
+  // Custom field mappings for supabase-table (defaults: id, email, full_name, created_at, last_login)
+  supabaseFields?: {
+    id?: string;
+    email?: string;
+    name?: string;
+    createdAt?: string;
+    lastActive?: string | null;
+    status?: string | null;
+    role?: string | null;
+    avatarUrl?: string | null;
+    selectExtra?: string; // extra columns to select
+  };
+  supabaseBotColumn?: string; // column name for bot flag filter (e.g. 'isBot')
 }
 
 const PROJECT_CONFIGS: ProjectConfig[] = [
@@ -97,21 +110,21 @@ const PROJECT_CONFIGS: ProjectConfig[] = [
     displayName: 'Basketball',
     companyNameMatch: 'Basktball',
     color: '#F59E0B', // amber
-    connectionType: 'pg',
-    envDbUrl: 'BASKETBALL_DB_URL',
-    tableName: '"User"',
-    excludeBotsSql: 'AND "isBot" IS NOT TRUE',
-    fields: {
+    connectionType: 'supabase-table',
+    envSupabaseUrl: 'BASKETBALL_SUPABASE_URL',
+    envSupabaseKey: 'BASKETBALL_SUPABASE_KEY',
+    supabaseTable: 'User',
+    supabaseBotColumn: 'isBot',
+    supabaseFields: {
       id: 'id',
       email: 'email',
-      name: `COALESCE("displayName", name)`,
-      createdAt: '"createdAt"',
-      lastActive: '"lastActiveAt"',
-      status: `LOWER(status::text)`,
-      role: `LOWER(role::text)`,
-      avatarUrl: '"avatarUrl"',
-      provider: `COALESCE((SELECT a.provider FROM "Account" a WHERE a."userId" = "User".id LIMIT 1), 'email')`,
-      plan: `'Free'`,
+      name: 'displayName',
+      createdAt: 'createdAt',
+      lastActive: 'lastActiveAt',
+      status: 'status',
+      role: 'role',
+      avatarUrl: 'avatarUrl',
+      selectExtra: 'id, email, displayName, name, createdAt, lastActiveAt, status, role, avatarUrl, isBot',
     },
   },
   {
@@ -119,21 +132,9 @@ const PROJECT_CONFIGS: ProjectConfig[] = [
     displayName: 'OpticRank',
     companyNameMatch: 'Optic Rank',
     color: '#10B981', // emerald
-    connectionType: 'pg',
-    envDbUrl: 'OPTICRANK_DB_URL',
-    tableName: 'auth.users',
-    fields: {
-      id: 'id',
-      email: 'email',
-      name: `raw_user_meta_data->>'full_name'`,
-      createdAt: 'created_at',
-      lastActive: 'last_sign_in_at',
-      status: `CASE WHEN banned_until IS NOT NULL AND banned_until > NOW() THEN 'banned' ELSE 'active' END`,
-      role: `COALESCE(raw_user_meta_data->>'role', 'user')`,
-      avatarUrl: `raw_user_meta_data->>'avatar_url'`,
-      provider: `COALESCE(raw_app_meta_data->>'provider', 'email')`,
-      plan: `COALESCE((SELECT o.plan FROM profiles p JOIN organizations o ON o.id = p.organization_id WHERE p.id = auth.users.id LIMIT 1), 'free')`,
-    },
+    connectionType: 'supabase-auth',
+    envSupabaseUrl: 'OPTICRANK_SUPABASE_URL',
+    envSupabaseKey: 'OPTICRANK_SUPABASE_KEY',
   },
   {
     slug: 'construction',
@@ -290,16 +291,23 @@ async function fetchSupabaseTableUserCount(config: ProjectConfig): Promise<{ tot
   if (!client) throw new Error(`No Supabase credentials for ${config.displayName}`);
 
   const table = config.supabaseTable!;
+  const createdAtCol = config.supabaseFields?.createdAt || 'created_at';
+  const botCol = config.supabaseBotColumn;
 
-  const { count: total } = await client.from(table).select('*', { count: 'exact', head: true });
+  let baseQuery = () => {
+    let q = client.from(table).select('*', { count: 'exact', head: true });
+    if (botCol) q = q.neq(botCol, true);
+    return q;
+  };
+
+  const { count: total } = await baseQuery();
 
   const now = new Date();
-  const thirtyDaysAgo = now.toISOString();
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgoStr = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const { count: new30d } = await client.from(table).select('*', { count: 'exact', head: true }).gte('created_at', thirtyDaysAgoStr);
-  const { count: new7d } = await client.from(table).select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo);
+  const { count: new30d } = await baseQuery().gte(createdAtCol, thirtyDaysAgoStr);
+  const { count: new7d } = await baseQuery().gte(createdAtCol, sevenDaysAgo);
 
   return { total: total || 0, new30d: new30d || 0, new7d: new7d || 0 };
 }
@@ -411,7 +419,7 @@ async function fetchPlanMapForProject(client: SupabaseClient, slug: string, user
         for (const c of companies || []) companyPlanMap[c.id] = c.subscription_plan || 'starter';
         for (const m of members) planMap[m.user_id] = companyPlanMap[m.company_id] || 'starter';
       }
-    } else if (slug === 'govirall') {
+    } else if (slug === 'govirall' || slug === 'opticrank') {
       // profiles → organizations
       const { data: profiles } = await client.from('profiles').select('id, organization_id').in('id', userIds);
       if (profiles && profiles.length > 0) {
@@ -531,50 +539,67 @@ async function fetchSupabaseTableUsers(config: ProjectConfig, options: FetchUser
   if (!client) throw new Error(`No Supabase credentials for ${config.displayName}`);
 
   const table = config.supabaseTable!;
+  const f = config.supabaseFields;
+  const botCol = config.supabaseBotColumn;
+
+  // Field mappings with defaults
+  const nameCol = f?.name || 'full_name';
+  const emailCol = f?.email || 'email';
+  const createdAtCol = f?.createdAt || 'created_at';
+  const lastActiveCol = f?.lastActive || 'last_login';
+  const statusCol = f?.status || null;
+  const roleCol = f?.role || null;
+  const avatarCol = f?.avatarUrl || null;
+
   const { page = 1, limit = 25, sortBy = 'createdAt', sortDir = 'desc', search, dateFrom, dateTo } = options;
   const offset = (page - 1) * limit;
 
-  // Map sort field
+  // Map sort field to actual column
   const sortMap: Record<string, string> = {
-    name: 'full_name',
-    email: 'email',
-    createdAt: 'created_at',
-    lastActive: 'last_login',
+    name: nameCol,
+    email: emailCol,
+    createdAt: createdAtCol,
+    lastActive: lastActiveCol || createdAtCol,
   };
-  const orderCol = sortMap[sortBy] || 'created_at';
+  const orderCol = sortMap[sortBy] || createdAtCol;
+
+  // Select columns
+  const selectCols = f?.selectExtra || `id, ${emailCol}, ${nameCol}, ${createdAtCol}, ${lastActiveCol}`;
 
   // Count query
   let countQuery = client.from(table).select('*', { count: 'exact', head: true });
-  if (search) countQuery = countQuery.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`);
-  if (dateFrom) countQuery = countQuery.gte('created_at', dateFrom);
-  if (dateTo) countQuery = countQuery.lte('created_at', dateTo);
+  if (botCol) countQuery = countQuery.neq(botCol, true);
+  if (search) countQuery = countQuery.or(`${emailCol}.ilike.%${search}%,${nameCol}.ilike.%${search}%`);
+  if (dateFrom) countQuery = countQuery.gte(createdAtCol, dateFrom);
+  if (dateTo) countQuery = countQuery.lte(createdAtCol, dateTo);
   const { count: total } = await countQuery;
 
   // Data query
   let dataQuery = client.from(table)
-    .select('id, email, full_name, created_at, last_login, subscription_tier, stripe_customer_id')
+    .select(selectCols)
     .order(orderCol, { ascending: sortDir === 'asc' })
     .range(offset, offset + limit - 1);
 
-  if (search) dataQuery = dataQuery.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`);
-  if (dateFrom) dataQuery = dataQuery.gte('created_at', dateFrom);
-  if (dateTo) dataQuery = dataQuery.lte('created_at', dateTo);
+  if (botCol) dataQuery = dataQuery.neq(botCol, true);
+  if (search) dataQuery = dataQuery.or(`${emailCol}.ilike.%${search}%,${nameCol}.ilike.%${search}%`);
+  if (dateFrom) dataQuery = dataQuery.gte(createdAtCol, dateFrom);
+  if (dateTo) dataQuery = dataQuery.lte(createdAtCol, dateTo);
 
   const { data, error } = await dataQuery;
   if (error) throw error;
 
   return {
     users: (data || []).map(row => ({
-      id: row.id,
-      email: row.email || '',
-      name: row.full_name || null,
-      createdAt: row.created_at,
-      lastActive: row.last_login || null,
-      status: 'active',
-      role: 'user',
-      avatarUrl: null,
+      id: row[f?.id || 'id'],
+      email: row[emailCol] || '',
+      name: row[nameCol] || row['name'] || null,
+      createdAt: row[createdAtCol],
+      lastActive: lastActiveCol ? row[lastActiveCol] || null : null,
+      status: statusCol ? (row[statusCol]?.toLowerCase?.() || 'active') : 'active',
+      role: roleCol ? (row[roleCol]?.toLowerCase?.() || 'user') : 'user',
+      avatarUrl: avatarCol ? row[avatarCol] || null : null,
       provider: 'email' as const,
-      plan: row.subscription_tier || 'free',
+      plan: row['subscription_tier'] || row['plan'] || 'free',
       project: config.slug,
       projectName: config.displayName,
       projectColor: config.color,
@@ -646,18 +671,24 @@ async function fetchSupabaseTableGrowthData(config: ProjectConfig, days: number)
   const client = getSupabaseClient(config);
   if (!client) throw new Error(`No Supabase credentials for ${config.displayName}`);
 
+  const createdAtCol = config.supabaseFields?.createdAt || 'created_at';
+  const botCol = config.supabaseBotColumn;
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await client
-    .from(config.supabaseTable!)
-    .select('created_at')
-    .gte('created_at', cutoff)
-    .order('created_at', { ascending: true });
 
+  let query = client
+    .from(config.supabaseTable!)
+    .select(createdAtCol)
+    .gte(createdAtCol, cutoff)
+    .order(createdAtCol, { ascending: true });
+
+  if (botCol) query = query.neq(botCol, true);
+
+  const { data, error } = await query;
   if (error) throw error;
 
   const counts: Record<string, number> = {};
   for (const row of data || []) {
-    const dateKey = new Date(row.created_at).toISOString().split('T')[0];
+    const dateKey = new Date(row[createdAtCol]).toISOString().split('T')[0];
     counts[dateKey] = (counts[dateKey] || 0) + 1;
   }
 
