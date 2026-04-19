@@ -588,9 +588,10 @@ async function fetchSupabaseTableUsers(config: ProjectConfig, options: FetchUser
   const { data, error } = await dataQuery;
   if (error) throw error;
 
+  const idCol = f?.id || 'id';
   return {
-    users: (data || []).map(row => ({
-      id: row[f?.id || 'id'],
+    users: (data || []).map((row: any) => ({
+      id: row[idCol],
       email: row[emailCol] || '',
       name: row[nameCol] || row['name'] || null,
       createdAt: row[createdAtCol],
@@ -687,7 +688,7 @@ async function fetchSupabaseTableGrowthData(config: ProjectConfig, days: number)
   if (error) throw error;
 
   const counts: Record<string, number> = {};
-  for (const row of data || []) {
+  for (const row of (data || []) as any[]) {
     const dateKey = new Date(row[createdAtCol]).toISOString().split('T')[0];
     counts[dateKey] = (counts[dateKey] || 0) + 1;
   }
