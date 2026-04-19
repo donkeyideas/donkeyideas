@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npx prisma generate --schema=../../packages/database/prisma/schema.prisma && npm run build --workspace=@donkey-ideas/financial-engine && npm run build --workspace=@donkey-ideas/dashboard",
-  "outputDirectory": ".next",
+  "buildCommand": "npx prisma generate --schema=packages/database/prisma/schema.prisma && npm run build --workspace=@donkey-ideas/financial-engine && npm run build --workspace=@donkey-ideas/dashboard",
+  "outputDirectory": "apps/dashboard/.next",
   "installCommand": "npm install",
   "framework": "nextjs"
 }
