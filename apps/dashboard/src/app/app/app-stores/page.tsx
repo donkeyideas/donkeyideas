@@ -217,7 +217,7 @@ export default function ConsolidatedAppStoresPage() {
             {subtitles[storeFilter]}
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           {/* Store Filter */}
           <div className="flex items-center gap-2 bg-white/5 [.light_&]:bg-slate-100 rounded-lg p-1">
             {([

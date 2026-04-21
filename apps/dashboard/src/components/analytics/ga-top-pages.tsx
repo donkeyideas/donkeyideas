@@ -34,16 +34,16 @@ export function GATopPages({ data, title = 'Top Pages' }: GATopPagesProps) {
       <CardContent>
         <div className="space-y-4">
           {/* Header */}
-          <div className="grid grid-cols-12 gap-4 text-xs text-white/50 [.light_&]:text-slate-500 uppercase tracking-wider pb-2 border-b border-white/10 [.light_&]:border-slate-200">
-            <div className="col-span-6">Page</div>
-            <div className="col-span-3 text-right">Pageviews</div>
-            <div className="col-span-3 text-right">Avg. Time</div>
+          <div className="grid grid-cols-12 gap-2 sm:gap-4 text-xs text-white/50 [.light_&]:text-slate-500 uppercase tracking-wider pb-2 border-b border-white/10 [.light_&]:border-slate-200">
+            <div className="col-span-8 sm:col-span-6">Page</div>
+            <div className="col-span-4 sm:col-span-3 text-right">Pageviews</div>
+            <div className="hidden sm:block col-span-3 text-right">Avg. Time</div>
           </div>
 
           {/* Rows */}
           {data.map((page, index) => (
-            <div key={page.page} className="grid grid-cols-12 gap-4 items-center group">
-              <div className="col-span-6">
+            <div key={page.page} className="grid grid-cols-12 gap-2 sm:gap-4 items-center group">
+              <div className="col-span-8 sm:col-span-6">
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-white/30 [.light_&]:text-slate-400 w-4">
                     {index + 1}
@@ -58,7 +58,7 @@ export function GATopPages({ data, title = 'Top Pages' }: GATopPagesProps) {
                   </div>
                 </div>
               </div>
-              <div className="col-span-3">
+              <div className="col-span-4 sm:col-span-3">
                 <div className="flex flex-col items-end">
                   <span className="text-sm font-medium text-white [.light_&]:text-slate-900">
                     {page.pageviews.toLocaleString()}
@@ -73,7 +73,7 @@ export function GATopPages({ data, title = 'Top Pages' }: GATopPagesProps) {
                   </div>
                 </div>
               </div>
-              <div className="col-span-3 text-right">
+              <div className="hidden sm:block col-span-3 text-right">
                 <span className="text-sm text-white/70 [.light_&]:text-slate-600">
                   {formatDuration(page.avgTimeOnPage)}
                 </span>

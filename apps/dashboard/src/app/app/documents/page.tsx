@@ -132,7 +132,7 @@ export default function DocumentsPage() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-8 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Document Library</h1>
           <p className="text-white/60 [.light_&]:text-slate-600">
@@ -160,7 +160,7 @@ export default function DocumentsPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {documents.map((doc) => (
             <Card key={doc.id}>
               <CardContent className="p-4">

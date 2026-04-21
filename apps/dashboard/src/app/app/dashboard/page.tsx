@@ -144,14 +144,14 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-8 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Dashboard Overview</h1>
-          <p className="text-white/60 [.light_&]:text-slate-600">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Dashboard Overview</h1>
+          <p className="text-white/60 [.light_&]:text-slate-600 text-sm sm:text-base">
             Donkey Ideas — Consolidated metrics across all companies
           </p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
           <div className="flex items-center gap-2">
             <label className="text-sm text-white/60 [.light_&]:text-slate-600">Filter by Month:</label>
             <select
@@ -202,13 +202,13 @@ export default function DashboardPage() {
       {loading ? (
         <StatsGridSkeleton />
       ) : (
-        <div className="grid grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
         <Card>
           <CardContent className="pt-6">
             <div className="text-xs text-white/50 [.light_&]:text-slate-500 uppercase tracking-wider mb-2">
               Total Revenue
             </div>
-            <div className="text-3xl font-bold mb-1 text-white [.light_&]:text-slate-900">
+            <div className="text-2xl sm:text-3xl font-bold mb-1 text-white [.light_&]:text-slate-900">
               {formatCurrency(consolidatedData?.totalRevenue || 0)}
             </div>
             <div className="text-sm text-green-500 [.light_&]:text-green-600">
@@ -223,7 +223,7 @@ export default function DashboardPage() {
             <div className="text-xs text-white/50 [.light_&]:text-slate-500 uppercase tracking-wider mb-2">
               Total Expenses
             </div>
-            <div className="text-3xl font-bold mb-1 text-red-400 [.light_&]:text-red-600">
+            <div className="text-2xl sm:text-3xl font-bold mb-1 text-red-400 [.light_&]:text-red-600">
               {formatCurrency(consolidatedData?.totalExpenses || 0)}
             </div>
             <div className="text-sm text-white/60 [.light_&]:text-slate-600">
@@ -238,7 +238,7 @@ export default function DashboardPage() {
             <div className="text-xs text-white/50 [.light_&]:text-slate-500 uppercase tracking-wider mb-2">
               Active Projects
             </div>
-            <div className="text-3xl font-bold mb-1 text-white [.light_&]:text-slate-900">
+            <div className="text-2xl sm:text-3xl font-bold mb-1 text-white [.light_&]:text-slate-900">
               {consolidatedData?.activeCompanies || companies.length}
             </div>
             <div className="text-sm text-white/60 [.light_&]:text-slate-600">
@@ -253,7 +253,7 @@ export default function DashboardPage() {
             <div className="text-xs text-white/50 [.light_&]:text-slate-500 uppercase tracking-wider mb-2">
               Total Cash
             </div>
-            <div className="text-3xl font-bold mb-1 text-blue-400 [.light_&]:text-blue-600">
+            <div className="text-2xl sm:text-3xl font-bold mb-1 text-blue-400 [.light_&]:text-blue-600">
               {formatCurrency(consolidatedData?.totalCashBalance || 0)}
             </div>
             <div className="text-sm text-white/60 [.light_&]:text-slate-600">
@@ -282,7 +282,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <h3 className="text-lg font-semibold text-white [.light_&]:text-slate-900 mb-4 pb-2 border-b border-white/10 [.light_&]:border-slate-200">
                 P&L Statement
@@ -333,7 +333,7 @@ export default function DashboardPage() {
       )}
 
       {/* Key Performance Indicators */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
         {/* Profitability KPIs */}
         <Card>
           <CardHeader>

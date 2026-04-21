@@ -891,12 +891,12 @@ export default function FinancialsPage() {
 
   return (
     <div>
-      <div className="mb-4 flex justify-between items-start">
+      <div className="mb-4 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
         <h1 className="text-xl font-bold mb-1 text-white [.light_&]:text-slate-900">Financial Hub</h1>
         <p className="text-white/60 [.light_&]:text-slate-600">{currentCompany.name} — Financial data</p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
           <div className="flex items-center gap-2">
             <label className="text-sm text-white/60 [.light_&]:text-slate-600">Filter by Month:</label>
             <select

@@ -162,7 +162,7 @@ export default function WebsitePage() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-8 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Website Manager</h1>
           <p className="text-white/60 [.light_&]:text-slate-600">

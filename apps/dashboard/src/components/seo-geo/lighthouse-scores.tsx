@@ -53,7 +53,7 @@ export function LighthouseScores({ performanceScore, seoScore, accessibilityScor
         <CardTitle className="text-lg">Lighthouse Scores</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <ScoreCircle score={performanceScore} label="Performance" />
           <ScoreCircle score={seoScore} label="SEO" />
           <ScoreCircle score={accessibilityScore} label="Accessibility" />

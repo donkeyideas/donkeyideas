@@ -34,7 +34,7 @@ export function PLCharts({ plStatements }: PLChartsProps) {
   const tooltipBorder = theme === 'light' ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)';
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Revenue & Expenses Trend</CardTitle>

@@ -37,9 +37,9 @@ export function GPVersionBreakdown({ data, title = 'Crash Rate by Version' }: GP
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        <div className="space-y-3 overflow-x-auto">
           {/* Header */}
-          <div className="grid grid-cols-12 gap-2 text-xs text-white/40 [.light_&]:text-slate-500 font-medium pb-2 border-b border-white/5 [.light_&]:border-slate-200">
+          <div className="grid grid-cols-12 gap-2 text-xs text-white/40 [.light_&]:text-slate-500 font-medium pb-2 border-b border-white/5 [.light_&]:border-slate-200 min-w-[400px]">
             <div className="col-span-2">Version</div>
             <div className="col-span-6">Crash Rate</div>
             <div className="col-span-2 text-right">Rate</div>
@@ -52,7 +52,7 @@ export function GPVersionBreakdown({ data, title = 'Crash Rate by Version' }: GP
             const color = isHigh ? '#ef4444' : version.crashRate > 0.5 ? '#f59e0b' : '#22c55e';
 
             return (
-              <div key={version.versionCode} className="grid grid-cols-12 gap-2 items-center">
+              <div key={version.versionCode} className="grid grid-cols-12 gap-2 items-center min-w-[400px]">
                 <div className="col-span-2">
                   <span className="text-sm font-mono text-white/70 [.light_&]:text-slate-700">
                     v{version.versionCode}

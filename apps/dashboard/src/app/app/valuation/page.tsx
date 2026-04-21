@@ -93,7 +93,7 @@ export default function ValuationPage() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-8 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Valuation Engine</h1>
           <p className="text-white/60 [.light_&]:text-slate-600">
@@ -129,7 +129,7 @@ export default function ValuationPage() {
           </div>
 
           {/* Valuation Methods */}
-          <div className="grid grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-6">
             <Card>
               <CardContent className="pt-6">
                 <div className="text-xs text-white/50 uppercase tracking-wider mb-2">
@@ -196,7 +196,7 @@ export default function ValuationPage() {
                   style={{ width: `${valuation.aiScore || 0}%` }}
                 />
               </div>
-              <div className="grid grid-cols-4 gap-4 text-center">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                 <div>
                   <div className="text-xs text-white/50 mb-1">GROWTH</div>
                   <div className="text-xl font-bold text-green-500">

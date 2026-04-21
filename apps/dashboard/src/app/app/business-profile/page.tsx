@@ -362,7 +362,7 @@ export default function BusinessProfilePage() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-8 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Business Profile</h1>
           <p className="text-white/60 [.light_&]:text-slate-600">
@@ -594,7 +594,7 @@ export default function BusinessProfilePage() {
           <CardTitle>Traction & Metrics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium mb-2">Total Customers</label>
               <input

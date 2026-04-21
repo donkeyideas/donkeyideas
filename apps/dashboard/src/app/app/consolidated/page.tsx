@@ -165,14 +165,14 @@ export default function ConsolidatedViewPage() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-8 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Consolidated Financials</h1>
-          <p className="text-white/60 [.light_&]:text-slate-600">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">Consolidated Financials</h1>
+          <p className="text-white/60 [.light_&]:text-slate-600 text-sm sm:text-base">
             Donkey Ideas — Combined financial overview of all companies
           </p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
           <div className="flex items-center gap-2">
             <label className="text-sm text-white/60 [.light_&]:text-slate-600">Filter by Month:</label>
             <select
@@ -211,7 +211,7 @@ export default function ConsolidatedViewPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-8">
         <Card>
           <CardHeader>
             <CardTitle>Consolidated P&L</CardTitle>
@@ -251,7 +251,7 @@ export default function ConsolidatedViewPage() {
           </CardHeader>
           <CardContent>
             {/* 2-Column Layout */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {/* Left Column: Total Assets */}
               <div className="space-y-2">
                 <div className="text-sm text-white/60 [.light_&]:text-slate-700 mb-1">Total Assets</div>
@@ -303,7 +303,7 @@ export default function ConsolidatedViewPage() {
       </div>
 
       {/* Portfolio Overview */}
-      <div className="grid grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-8">
         <Card>
           <CardHeader>
             <CardTitle>Portfolio Overview</CardTitle>

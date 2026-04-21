@@ -130,7 +130,7 @@ export default function ApiUsagePage() {
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-start">
+      <div className="mb-8 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2 text-white [.light_&]:text-slate-900">API Usage & Costs</h1>
           <p className="text-white/60 [.light_&]:text-slate-600">
@@ -156,7 +156,7 @@ export default function ApiUsagePage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-8">
         <Card>
           <CardContent className="pt-6">
             <div className="text-xs text-white/50 uppercase tracking-wider mb-2">
