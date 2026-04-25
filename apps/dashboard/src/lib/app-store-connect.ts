@@ -342,68 +342,46 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string, dat
   let deviceBreakdown: { device: string; count: number }[] = [];
 
   const vendorNumber = process.env.ASC_VENDOR_NUMBER;
-  const isLongRange = dateRange === 'all' || dateRange === '90d';
 
-  if (isLongRange) {
-    // For longer date ranges, prefer Analytics Reports (single CSV covering full history)
+  // Try both data sources and use whichever has more data
+  let analyticsResult = { timeSeries: [] as any[], totalInstalls: 0, dailyInstalls: 0, activeDevices: 0 };
+  let salesResult = { timeSeries: [] as any[], totalInstalls: 0, dailyInstalls: 0, deviceBreakdown: [] as any[] };
+
+  // Fetch Analytics Reports (covers full history via CSV)
+  try {
+    analyticsResult = await fetchAnalyticsData(app.id, token, startDate, endDate);
+    if (analyticsResult.totalInstalls > 0) {
+      console.log(`[ASC] Analytics Reports: ${analyticsResult.totalInstalls} total installs from ${analyticsResult.timeSeries.length} days`);
+    }
+  } catch (e: any) {
+    console.log('[ASC] Analytics data not available:', e.message);
+  }
+
+  // Fetch Sales Reports (more accurate daily data, limited to 30 days)
+  if (vendorNumber) {
     try {
-      const analyticsData = await fetchAnalyticsData(app.id, token, startDate, endDate);
-      if (analyticsData.totalInstalls > 0) {
-        installTimeSeries = analyticsData.timeSeries;
-        totalInstalls = analyticsData.totalInstalls;
-        dailyInstalls = analyticsData.dailyInstalls;
-        activeDevices = analyticsData.activeDevices;
-        console.log(`[ASC] Analytics Reports: ${totalInstalls} total installs`);
+      salesResult = await fetchSalesData(app.id, token, vendorNumber, startDate, endDate);
+      if (salesResult.totalInstalls > 0) {
+        console.log(`[ASC] Sales Reports: ${salesResult.totalInstalls} total installs from ${salesResult.timeSeries.length} days`);
       }
     } catch (e: any) {
-      console.log('[ASC] Analytics data not available:', e.message);
+      console.log('[ASC] Sales Reports not available:', e.message);
     }
+  }
 
-    // Fall back to Sales Reports if Analytics has no data
-    if (totalInstalls === 0 && vendorNumber) {
-      try {
-        console.log('[ASC] Falling back to Sales Reports API');
-        const salesData = await fetchSalesData(app.id, token, vendorNumber, startDate, endDate);
-        installTimeSeries = salesData.timeSeries;
-        totalInstalls = salesData.totalInstalls;
-        dailyInstalls = salesData.dailyInstalls;
-        deviceBreakdown = salesData.deviceBreakdown;
-        console.log(`[ASC] Sales Reports: ${totalInstalls} total installs from ${installTimeSeries.length} days`);
-      } catch (e: any) {
-        console.log('[ASC] Sales Reports not available:', e.message);
-      }
-    }
-  } else {
-    // For short date ranges (7d, 30d), prefer Sales Reports (more accurate, near real-time)
-    if (vendorNumber) {
-      try {
-        console.log('[ASC] Trying Sales Reports API with vendor number');
-        const salesData = await fetchSalesData(app.id, token, vendorNumber, startDate, endDate);
-        installTimeSeries = salesData.timeSeries;
-        totalInstalls = salesData.totalInstalls;
-        dailyInstalls = salesData.dailyInstalls;
-        deviceBreakdown = salesData.deviceBreakdown;
-        console.log(`[ASC] Sales Reports: ${totalInstalls} total installs from ${installTimeSeries.length} days`);
-      } catch (e: any) {
-        console.log('[ASC] Sales Reports not available:', e.message);
-      }
-    }
-
-    // Fall back to Analytics Reports if Sales has no data
-    if (totalInstalls === 0) {
-      try {
-        const analyticsData = await fetchAnalyticsData(app.id, token, startDate, endDate);
-        if (analyticsData.totalInstalls > 0) {
-          installTimeSeries = analyticsData.timeSeries;
-          totalInstalls = analyticsData.totalInstalls;
-          dailyInstalls = analyticsData.dailyInstalls;
-          activeDevices = analyticsData.activeDevices;
-          console.log(`[ASC] Analytics Reports: ${totalInstalls} total installs`);
-        }
-      } catch (e: any) {
-        console.log('[ASC] Analytics data not available:', e.message);
-      }
-    }
+  // Use whichever source has more total installs
+  if (analyticsResult.totalInstalls >= salesResult.totalInstalls && analyticsResult.totalInstalls > 0) {
+    installTimeSeries = analyticsResult.timeSeries;
+    totalInstalls = analyticsResult.totalInstalls;
+    dailyInstalls = analyticsResult.dailyInstalls;
+    activeDevices = analyticsResult.activeDevices;
+    console.log(`[ASC] Using Analytics data (${totalInstalls} installs)`);
+  } else if (salesResult.totalInstalls > 0) {
+    installTimeSeries = salesResult.timeSeries;
+    totalInstalls = salesResult.totalInstalls;
+    dailyInstalls = salesResult.dailyInstalls;
+    deviceBreakdown = salesResult.deviceBreakdown;
+    console.log(`[ASC] Using Sales data (${totalInstalls} installs)`);
   }
 
   // Try store listing metrics
