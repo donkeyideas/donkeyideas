@@ -481,7 +481,7 @@ async function fetchSupabaseAuthUsers(config: ProjectConfig, options: FetchUsers
     const s = search.toLowerCase();
     allUsers = allUsers.filter(u =>
       u.email?.toLowerCase().includes(s) ||
-      (u.user_metadata?.full_name || u.user_metadata?.name || '').toLowerCase().includes(s)
+      (u.user_metadata?.full_name || u.user_metadata?.name || u.user_metadata?.display_name || '').toLowerCase().includes(s)
     );
   }
   if (dateFrom) {
@@ -518,12 +518,12 @@ async function fetchSupabaseAuthUsers(config: ProjectConfig, options: FetchUsers
     users: paged.map(u => ({
       id: u.id,
       email: u.email || '',
-      name: u.user_metadata?.full_name || u.user_metadata?.name || null,
+      name: u.user_metadata?.full_name || u.user_metadata?.name || u.user_metadata?.display_name || null,
       createdAt: u.created_at,
       lastActive: u.last_sign_in_at || null,
       status: u.banned_until ? 'banned' : 'active',
       role: u.role || 'user',
-      avatarUrl: u.user_metadata?.avatar_url || null,
+      avatarUrl: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
       provider: getSupabaseUserProvider(u),
       plan: planMap[u.id] || 'free',
       project: config.slug,
