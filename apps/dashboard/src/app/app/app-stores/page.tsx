@@ -69,7 +69,7 @@ function mergeStoreListings(play: any, apple: any): any {
 export default function ConsolidatedAppStoresPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<DateRange>('30d');
+  const [dateRange, setDateRange] = useState<DateRange>('all');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [showCustomPicker, setShowCustomPicker] = useState(false);

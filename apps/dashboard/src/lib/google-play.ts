@@ -1,5 +1,4 @@
 import { google } from 'googleapis';
-import { Storage } from '@google-cloud/storage';
 import { gunzipSync } from 'zlib';
 
 // Initialize Google Play API clients with service account credentials
@@ -531,27 +530,14 @@ async function fetchGCSReports(packageName: string, dateRange: string, dateFrom?
   }
 }
 
-// Create a GCS Storage client (separate from googleapis for better compatibility)
-function getGCSStorage(): Storage | null {
-  const clientEmail = process.env.GP_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = process.env.GP_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-  if (!clientEmail || !privateKey) return null;
-
-  return new Storage({
-    credentials: {
-      client_email: clientEmail,
-      private_key: privateKey,
-    },
-    projectId: 'donkey-ideas-493014',
-  });
-}
-
-// Download and decompress a GCS file (handles gzip-compressed and UTF-16LE CSVs)
-async function downloadGCSFile(gcs: Storage, bucketId: string, objectPath: string): Promise<string | null> {
+// Download a GCS file using the googleapis REST API (works on Node v24 Windows)
+async function downloadGCSFile(storageApi: any, bucketId: string, objectPath: string): Promise<string | null> {
   try {
-    const [buffer] = await gcs.bucket(bucketId).file(objectPath).download();
-    let data: Buffer = buffer;
+    const res = await storageApi.objects.get(
+      { bucket: bucketId, object: objectPath, alt: 'media' },
+      { responseType: 'arraybuffer' }
+    );
+    let data = Buffer.from(res.data as ArrayBuffer);
     // Check for gzip magic bytes (0x1f 0x8b)
     if (data.length >= 2 && data[0] === 0x1f && data[1] === 0x8b) {
       data = gunzipSync(data);
@@ -570,6 +556,43 @@ async function downloadGCSFile(gcs: Storage, bucketId: string, objectPath: strin
   }
 }
 
+// Get authenticated GCS storage REST API client
+function getGCSStorageApi() {
+  const clientEmail = process.env.GP_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GP_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  if (!clientEmail || !privateKey) return null;
+
+  const auth = new google.auth.JWT({
+    email: clientEmail,
+    key: privateKey,
+    scopes: ['https://www.googleapis.com/auth/devstorage.read_only'],
+  });
+  return google.storage({ version: 'v1', auth });
+}
+
+// List files in GCS bucket matching a prefix (cached per request)
+const _bucketFileCache = new Map<string, string[]>();
+async function listBucketFiles(storageApi: any, bucketId: string, prefix: string): Promise<string[]> {
+  const cacheKey = `${bucketId}:${prefix}`;
+  if (_bucketFileCache.has(cacheKey)) return _bucketFileCache.get(cacheKey)!;
+
+  const files: string[] = [];
+  let pageToken: string | undefined;
+  do {
+    const res = await storageApi.objects.list({
+      bucket: bucketId,
+      prefix,
+      maxResults: 500,
+      pageToken,
+    });
+    res.data.items?.forEach((item: any) => files.push(item.name));
+    pageToken = res.data.nextPageToken;
+  } while (pageToken);
+
+  _bucketFileCache.set(cacheKey, files);
+  return files;
+}
+
 // Fetch CSV report files from GCS bucket
 async function fetchCSVReport(
   _storage: any,
@@ -579,40 +602,44 @@ async function fetchCSVReport(
   reportType: string,
   filePrefix: string
 ): Promise<Record<string, string>[]> {
-  const gcs = getGCSStorage();
-  if (!gcs) return [];
+  const storageApi = getGCSStorageApi();
+  if (!storageApi) return [];
+
+  // List all available files once, then filter — avoids hundreds of 404 attempts
+  const [files1, files2] = await Promise.all([
+    listBucketFiles(storageApi, bucketId, `stats/${reportType}/`),
+    listBucketFiles(storageApi, bucketId, `stats/stats/${reportType}/`),
+  ]);
+  const allFiles = new Set([...files1, ...files2]);
 
   const allRows: Record<string, string>[] = [];
+  const suffix = reportType === 'store_performance' ? '_country.csv' : '_overview.csv';
 
   for (const month of months) {
-    // Try different naming patterns Play Console uses
-    // Also try stats/stats/ prefix (happens when gsutil cp -r creates double prefix)
-    let patterns: string[];
+    // Build candidate file paths
+    const candidates = [
+      `stats/${reportType}/${filePrefix}${packageName}_${month}${suffix}`,
+      `stats/stats/${reportType}/${filePrefix}${packageName}_${month}${suffix}`,
+    ];
     if (reportType === 'store_performance') {
-      // Store performance has _country.csv and _traffic_source.csv, no _overview.csv
-      patterns = [
-        `stats/${reportType}/${filePrefix}${packageName}_${month}_country.csv`,
-        `stats/stats/${reportType}/${filePrefix}${packageName}_${month}_country.csv`,
-        `stats/${reportType}/total_${filePrefix}${packageName}_${month}_country.csv`,
-      ];
+      candidates.push(
+        `stats/${reportType}/total_${filePrefix}${packageName}_${month}${suffix}`,
+        `stats/stats/${reportType}/total_${filePrefix}${packageName}_${month}${suffix}`,
+      );
     } else {
-      patterns = [
-        `stats/${reportType}/${filePrefix}${packageName}_${month}_overview.csv`,
-        `stats/stats/${reportType}/${filePrefix}${packageName}_${month}_overview.csv`,
-        `stats/${reportType}/${filePrefix}${packageName}_${month}.csv`,
-      ];
+      candidates.push(`stats/${reportType}/${filePrefix}${packageName}_${month}.csv`);
     }
 
-    for (const objectPath of patterns) {
-      console.log(`[GCS] Trying: ${objectPath}`);
-      const content = await downloadGCSFile(gcs, bucketId, objectPath);
+    // Only download files that actually exist
+    for (const objectPath of candidates) {
+      if (!allFiles.has(objectPath)) continue;
+      console.log(`[GCS] Downloading: ${objectPath}`);
+      const content = await downloadGCSFile(storageApi, bucketId, objectPath);
       if (content) {
         const rows = parseCSV(content);
         console.log(`[GCS] Success: ${objectPath} - ${rows.length} rows`);
         allRows.push(...rows);
-        break; // Found the file, skip other patterns
-      } else {
-        console.log(`[GCS] Not found: ${objectPath}`);
+        break;
       }
     }
   }

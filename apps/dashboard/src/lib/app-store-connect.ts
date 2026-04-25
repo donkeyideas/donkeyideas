@@ -233,8 +233,8 @@ async function fetchSalesData(
     return { timeSeries: [], totalInstalls: 0, dailyInstalls: 0, deviceBreakdown: [] };
   }
 
-  // Limit to last 14 days to avoid too many API calls
-  const maxDays = 14;
+  // Limit to last 30 days to avoid too many API calls
+  const maxDays = 30;
   const fetchStart = new Date(
     Math.max(reportStart.getTime(), reportEnd.getTime() - maxDays * 86400000)
   );
@@ -341,24 +341,11 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string, dat
   let activeDevices = 0;
   let deviceBreakdown: { device: string; count: number }[] = [];
 
-  // Strategy 1: Sales Reports API (requires ASC_VENDOR_NUMBER, most reliable)
   const vendorNumber = process.env.ASC_VENDOR_NUMBER;
-  if (vendorNumber) {
-    try {
-      console.log('[ASC] Trying Sales Reports API with vendor number');
-      const salesData = await fetchSalesData(app.id, token, vendorNumber, startDate, endDate);
-      installTimeSeries = salesData.timeSeries;
-      totalInstalls = salesData.totalInstalls;
-      dailyInstalls = salesData.dailyInstalls;
-      deviceBreakdown = salesData.deviceBreakdown;
-      console.log(`[ASC] Sales Reports: ${totalInstalls} total installs from ${installTimeSeries.length} days`);
-    } catch (e: any) {
-      console.log('[ASC] Sales Reports not available:', e.message);
-    }
-  }
+  const isLongRange = dateRange === 'all' || dateRange === '90d';
 
-  // Strategy 2: Analytics Reports API (async, may not have data yet)
-  if (installTimeSeries.length === 0 || totalInstalls === 0) {
+  if (isLongRange) {
+    // For longer date ranges, prefer Analytics Reports (single CSV covering full history)
     try {
       const analyticsData = await fetchAnalyticsData(app.id, token, startDate, endDate);
       if (analyticsData.totalInstalls > 0) {
@@ -370,6 +357,52 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string, dat
       }
     } catch (e: any) {
       console.log('[ASC] Analytics data not available:', e.message);
+    }
+
+    // Fall back to Sales Reports if Analytics has no data
+    if (totalInstalls === 0 && vendorNumber) {
+      try {
+        console.log('[ASC] Falling back to Sales Reports API');
+        const salesData = await fetchSalesData(app.id, token, vendorNumber, startDate, endDate);
+        installTimeSeries = salesData.timeSeries;
+        totalInstalls = salesData.totalInstalls;
+        dailyInstalls = salesData.dailyInstalls;
+        deviceBreakdown = salesData.deviceBreakdown;
+        console.log(`[ASC] Sales Reports: ${totalInstalls} total installs from ${installTimeSeries.length} days`);
+      } catch (e: any) {
+        console.log('[ASC] Sales Reports not available:', e.message);
+      }
+    }
+  } else {
+    // For short date ranges (7d, 30d), prefer Sales Reports (more accurate, near real-time)
+    if (vendorNumber) {
+      try {
+        console.log('[ASC] Trying Sales Reports API with vendor number');
+        const salesData = await fetchSalesData(app.id, token, vendorNumber, startDate, endDate);
+        installTimeSeries = salesData.timeSeries;
+        totalInstalls = salesData.totalInstalls;
+        dailyInstalls = salesData.dailyInstalls;
+        deviceBreakdown = salesData.deviceBreakdown;
+        console.log(`[ASC] Sales Reports: ${totalInstalls} total installs from ${installTimeSeries.length} days`);
+      } catch (e: any) {
+        console.log('[ASC] Sales Reports not available:', e.message);
+      }
+    }
+
+    // Fall back to Analytics Reports if Sales has no data
+    if (totalInstalls === 0) {
+      try {
+        const analyticsData = await fetchAnalyticsData(app.id, token, startDate, endDate);
+        if (analyticsData.totalInstalls > 0) {
+          installTimeSeries = analyticsData.timeSeries;
+          totalInstalls = analyticsData.totalInstalls;
+          dailyInstalls = analyticsData.dailyInstalls;
+          activeDevices = analyticsData.activeDevices;
+          console.log(`[ASC] Analytics Reports: ${totalInstalls} total installs`);
+        }
+      } catch (e: any) {
+        console.log('[ASC] Analytics data not available:', e.message);
+      }
     }
   }
 
