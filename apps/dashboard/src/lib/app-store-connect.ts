@@ -207,7 +207,43 @@ function parseSalesReportForApp(
   return { units: totalUnits, devices };
 }
 
+// Fetch a monthly sales report (returns gzip TSV, NOT JSON)
+async function fetchMonthlySalesReport(
+  token: string,
+  vendorNumber: string,
+  yearMonth: string  // YYYYMM format
+): Promise<string | null> {
+  const url = `${ASC_BASE_URL}/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=MONTHLY&filter[reportDate]=${yearMonth}&filter[vendorNumber]=${vendorNumber}`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/a-gzip, application/json',
+    },
+    cache: 'no-store',
+  });
+
+  if (response.status === 404) return null;
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    // 400 errors are common for months with no data
+    if (response.status === 400) return null;
+    throw new Error(`Monthly sales report ${response.status}: ${errorText.slice(0, 300)}`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.length === 0) return null;
+
+  if (buffer.length >= 2 && buffer[0] === 0x1f && buffer[1] === 0x8b) {
+    return gunzipSync(buffer).toString('utf-8');
+  }
+
+  return buffer.toString('utf-8');
+}
+
 // Fetch sales data for a specific app across a date range
+// Uses MONTHLY reports for historical data + DAILY reports for recent 30 days
 async function fetchSalesData(
   appAppleId: string,
   token: string,
@@ -233,13 +269,53 @@ async function fetchSalesData(
     return { timeSeries: [], totalInstalls: 0, dailyInstalls: 0, deviceBreakdown: [] };
   }
 
-  // Limit to last 30 days to avoid too many API calls
-  const maxDays = 30;
+  // --- MONTHLY reports for historical data (up to 12 months back) ---
+  const dailyCutoff = new Date(reportEnd);
+  dailyCutoff.setDate(dailyCutoff.getDate() - 30);
+
+  const monthlyPromises: Promise<{ month: string; content: string | null }>[] = [];
+  const monthlyStart = new Date(Math.max(reportStart.getTime(), reportEnd.getTime() - 365 * 86400000));
+
+  // Generate list of months to fetch (YYYYMM format)
+  const currentMonth = new Date(reportEnd);
+  for (
+    let d = new Date(monthlyStart.getFullYear(), monthlyStart.getMonth(), 1);
+    d < dailyCutoff;
+    d.setMonth(d.getMonth() + 1)
+  ) {
+    const ym = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    monthlyPromises.push(
+      fetchMonthlySalesReport(token, vendorNumber, ym)
+        .then(content => ({ month: monthStr, content }))
+        .catch(() => ({ month: monthStr, content: null }))
+    );
+  }
+
+  const monthlyResults = await Promise.all(monthlyPromises);
+  let monthsWithData = 0;
+
+  for (const { month, content } of monthlyResults) {
+    if (!content) continue;
+    const { units, devices } = parseSalesReportForApp(content, appAppleId);
+    if (units > 0) {
+      monthsWithData++;
+      totalInstalls += units;
+      // Use the first day of the month as the date for the time series
+      timeSeries.push({ date: `${month}-01`, installs: units, uninstalls: 0, updates: 0, activeDevices: 0 });
+      for (const [device, count] of Object.entries(devices)) {
+        deviceTotals[device] = (deviceTotals[device] || 0) + count;
+      }
+    }
+  }
+
+  console.log(`[ASC] Monthly Sales: ${monthsWithData} months with data out of ${monthlyResults.length} fetched`);
+
+  // --- DAILY reports for the last 30 days ---
   const fetchStart = new Date(
-    Math.max(reportStart.getTime(), reportEnd.getTime() - maxDays * 86400000)
+    Math.max(reportStart.getTime(), dailyCutoff.getTime())
   );
 
-  // Fetch all daily reports in parallel
   const datePromises: Promise<{ date: string; content: string | null }>[] = [];
 
   for (let d = new Date(fetchStart); d <= reportEnd; d.setDate(d.getDate() + 1)) {
@@ -251,23 +327,29 @@ async function fetchSalesData(
     );
   }
 
-  const results = await Promise.all(datePromises);
+  const dailyResults = await Promise.all(datePromises);
 
-  for (const { date, content } of results) {
+  let reportsWithData = 0;
+  let reportsEmpty = 0;
+  for (const { date, content } of dailyResults) {
     if (!content) {
-      // Include zero-data days in time series for chart continuity
-      timeSeries.push({ date, installs: 0, uninstalls: 0, updates: 0, activeDevices: 0 });
+      reportsEmpty++;
       continue;
     }
 
+    reportsWithData++;
     const { units, devices } = parseSalesReportForApp(content, appAppleId);
     totalInstalls += units;
-    timeSeries.push({ date, installs: units, uninstalls: 0, updates: 0, activeDevices: 0 });
+    if (units > 0) {
+      timeSeries.push({ date, installs: units, uninstalls: 0, updates: 0, activeDevices: 0 });
+    }
 
     for (const [device, count] of Object.entries(devices)) {
       deviceTotals[device] = (deviceTotals[device] || 0) + count;
     }
   }
+
+  console.log(`[ASC] Daily Sales: ${reportsWithData} with data, ${reportsEmpty} empty out of ${dailyResults.length}`);
 
   // Sort by date
   timeSeries.sort((a: any, b: any) => a.date.localeCompare(b.date));
@@ -359,14 +441,15 @@ export async function fetchAppStoreData(bundleId: string, dateRange: string, dat
 
   // Fetch Sales Reports (more accurate daily data, limited to 30 days)
   if (vendorNumber) {
+    console.log(`[ASC] Fetching Sales Reports for app ${app.id} with vendor ${vendorNumber}`);
     try {
       salesResult = await fetchSalesData(app.id, token, vendorNumber, startDate, endDate);
-      if (salesResult.totalInstalls > 0) {
-        console.log(`[ASC] Sales Reports: ${salesResult.totalInstalls} total installs from ${salesResult.timeSeries.length} days`);
-      }
+      console.log(`[ASC] Sales Reports: ${salesResult.totalInstalls} total installs from ${salesResult.timeSeries.length} days`);
     } catch (e: any) {
       console.log('[ASC] Sales Reports not available:', e.message);
     }
+  } else {
+    console.log('[ASC] ASC_VENDOR_NUMBER not set, skipping Sales Reports');
   }
 
   // Use whichever source has more total installs
@@ -509,7 +592,9 @@ const PREFERRED_REPORTS: Record<string, string[]> = {
   APP_STORE_ENGAGEMENT: ['App Store Discovery and Engagement'],
 };
 
-// Navigate the analytics report hierarchy to download a report CSV
+// Navigate the analytics report hierarchy to download report CSVs
+// Downloads ALL instances (not just the latest) and combines them,
+// since each instance may cover a different time period (e.g., monthly snapshots)
 async function downloadAnalyticsReport(
   requestId: string,
   category: string,
@@ -562,28 +647,57 @@ async function downloadAnalyticsReport(
 
     if (instances.length === 0) continue;
 
-    // Get the latest instance
-    const latest = instances[instances.length - 1];
-    console.log(`[ASC] Using instance: ${latest.id} (date: ${latest.attributes?.processingDate || 'unknown'})`);
+    // Download ALL instances and combine their CSVs
+    // Each instance may cover a different time period (monthly snapshots have one instance per month)
+    const allContents: string[] = [];
+    let headerLine = '';
 
-    // Step 3: Get segments for this instance
-    const segmentsUrl = latest.relationships?.segments?.links?.related;
-    if (!segmentsUrl) continue;
+    // Download instances in parallel (limit to 12 to avoid rate limits)
+    const instancesToDownload = instances.slice(-12); // Use most recent 12 instances
+    console.log(`[ASC] Downloading ${instancesToDownload.length} instances (of ${instances.length} total)`);
 
-    const segmentsData = await ascFetch(segmentsUrl, token);
-    const segments = segmentsData.data || [];
-    console.log(`[ASC] Found ${segments.length} segments`);
+    const downloadPromises = instancesToDownload.map(async (instance: any) => {
+      const instanceDate = instance.attributes?.processingDate || 'unknown';
+      try {
+        const segmentsUrl = instance.relationships?.segments?.links?.related;
+        if (!segmentsUrl) return null;
 
-    if (segments.length === 0) continue;
+        const segmentsData = await ascFetch(segmentsUrl, token);
+        const segments = segmentsData.data || [];
+        if (segments.length === 0) return null;
 
-    // Step 4: Download the segment file
-    const fileUrl = segments[0].attributes?.url;
-    if (!fileUrl) continue;
+        const fileUrl = segments[0].attributes?.url;
+        if (!fileUrl) return null;
 
-    console.log(`[ASC] Downloading report from: ${fileUrl.slice(0, 80)}...`);
-    const content = await fetchReport(fileUrl);
-    console.log(`[ASC] Downloaded ${content.length} chars, first line: ${content.split('\n')[0]?.slice(0, 100)}`);
-    return content;
+        const content = await fetchReport(fileUrl);
+        console.log(`[ASC] Instance ${instanceDate}: ${content.split('\n').length - 1} data rows, ${content.length} chars`);
+        return content;
+      } catch (e: any) {
+        console.log(`[ASC] Instance ${instanceDate} failed: ${e.message}`);
+        return null;
+      }
+    });
+
+    const results = await Promise.all(downloadPromises);
+
+    for (const content of results) {
+      if (!content) continue;
+      const lines = content.trim().split('\n');
+      if (lines.length < 2) continue;
+
+      // Capture header from first successful download
+      if (!headerLine) {
+        headerLine = lines[0];
+      }
+      // Add data rows (skip header line)
+      allContents.push(...lines.slice(1));
+    }
+
+    if (headerLine && allContents.length > 0) {
+      const combined = headerLine + '\n' + allContents.join('\n');
+      console.log(`[ASC] Combined ${allContents.length} data rows from ${results.filter(Boolean).length} instances`);
+      return combined;
+    }
   }
 
   return null;
