@@ -174,6 +174,15 @@ const PROJECT_CONFIGS: ProjectConfig[] = [
     envSupabaseUrl: 'GOVIRALL_SUPABASE_URL',
     envSupabaseKey: 'GOVIRALL_SUPABASE_KEY',
   },
+  {
+    slug: 'topviso',
+    displayName: 'Top Viso',
+    companyNameMatch: 'Top Viso',
+    color: '#6366F1', // indigo
+    connectionType: 'supabase-auth',
+    envSupabaseUrl: 'TOPVISO_SUPABASE_URL',
+    envSupabaseKey: 'TOPVISO_SUPABASE_KEY',
+  },
 ];
 
 export function getProjectConfigs() {
@@ -431,6 +440,18 @@ async function fetchPlanMapForProject(client: SupabaseClient, slug: string, user
           for (const p of profiles) {
             if (p.organization_id) planMap[p.id] = orgPlanMap[p.organization_id] || 'free';
           }
+        }
+      }
+    } else if (slug === 'topviso') {
+      // organization_members → organizations (plan_tier)
+      const { data: members } = await client.from('organization_members').select('user_id, organization_id').in('user_id', userIds);
+      if (members && members.length > 0) {
+        const orgIds = [...new Set(members.map((m: any) => m.organization_id))];
+        if (orgIds.length > 0) {
+          const { data: orgs } = await client.from('organizations').select('id, plan_tier').in('id', orgIds);
+          const orgPlanMap: Record<string, string> = {};
+          for (const o of orgs || []) orgPlanMap[o.id] = o.plan_tier || 'solo';
+          for (const m of members) planMap[m.user_id] = orgPlanMap[m.organization_id] || 'solo';
         }
       }
     }
