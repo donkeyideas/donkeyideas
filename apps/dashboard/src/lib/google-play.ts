@@ -447,6 +447,67 @@ function getMonthsForRange(dateRange: string, dateFrom?: string, dateTo?: string
   return months;
 }
 
+// Get ALL months that have install data available for this package in GCS
+async function getAllAvailableInstallMonths(storageApi: any, bucketId: string, packageName: string): Promise<string[]> {
+  const files = await listBucketFiles(storageApi, bucketId, 'stats/installs/');
+  const months = new Set<string>();
+  const pattern = new RegExp(`installs_${packageName.replace('.', '\\.')}_(\\d{6})_overview\\.csv$`);
+  for (const file of files) {
+    const match = file.match(pattern);
+    if (match) months.add(match[1]);
+  }
+  return Array.from(months).sort();
+}
+
+// Fetch total_store_performance acquisitions for months where installs data is missing
+async function fetchStoreAcquisitionsForMissingMonths(
+  storageApi: any,
+  bucketId: string,
+  packageName: string,
+  missingMonths: string[],
+  startDate: string,
+  endDate: string,
+): Promise<{ date: string; installs: number }[]> {
+  if (missingMonths.length === 0) return [];
+
+  const allFiles = await listBucketFiles(storageApi, bucketId, 'stats/store_performance/');
+  const results: { date: string; installs: number }[] = [];
+
+  for (const month of missingMonths) {
+    // Try total_store_performance first (includes all acquisition sources), then regular store_performance
+    const candidates = [
+      `stats/store_performance/total_store_performance_${packageName}_${month}_country.csv`,
+      `stats/store_performance/store_performance_${packageName}_${month}_country.csv`,
+    ];
+
+    for (const objectPath of candidates) {
+      if (!allFiles.includes(objectPath)) continue;
+      console.log(`[GCS] Using store_performance as install proxy: ${objectPath}`);
+      const content = await downloadGCSFile(storageApi, bucketId, objectPath);
+      if (!content) continue;
+
+      const rows = parseCSV(content);
+      // Aggregate by date (country CSV has per-country rows)
+      const dateAcquisitions: Record<string, number> = {};
+      for (const row of rows) {
+        const date = row['Date'] || '';
+        if (!date || date < startDate || date > endDate) continue;
+        const acquisitions = parseInt(
+          row['Total store acquisitions'] || row['Store Listing Acquisitions'] || row['Store listing acquisitions'] || row['Installers'] || '0'
+        );
+        dateAcquisitions[date] = (dateAcquisitions[date] || 0) + acquisitions;
+      }
+
+      for (const [date, installs] of Object.entries(dateAcquisitions)) {
+        results.push({ date, installs });
+      }
+      break; // Got data from one candidate, skip others
+    }
+  }
+
+  return results.sort((a, b) => a.date.localeCompare(b.date));
+}
+
 // Fetch and parse GCS CSV reports
 async function fetchGCSReports(packageName: string, dateRange: string, dateFrom?: string, dateTo?: string) {
   const bucketId = process.env.GP_GCS_BUCKET_ID;
@@ -461,19 +522,36 @@ async function fetchGCSReports(packageName: string, dateRange: string, dateFrom?
   const { storage } = clients;
   const months = getMonthsForRange(dateRange, dateFrom, dateTo);
   const { startDate, endDate } = getPlayDateRange(dateRange, dateFrom, dateTo);
+  const storageApi = getGCSStorageApi();
+  if (!storageApi) return null;
 
   console.log(`[GCS] Fetching reports for ${packageName}, bucket: ${bucketId}, months: ${months.join(',')}`);
 
   try {
-    // Fetch install and store performance reports in parallel
-    const [installRows, storeRows] = await Promise.all([
-      fetchCSVReport(storage, bucketId, packageName, months, 'installs', 'installs_'),
+    // Find all available install months for this package
+    const availableInstallMonths = await getAllAvailableInstallMonths(storageApi, bucketId, packageName);
+    // Determine which months in our range have install data and which don't
+    const monthsWithInstalls = months.filter(m => availableInstallMonths.includes(m));
+    const monthsMissingInstalls = months.filter(m => !availableInstallMonths.includes(m));
+
+    if (monthsMissingInstalls.length > 0) {
+      console.log(`[GCS] Missing install data for months: ${monthsMissingInstalls.join(',')} — will use store_performance`);
+    }
+
+    // For totalInstalls: fetch ALL available install months (not just date range)
+    // This gives us the cumulative total across all history
+    const allInstallMonths = availableInstallMonths.length > 0 ? availableInstallMonths : monthsWithInstalls;
+
+    // Fetch install reports, store performance reports, AND store acquisitions for missing months
+    const [installRows, storeRows, storeAcquisitions] = await Promise.all([
+      fetchCSVReport(storage, bucketId, packageName, allInstallMonths, 'installs', 'installs_'),
       fetchCSVReport(storage, bucketId, packageName, months, 'store_performance', 'store_performance_'),
+      fetchStoreAcquisitionsForMissingMonths(storageApi, bucketId, packageName, monthsMissingInstalls, startDate, endDate),
     ]);
 
-    console.log(`[GCS] Parsed ${installRows.length} install rows, ${storeRows.length} store rows`);
+    console.log(`[GCS] Parsed ${installRows.length} install rows, ${storeRows.length} store rows, ${storeAcquisitions.length} acquisition proxy rows`);
 
-    // Parse install data
+    // Parse install data (filtered to date range for time series)
     const filteredInstalls = filterRowsByDateRange(installRows, startDate, endDate);
     const installTimeSeries = filteredInstalls.map((row) => ({
       date: row['Date'] || '',
@@ -483,8 +561,30 @@ async function fetchGCSReports(packageName: string, dateRange: string, dateFrom?
       activeDevices: parseInt(row['Active Device Installs'] || '0'),
     }));
 
-    // Aggregate install overview
-    const totalInstalls = installTimeSeries.reduce((sum, d) => sum + d.installs, 0);
+    // Append store acquisition data for missing months as install proxy
+    const installDates = new Set(installTimeSeries.map(d => d.date));
+    for (const acq of storeAcquisitions) {
+      if (!installDates.has(acq.date)) {
+        installTimeSeries.push({
+          date: acq.date,
+          installs: acq.installs,
+          uninstalls: 0,
+          updates: 0,
+          activeDevices: 0,
+        });
+      }
+    }
+    // Re-sort after appending
+    installTimeSeries.sort((a, b) => a.date.localeCompare(b.date));
+
+    // Calculate totalInstalls: sum of ALL available daily installs (all history, not just date range)
+    const allTimeInstalls = installRows.reduce(
+      (sum, row) => sum + parseInt(row['Daily Device Installs'] || row['Daily User Installs'] || '0'), 0
+    );
+    // Add current month acquisitions from store_performance
+    const currentMonthAcquisitions = storeAcquisitions.reduce((sum, d) => sum + d.installs, 0);
+    const totalInstalls = allTimeInstalls + currentMonthAcquisitions;
+
     const totalUninstalls = installTimeSeries.reduce((sum, d) => sum + d.uninstalls, 0);
     const totalUpdates = installTimeSeries.reduce((sum, d) => sum + d.updates, 0);
     const latestActiveDevices = installTimeSeries.length > 0
@@ -496,6 +596,9 @@ async function fetchGCSReports(packageName: string, dateRange: string, dateFrom?
     const latestDailyUninstalls = installTimeSeries.length > 0
       ? installTimeSeries[installTimeSeries.length - 1].uninstalls
       : 0;
+
+    // Determine latest data date
+    const lastInstallDate = installTimeSeries.length > 0 ? installTimeSeries[installTimeSeries.length - 1].date : null;
 
     // Parse store listing data (country CSV has per-country rows, aggregate them)
     const filteredStore = filterRowsByDateRange(storeRows, startDate, endDate);
@@ -523,6 +626,7 @@ async function fetchGCSReports(packageName: string, dateRange: string, dateFrom?
         acquisitions: totalAcquisitions,
         conversionRate,
       },
+      dataAsOf: lastInstallDate,
     };
   } catch (err: any) {
     console.error('Failed to fetch GCS reports:', err.message);
