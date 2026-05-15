@@ -174,6 +174,68 @@ export async function GET(_request: NextRequest) {
       });
     }
 
+    // ── System-wide Activity Heatmap (last 30 days) ──
+    const thirtyDaysAgo = new Date(todayStart);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [heatRaces, heatBets] = await Promise.all([
+      prisma.raceRecord.findMany({
+        where: { racedAt: { gte: thirtyDaysAgo } },
+        select: { racedAt: true },
+      }),
+      prisma.betRecord.findMany({
+        where: { placedAt: { gte: thirtyDaysAgo } },
+        select: { placedAt: true },
+      }),
+    ]);
+
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const heatGrid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+
+    for (const r of heatRaces) {
+      const d = new Date(r.racedAt);
+      const dow = (d.getDay() + 6) % 7; // Monday=0
+      heatGrid[dow][d.getHours()]++;
+    }
+    for (const b of heatBets) {
+      const d = new Date(b.placedAt);
+      const dow = (d.getDay() + 6) % 7;
+      heatGrid[dow][d.getHours()]++;
+    }
+
+    // Scale to 0-5
+    const maxHeat = Math.max(1, ...heatGrid.flat());
+    const scaledGrid = heatGrid.map((row) => row.map((v) => Math.min(5, Math.round((v / maxHeat) * 5))));
+
+    // Peak time + most active day
+    const hourTotals = Array(24).fill(0);
+    const dayTotals = Array(7).fill(0);
+    let peakHour = 0;
+    let peakCount = 0;
+    for (let d = 0; d < 7; d++) {
+      for (let h = 0; h < 24; h++) {
+        hourTotals[h] += heatGrid[d][h];
+        dayTotals[d] += heatGrid[d][h];
+        if (heatGrid[d][h] > peakCount) {
+          peakCount = heatGrid[d][h];
+          peakHour = h;
+        }
+      }
+    }
+    const mostActiveDayIdx = dayTotals.indexOf(Math.max(...dayTotals));
+    const fmtHour = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
+    const totalActivity = heatRaces.length + heatBets.length;
+
+    const heatmap = {
+      days: dayNames,
+      grid: scaledGrid,
+      peakTime: `${fmtHour(peakHour)}-${fmtHour(Math.min(23, peakHour + 2))}`,
+      mostActiveDay: dayNames[mostActiveDayIdx],
+      totalEvents: totalActivity,
+      totalRaces: heatRaces.length,
+      totalBets: heatBets.length,
+    };
+
     // ── Trend percentages ──
     const revenueTrend = revYesterday > 0
       ? ((revToday - revYesterday) / revYesterday * 100)
@@ -210,6 +272,7 @@ export async function GET(_request: NextRequest) {
       economy: {
         totalCoinsInCirculation: totalCoinsInCirculation._sum.coins ?? 0,
       },
+      heatmap,
       revenueChart,
       revenueByProduct,
       quickStats,

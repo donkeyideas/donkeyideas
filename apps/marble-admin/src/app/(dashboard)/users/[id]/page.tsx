@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 
 /* ================================================================== */
@@ -140,6 +140,14 @@ export default function UserDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [noteText, setNoteText] = useState('');
+  const [showAdjustCoins, setShowAdjustCoins] = useState(false);
+  const [adjustAmount, setAdjustAmount] = useState('');
+  const [adjustNote, setAdjustNote] = useState('');
+  const [showBanConfirm, setShowBanConfirm] = useState(false);
+  const [banReason, setBanReason] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['player', id],
@@ -172,8 +180,10 @@ export default function UserDetailPage() {
   const avgPurchase = purchasesList.length > 0 ? purchaseTotal / purchasesList.length : 0;
   const lastPurchase = purchasesList.length > 0 && purchasesList[0].purchasedAt ? timeAgo(purchasesList[0].purchasedAt) : 'N/A';
 
-  // Recent races from API (used for race history table)
+  // Recent bets from API
   const recentBets: any[] = data?.recentBets ?? [];
+  // Recent races from API (used for race history table)
+  const recentRaces: any[] = data?.recentRaces ?? [];
 
   // Season progress from API
   const seasonProgressList: any[] = data?.seasonProgress ?? [];
@@ -183,6 +193,77 @@ export default function UserDetailPage() {
   const daysActive = player.createdAt
     ? Math.max(1, Math.floor((Date.now() - new Date(player.createdAt).getTime()) / (1000 * 60 * 60 * 24)))
     : 0;
+
+  /* ================================================================== */
+  /*  Action handlers                                                    */
+  /* ================================================================== */
+
+  async function handleAdjustCoins() {
+    const amt = parseInt(adjustAmount);
+    if (isNaN(amt) || amt === 0) return;
+    setActionLoading(true);
+    try {
+      await api.post(`/players/${id}/adjust-coins`, { amount: amt, note: adjustNote || undefined });
+      queryClient.invalidateQueries({ queryKey: ['player', id] });
+      setShowAdjustCoins(false);
+      setAdjustAmount('');
+      setAdjustNote('');
+    } catch (e: any) {
+      alert(e.response?.data?.error?.message || 'Failed to adjust coins');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleBan() {
+    setActionLoading(true);
+    try {
+      await api.post(`/players/${id}/ban`, { reason: banReason || undefined });
+      queryClient.invalidateQueries({ queryKey: ['player', id] });
+      setShowBanConfirm(false);
+      setBanReason('');
+    } catch (e: any) {
+      alert(e.response?.data?.error?.message || 'Failed to ban player');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleUnban() {
+    setActionLoading(true);
+    try {
+      await api.post(`/players/${id}/unban`);
+      queryClient.invalidateQueries({ queryKey: ['player', id] });
+    } catch (e: any) {
+      alert(e.response?.data?.error?.message || 'Failed to unban player');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  function handleExportGDPR() {
+    const exportData = { player, betting, kpis, heatmap, coinHistory, raceStats, marblePreferences: marblePrefsRaw, purchases: purchasesList, recentBets, recentRaces, seasonProgress: seasonProgressList };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `player-${player.playerName}-${id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleDelete() {
+    setActionLoading(true);
+    try {
+      await api.post(`/players/${id}/ban`, { reason: 'Account deleted by admin' });
+      queryClient.invalidateQueries({ queryKey: ['player', id] });
+      setShowDeleteConfirm(false);
+    } catch (e: any) {
+      alert(e.response?.data?.error?.message || 'Failed');
+    } finally {
+      setActionLoading(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -251,14 +332,14 @@ export default function UserDetailPage() {
 
           {/* Action buttons */}
           <div className="flex flex-col gap-2 flex-shrink-0">
-            <button className="px-4 py-2 rounded-xl text-xs font-bold bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-colors">
+            <button onClick={() => setShowAdjustCoins(true)} className="px-4 py-2 rounded-xl text-xs font-bold bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-colors">
               Adjust Coins
             </button>
             <button className="px-4 py-2 rounded-xl text-xs font-bold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors">
               Message
             </button>
-            <button className="px-4 py-2 rounded-xl text-xs font-bold bg-marble-red/10 text-marble-red border border-marble-red/30 hover:bg-marble-red/20 transition-colors">
-              Ban User
+            <button onClick={() => { player.status === 'banned' ? handleUnban() : setShowBanConfirm(true); }} className="px-4 py-2 rounded-xl text-xs font-bold bg-marble-red/10 text-marble-red border border-marble-red/30 hover:bg-marble-red/20 transition-colors">
+              {player.status === 'banned' ? 'Unban User' : 'Ban User'}
             </button>
           </div>
         </div>
@@ -431,17 +512,18 @@ export default function UserDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentBets.length > 0 ? recentBets.map((r: any, i: number) => {
+                {recentRaces.length > 0 ? recentRaces.map((r: any, i: number) => {
                   const isWin = r.won === true;
                   const payout = Number(r.payout ?? 0);
                   const betAmt = Number(r.betAmount ?? 0);
+                  const courseName = r.courseId ? r.courseId.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : '---';
                   return (
                     <tr key={i} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                      <td className="px-4 py-2.5 text-xs text-white/60">{r.courseId ?? '---'}</td>
+                      <td className="px-4 py-2.5 text-xs text-white/60">{courseName}</td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-1.5">
-                          <MarbleDot name={r.marbleId ?? 'dash'} size={16} />
-                          <span className="text-xs text-white/60 capitalize">{r.marbleId ?? '---'}</span>
+                          <MarbleDot name={r.playerPickId ?? 'dash'} size={16} />
+                          <span className="text-xs text-white/60 capitalize">{r.playerPickId ?? '---'}</span>
                         </div>
                       </td>
                       <td className="px-4 py-2.5 text-xs text-white/50">{fmtNum(betAmt)}</td>
@@ -453,7 +535,7 @@ export default function UserDetailPage() {
                       <td className={`px-4 py-2.5 text-xs font-semibold ${isWin ? 'text-marble-green' : 'text-marble-red'}`}>
                         {isWin ? `+${fmtNum(payout)}` : `-${fmtNum(betAmt)}`}
                       </td>
-                      <td className="px-4 py-2.5 text-[10px] text-white/30">{r.placedAt ? timeAgo(r.placedAt) : '---'}</td>
+                      <td className="px-4 py-2.5 text-[10px] text-white/30">{r.racedAt ? timeAgo(r.racedAt) : '---'}</td>
                     </tr>
                   );
                 }) : (
@@ -644,7 +726,7 @@ export default function UserDetailPage() {
         {/* Account Actions */}
         <SectionCard title="Account Actions">
           <div className="space-y-2">
-            <button className="w-full py-3 rounded-xl text-sm font-bold bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-colors">
+            <button onClick={() => setShowAdjustCoins(true)} className="w-full py-3 rounded-xl text-sm font-bold bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-colors">
               Adjust Coins
             </button>
             <button className="w-full py-3 rounded-xl text-sm font-bold bg-marble-blue/15 text-marble-blue border border-marble-blue/30 hover:bg-marble-blue/25 transition-colors">
@@ -653,21 +735,74 @@ export default function UserDetailPage() {
             <button className="w-full py-3 rounded-xl text-sm font-bold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors">
               Reset Password
             </button>
-            <button className="w-full py-3 rounded-xl text-sm font-bold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors">
+            <button onClick={handleExportGDPR} className="w-full py-3 rounded-xl text-sm font-bold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors">
               Export User Data (GDPR)
             </button>
-            <button className="w-full py-3 rounded-xl text-sm font-bold text-gold border-2 border-gold/30 hover:bg-gold/10 transition-colors">
-              Suspend Account
+            <button onClick={() => { player.status === 'banned' ? handleUnban() : setShowBanConfirm(true); }} className="w-full py-3 rounded-xl text-sm font-bold text-gold border-2 border-gold/30 hover:bg-gold/10 transition-colors">
+              {player.status === 'banned' ? 'Unban Account' : 'Suspend Account'}
             </button>
-            <button className="w-full py-3 rounded-xl text-sm font-bold bg-marble-red/10 text-marble-red border border-marble-red/30 hover:bg-marble-red/20 transition-colors">
-              Ban Account
+            <button onClick={() => setShowBanConfirm(true)} className="w-full py-3 rounded-xl text-sm font-bold bg-marble-red/10 text-marble-red border border-marble-red/30 hover:bg-marble-red/20 transition-colors">
+              {player.status === 'banned' ? 'Already Banned' : 'Ban Account'}
             </button>
-            <button className="w-full py-3 rounded-xl text-sm font-bold bg-marble-red/5 text-marble-red/50 border border-marble-red/15 hover:bg-marble-red/10 hover:text-marble-red/70 transition-colors">
+            <button onClick={() => setShowDeleteConfirm(true)} className="w-full py-3 rounded-xl text-sm font-bold bg-marble-red/5 text-marble-red/50 border border-marble-red/15 hover:bg-marble-red/10 hover:text-marble-red/70 transition-colors">
               Delete Account
             </button>
           </div>
         </SectionCard>
       </div>
+
+      {/* ============ MODALS ============ */}
+
+      {/* Adjust Coins Modal */}
+      {showAdjustCoins && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowAdjustCoins(false)}>
+          <div className="bg-[#0d1b3e] border-2 border-white/10 rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="font-heading text-lg text-gold mb-4">Adjust Coins</h3>
+            <p className="text-xs text-white/40 mb-3">Current balance: <span className="text-gold font-bold">{fmtNum(player.coins)}</span></p>
+            <input type="number" value={adjustAmount} onChange={e => setAdjustAmount(e.target.value)} placeholder="Amount (positive to add, negative to deduct)" className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-gold/40 mb-3" />
+            <input type="text" value={adjustNote} onChange={e => setAdjustNote(e.target.value)} placeholder="Reason (optional)" className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-gold/40 mb-4" />
+            <div className="flex gap-3">
+              <button onClick={() => setShowAdjustCoins(false)} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/50 hover:bg-white/5 border border-white/10 transition-colors">Cancel</button>
+              <button onClick={handleAdjustCoins} disabled={actionLoading || !adjustAmount} className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-gold text-navy-900 hover:bg-gold-light transition-colors disabled:opacity-50">
+                {actionLoading ? 'Adjusting...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ban Confirmation Modal */}
+      {showBanConfirm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowBanConfirm(false)}>
+          <div className="bg-[#0d1b3e] border-2 border-marble-red/20 rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="font-heading text-lg text-marble-red mb-2">Ban {player.playerName}?</h3>
+            <p className="text-xs text-white/40 mb-4">This will ban the player and invalidate all their sessions. They won&apos;t be able to play until unbanned.</p>
+            <input type="text" value={banReason} onChange={e => setBanReason(e.target.value)} placeholder="Ban reason (optional)" className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-marble-red/40 mb-4" />
+            <div className="flex gap-3">
+              <button onClick={() => setShowBanConfirm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/50 hover:bg-white/5 border border-white/10 transition-colors">Cancel</button>
+              <button onClick={handleBan} disabled={actionLoading} className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-marble-red text-white hover:bg-marble-red/80 transition-colors disabled:opacity-50">
+                {actionLoading ? 'Banning...' : 'Confirm Ban'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="bg-[#0d1b3e] border-2 border-marble-red/20 rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="font-heading text-lg text-marble-red mb-2">Delete {player.playerName}?</h3>
+            <p className="text-xs text-white/40 mb-4">This action cannot be undone. The player&apos;s account will be permanently banned and marked for deletion.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/50 hover:bg-white/5 border border-white/10 transition-colors">Cancel</button>
+              <button onClick={handleDelete} disabled={actionLoading} className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-marble-red text-white hover:bg-marble-red/80 transition-colors disabled:opacity-50">
+                {actionLoading ? 'Deleting...' : 'Delete Forever'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

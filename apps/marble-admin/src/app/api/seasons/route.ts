@@ -3,6 +3,12 @@ import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
+/* ------------------------------------------------------------------ */
+/*  Static data                                                        */
+/* ------------------------------------------------------------------ */
+
+const ALL_MARBLES = ['dash', 'spike', 'rocky', 'lucky', 'frosty', 'nova', 'shadow', 'aqua'];
+
 const MARBLE_COLORS: Record<string, string> = {
   dash: '#e74c3c',
   spike: '#f39c12',
@@ -13,6 +19,21 @@ const MARBLE_COLORS: Record<string, string> = {
   shadow: '#2c3e50',
   aqua: '#1abc9c',
 };
+
+const SEASON_NAMES: Record<number, string> = {
+  1: 'INAUGURAL SEASON',
+  2: 'RISING THUNDER',
+  3: 'GOLDEN ERA',
+  4: 'WINTER BLITZ',
+};
+
+const COURSE_ROTATION = [
+  { name: 'Classic Falls', meta: 'Difficulty: Medium • 4 obstacles', theme: 'GRASS', thumbBg: 'bg-emerald-900', letter: 'CF', tagClass: 'bg-marble-green/15 text-marble-green', disabled: false },
+  { name: 'Volcano Rush', meta: 'Difficulty: Hard • 6 obstacles', theme: 'LAVA', thumbBg: 'bg-red-900', letter: 'VR', tagClass: 'bg-marble-red/15 text-marble-red', disabled: false },
+  { name: 'Glacier Run', meta: 'Difficulty: Easy • 3 obstacles', theme: 'ICE', thumbBg: 'bg-marble-blue/20', letter: 'GR', tagClass: 'bg-marble-blue/15 text-marble-blue', disabled: false },
+  { name: 'Neon Circuit', meta: 'Difficulty: Hard • 5 obstacles', theme: 'CYBER', thumbBg: 'bg-purple-900', letter: 'NC', tagClass: 'bg-[#c39bd3]/15 text-[#c39bd3]', disabled: false },
+  { name: 'Forest Trail', meta: 'Difficulty: Medium • 4 obstacles', theme: 'GRASS', thumbBg: 'bg-emerald-900', letter: 'FT', tagClass: 'bg-marble-green/15 text-marble-green', disabled: true },
+];
 
 export async function GET() {
   try {
@@ -41,15 +62,14 @@ export async function GET() {
       _avg: { racesCompleted: true },
     });
 
-    // Pass adoption (grouped by tier)
+    // ── Pass adoption (grouped by tier) ──
     const passTiers = await prisma.gamePlayer.groupBy({
       by: ['passTier'],
       _count: { id: true },
     });
 
-    // --- passKpis ---
     const tierCounts: Record<string, number> = {};
-    passTiers.forEach((t: any) => {
+    passTiers.forEach((t) => {
       tierCounts[t.passTier || 'free'] = t._count.id;
     });
     const totalPlayers = Object.values(tierCounts).reduce((s, c) => s + c, 0);
@@ -57,9 +77,10 @@ export async function GET() {
     const premiumCount = tierCounts['premium'] || 0;
     const plusCount = tierCounts['plus'] || 0;
 
-    // Pass revenue: sum of GamePurchase where productName contains 'pass' or 'season'
+    // Pass revenue
     const passRevenue = await prisma.gamePurchase.aggregate({
       where: {
+        status: 'completed',
         OR: [
           { productName: { contains: 'pass', mode: 'insensitive' } },
           { productName: { contains: 'season', mode: 'insensitive' } },
@@ -68,7 +89,7 @@ export async function GET() {
       _sum: { priceUsd: true },
     });
 
-    // Avg pass level completion (assuming 30 levels)
+    // Avg pass level
     const avgPassLevel = await prisma.gamePlayer.aggregate({
       _avg: { passLevel: true },
     });
@@ -113,32 +134,27 @@ export async function GET() {
       },
     ];
 
-    // --- Marble standings from season races ---
+    // ── Marble standings: always show all 8, merge DB data ──
     const marbleWins = await prisma.raceRecord.groupBy({
       by: ['playerPickId'],
-      where: { gameMode: 'season', won: true },
+      where: { won: true },
       _count: { id: true },
     });
 
     const marbleRaces = await prisma.raceRecord.groupBy({
       by: ['playerPickId'],
-      where: { gameMode: 'season' },
       _count: { id: true },
     });
 
-    const raceMap = marbleRaces.reduce((acc: Record<string, number>, r: any) => {
-      if (r.playerPickId) acc[r.playerPickId] = r._count.id;
-      return acc;
-    }, {} as Record<string, number>);
+    const raceMap: Record<string, number> = {};
+    marbleRaces.forEach((r) => { if (r.playerPickId) raceMap[r.playerPickId] = r._count.id; });
 
-    const winMap = marbleWins.reduce((acc: Record<string, number>, r: any) => {
-      if (r.playerPickId) acc[r.playerPickId] = r._count.id;
-      return acc;
-    }, {} as Record<string, number>);
+    const winMap: Record<string, number> = {};
+    marbleWins.forEach((r) => { if (r.playerPickId) winMap[r.playerPickId] = r._count.id; });
 
-    const standings = Object.keys(raceMap)
-      .map((marbleId: any) => {
-        const races = raceMap[marbleId];
+    const standings = ALL_MARBLES
+      .map((marbleId) => {
+        const races = raceMap[marbleId] || 0;
         const wins = winMap[marbleId] || 0;
         const losses = races - wins;
         return {
@@ -151,11 +167,10 @@ export async function GET() {
           color: MARBLE_COLORS[marbleId] || '#ffffff',
         };
       })
-      .sort((a: any, b: any) => b.wins - a.wins)
-      .map((s: any, i: number) => ({ ...s, rank: i + 1 }));
+      .sort((a, b) => b.wins - a.wins || b.winRate - a.winRate || a.marbleId.localeCompare(b.marbleId))
+      .map((s, i) => ({ ...s, rank: i + 1 }));
 
-    // --- seasonMeta ---
-    // Find earliest progress record for this season to estimate start date
+    // ── Season meta ──
     const earliestProgress = await prisma.playerSeasonProgress.findFirst({
       where: { seasonNumber: currentSeason },
       orderBy: { createdAt: 'asc' },
@@ -171,16 +186,12 @@ export async function GET() {
     const progressPct = Math.round((week / totalWeeks) * 100);
 
     const seasonMeta = {
-      seasonName: `Season ${currentSeason}`,
+      seasonName: SEASON_NAMES[currentSeason] || `SEASON ${currentSeason}`,
       week,
       totalWeeks,
       daysRemaining,
       progressPct,
     };
-
-    // --- courses ---
-    // Course data lives in the game app at data/courses.ts, not in the DB
-    const courses: any[] = [];
 
     return NextResponse.json({
       currentSeason,
@@ -191,11 +202,10 @@ export async function GET() {
         coinsWon: Number(seasonStats._sum.coinsPaid ?? 0),
         avgRacesPerPlayer: Math.round(Number(seasonStats._avg.racesCompleted ?? 0)),
       },
-      passTiers: passTiers.map((t: any) => ({ tier: t.passTier || 'free', count: t._count.id })),
       standings,
       passKpis,
       seasonMeta,
-      courses,
+      courses: COURSE_ROTATION,
     });
   } catch (error: any) {
     console.error('Seasons error:', error);

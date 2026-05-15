@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { name: 'Economy', href: '/economy', icon: '◈' },
   { name: 'Seasons', href: '/seasons', icon: '●' },
   { name: 'Analytics', href: '/analytics', icon: '☰' },
+  { name: 'Physics', href: '/physics', icon: '⚛' },
   { name: 'Support', href: '/support', icon: '►', badgeKey: 'support' },
 ];
 

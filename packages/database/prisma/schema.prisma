@@ -984,3 +984,248 @@ model SocialMediaAutomation {
 
   @@map("social_media_automations")
 }
+
+// ═══════════════════════════════════════════════════════
+// DONKEY MARBLE RACING — Game Models
+// ═══════════════════════════════════════════════════════
+
+model GamePlayer {
+  id            String    @id @default(cuid())
+  deviceId      String    @unique
+  playerName    String
+  email         String?   @unique
+  platform      String    @default("unknown") // ios, android, web
+  appVersion    String?
+  deviceModel   String?
+
+  // Economy
+  coins         Int       @default(1000)
+  totalSpent    Decimal   @default(0) // Real money spent (USD)
+
+  // Stats
+  totalRaces    Int       @default(0)
+  totalWins     Int       @default(0)
+  currentStreak Int       @default(0)
+  bestStreak    Int       @default(0)
+  dailyStreak   Int       @default(1)
+
+  // Pass
+  passLevel     Int       @default(1)
+  passXp        Int       @default(0)
+  passTier      String    @default("free") // free, premium, plus
+
+  // Status
+  status        String    @default("active") // active, banned, flagged, inactive
+  banReason     String?
+  bannedAt      DateTime?
+  bannedBy      String?
+  flagReason    String?
+  lastActiveAt  DateTime  @default(now())
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions         GamePlayerSession[]
+  raceRecords      RaceRecord[]
+  betRecords       BetRecord[]
+  coinTransactions GameCoinTransaction[]
+  purchases        GamePurchase[]
+  seasonProgress   PlayerSeasonProgress[]
+  supportTickets   SupportTicket[]
+
+  @@index([status])
+  @@index([lastActiveAt])
+  @@index([createdAt])
+  @@index([coins])
+  @@map("game_players")
+}
+
+model GamePlayerSession {
+  id         String   @id @default(cuid())
+  playerId   String
+  token      String   @unique
+  deviceId   String
+  platform   String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@map("game_player_sessions")
+}
+
+model RaceRecord {
+  id              String   @id @default(cuid())
+  playerId        String
+  courseId         String
+  courseTheme      String
+  gameMode        String // quick_race, bet, season, national_race, tournament, playoff
+
+  finishOrder     Json   // ["dash","rocky","lucky",...]
+  playerPickId    String?
+  betAmount       Int      @default(0)
+  payout          Int      @default(0)
+  playerPlacement Int      @default(0)
+  won             Boolean  @default(false)
+
+  winnerTime      Decimal?
+  modeContext     Json?
+
+  racedAt         DateTime @default(now())
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, racedAt])
+  @@index([racedAt])
+  @@index([gameMode])
+  @@index([courseId])
+  @@map("game_race_records")
+}
+
+model BetRecord {
+  id          String   @id @default(cuid())
+  playerId    String
+  marbleId    String
+  betAmount   Int
+  odds        Decimal
+  payout      Int      @default(0)
+  won         Boolean  @default(false)
+  placement   Int      @default(0)
+
+  placedAt    DateTime @default(now())
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, placedAt])
+  @@index([marbleId])
+  @@index([placedAt])
+  @@map("game_bet_records")
+}
+
+model GameCoinTransaction {
+  id          String   @id @default(cuid())
+  playerId    String
+  type        String // bet, payout, daily_bonus, purchase, admin_adjustment, national_entry, tournament_entry
+  amount      Int    // positive = incoming, negative = outgoing
+  balance     Int    // player's balance after this transaction
+  description String
+
+  adminId     String?
+  adminNote   String?
+
+  createdAt   DateTime @default(now())
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@index([type, createdAt])
+  @@index([createdAt])
+  @@map("game_coin_transactions")
+}
+
+model GamePurchase {
+  id                 String    @id @default(cuid())
+  playerId           String
+  productId          String
+  productName        String
+  priceUsd           Decimal
+  coinsGranted       Int       @default(0)
+  platform           String // ios, android
+  storeTransactionId String?
+  status             String    @default("completed") // completed, refunded, disputed
+  refundedAt         DateTime?
+
+  purchasedAt        DateTime  @default(now())
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, purchasedAt])
+  @@index([purchasedAt])
+  @@index([status])
+  @@map("game_purchases")
+}
+
+model PlayerSeasonProgress {
+  id                String   @id @default(cuid())
+  playerId          String
+  seasonNumber      Int
+  mode              String // franchise, bettor
+  franchiseMarbleId String?
+
+  racesCompleted    Int      @default(0)
+  betsPlaced        Int      @default(0)
+  betsWon           Int      @default(0)
+  coinsWagered      Int      @default(0)
+  coinsPaid         Int      @default(0)
+
+  playoffReached    Boolean  @default(false)
+  playoffSeed       Int?
+  playoffResult     String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, seasonNumber])
+  @@index([seasonNumber])
+  @@map("game_player_season_progress")
+}
+
+model GameConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  label     String
+  group     String // rewards, betting, limits, features
+
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@map("game_config")
+}
+
+model SupportTicket {
+  id           String   @id @default(cuid())
+  ticketNumber String   @unique // e.g. TKT-0001
+  playerId     String
+  playerName   String
+  playerEmail  String?
+  platform     String   @default("unknown") // ios, android
+
+  subject      String
+  category     String   // purchase, deletion, bug, account, refund
+  priority     String   @default("low") // low, high, urgent
+  status       String   @default("open") // open, pending, resolved
+
+  assignedTo   String?
+  resolution   String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  resolvedAt   DateTime?
+
+  player   GamePlayer     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  messages TicketMessage[]
+
+  @@index([playerId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id         String   @id @default(cuid())
+  ticketId   String
+  authorName String
+  authorType String   // player, admin
+  content    String
+  createdAt  DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("ticket_messages")
+}

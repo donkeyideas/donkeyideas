@@ -99,6 +99,212 @@ function PassBadge({ tier }: { tier: string }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Player Summary Modal                                               */
+/* ------------------------------------------------------------------ */
+
+interface PlayerDetail {
+  player: {
+    id: string;
+    visibleId: string;
+    playerName: string;
+    platform: string;
+    coins: number;
+    totalSpent: number;
+    totalRaces: number;
+    passTier: string;
+    status: string;
+    lastActiveAt: string;
+    totalWins: number;
+  };
+  betting: {
+    totalBets: number;
+    wins: number;
+    losses: number;
+    winRate: number;
+    totalWagered: number;
+    totalWon: number;
+    netPL: number;
+    avgBetSize: number;
+    biggestWin: number;
+  };
+  kpis: { label: string; value: string; color: string; riskLevel?: number }[];
+}
+
+function PlayerSummaryModal({
+  playerId,
+  onClose,
+  onViewFull,
+}: {
+  playerId: string;
+  onClose: () => void;
+  onViewFull: (id: string) => void;
+}) {
+  const { data, isLoading, isError } = useQuery<PlayerDetail>({
+    queryKey: ['player-summary', playerId],
+    queryFn: () => api.get(`/players/${playerId}`).then((r) => r.data),
+    enabled: !!playerId,
+  });
+
+  const player = data?.player;
+  const betting = data?.betting;
+  const kpis = data?.kpis ?? [];
+
+  const churnKpi = kpis.find((k) => k.label === 'Churn Risk');
+  const churnRisk = churnKpi?.value ?? '---';
+  const churnColor =
+    churnRisk === 'Low'
+      ? 'text-marble-green'
+      : churnRisk === 'Medium'
+        ? 'text-gold'
+        : 'text-marble-red';
+
+  const winRate =
+    player && player.totalRaces > 0
+      ? Math.round(((player.totalWins ?? 0) / player.totalRaces) * 100)
+      : 0;
+
+  return (
+    /* Backdrop */
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      {/* Modal card */}
+      <div
+        className="relative w-full max-w-md mx-4 bg-[#0d1b3e] border-2 border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* Error state */}
+        {isError && (
+          <div className="px-6 py-16 text-center">
+            <p className="text-sm text-marble-red">Failed to load player data.</p>
+            <button
+              onClick={onClose}
+              className="mt-4 px-4 py-1.5 rounded-lg text-xs font-semibold text-white/60 hover:text-white/80 border border-white/10 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        )}
+
+        {/* Content */}
+        {player && !isLoading && !isError && (
+          <>
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4 border-b border-white/[0.08]">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-gold/20 border-2 border-gold/40 flex items-center justify-center text-xl text-gold font-heading flex-shrink-0">
+                  {player.playerName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-lg font-bold text-white/90 truncate">{player.playerName}</p>
+                  <p className="text-[10px] text-white/30 mb-1.5">{player.visibleId ?? `#${player.id.slice(0, 8)}`}</p>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={player.status} />
+                    <PlatformBadge platform={player.platform || '---'} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats grid */}
+            <div className="px-6 py-4 grid grid-cols-2 gap-3">
+              {/* Coins */}
+              <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">Coins</p>
+                <p className="text-sm font-semibold text-gold flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-gold inline-block flex-shrink-0" />
+                  {fmtNum(player.coins)}
+                </p>
+              </div>
+
+              {/* Total Spent */}
+              <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">Total Spent</p>
+                <p className={`text-sm font-semibold ${player.totalSpent > 0 ? 'text-marble-green' : 'text-white/40'}`}>
+                  ${player.totalSpent.toFixed(2)}
+                </p>
+              </div>
+
+              {/* Races */}
+              <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">Races</p>
+                <p className="text-sm font-semibold text-white/80">{fmtNum(player.totalRaces)}</p>
+              </div>
+
+              {/* Win Rate */}
+              <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">Win Rate</p>
+                <p className="text-sm font-semibold text-marble-blue">{winRate}%</p>
+              </div>
+
+              {/* Pass Tier */}
+              <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">Pass Tier</p>
+                <div className="mt-0.5">
+                  <PassBadge tier={player.passTier ?? 'free'} />
+                </div>
+              </div>
+
+              {/* Churn Risk */}
+              <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">Churn Risk</p>
+                <p className={`text-sm font-semibold ${churnColor}`}>{churnRisk}</p>
+              </div>
+            </div>
+
+            {/* Betting summary */}
+            {betting && (
+              <div className="px-6 pb-3">
+                <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3">
+                  <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-2">Betting</p>
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-marble-green font-semibold">{fmtNum(betting.wins)} W</span>
+                    <span className="text-marble-red font-semibold">{fmtNum(betting.losses)} L</span>
+                    <span className="text-white/50">|</span>
+                    <span className="text-marble-blue font-semibold">{betting.winRate}% rate</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Last Active */}
+            <div className="px-6 pb-4">
+              <p className="text-[10px] text-white/30">
+                Last active: {player.lastActiveAt ? timeAgo(player.lastActiveAt) : '---'}
+              </p>
+            </div>
+
+            {/* Footer buttons */}
+            <div className="px-6 pb-6 flex items-center gap-3">
+              <button
+                onClick={() => onViewFull(player.id)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-gold/15 text-gold border-2 border-gold/30 hover:bg-gold/25 transition-colors"
+              >
+                View Full Profile
+              </button>
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white/50 hover:text-white/70 border-2 border-white/10 hover:border-white/20 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -107,6 +313,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const perPage = 7;
 
   const { data, isLoading } = useQuery({
@@ -230,7 +437,7 @@ export default function UsersPage() {
                   <tr
                     key={p.id}
                     className="border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer transition-colors"
-                    onClick={() => router.push(`/users/${p.id}`)}
+                    onClick={() => setSelectedPlayerId(p.id)}
                   >
                     {/* User */}
                     <td className="px-4 py-3.5 align-middle">
@@ -291,7 +498,7 @@ export default function UsersPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/users/${p.id}`);
+                            setSelectedPlayerId(p.id);
                           }}
                           className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors"
                         >
@@ -368,6 +575,18 @@ export default function UsersPage() {
           </button>
         </div>
       </div>
+
+      {/* ============ PLAYER SUMMARY MODAL ============ */}
+      {selectedPlayerId && (
+        <PlayerSummaryModal
+          playerId={selectedPlayerId}
+          onClose={() => setSelectedPlayerId(null)}
+          onViewFull={(id) => {
+            setSelectedPlayerId(null);
+            router.push(`/users/${id}`);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
+const ALL_MARBLES = ['dash', 'spike', 'rocky', 'lucky', 'frosty', 'nova', 'shadow', 'aqua'];
+
 const MARBLE_COLORS: Record<string, string> = {
   dash: '#e74c3c',
   spike: '#f39c12',
@@ -117,10 +119,10 @@ export async function GET(_request: NextRequest) {
 
     // --- Bet Distribution ---
     const betRanges = [
-      { label: '10-50', min: 10, max: 50 },
+      { label: '25-50', min: 25, max: 50 },
       { label: '51-100', min: 51, max: 100 },
-      { label: '101-500', min: 101, max: 500 },
-      { label: '500+', min: 501, max: 999999999 },
+      { label: '101-250', min: 101, max: 250 },
+      { label: '251-500', min: 251, max: 500 },
     ];
 
     const betDistributionResults = await Promise.all(
@@ -238,23 +240,35 @@ export async function GET(_request: NextRequest) {
       { name: 'Playoffs', pct: Math.round((playersWithPlayoff.length / activeBase) * 100), barColor: '#c39bd3', textColor: 'text-[#c39bd3]' },
     ];
 
-    // --- Marble win rates with color + gradient ---
-    const marbleWinRates = marbleStats
-      .map((m: any) => ({
-        marbleId: m.marbleId,
-        name: m.marbleId.charAt(0).toUpperCase() + m.marbleId.slice(1),
-        totalBets: m._count.id,
-        totalWagered: Number(m._sum.betAmount ?? 0),
-        totalPaidOut: Number(m._sum.payout ?? 0),
+    // --- Marble win rates: always show all 8, merge DB data ---
+    const statsMap: Record<string, { bets: number; wagered: number; paidOut: number; avgOdds: number }> = {};
+    marbleStats.forEach((m) => {
+      statsMap[m.marbleId] = {
+        bets: m._count.id,
+        wagered: Number(m._sum.betAmount ?? 0),
+        paidOut: Number(m._sum.payout ?? 0),
         avgOdds: Number(m._avg.odds ?? 0),
-        wins: winMap[m.marbleId] ?? 0,
-        winRate: m._count.id > 0
-          ? Math.round(((winMap[m.marbleId] ?? 0) / m._count.id) * 100)
-          : 0,
-        color: MARBLE_COLORS[m.marbleId] || '#ffffff',
-        grad: MARBLE_GRADIENTS[m.marbleId] || 'radial-gradient(circle at 35% 30%, #888, #555)',
-      }))
-      .sort((a: any, b: any) => b.winRate - a.winRate);
+      };
+    });
+
+    const marbleWinRates = ALL_MARBLES
+      .map((id) => {
+        const s = statsMap[id] || { bets: 0, wagered: 0, paidOut: 0, avgOdds: 0 };
+        const wins = winMap[id] ?? 0;
+        return {
+          marbleId: id,
+          name: id.charAt(0).toUpperCase() + id.slice(1),
+          totalBets: s.bets,
+          totalWagered: s.wagered,
+          totalPaidOut: s.paidOut,
+          avgOdds: s.avgOdds,
+          wins,
+          winRate: s.bets > 0 ? Math.round((wins / s.bets) * 100) : 0,
+          color: MARBLE_COLORS[id] || '#ffffff',
+          grad: MARBLE_GRADIENTS[id] || 'radial-gradient(circle at 35% 30%, #888, #555)',
+        };
+      })
+      .sort((a, b) => b.winRate - a.winRate || b.totalBets - a.totalBets);
 
     return NextResponse.json({
       marbles: marbleWinRates,

@@ -3,6 +3,23 @@ import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
+/* ------------------------------------------------------------------ */
+/*  Static product catalog (always shown in pricing matrix)            */
+/* ------------------------------------------------------------------ */
+const PRODUCT_CATALOG = [
+  { productId: 'coin_pack_starter', productName: 'Starter Pack (1,000 coins)', unitPrice: 0.99, coins: 1000 },
+  { productId: 'coin_pack_popular', productName: 'Popular Pack (6,000 coins)', unitPrice: 4.99, coins: 6000 },
+  { productId: 'coin_pack_big', productName: 'Big Spender (15,000 coins)', unitPrice: 9.99, coins: 15000 },
+  { productId: 'coin_pack_whale', productName: 'Whale Pack (40,000 coins)', unitPrice: 24.99, coins: 40000 },
+  { productId: 'season_pass_premium', productName: 'Season Pass — Premium', unitPrice: 9.99, coins: 0 },
+  { productId: 'season_pass_plus', productName: 'Season Pass — Plus', unitPrice: 24.99, coins: 0 },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Fee impact revenue tiers (always shown)                            */
+/* ------------------------------------------------------------------ */
+const FEE_TIERS = [25_000, 100_000, 500_000, 1_000_000];
+
 export async function GET() {
   try {
     const cookieStore = await cookies();
@@ -63,58 +80,81 @@ export async function GET() {
     const fees = gross * feeRate;
     const net = gross - fees;
 
-    // Pricing matrix: per-product breakdown with fee analysis
-    const pricingMatrix = byProduct.map(p => {
-      const unitsSold = p._count.id;
-      const grossRevenue = Number(p._sum.priceUsd ?? 0);
-      const unitPrice = unitsSold > 0 ? grossRevenue / unitsSold : 0;
-      const appStoreFeeRate = grossRevenue > 1_000_000 ? 0.30 : 0.15;
-      const appStoreFee = grossRevenue * appStoreFeeRate;
-      const netRevenue = grossRevenue - appStoreFee;
-      const avgCoinsGranted = unitsSold > 0 ? (p._sum.coinsGranted ?? 0) / unitsSold : 0;
-      const coinsPerDollar = unitPrice > 0 ? avgCoinsGranted / unitPrice : 0;
+    // ── Pricing matrix: merge static catalog with actual sales ──
+    const salesByProduct = new Map(
+      byProduct.map((p) => [p.productId, { units: p._count.id, revenue: Number(p._sum.priceUsd ?? 0) }]),
+    );
+
+    const pricingMatrix = PRODUCT_CATALOG.map((cat) => {
+      const sales = salesByProduct.get(cat.productId);
+      const unitsSold = sales?.units ?? 0;
+      const grossRevenue = sales?.revenue ?? 0;
+      const appStoreFeeRate = 0.15;
+      const appStoreFee = cat.unitPrice * appStoreFeeRate;
+      const netPerUnit = cat.unitPrice - appStoreFee;
+      const fee30 = cat.unitPrice * 0.30;
+      const netAt30 = cat.unitPrice - fee30;
 
       return {
-        productId: p.productId,
-        productName: p.productName,
-        unitPrice,
+        productId: cat.productId,
+        productName: cat.productName,
+        unitPrice: cat.unitPrice,
         unitsSold,
         grossRevenue,
         appStoreFeeRate,
-        appStoreFee,
-        netRevenue,
-        coinsPerDollar,
+        appStoreFee,       // fee per unit at 15%
+        netPerUnit,        // you receive per unit at 15%
+        netAt30PerUnit: netAt30, // you receive per unit at 30%
+        savingsPerUnit: fee30 - appStoreFee, // savings per unit
+        monthlyRevenue: grossRevenue,
+        coinsPerDollar: cat.unitPrice > 0 ? cat.coins / cat.unitPrice : 0,
       };
     });
 
-    // Fee comparison: actual total revenue at 15% vs 30%
+    // ── Platform split: always show iOS + Android ──
+    const platformMap = new Map(
+      byPlatform.map((p) => [p.platform, { revenue: Number(p._sum.priceUsd ?? 0), transactions: p._count.id }]),
+    );
+    const platforms = [
+      { platform: 'iOS', revenue: platformMap.get('ios')?.revenue ?? platformMap.get('iOS')?.revenue ?? 0, transactions: platformMap.get('ios')?.transactions ?? platformMap.get('iOS')?.transactions ?? 0 },
+      { platform: 'Android', revenue: platformMap.get('android')?.revenue ?? platformMap.get('Android')?.revenue ?? 0, transactions: platformMap.get('android')?.transactions ?? platformMap.get('Android')?.transactions ?? 0 },
+    ];
+
+    // ── Fee impact tiers ──
+    const feeTiers = FEE_TIERS.map((annual) => ({
+      annualRevenue: annual,
+      at30pct: annual * 0.30,
+      at15pct: annual * 0.15,
+      keep30: annual * 0.70,
+      keep15: annual * 0.85,
+      savings: annual * 0.15, // difference between 30% and 15%
+    }));
+
+    // ── Actual fee comparison (current revenue) ──
     const totalGross = Number(totalRevenue._sum.priceUsd ?? 0);
     const feeComparison = {
       totalRevenue: totalGross,
       at15pct: totalGross * 0.15,
       at30pct: totalGross * 0.30,
-      savings: totalGross * 0.30 - totalGross * 0.15,
+      savings: totalGross * 0.15,
     };
 
     return NextResponse.json({
       monthly: { gross, net, fees, feeRate, transactions: monthlyRevenue._count.id },
       total: { gross: totalGross, transactions: totalRevenue._count.id },
       refunds: { amount: Number(refunds._sum.priceUsd ?? 0), count: refunds._count.id },
-      byProduct: byProduct.map(p => ({
+      byProduct: byProduct.map((p) => ({
         productId: p.productId,
         productName: p.productName,
         revenue: Number(p._sum.priceUsd ?? 0),
         units: p._count.id,
         coinsGranted: p._sum.coinsGranted ?? 0,
       })),
-      byPlatform: byPlatform.map(p => ({
-        platform: p.platform,
-        revenue: Number(p._sum.priceUsd ?? 0),
-        transactions: p._count.id,
-      })),
+      byPlatform: platforms,
       pricingMatrix,
       feeComparison,
-      recentTransactions: recentTransactions.map(t => ({
+      feeTiers,
+      recentTransactions: recentTransactions.map((t) => ({
         id: t.id,
         productName: t.productName,
         priceUsd: Number(t.priceUsd),

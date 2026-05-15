@@ -103,6 +103,12 @@ export default function SeasonsPage() {
     return 'text-white/40';
   };
 
+  const fmtWinRate = (winRate: number) => {
+    // Baseball-style: .000 to 1.000
+    const pct = winRate / 100;
+    return pct.toFixed(3).replace(/^0/, '');
+  };
+
   return (
     <div className="space-y-5">
       {/* ============================================================ */}
@@ -176,7 +182,7 @@ export default function SeasonsPage() {
                 <div className="flex-1 font-semibold text-[13px] capitalize">{m.marbleId}</div>
                 <div className="text-xs text-white/50">{m.record}</div>
                 <div className={`font-bold text-[13px] ${wpColor(m.winRate)}`}>
-                  .{String(m.winRate * 10).padStart(3, '0')}
+                  {fmtWinRate(m.winRate)}
                 </div>
               </div>
             ))
@@ -187,7 +193,7 @@ export default function SeasonsPage() {
         <Card
           title="Course Rotation"
           headerAction={
-            <span className="text-[11px] text-white/35">112 total courses</span>
+            <span className="text-[11px] text-white/35">96 total courses</span>
           }
         >
           {courses.length === 0 ? (

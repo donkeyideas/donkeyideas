@@ -17,8 +17,19 @@ interface PricingMatrixRow {
   grossRevenue: number;
   appStoreFeeRate: number;
   appStoreFee: number;
-  netRevenue: number;
-  coinsPerDollar: number;
+  netPerUnit: number;
+  netAt30PerUnit: number;
+  savingsPerUnit: number;
+  monthlyRevenue: number;
+}
+
+interface FeeTier {
+  annualRevenue: number;
+  at30pct: number;
+  at15pct: number;
+  keep30: number;
+  keep15: number;
+  savings: number;
 }
 
 interface FinancialsData {
@@ -29,6 +40,7 @@ interface FinancialsData {
   byPlatform: Array<{ platform: string; revenue: number; transactions: number }>;
   pricingMatrix: PricingMatrixRow[];
   feeComparison: { totalRevenue: number; at15pct: number; at30pct: number; savings: number };
+  feeTiers: FeeTier[];
   recentTransactions: Array<{
     id: string;
     productName: string;
@@ -55,6 +67,12 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
+function fmtK(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}K`;
+  return formatCurrency(n);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
@@ -71,38 +89,29 @@ export default function FinancialsPage() {
       <div className="text-center py-20 text-white/40">Failed to load</div>
     );
 
-  /* KPI values from API */
   const grossRevenue = data.monthly?.gross ?? 0;
   const netRevenue = data.monthly?.net ?? 0;
   const appStoreFees = data.monthly?.fees ?? 0;
-  const feeRate = data.monthly?.feeRate ?? 0;
+  const feeRate = data.monthly?.feeRate ?? 0.15;
   const refundAmount = data.refunds?.amount ?? 0;
   const refundCount = data.refunds?.count ?? 0;
 
-  /* Platform data from API */
   const platforms = data.byPlatform ?? [];
-  const totalPlatformRevenue = platforms.reduce((s: number, p: any) => s + (p.revenue ?? 0), 0);
+  const totalPlatformRevenue = platforms.reduce((s, p) => s + (p.revenue ?? 0), 0);
 
-  /* Pricing matrix from API */
   const pricingMatrix: PricingMatrixRow[] = data.pricingMatrix ?? [];
 
-  /* Compute totals from pricingMatrix */
   const pricingTotals = {
-    units: pricingMatrix.reduce((s: number, r: any) => s + r.unitsSold, 0),
-    gross: pricingMatrix.reduce((s: number, r: any) => s + r.grossRevenue, 0),
-    net: pricingMatrix.reduce((s: number, r: any) => s + r.netRevenue, 0),
-    savings: pricingMatrix.reduce((s: number, r: any) => s + (r.grossRevenue * 0.30 - r.appStoreFee), 0),
+    units: pricingMatrix.reduce((s, r) => s + r.unitsSold, 0),
+    gross: pricingMatrix.reduce((s, r) => s + r.monthlyRevenue, 0),
   };
 
-  /* Fee comparison from API */
-  const feeComp = data.feeComparison ?? { totalRevenue: 0, at15pct: 0, at30pct: 0, savings: 0 };
-
-  /* Recent transactions from API */
+  const feeTiers: FeeTier[] = data.feeTiers ?? [];
   const recentTxns = data.recentTransactions ?? [];
 
   return (
     <div className="space-y-6">
-      {/* -- KPI Cards -- */}
+      {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Gross Revenue */}
         <div className="bg-white/5 border-2 border-gold/20 rounded-2xl p-5 relative overflow-hidden">
@@ -161,7 +170,7 @@ export default function FinancialsPage() {
         </div>
       </div>
 
-      {/* -- Pricing Matrix Table -- */}
+      {/* ── Pricing Matrix Table ── */}
       <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="font-heading text-base tracking-wide">
@@ -182,38 +191,27 @@ export default function FinancialsPage() {
               <tr className="border-b border-white/[0.08]">
                 <th className="text-left text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Product</th>
                 <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Price</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">App Store Fee</th>
+                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">App Store Fee (15%)</th>
                 <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">You Receive</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Units Sold</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Gross Revenue</th>
+                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Units Sold (Month)</th>
+                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Monthly Revenue</th>
                 <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">If 30% Fee</th>
                 <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Savings from 15%</th>
               </tr>
             </thead>
             <tbody>
-              {pricingMatrix.map((row: any) => {
-                const fee15 = row.unitPrice * row.appStoreFeeRate;
-                const net15 = row.unitPrice - fee15;
-                const net30 = row.unitPrice * 0.70;
-                const savingsPerUnit = (row.unitPrice * 0.30) - fee15;
-                const totalSavings = savingsPerUnit * row.unitsSold;
-
-                return (
-                  <tr
-                    key={row.productId}
-                    className="border-b border-white/[0.04]"
-                  >
-                    <td className="px-3 py-2.5 text-sm text-white/70">{row.productName}</td>
-                    <td className="px-3 py-2.5 text-sm text-right text-white/60">{formatCurrency(row.unitPrice)}</td>
-                    <td className="px-3 py-2.5 text-sm text-right text-marble-red/70">-{formatCurrency(fee15)}</td>
-                    <td className="px-3 py-2.5 text-sm text-right text-marble-green font-medium">{formatCurrency(net15)}</td>
-                    <td className="px-3 py-2.5 text-sm text-right text-white/60">{row.unitsSold}</td>
-                    <td className="px-3 py-2.5 text-sm text-right text-gold font-medium">{formatCurrency(row.grossRevenue)}</td>
-                    <td className="px-3 py-2.5 text-sm text-right text-white/40">{formatCurrency(net30)}</td>
-                    <td className="px-3 py-2.5 text-sm text-right text-marble-green font-semibold">+{formatCurrency(totalSavings)}</td>
-                  </tr>
-                );
-              })}
+              {pricingMatrix.map((row) => (
+                <tr key={row.productId} className="border-b border-white/[0.04]">
+                  <td className="px-3 py-2.5 text-sm text-white/70">{row.productName}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-white/60">{formatCurrency(row.unitPrice)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-marble-red/70">-{formatCurrency(row.appStoreFee)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-marble-green font-medium">{formatCurrency(row.netPerUnit)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-white/60">{row.unitsSold}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-gold font-medium">{formatCurrency(row.monthlyRevenue)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-white/40">{formatCurrency(row.netAt30PerUnit)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-marble-green font-semibold">+{formatCurrency(row.savingsPerUnit * row.unitsSold)}</td>
+                </tr>
+              ))}
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-white/[0.08]">
@@ -223,15 +221,15 @@ export default function FinancialsPage() {
                 <td className="px-3 py-2.5" />
                 <td className="px-3 py-2.5 text-sm text-right font-bold">{pricingTotals.units}</td>
                 <td className="px-3 py-2.5 text-sm text-right font-bold text-gold">{formatCurrency(pricingTotals.gross)}</td>
-                <td className="px-3 py-2.5 text-sm text-right font-bold text-white/50">{formatCurrency(pricingTotals.net)}</td>
-                <td className="px-3 py-2.5 text-sm text-right font-bold text-marble-green">+{formatCurrency(pricingTotals.savings)}</td>
+                <td className="px-3 py-2.5" />
+                <td className="px-3 py-2.5" />
               </tr>
             </tfoot>
           </table>
         </div>
       </div>
 
-      {/* -- Platform Split + Recent Transactions -- */}
+      {/* ── Platform Split + Recent Transactions ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Revenue by Platform */}
         <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
@@ -239,31 +237,32 @@ export default function FinancialsPage() {
             Revenue by Platform
           </div>
           <div className="space-y-5">
-            {platforms.length > 0 ? (
-              platforms.map((p: any) => {
-                const pct = totalPlatformRevenue > 0 ? Math.round((p.revenue / totalPlatformRevenue) * 100) : 0;
-                const colorClass = p.platform?.toLowerCase() === 'ios'
-                  ? 'from-marble-blue to-marble-blue/50'
-                  : 'from-marble-green to-marble-green/50';
-                return (
-                  <div key={p.platform}>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-white/60">{p.platform}</span>
-                      <span className="text-white/80 font-medium">
-                        {formatCurrency(p.revenue)} ({pct}%)
-                      </span>
-                    </div>
-                    <div className="h-3 bg-white/[0.06] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full bg-gradient-to-r ${colorClass} rounded-full transition-all`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
+            {platforms.map((p) => {
+              const pct = totalPlatformRevenue > 0 ? Math.round((p.revenue / totalPlatformRevenue) * 100) : 0;
+              const isIOS = p.platform?.toLowerCase() === 'ios';
+              const colorClass = isIOS
+                ? 'from-marble-blue to-marble-blue/50'
+                : 'from-marble-green to-marble-green/50';
+              return (
+                <div key={p.platform}>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-white/60 font-medium">{p.platform}</span>
+                    <span className="text-white/80 font-medium">
+                      {formatCurrency(p.revenue)} ({pct}%)
+                    </span>
                   </div>
-                );
-              })
-            ) : (
-              <div className="text-sm text-white/30 text-center py-4">No platform data</div>
+                  <div className="h-3 bg-white/[0.06] rounded-full overflow-hidden">
+                    <div
+                      className={`h-full bg-gradient-to-r ${colorClass} rounded-full transition-all`}
+                      style={{ width: `${Math.max(pct, totalPlatformRevenue === 0 ? 0 : 2)}%` }}
+                    />
+                  </div>
+                  <div className="text-[10px] text-white/30 mt-1">{p.transactions} transactions</div>
+                </div>
+              );
+            })}
+            {totalPlatformRevenue === 0 && (
+              <div className="text-[11px] text-white/25 text-center mt-2">No transactions yet — platform data will appear after first purchase</div>
             )}
           </div>
         </div>
@@ -275,7 +274,7 @@ export default function FinancialsPage() {
           </div>
           <div className="space-y-0">
             {recentTxns.length > 0 ? (
-              recentTxns.map((t: any) => {
+              recentTxns.map((t) => {
                 const isRefund = t.status === 'refunded';
                 const displayAmount = isRefund ? -t.priceUsd : t.priceUsd;
                 return (
@@ -314,50 +313,45 @@ export default function FinancialsPage() {
                 );
               })
             ) : (
-              <div className="text-sm text-white/30 text-center py-4">No recent transactions</div>
+              <div className="text-sm text-white/30 text-center py-4">No transactions yet</div>
             )}
           </div>
         </div>
       </div>
 
-      {/* -- Fee Comparison -- */}
+      {/* ── App Store Fee Impact — 15% vs 30% ── */}
       <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
-        <div className="font-heading text-base tracking-wide mb-4">
-          App Store Fee Impact — 15% vs 30%
+        <div className="flex items-center justify-between mb-4">
+          <div className="font-heading text-base tracking-wide">
+            App Store Fee Impact — 15% vs 30%
+          </div>
+          <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-lg bg-marble-green/15 text-marble-green">
+            Small Business Program Enrolled
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.08]">
-                <th className="text-left text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Metric</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Value</th>
+                <th className="text-left text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Annual Revenue</th>
+                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">At 30% Fee</th>
+                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">At 15% Fee</th>
+                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">You Keep (30%)</th>
+                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">You Keep (15%)</th>
+                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Annual Savings</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-white/[0.04]">
-                <td className="px-3 py-2.5 text-sm text-white/70 font-medium">Total Revenue</td>
-                <td className="px-3 py-2.5 text-sm text-right text-gold font-medium">{formatCurrency(feeComp.totalRevenue)}</td>
-              </tr>
-              <tr className="border-b border-white/[0.04]">
-                <td className="px-3 py-2.5 text-sm text-white/70 font-medium">Fees at 30%</td>
-                <td className="px-3 py-2.5 text-sm text-right text-marble-red">{formatCurrency(feeComp.at30pct)}</td>
-              </tr>
-              <tr className="border-b border-white/[0.04]">
-                <td className="px-3 py-2.5 text-sm text-white/70 font-medium">Fees at 15%</td>
-                <td className="px-3 py-2.5 text-sm text-right text-marble-red/60">{formatCurrency(feeComp.at15pct)}</td>
-              </tr>
-              <tr className="border-b border-white/[0.04]">
-                <td className="px-3 py-2.5 text-sm text-white/70 font-medium">You Keep at 30%</td>
-                <td className="px-3 py-2.5 text-sm text-right text-white/50">{formatCurrency(feeComp.totalRevenue - feeComp.at30pct)}</td>
-              </tr>
-              <tr className="border-b border-white/[0.04]">
-                <td className="px-3 py-2.5 text-sm text-white/70 font-medium">You Keep at 15%</td>
-                <td className="px-3 py-2.5 text-sm text-right text-marble-green font-medium">{formatCurrency(feeComp.totalRevenue - feeComp.at15pct)}</td>
-              </tr>
-              <tr className="border-t-2 border-white/[0.08]">
-                <td className="px-3 py-2.5 text-sm font-bold">Savings from 15% Program</td>
-                <td className="px-3 py-2.5 text-sm text-right text-gold font-semibold">+{formatCurrency(feeComp.savings)}</td>
-              </tr>
+              {feeTiers.map((tier) => (
+                <tr key={tier.annualRevenue} className="border-b border-white/[0.04]">
+                  <td className="px-3 py-2.5 text-sm text-white/70 font-medium">{fmtK(tier.annualRevenue)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-marble-red">-{fmtK(tier.at30pct)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-marble-red/60">-{fmtK(tier.at15pct)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-white/50">{fmtK(tier.keep30)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-marble-green font-medium">{fmtK(tier.keep15)}</td>
+                  <td className="px-3 py-2.5 text-sm text-right text-gold font-semibold">+{fmtK(tier.savings)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

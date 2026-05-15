@@ -41,6 +41,16 @@ interface ProductSlice {
   color: string;
 }
 
+interface HeatmapData {
+  days: string[];
+  grid: number[][];
+  peakTime: string;
+  mostActiveDay: string;
+  totalEvents: number;
+  totalRaces: number;
+  totalBets: number;
+}
+
 interface OverviewData {
   players: {
     total: number;
@@ -54,6 +64,7 @@ interface OverviewData {
   races: { today: number; total: number };
   revenue: { total: number; today: number; week: number; month: number };
   economy: { totalCoinsInCirculation: number };
+  heatmap: HeatmapData;
   revenueChart: RevenueChartPoint[];
   revenueByProduct: ProductSlice[];
   quickStats: QuickStat[];
@@ -95,6 +106,13 @@ function trendLabel(value: number): { text: string; positive: boolean } {
   if (value > 0) return { text: `\u2191 +${value}%`, positive: true };
   if (value < 0) return { text: `\u2193 ${value}%`, positive: false };
   return { text: '- 0%', positive: true };
+}
+
+function h12(h: number): string {
+  if (h === 0) return '12 AM';
+  if (h < 12) return `${h} AM`;
+  if (h === 12) return '12 PM';
+  return `${h - 12} PM`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -205,6 +223,79 @@ export default function OverviewPage() {
           <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">
             {payingUsers} of {data.players.total.toLocaleString()} players
           </div>
+        </div>
+      </div>
+
+      {/* -- System Activity Heatmap -- */}
+      <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="font-heading text-base tracking-wide">System Activity &mdash; Last 30 Days</div>
+            <p className="text-[11px] text-white/35 mt-0.5">
+              {data.heatmap.totalEvents.toLocaleString()} events &middot; {data.heatmap.totalRaces.toLocaleString()} races &middot; {data.heatmap.totalBets.toLocaleString()} bets
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-[10px] text-white/30 uppercase tracking-wider font-bold">Peak Time</p>
+              <p className="text-sm font-semibold text-gold">{data.heatmap.peakTime}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-white/30 uppercase tracking-wider font-bold">Most Active</p>
+              <p className="text-sm font-semibold text-marble-green">{data.heatmap.mostActiveDay}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Heatmap grid */}
+        <div className="space-y-1">
+          {/* Hour labels */}
+          <div className="flex items-center gap-[3px] ml-10">
+            {Array.from({ length: 24 }, (_, h) => (
+              <div key={h} className="flex-1 text-center">
+                {h % 3 === 0 && <span className="text-[9px] text-white/25">{h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`}</span>}
+              </div>
+            ))}
+          </div>
+          {/* Day rows */}
+          {data.heatmap.days.map((day, di) => (
+            <div key={day} className="flex items-center gap-[3px]">
+              <span className="text-[10px] text-white/30 w-9 text-right pr-1.5 flex-shrink-0 font-semibold">{day}</span>
+              {(data.heatmap.grid[di] ?? []).map((level, hi) => (
+                <div
+                  key={hi}
+                  className={`flex-1 aspect-square rounded-[3px] transition-colors ${
+                    level === 0 ? 'bg-white/[0.04]' :
+                    level === 1 ? 'bg-marble-blue/[0.15]' :
+                    level === 2 ? 'bg-marble-blue/[0.30]' :
+                    level === 3 ? 'bg-marble-blue/[0.50]' :
+                    level === 4 ? 'bg-marble-blue/[0.75]' :
+                    'bg-marble-blue'
+                  }`}
+                  title={`${day} ${h12(hi)}: level ${level}`}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center gap-1.5 mt-3">
+          <span className="text-[10px] text-white/25 mr-1">Less</span>
+          {[0, 1, 2, 3, 4, 5].map((l) => (
+            <div
+              key={l}
+              className={`w-3.5 h-3.5 rounded-[3px] ${
+                l === 0 ? 'bg-white/[0.04]' :
+                l === 1 ? 'bg-marble-blue/[0.15]' :
+                l === 2 ? 'bg-marble-blue/[0.30]' :
+                l === 3 ? 'bg-marble-blue/[0.50]' :
+                l === 4 ? 'bg-marble-blue/[0.75]' :
+                'bg-marble-blue'
+              }`}
+            />
+          ))}
+          <span className="text-[10px] text-white/25 ml-1">More</span>
         </div>
       </div>
 

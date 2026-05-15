@@ -6,6 +6,7 @@
     "apps/dashboard",
     "apps/desktop",
     "apps/web",
+    "apps/marble-admin",
     "packages/*"
   ],
   "scripts": {
