@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { prisma } from '@donkey-ideas/database';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ export interface GrowthDataPoint {
 
 // ─── Project Configs ─────────────────────────────────────────────────────────
 
-type ConnectionType = 'pg' | 'supabase-auth' | 'supabase-table';
+type ConnectionType = 'pg' | 'prisma' | 'supabase-auth' | 'supabase-table';
 
 interface ProjectConfig {
   slug: string;
@@ -188,8 +189,7 @@ const PROJECT_CONFIGS: ProjectConfig[] = [
     displayName: 'Donkey Roller Coaster Racing',
     companyNameMatch: 'Donkey Roller Coaster Racing',
     color: '#F97316', // orange
-    connectionType: 'pg',
-    envDbUrl: 'DATABASE_URL',
+    connectionType: 'prisma',
     tableName: 'game_players',
     fields: {
       id: 'id',
@@ -277,6 +277,108 @@ async function fetchPgUserCount(config: ProjectConfig): Promise<{ total: number;
     new30d: parseInt(result.rows[0].new_30d),
     new7d: parseInt(result.rows[0].new_7d),
   };
+}
+
+// ─── Prisma-based queries (same DB as main app) ────────────────────────────
+
+async function fetchPrismaUserCount(config: ProjectConfig): Promise<{ total: number; new30d: number; new7d: number }> {
+  const { fields, tableName } = config;
+  const createdAt = fields!.createdAt;
+  const result: any[] = await prisma.$queryRawUnsafe(`
+    SELECT
+      COUNT(*) as total,
+      COUNT(*) FILTER (WHERE ${createdAt} >= NOW() - INTERVAL '30 days') as new_30d,
+      COUNT(*) FILTER (WHERE ${createdAt} >= NOW() - INTERVAL '7 days') as new_7d
+    FROM "${tableName}"
+  `);
+  return {
+    total: Number(result[0].total),
+    new30d: Number(result[0].new_30d),
+    new7d: Number(result[0].new_7d),
+  };
+}
+
+async function fetchPrismaUsers(config: ProjectConfig, options: FetchUsersOptions): Promise<{ users: NormalizedUser[]; total: number }> {
+  const { fields, tableName } = config;
+  const { page = 1, limit = 25, sortBy = 'createdAt', sortDir = 'desc', search, dateFrom, dateTo } = options;
+  const offset = (page - 1) * limit;
+
+  const sortMap: Record<string, string> = {
+    name: fields!.name,
+    email: fields!.email,
+    createdAt: fields!.createdAt,
+    lastActive: fields!.lastActive || fields!.createdAt,
+    status: fields!.status,
+  };
+  const orderCol = sortMap[sortBy] || fields!.createdAt;
+
+  const conditions: string[] = [];
+  if (search) {
+    const escaped = search.replace(/'/g, "''");
+    conditions.push(`(${fields!.email} ILIKE '%${escaped}%' OR (${fields!.name})::text ILIKE '%${escaped}%')`);
+  }
+  if (dateFrom) conditions.push(`${fields!.createdAt} >= '${dateFrom}'::timestamp`);
+  if (dateTo) conditions.push(`${fields!.createdAt} <= '${dateTo}'::timestamp`);
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const countResult: any[] = await prisma.$queryRawUnsafe(`SELECT COUNT(*) FROM "${tableName}" ${whereClause}`);
+  const total = Number(countResult[0].count);
+
+  const rows: any[] = await prisma.$queryRawUnsafe(`
+    SELECT
+      ${fields!.id} AS id,
+      ${fields!.email} AS email,
+      (${fields!.name})::text AS name,
+      ${fields!.createdAt} AS "createdAt",
+      ${fields!.lastActive || 'NULL'} AS "lastActive",
+      (${fields!.status})::text AS status,
+      (${fields!.role})::text AS role,
+      ${fields!.avatarUrl || 'NULL'} AS "avatarUrl",
+      (${fields!.provider})::text AS provider,
+      (${fields!.plan || "'free'"})::text AS plan
+    FROM "${tableName}"
+    ${whereClause}
+    ORDER BY ${orderCol} ${sortDir.toUpperCase()}
+    LIMIT ${limit} OFFSET ${offset}
+  `);
+
+  return {
+    users: rows.map(row => ({
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      createdAt: row.createdAt?.toISOString?.() || row.createdAt,
+      lastActive: row.lastActive?.toISOString?.() || row.lastActive,
+      status: row.status || 'active',
+      role: row.role || 'user',
+      avatarUrl: row.avatarUrl,
+      provider: (row.provider === 'google' || row.provider === 'apple' || row.provider === 'device') ? row.provider : 'email',
+      plan: row.plan || 'free',
+      project: config.slug,
+      projectName: config.displayName,
+      projectColor: config.color,
+    })),
+    total,
+  };
+}
+
+async function fetchPrismaGrowthData(config: ProjectConfig, days: number): Promise<{ date: string; count: number }[]> {
+  const { fields, tableName } = config;
+  const createdAt = fields!.createdAt;
+  const rows: any[] = await prisma.$queryRawUnsafe(`
+    SELECT
+      DATE(${createdAt}) as date,
+      COUNT(*) as count
+    FROM "${tableName}"
+    WHERE ${createdAt} >= NOW() - INTERVAL '${days} days'
+    GROUP BY DATE(${createdAt})
+    ORDER BY date
+  `);
+  return rows.map(r => ({
+    date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date),
+    count: Number(r.count),
+  }));
 }
 
 async function fetchBotUserIds(client: SupabaseClient): Promise<Set<string>> {
@@ -763,6 +865,9 @@ export async function fetchAllProjectOverview(): Promise<{
         case 'pg':
           counts = await fetchPgUserCount(config);
           break;
+        case 'prisma':
+          counts = await fetchPrismaUserCount(config);
+          break;
         case 'supabase-auth':
           counts = await fetchSupabaseAuthUserCount(config);
           break;
@@ -816,6 +921,8 @@ export async function fetchProjectUsers(projectSlug: string, options: FetchUsers
   switch (config.connectionType) {
     case 'pg':
       return fetchPgUsers(config, options);
+    case 'prisma':
+      return fetchPrismaUsers(config, options);
     case 'supabase-auth':
       return fetchSupabaseAuthUsers(config, options);
     case 'supabase-table':
@@ -832,6 +939,8 @@ export async function fetchAllUsers(options: FetchUsersOptions): Promise<{ users
       switch (config.connectionType) {
         case 'pg':
           return fetchPgUsers(config, { ...options, page: 1, limit: 500 });
+        case 'prisma':
+          return fetchPrismaUsers(config, { ...options, page: 1, limit: 500 });
         case 'supabase-auth':
           return fetchSupabaseAuthUsers(config, { ...options, page: 1, limit: 500 });
         case 'supabase-table':
@@ -879,6 +988,9 @@ export async function fetchAllGrowthData(days: number = 90): Promise<GrowthDataP
       switch (config.connectionType) {
         case 'pg':
           data = await fetchPgGrowthData(config, days);
+          break;
+        case 'prisma':
+          data = await fetchPrismaGrowthData(config, days);
           break;
         case 'supabase-auth':
           data = await fetchSupabaseAuthGrowthData(config, days);
