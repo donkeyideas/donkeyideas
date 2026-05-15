@@ -314,7 +314,7 @@ export default function UsersPage() {
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const perPage = 7;
+  const perPage = 20;
 
   const { data, isLoading } = useQuery({
     queryKey: ['players', page, filter, search],
