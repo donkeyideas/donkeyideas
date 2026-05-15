@@ -74,7 +74,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
         {/* Logo */}
         <div className="px-5 py-6 border-b border-white/[0.08] flex items-center gap-3">
-          <Image src="/logo-small.png" alt="Donkey Marble Racing" width={42} height={42} className="rounded-full flex-shrink-0" />
+          <Image src="/logo-small.png" alt="Donkey Marble Racing" width={42} height={42} className="rounded-xl flex-shrink-0" />
           <div>
             <div className="font-heading text-base tracking-wide leading-tight">
               DONKEY <span className="text-gold">MARBLE</span>

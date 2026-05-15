@@ -42,7 +42,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Image src="/logo-small.png" alt="Donkey Marble Racing" width={80} height={80} className="mx-auto mb-4 rounded-full shadow-lg shadow-gold/20" />
+          <Image src="/logo-small.png" alt="Donkey Marble Racing" width={80} height={80} className="mx-auto mb-4 rounded-2xl shadow-lg shadow-gold/20" />
           <h1 className="font-heading text-2xl tracking-wide">
             DONKEY <span className="text-gold">MARBLE</span>
           </h1>
