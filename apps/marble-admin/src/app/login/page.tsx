@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gold-light to-gold mx-auto mb-4 shadow-lg shadow-gold/20" />
+          <Image src="/logo.png" alt="Donkey Marble Racing" width={80} height={80} className="mx-auto mb-4 rounded-full shadow-lg shadow-gold/20" />
           <h1 className="font-heading text-2xl tracking-wide">
             DONKEY <span className="text-gold">MARBLE</span>
           </h1>

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
@@ -72,9 +73,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
         {/* Logo */}
         <div className="px-5 py-6 border-b border-white/[0.08] flex items-center gap-3">
-          <div className="w-[42px] h-[42px] rounded-full bg-gradient-to-br from-gold-light to-gold shadow-[0_3px_0_rgba(0,0,0,0.25)] relative flex-shrink-0">
-            <div className="absolute top-[7px] left-[9px] w-4 h-[11px] bg-white/45 rounded-full -rotate-[20deg]" />
-          </div>
+          <Image src="/logo.png" alt="Donkey Marble Racing" width={42} height={42} className="rounded-full flex-shrink-0" />
           <div>
             <div className="font-heading text-base tracking-wide leading-tight">
               DONKEY <span className="text-gold">MARBLE</span>
