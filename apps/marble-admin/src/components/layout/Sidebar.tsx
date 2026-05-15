@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 
@@ -31,6 +31,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const { data } = useQuery<any>({
     queryKey: ['overview'],
@@ -125,14 +126,30 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-white/[0.08] flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gold flex items-center justify-center font-heading text-navy-900 text-base border-2 border-white">
-            A
+        <div className="px-5 py-4 border-t border-white/[0.08]">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-full bg-gold flex items-center justify-center font-heading text-navy-900 text-base border-2 border-white">
+              A
+            </div>
+            <div className="text-xs">
+              <div className="font-semibold">Admin</div>
+              <div className="text-white/40 text-[10px]">SUPER ADMIN</div>
+            </div>
           </div>
-          <div className="text-xs">
-            <div className="font-semibold">Admin</div>
-            <div className="text-white/40 text-[10px]">SUPER ADMIN</div>
-          </div>
+          <button
+            onClick={async () => {
+              try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                router.push('/login');
+              } catch {
+                window.location.href = '/login';
+              }
+            }}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white/80 transition-all"
+          >
+            <span className="text-sm">↪</span>
+            <span>Log Out</span>
+          </button>
         </div>
       </aside>
     </>
