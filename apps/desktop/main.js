@@ -7,9 +7,9 @@ let mainWindow = null;
 let tray = null;
 
 // Dashboard URL - Update this to your hosted dashboard URL
-// For local development, use: http://localhost:3001
+// For local development, use: http://localhost:3002
 // For production, use: https://app.donkeyideas.com (or your actual URL)
-const DASHBOARD_URL = 'http://localhost:3001';
+const DASHBOARD_URL = 'http://localhost:3002';
 
 // Function to check if server is ready
 function waitForServer(url, maxAttempts = 30, interval = 1000) {

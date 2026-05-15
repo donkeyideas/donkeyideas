@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Donkey Ideas",
+    "slug": "donkey-ideas",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "donkeyideas",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0a"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0a"
+      },
+      "package": "com.donkeyideas.mobile",
+      "navigationBarColor": "#0a0a0a",
+      "navigationBarStyle": "light"
+    },
+    "jsEngine": "hermes",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "extra": {
+      "router": {
+        "root": "./app"
+      },
+      "eas": {
+        "projectId": "e26ba53b-0f6e-482d-9bfb-bc8866489862"
+      }
+    },
+    "owner": "donkeyideas"
+  }
+}

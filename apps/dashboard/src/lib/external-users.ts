@@ -12,7 +12,7 @@ export interface NormalizedUser {
   status: string;
   role: string;
   avatarUrl: string | null;
-  provider: 'google' | 'apple' | 'email';
+  provider: 'google' | 'apple' | 'email' | 'device';
   plan: string;           // subscription plan/tier (e.g. 'free', 'pro', 'premium')
   project: string;       // slug
   projectName: string;   // display name
@@ -182,6 +182,36 @@ const PROJECT_CONFIGS: ProjectConfig[] = [
     connectionType: 'supabase-auth',
     envSupabaseUrl: 'TOPVISO_SUPABASE_URL',
     envSupabaseKey: 'TOPVISO_SUPABASE_KEY',
+  },
+  {
+    slug: 'coasterracing',
+    displayName: 'Donkey Roller Coaster Racing',
+    companyNameMatch: 'Donkey Roller Coaster Racing',
+    color: '#F97316', // orange
+    connectionType: 'pg',
+    envDbUrl: 'DATABASE_URL',
+    tableName: 'game_players',
+    fields: {
+      id: 'id',
+      email: "COALESCE(email, 'device:' || \"deviceId\")",
+      name: '"playerName"',
+      createdAt: '"createdAt"',
+      lastActive: '"lastActiveAt"',
+      status: 'status',
+      role: "'player'",
+      avatarUrl: 'NULL',
+      provider: "'device'",
+      plan: '"passTier"',
+    },
+  },
+  {
+    slug: 'jetdale',
+    displayName: 'Jetdale',
+    companyNameMatch: 'Jetdale',
+    color: '#14B8A6', // teal
+    connectionType: 'supabase-auth',
+    envSupabaseUrl: 'JETDALE_SUPABASE_URL',
+    envSupabaseKey: 'JETDALE_SUPABASE_KEY',
   },
 ];
 
@@ -403,7 +433,7 @@ async function fetchPgUsers(config: ProjectConfig, options: FetchUsersOptions): 
       status: row.status || 'active',
       role: row.role || 'user',
       avatarUrl: row.avatarUrl,
-      provider: (row.provider === 'google' || row.provider === 'apple') ? row.provider : 'email',
+      provider: (row.provider === 'google' || row.provider === 'apple' || row.provider === 'device') ? row.provider : 'email',
       plan: row.plan || 'free',
       project: config.slug,
       projectName: config.displayName,
