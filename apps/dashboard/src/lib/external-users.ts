@@ -186,7 +186,7 @@ const PROJECT_CONFIGS: ProjectConfig[] = [
   },
   {
     slug: 'coasterracing',
-    displayName: 'Donkey Roller Coaster Racing',
+    displayName: 'DRCR',
     companyNameMatch: 'Donkey Roller Coaster Racing',
     color: '#F97316', // orange
     connectionType: 'prisma',
