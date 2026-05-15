@@ -113,16 +113,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Spacer */}
           <div className="flex-1" />
-
-          {/* Settings */}
-          <Link
-            href="/overview"
-            onClick={onClose}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-medium transition-all border-2 border-transparent text-white/55 hover:bg-white/5 hover:text-white/80"
-          >
-            <span className="w-5 text-center text-base">▾</span>
-            <span>Settings</span>
-          </Link>
         </nav>
 
         {/* Footer */}
