@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -275,6 +276,8 @@ function TicketModal({
 /*  Main Page                                                          */
 /* ------------------------------------------------------------------ */
 
+type TicketSortKey = 'ticketNumber' | 'playerName' | 'category' | 'priority' | 'status' | 'createdAt';
+
 export default function SupportPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery<SupportData>({
@@ -284,6 +287,7 @@ export default function SupportPage() {
 
   const [filter, setFilter] = useState<'all' | 'open' | 'pending' | 'resolved'>('all');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const { sortKey, sortDir, handleSort, sortItems } = useSort<TicketSortKey>();
 
   if (isLoading) return <LoadingSpinner />;
   if (isError || !data) return <div className="text-center py-20 text-white/40">Failed to load</div>;
@@ -381,17 +385,17 @@ export default function SupportPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/[0.08]">
-                    <th className="text-left text-[10px] text-white/40 uppercase px-4 py-2 tracking-wider">Ticket</th>
-                    <th className="text-left text-[10px] text-white/40 uppercase px-4 py-2 tracking-wider">User</th>
-                    <th className="text-left text-[10px] text-white/40 uppercase px-4 py-2 tracking-wider">Category</th>
-                    <th className="text-left text-[10px] text-white/40 uppercase px-4 py-2 tracking-wider">Priority</th>
-                    <th className="text-left text-[10px] text-white/40 uppercase px-4 py-2 tracking-wider">Status</th>
-                    <th className="text-left text-[10px] text-white/40 uppercase px-4 py-2 tracking-wider">Created</th>
+                    <SortableHeader label="Ticket" sortKey="ticketNumber" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                    <SortableHeader label="User" sortKey="playerName" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                    <SortableHeader label="Category" sortKey="category" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                    <SortableHeader label="Priority" sortKey="priority" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                    <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                    <SortableHeader label="Created" sortKey="createdAt" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                     <th className="text-right text-[10px] text-white/40 uppercase px-4 py-2 tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTickets.map((t) => (
+                  {sortItems(filteredTickets).map((t) => (
                     <tr
                       key={t.id}
                       className="border-b border-white/[0.04] hover:bg-white/[0.03] cursor-pointer transition-colors"

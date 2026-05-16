@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
+import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -309,12 +310,15 @@ function PlayerSummaryModal({
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+type SortKey = 'playerName' | 'status' | 'platform' | 'coins' | 'totalRaces' | 'totalSpent' | 'passTier' | 'lastActiveAt';
+
 export default function UsersPage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const { sortKey, sortDir, handleSort, sortItems } = useSort<SortKey>();
   const perPage = 20;
 
   const { data, isLoading } = useQuery({
@@ -323,9 +327,11 @@ export default function UsersPage() {
       api.get('/players', { params: { page, limit: perPage, search, filter } }).then((r) => r.data),
   });
 
-  const players: Player[] = data?.players ?? [];
+  const rawPlayers: Player[] = data?.players ?? [];
   const total = data?.pagination?.total ?? 0;
   const totalPages = data?.pagination?.totalPages ?? 0;
+
+  const players = sortItems(rawPlayers);
 
   const payingCount = data?.summary?.paying ?? 0;
   const bannedCount = data?.summary?.banned ?? 0;
@@ -457,16 +463,15 @@ export default function UsersPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.08]">
-                {['User', 'Status', 'Platform', 'Coins', 'Races', 'Total Spent', 'Season Pass', 'Last Active', 'Actions'].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="text-left px-4 py-3 text-[10px] font-bold text-white/40 uppercase tracking-wider"
-                    >
-                      {h}
-                    </th>
-                  ),
-                )}
+                <SortableHeader label="User" sortKey="playerName" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Platform" sortKey="platform" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Coins" sortKey="coins" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Races" sortKey="totalRaces" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Total Spent" sortKey="totalSpent" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Season Pass" sortKey="passTier" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Last Active" sortKey="lastActiveAt" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <th className="text-left px-4 py-3 text-[10px] font-bold text-white/40 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>

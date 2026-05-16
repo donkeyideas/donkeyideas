@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
+import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -133,6 +134,13 @@ function CompetitorCard({ app, ourInstalls }: { app: AppData; ourInstalls: numbe
 }
 
 /* ------------------------------------------------------------------ */
+/*  Sort key types                                                     */
+/* ------------------------------------------------------------------ */
+
+type CompetitorSortKey = 'title' | 'score' | 'reviews' | 'minInstalls' | 'version';
+type SearchHistorySortKey = 'keyword' | 'rank' | 'topCompetitor' | 'totalResults';
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -142,6 +150,9 @@ export default function ASOPage() {
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchHistory, setSearchHistory] = useState<SearchResult[]>([]);
+
+  const { sortKey: compSortKey, sortDir: compSortDir, handleSort: handleCompSort, sortItems: sortCompItems } = useSort<CompetitorSortKey>();
+  const { sortKey: histSortKey, sortDir: histSortDir, handleSort: handleHistSort, sortItems: sortHistItems } = useSort<SearchHistorySortKey>();
 
   // Auto-fetch dashboard data
   const { data, isLoading, isError, refetch } = useQuery<DashboardData>({
@@ -325,11 +336,11 @@ export default function ASOPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/[0.08]">
-                  <th className="text-left px-3 py-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">App</th>
-                  <th className="text-center px-3 py-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">Rating</th>
-                  <th className="text-center px-3 py-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">Reviews</th>
-                  <th className="text-center px-3 py-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">Installs</th>
-                  <th className="text-center px-3 py-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">Version</th>
+                  <SortableHeader label="App" sortKey="title" currentSort={compSortKey} currentDir={compSortDir} onSort={handleCompSort} />
+                  <SortableHeader label="Rating" sortKey="score" currentSort={compSortKey} currentDir={compSortDir} onSort={handleCompSort} className="text-center" />
+                  <SortableHeader label="Reviews" sortKey="reviews" currentSort={compSortKey} currentDir={compSortDir} onSort={handleCompSort} className="text-center" />
+                  <SortableHeader label="Installs" sortKey="minInstalls" currentSort={compSortKey} currentDir={compSortDir} onSort={handleCompSort} className="text-center" />
+                  <SortableHeader label="Version" sortKey="version" currentSort={compSortKey} currentDir={compSortDir} onSort={handleCompSort} className="text-center" />
                 </tr>
               </thead>
               <tbody>
@@ -350,7 +361,7 @@ export default function ASOPage() {
                   </tr>
                 )}
                 {/* Competitor rows */}
-                {competitors.map((app) => (
+                {sortCompItems(competitors).map((app) => (
                   <tr key={app.appId} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
                     <td className="px-3 py-3 flex items-center gap-2">
                       {app.icon && <img src={app.icon} alt="" className="w-7 h-7 rounded-lg" crossOrigin="anonymous" />}
@@ -446,14 +457,14 @@ export default function ASOPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/[0.08]">
-                  <th className="text-left px-4 py-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">Keyword</th>
-                  <th className="text-center px-4 py-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">Rank</th>
-                  <th className="text-left px-4 py-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">#1 Result</th>
-                  <th className="text-center px-4 py-2 text-[10px] font-bold text-white/30 uppercase tracking-wider">Results</th>
+                  <SortableHeader label="Keyword" sortKey="keyword" currentSort={histSortKey} currentDir={histSortDir} onSort={handleHistSort} />
+                  <SortableHeader label="Rank" sortKey="rank" currentSort={histSortKey} currentDir={histSortDir} onSort={handleHistSort} className="text-center" />
+                  <SortableHeader label="#1 Result" sortKey="topCompetitor" currentSort={histSortKey} currentDir={histSortDir} onSort={handleHistSort} />
+                  <SortableHeader label="Results" sortKey="totalResults" currentSort={histSortKey} currentDir={histSortDir} onSort={handleHistSort} className="text-center" />
                 </tr>
               </thead>
               <tbody>
-                {searchHistory.map((h) => (
+                {sortHistItems(searchHistory).map((h) => (
                   <tr key={h.keyword} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors cursor-pointer"
                     onClick={() => { setSearchTerm(h.keyword); setSearchResult(h); }}>
                     <td className="px-4 py-2.5 text-sm text-white/60">{h.keyword}</td>

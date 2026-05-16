@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
+import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -74,6 +75,13 @@ function fmtK(n: number): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Sort key types                                                     */
+/* ------------------------------------------------------------------ */
+
+type PricingSortKey = 'productName' | 'unitPrice' | 'appStoreFee' | 'netPerUnit' | 'unitsSold' | 'monthlyRevenue' | 'netAt30PerUnit' | 'savingsPerUnit';
+type FeeTierSortKey = 'annualRevenue' | 'at30pct' | 'at15pct' | 'keep30' | 'keep15' | 'savings';
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -82,6 +90,9 @@ export default function FinancialsPage() {
     queryKey: ['financials'],
     queryFn: () => api.get('/financials').then((res: any) => res.data),
   });
+
+  const { sortKey: pricingSortKey, sortDir: pricingSortDir, handleSort: handlePricingSort, sortItems: sortPricingItems } = useSort<PricingSortKey>();
+  const { sortKey: feeSortKey, sortDir: feeSortDir, handleSort: handleFeeSort, sortItems: sortFeeItems } = useSort<FeeTierSortKey>();
 
   if (isLoading) return <LoadingSpinner />;
   if (isError || !data)
@@ -189,18 +200,18 @@ export default function FinancialsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.08]">
-                <th className="text-left text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Product</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Price</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">App Store Fee (15%)</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">You Receive</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Units Sold (Month)</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Monthly Revenue</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">If 30% Fee</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Savings from 15%</th>
+                <SortableHeader label="Product" sortKey="productName" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} />
+                <SortableHeader label="Price" sortKey="unitPrice" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
+                <SortableHeader label="App Store Fee (15%)" sortKey="appStoreFee" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
+                <SortableHeader label="You Receive" sortKey="netPerUnit" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
+                <SortableHeader label="Units Sold (Month)" sortKey="unitsSold" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
+                <SortableHeader label="Monthly Revenue" sortKey="monthlyRevenue" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
+                <SortableHeader label="If 30% Fee" sortKey="netAt30PerUnit" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
+                <SortableHeader label="Savings from 15%" sortKey="savingsPerUnit" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
               </tr>
             </thead>
             <tbody>
-              {pricingMatrix.map((row) => (
+              {sortPricingItems(pricingMatrix).map((row) => (
                 <tr key={row.productId} className="border-b border-white/[0.04]">
                   <td className="px-3 py-2.5 text-sm text-white/70">{row.productName}</td>
                   <td className="px-3 py-2.5 text-sm text-right text-white/60">{formatCurrency(row.unitPrice)}</td>
@@ -333,16 +344,16 @@ export default function FinancialsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/[0.08]">
-                <th className="text-left text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Annual Revenue</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">At 30% Fee</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">At 15% Fee</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">You Keep (30%)</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">You Keep (15%)</th>
-                <th className="text-right text-[10px] text-white/40 uppercase px-3 py-2 tracking-wider">Annual Savings</th>
+                <SortableHeader label="Annual Revenue" sortKey="annualRevenue" currentSort={feeSortKey} currentDir={feeSortDir} onSort={handleFeeSort} />
+                <SortableHeader label="At 30% Fee" sortKey="at30pct" currentSort={feeSortKey} currentDir={feeSortDir} onSort={handleFeeSort} className="text-right" />
+                <SortableHeader label="At 15% Fee" sortKey="at15pct" currentSort={feeSortKey} currentDir={feeSortDir} onSort={handleFeeSort} className="text-right" />
+                <SortableHeader label="You Keep (30%)" sortKey="keep30" currentSort={feeSortKey} currentDir={feeSortDir} onSort={handleFeeSort} className="text-right" />
+                <SortableHeader label="You Keep (15%)" sortKey="keep15" currentSort={feeSortKey} currentDir={feeSortDir} onSort={handleFeeSort} className="text-right" />
+                <SortableHeader label="Annual Savings" sortKey="savings" currentSort={feeSortKey} currentDir={feeSortDir} onSort={handleFeeSort} className="text-right" />
               </tr>
             </thead>
             <tbody>
-              {feeTiers.map((tier) => (
+              {sortFeeItems(feeTiers).map((tier) => (
                 <tr key={tier.annualRevenue} className="border-b border-white/[0.04]">
                   <td className="px-3 py-2.5 text-sm text-white/70 font-medium">{fmtK(tier.annualRevenue)}</td>
                   <td className="px-3 py-2.5 text-sm text-right text-marble-red">-{fmtK(tier.at30pct)}</td>

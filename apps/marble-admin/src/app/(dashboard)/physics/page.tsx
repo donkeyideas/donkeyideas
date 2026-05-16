@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -125,6 +126,15 @@ const PIE_COLORS = ['#2ecc71', '#ffc220', '#e74c3c'];
 
 
 /* ------------------------------------------------------------------ */
+/*  Sort key types                                                     */
+/* ------------------------------------------------------------------ */
+
+type MarbleSortKey = 'name' | 'speed' | 'power' | 'bounce' | 'luck' | 'frictionAir' | 'density' | 'restitution' | 'avgFinish' | 'winRate' | 'totalRaces';
+type CourseSortKey = 'courseId' | 'theme' | 'avgTime' | 'minTime' | 'maxTime' | 'races' | 'doomsdayPct';
+type FairnessSortKey = 'name' | 'entropy' | 'isFair';
+type BettingSortKey = 'name' | 'avgOdds' | 'impliedProb' | 'actualWinRate' | 'delta' | 'accuracy' | 'totalBets' | 'totalWagered' | 'totalPaidOut' | 'marbleHouseEdge';
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -134,6 +144,11 @@ export default function PhysicsPage() {
     queryFn: () => api.get('/physics').then((r: any) => r.data),
     staleTime: 60_000,
   });
+
+  const { sortKey: marbleSortKey, sortDir: marbleSortDir, handleSort: handleMarbleSort, sortItems: sortMarbleItems } = useSort<MarbleSortKey>();
+  const { sortKey: courseSortKey, sortDir: courseSortDir, handleSort: handleCourseSort, sortItems: sortCourseItems } = useSort<CourseSortKey>();
+  const { sortKey: fairnessSortKey, sortDir: fairnessSortDir, handleSort: handleFairnessSort, sortItems: sortFairnessItems } = useSort<FairnessSortKey>();
+  const { sortKey: bettingSortKey, sortDir: bettingSortDir, handleSort: handleBettingSort, sortItems: sortBettingItems } = useSort<BettingSortKey>();
 
   if (isLoading || !data) {
     return (
@@ -145,6 +160,18 @@ export default function PhysicsPage() {
 
   const ec = data.engineConfig;
   const dms = data.doomsdayStats;
+
+  // Flatten marble dynamics for sorting
+  const flatMarbles = data.marbleDynamics.map((m) => ({
+    ...m,
+    speed: m.stats.speed,
+    power: m.stats.power,
+    bounce: m.stats.bounce,
+    luck: m.stats.luck,
+    frictionAir: m.physics.frictionAir,
+    density: m.physics.density,
+    restitution: m.physics.restitution,
+  }));
 
   return (
     <div className="space-y-6">
@@ -266,22 +293,22 @@ export default function PhysicsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-white/40 text-[11px] uppercase tracking-wider border-b border-white/[0.08]">
-                <th className="text-left py-3 px-2">Marble</th>
-                <th className="text-center py-3 px-2">Spd</th>
-                <th className="text-center py-3 px-2">Pwr</th>
-                <th className="text-center py-3 px-2">Bnc</th>
-                <th className="text-center py-3 px-2">Luck</th>
-                <th className="text-center py-3 px-2">Friction Air</th>
-                <th className="text-center py-3 px-2">Density</th>
-                <th className="text-center py-3 px-2">Restitution</th>
-                <th className="text-center py-3 px-2">Avg Finish</th>
-                <th className="text-center py-3 px-2">Win Rate</th>
-                <th className="text-center py-3 px-2">Races</th>
+                <SortableHeader label="Marble" sortKey="name" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-left py-3 px-2" />
+                <SortableHeader label="Spd" sortKey="speed" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Pwr" sortKey="power" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Bnc" sortKey="bounce" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Luck" sortKey="luck" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Friction Air" sortKey="frictionAir" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Density" sortKey="density" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Restitution" sortKey="restitution" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Avg Finish" sortKey="avgFinish" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Win Rate" sortKey="winRate" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Races" sortKey="totalRaces" currentSort={marbleSortKey} currentDir={marbleSortDir} onSort={handleMarbleSort} className="text-center py-3 px-2" />
               </tr>
             </thead>
             <tbody>
-              {data.marbleDynamics.map((m, i) => (
-                <tr key={m.marbleId} className={`border-b border-white/[0.04] ${i === 0 ? 'bg-gold/[0.04]' : ''}`}>
+              {sortMarbleItems(flatMarbles).map((m, i) => (
+                <tr key={m.marbleId} className={`border-b border-white/[0.04] ${i === 0 && !marbleSortKey ? 'bg-gold/[0.04]' : ''}`}>
                   <td className="py-3 px-2 flex items-center gap-2">
                     <div className="w-5 h-5 rounded-full flex-shrink-0" style={{ background: m.grad }} />
                     <span className="font-semibold">{m.name}</span>
@@ -368,17 +395,17 @@ export default function PhysicsPage() {
             <thead>
               <tr className="text-white/40 text-[11px] uppercase tracking-wider border-b border-white/[0.08]">
                 <th className="text-left py-3 px-2">#</th>
-                <th className="text-left py-3 px-2">Course</th>
-                <th className="text-left py-3 px-2">Theme</th>
-                <th className="text-center py-3 px-2">Avg Time</th>
-                <th className="text-center py-3 px-2">Min</th>
-                <th className="text-center py-3 px-2">Max</th>
-                <th className="text-center py-3 px-2">Races</th>
-                <th className="text-center py-3 px-2">Doomsday %</th>
+                <SortableHeader label="Course" sortKey="courseId" currentSort={courseSortKey} currentDir={courseSortDir} onSort={handleCourseSort} className="text-left py-3 px-2" />
+                <SortableHeader label="Theme" sortKey="theme" currentSort={courseSortKey} currentDir={courseSortDir} onSort={handleCourseSort} className="text-left py-3 px-2" />
+                <SortableHeader label="Avg Time" sortKey="avgTime" currentSort={courseSortKey} currentDir={courseSortDir} onSort={handleCourseSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Min" sortKey="minTime" currentSort={courseSortKey} currentDir={courseSortDir} onSort={handleCourseSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Max" sortKey="maxTime" currentSort={courseSortKey} currentDir={courseSortDir} onSort={handleCourseSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Races" sortKey="races" currentSort={courseSortKey} currentDir={courseSortDir} onSort={handleCourseSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Doomsday %" sortKey="doomsdayPct" currentSort={courseSortKey} currentDir={courseSortDir} onSort={handleCourseSort} className="text-center py-3 px-2" />
               </tr>
             </thead>
             <tbody>
-              {data.courseDifficulty.slice(0, 15).map((c, i) => {
+              {sortCourseItems(data.courseDifficulty).slice(0, 15).map((c, i) => {
                 const theme = c.theme || 'unknown';
                 return (
                   <tr key={c.courseId} className="border-b border-white/[0.04]">
@@ -432,16 +459,16 @@ export default function PhysicsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-white/40 text-[11px] uppercase tracking-wider border-b border-white/[0.08]">
-                <th className="text-left py-3 px-2">Marble</th>
+                <SortableHeader label="Marble" sortKey="name" currentSort={fairnessSortKey} currentDir={fairnessSortDir} onSort={handleFairnessSort} className="text-left py-3 px-2" />
                 {[1,2,3,4,5,6,7,8].map((p) => (
                   <th key={p} className="text-center py-3 px-2 w-16">P{p}</th>
                 ))}
-                <th className="text-center py-3 px-2">Entropy</th>
-                <th className="text-center py-3 px-2">Status</th>
+                <SortableHeader label="Entropy" sortKey="entropy" currentSort={fairnessSortKey} currentDir={fairnessSortDir} onSort={handleFairnessSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Status" sortKey="isFair" currentSort={fairnessSortKey} currentDir={fairnessSortDir} onSort={handleFairnessSort} className="text-center py-3 px-2" />
               </tr>
             </thead>
             <tbody>
-              {data.fairness.map((f) => {
+              {sortFairnessItems(data.fairness).map((f) => {
                 const maxCount = Math.max(...f.positionCounts, 1);
                 return (
                   <tr key={f.marbleId} className="border-b border-white/[0.04]">
@@ -596,20 +623,20 @@ export default function PhysicsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-white/40 text-[11px] uppercase tracking-wider border-b border-white/[0.08]">
-                <th className="text-left py-3 px-2">Marble</th>
-                <th className="text-center py-3 px-2">Avg Odds</th>
-                <th className="text-center py-3 px-2">Implied %</th>
-                <th className="text-center py-3 px-2">Actual %</th>
-                <th className="text-center py-3 px-2">Delta</th>
-                <th className="text-center py-3 px-2">Accuracy</th>
-                <th className="text-center py-3 px-2">Bets</th>
-                <th className="text-center py-3 px-2">Wagered</th>
-                <th className="text-center py-3 px-2">Paid Out</th>
-                <th className="text-center py-3 px-2">Edge</th>
+                <SortableHeader label="Marble" sortKey="name" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-left py-3 px-2" />
+                <SortableHeader label="Avg Odds" sortKey="avgOdds" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Implied %" sortKey="impliedProb" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Actual %" sortKey="actualWinRate" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Delta" sortKey="delta" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Accuracy" sortKey="accuracy" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Bets" sortKey="totalBets" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Wagered" sortKey="totalWagered" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Paid Out" sortKey="totalPaidOut" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-center py-3 px-2" />
+                <SortableHeader label="Edge" sortKey="marbleHouseEdge" currentSort={bettingSortKey} currentDir={bettingSortDir} onSort={handleBettingSort} className="text-center py-3 px-2" />
               </tr>
             </thead>
             <tbody>
-              {data.bettingParity.map((b) => (
+              {sortBettingItems(data.bettingParity).map((b) => (
                 <tr key={b.marbleId} className="border-b border-white/[0.04]">
                   <td className="py-3 px-2 flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: b.color }} />

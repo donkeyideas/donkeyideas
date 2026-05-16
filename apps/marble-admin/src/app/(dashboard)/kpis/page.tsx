@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 import {
   LineChart,
   Line,
@@ -437,7 +438,11 @@ export default function KpisPage() {
     }
   };
 
-  const entries = data?.entries ?? [];
+  const rawEntries = data?.entries ?? [];
+
+  type KpiSortKey = 'weekOf' | 'dau' | 'd1Retention' | 'd7Retention' | 'd30Retention' | 'sessionsPerDau' | 'arpdau' | 'rating' | 'crashRate';
+  const { sortKey: kpiSortKey, sortDir: kpiSortDir, handleSort: handleKpiSort, sortItems: sortKpiItems } = useSort<KpiSortKey>();
+  const entries = sortKpiItems(rawEntries);
 
   if (isLoading) {
     return (
@@ -530,15 +535,15 @@ export default function KpisPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/[0.06]">
-                  <th className="text-left px-4 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">Week</th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">DAU</th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">D1</th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">D7</th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">D30</th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">Sess</th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">ARPDAU</th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">Rating</th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">Crash</th>
+                  <SortableHeader label="Week" sortKey="weekOf" currentSort={kpiSortKey} currentDir={kpiSortDir} onSort={handleKpiSort} />
+                  <SortableHeader label="DAU" sortKey="dau" currentSort={kpiSortKey} currentDir={kpiSortDir} onSort={handleKpiSort} className="text-right" />
+                  <SortableHeader label="D1" sortKey="d1Retention" currentSort={kpiSortKey} currentDir={kpiSortDir} onSort={handleKpiSort} className="text-right" />
+                  <SortableHeader label="D7" sortKey="d7Retention" currentSort={kpiSortKey} currentDir={kpiSortDir} onSort={handleKpiSort} className="text-right" />
+                  <SortableHeader label="D30" sortKey="d30Retention" currentSort={kpiSortKey} currentDir={kpiSortDir} onSort={handleKpiSort} className="text-right" />
+                  <SortableHeader label="Sess" sortKey="sessionsPerDau" currentSort={kpiSortKey} currentDir={kpiSortDir} onSort={handleKpiSort} className="text-right" />
+                  <SortableHeader label="ARPDAU" sortKey="arpdau" currentSort={kpiSortKey} currentDir={kpiSortDir} onSort={handleKpiSort} className="text-right" />
+                  <SortableHeader label="Rating" sortKey="rating" currentSort={kpiSortKey} currentDir={kpiSortDir} onSort={handleKpiSort} className="text-right" />
+                  <SortableHeader label="Crash" sortKey="crashRate" currentSort={kpiSortKey} currentDir={kpiSortDir} onSort={handleKpiSort} className="text-right" />
                   <th className="text-left px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">Notes</th>
                 </tr>
               </thead>
