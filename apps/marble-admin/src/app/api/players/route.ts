@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
         take: limit,
         select: {
           id: true,
+          deviceId: true,
           playerName: true,
           email: true,
           platform: true,

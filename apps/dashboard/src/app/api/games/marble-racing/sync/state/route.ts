@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const {
+      playerName,
       coins,
       totalRaces,
       totalWins,
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
     await prisma.gamePlayer.update({
       where: { id: player.id },
       data: {
+        ...(playerName && playerName.trim().length >= 2 ? { playerName: playerName.trim().slice(0, 30) } : {}),
         coins: coins ?? player.coins,
         totalRaces: totalRaces ?? player.totalRaces,
         totalWins: totalWins ?? player.totalWins,

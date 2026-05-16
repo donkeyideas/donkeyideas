@@ -12,6 +12,7 @@ import api from '@/lib/api-client';
 interface Player {
   id: string;
   visibleId: string;
+  deviceId: string;
   playerName: string;
   platform: string;
   coins: number;
@@ -489,6 +490,11 @@ export default function UsersPage() {
                         <div>
                           <p className="text-sm font-semibold text-white/90">{p.playerName}</p>
                           <p className="text-[10px] text-white/30">{p.visibleId ?? `#${p.id.slice(0, 8)}`}</p>
+                          {p.deviceId && (
+                            <p className="text-[9px] text-white/20 font-mono mt-0.5" title={p.deviceId}>
+                              device: {p.deviceId.slice(0, 8)}...
+                            </p>
+                          )}
                         </div>
                       </div>
                     </td>
