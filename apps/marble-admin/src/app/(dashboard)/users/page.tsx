@@ -22,6 +22,7 @@ interface Player {
   passTier: string;
   status: string;
   lastActiveAt: string;
+  createdAt: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -310,7 +311,7 @@ function PlayerSummaryModal({
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
-type SortKey = 'playerName' | 'status' | 'platform' | 'coins' | 'totalRaces' | 'totalSpent' | 'passTier' | 'lastActiveAt';
+type SortKey = 'playerName' | 'status' | 'platform' | 'coins' | 'totalRaces' | 'totalSpent' | 'passTier' | 'createdAt' | 'lastActiveAt';
 
 export default function UsersPage() {
   const router = useRouter();
@@ -318,7 +319,7 @@ export default function UsersPage() {
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const { sortKey, sortDir, handleSort, sortItems } = useSort<SortKey>();
+  const { sortKey, sortDir, handleSort, sortItems } = useSort<SortKey>('createdAt', 'desc');
   const perPage = 20;
 
   const { data, isLoading } = useQuery({
@@ -470,6 +471,7 @@ export default function UsersPage() {
                 <SortableHeader label="Races" sortKey="totalRaces" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Total Spent" sortKey="totalSpent" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Season Pass" sortKey="passTier" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <SortableHeader label="Joined" sortKey="createdAt" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Last Active" sortKey="lastActiveAt" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <th className="text-left px-4 py-3 text-[10px] font-bold text-white/40 uppercase tracking-wider">Actions</th>
               </tr>
@@ -537,6 +539,11 @@ export default function UsersPage() {
                     {/* Season Pass */}
                     <td className="px-4 py-3.5 align-middle">
                       <PassBadge tier={p.passTier ?? 'free'} />
+                    </td>
+
+                    {/* Joined */}
+                    <td className="px-4 py-3.5 align-middle text-xs text-white/40">
+                      {p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : '---'}
                     </td>
 
                     {/* Last Active */}

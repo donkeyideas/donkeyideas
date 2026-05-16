@@ -16,6 +16,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { name: 'Overview', href: '/overview', icon: '◆' },
   { name: 'Users', href: '/users', icon: '■', badgeKey: 'users' },
+  { name: 'Forecast', href: '/forecast', icon: '▲' },
   { name: 'Financials', href: '/financials', icon: '▲' },
   { name: 'Economy', href: '/economy', icon: '◈' },
   { name: 'Seasons', href: '/seasons', icon: '●' },
