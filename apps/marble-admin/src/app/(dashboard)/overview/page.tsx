@@ -69,6 +69,7 @@ interface OverviewData {
   revenueByProduct: ProductSlice[];
   quickStats: QuickStat[];
   alerts: AlertItem[];
+  gameModes: { mode: string; count: number }[];
   trends: { revenue: number; dau: number; paying: number };
 }
 
@@ -392,6 +393,68 @@ export default function OverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* -- Game Mode Distribution -- */}
+      {data.gameModes && data.gameModes.length > 0 && (() => {
+        const modeLabels: Record<string, { label: string; color: string; border: string; bg: string }> = {
+          bet: { label: 'Betting', color: 'text-gold', border: 'border-gold/20', bg: 'bg-gold' },
+          quick_race: { label: 'Quick Race', color: 'text-marble-blue', border: 'border-marble-blue/20', bg: 'bg-marble-blue' },
+          season: { label: 'Season', color: 'text-marble-green', border: 'border-marble-green/20', bg: 'bg-marble-green' },
+          national_race: { label: 'National Race', color: 'text-[#c39bd3]', border: 'border-[#c39bd3]/20', bg: 'bg-[#c39bd3]' },
+          tournament: { label: 'Tournament', color: 'text-marble-red', border: 'border-marble-red/20', bg: 'bg-marble-red' },
+          playoff: { label: 'Playoff', color: 'text-[#f39c12]', border: 'border-[#f39c12]/20', bg: 'bg-[#f39c12]' },
+        };
+        const sorted = [...(data as any).gameModes].sort((a: any, b: any) => b.count - a.count);
+        const totalRaces = sorted.reduce((s: number, m: any) => s + m.count, 0);
+        return (
+          <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="font-heading text-base tracking-wide">Game Mode Distribution</div>
+              <span className="text-[11px] text-white/35">{totalRaces.toLocaleString()} total races</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+              {sorted.map((m: any) => {
+                const meta = modeLabels[m.mode] ?? { label: m.mode, color: 'text-white/60', border: 'border-white/10', bg: 'bg-white' };
+                const pct = totalRaces > 0 ? Math.round((m.count / totalRaces) * 100) : 0;
+                return (
+                  <div key={m.mode} className={`bg-white/5 border-2 ${meta.border} rounded-2xl p-4 relative overflow-hidden`}>
+                    <div className={`absolute -top-4 -right-4 w-[50px] h-[50px] rounded-full ${meta.bg} opacity-[0.08]`} />
+                    <p className={`font-heading text-[24px] leading-none ${meta.color}`}>{m.count.toLocaleString()}</p>
+                    <p className="text-[10px] text-white/40 font-semibold uppercase tracking-wider mt-1.5">{meta.label}</p>
+                    <p className="text-[10px] text-white/25 mt-0.5">{pct}% of total</p>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Stacked bar */}
+            <div className="h-4 bg-white/[0.06] rounded-full overflow-hidden flex">
+              {sorted.map((m: any) => {
+                const meta = modeLabels[m.mode] ?? { label: m.mode, color: 'text-white/60', border: 'border-white/10', bg: 'bg-white' };
+                const pct = totalRaces > 0 ? (m.count / totalRaces) * 100 : 0;
+                return (
+                  <div
+                    key={m.mode}
+                    className={`h-full ${meta.bg} opacity-60 first:rounded-l-full last:rounded-r-full`}
+                    style={{ width: `${pct}%` }}
+                    title={`${meta.label}: ${m.count.toLocaleString()} (${Math.round(pct)}%)`}
+                  />
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap gap-4 mt-3">
+              {sorted.map((m: any) => {
+                const meta = modeLabels[m.mode] ?? { label: m.mode, color: 'text-white/60', border: 'border-white/10', bg: 'bg-white' };
+                return (
+                  <div key={m.mode} className="flex items-center gap-1.5">
+                    <div className={`w-2.5 h-2.5 rounded-full ${meta.bg} opacity-60`} />
+                    <span className="text-[11px] text-white/50">{meta.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* -- Alerts & Quick Stats -- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

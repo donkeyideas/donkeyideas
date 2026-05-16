@@ -38,7 +38,7 @@ export async function GET(
       prisma.raceRecord.findMany({
         where: { playerId: id },
         orderBy: { racedAt: 'desc' },
-        take: 20,
+        take: 100,
       }),
       prisma.betRecord.findMany({
         where: { playerId: id },
@@ -203,6 +203,12 @@ export async function GET(
       where: { playerId: id, racedAt: { gte: todayStart } },
     });
 
+    const gameModeBreakdown = await prisma.raceRecord.groupBy({
+      by: ['gameMode'],
+      where: { playerId: id },
+      _count: { id: true },
+    });
+
     const raceStats = [
       { label: 'Races Today', value: String(racesToday) },
       { label: 'Win Rate', value: `${winRate}%` },
@@ -233,6 +239,10 @@ export async function GET(
       heatmap,
       coinHistory,
       raceStats,
+      gameModes: gameModeBreakdown.map((g) => ({
+        mode: g.gameMode,
+        count: g._count.id,
+      })),
       adminNotes,
       marblePreferences: marbleBets.map((m) => ({
         marbleId: m.marbleId,

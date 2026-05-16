@@ -236,6 +236,12 @@ export async function GET(_request: NextRequest) {
       totalBets: heatBets.length,
     };
 
+    // ── Game Mode Distribution ──
+    const gameModeDistribution = await prisma.raceRecord.groupBy({
+      by: ['gameMode'],
+      _count: { id: true },
+    });
+
     // ── Trend percentages ──
     const revenueTrend = revYesterday > 0
       ? ((revToday - revYesterday) / revYesterday * 100)
@@ -276,6 +282,10 @@ export async function GET(_request: NextRequest) {
       revenueChart,
       revenueByProduct,
       quickStats,
+      gameModes: gameModeDistribution.map((g) => ({
+        mode: g.gameMode,
+        count: g._count.id,
+      })),
       alerts,
       trends: {
         revenue: Number(revenueTrend.toFixed(1)),

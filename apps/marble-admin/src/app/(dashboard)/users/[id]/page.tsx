@@ -147,6 +147,8 @@ export default function UserDetailPage() {
   const [banReason, setBanReason] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [racePage, setRacePage] = useState(1);
+  const RACE_PER_PAGE = 10;
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -184,6 +186,11 @@ export default function UserDetailPage() {
   const recentBets: any[] = data?.recentBets ?? [];
   // Recent races from API (used for race history table)
   const recentRaces: any[] = data?.recentRaces ?? [];
+  const totalRacePages = Math.max(1, Math.ceil(recentRaces.length / RACE_PER_PAGE));
+  const pagedRaces = recentRaces.slice((racePage - 1) * RACE_PER_PAGE, racePage * RACE_PER_PAGE);
+
+  // Game mode usage from API
+  const gameModes: any[] = data?.gameModes ?? [];
 
   // Season progress from API
   const seasonProgressList: any[] = data?.seasonProgress ?? [];
@@ -512,7 +519,7 @@ export default function UserDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentRaces.length > 0 ? recentRaces.map((r: any, i: number) => {
+                {pagedRaces.length > 0 ? pagedRaces.map((r: any, i: number) => {
                   const isWin = r.won === true;
                   const payout = Number(r.payout ?? 0);
                   const betAmt = Number(r.betAmount ?? 0);
@@ -547,6 +554,42 @@ export default function UserDetailPage() {
             </table>
           </div>
 
+          {/* Pagination */}
+          {recentRaces.length > RACE_PER_PAGE && (
+            <div className="flex items-center justify-between px-5 py-3 border-t border-white/[0.06]">
+              <span className="text-[11px] text-white/30">
+                {(racePage - 1) * RACE_PER_PAGE + 1}-{Math.min(racePage * RACE_PER_PAGE, recentRaces.length)} of {recentRaces.length}
+              </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setRacePage((p) => Math.max(1, p - 1))}
+                  disabled={racePage === 1}
+                  className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-white/[0.06] text-white/50 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  Prev
+                </button>
+                {Array.from({ length: totalRacePages }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setRacePage(p)}
+                    className={`w-7 h-7 rounded-lg text-[11px] font-semibold transition-colors ${
+                      p === racePage ? 'bg-gold/20 text-gold' : 'bg-white/[0.06] text-white/40 hover:bg-white/10'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setRacePage((p) => Math.min(totalRacePages, p + 1))}
+                  disabled={racePage === totalRacePages}
+                  className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-white/[0.06] text-white/50 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Race Stats Summary */}
           <div className="px-5 py-4 border-t border-white/[0.06]">
             <p className="text-[10px] text-white/30 uppercase font-bold tracking-wider mb-2">Race Stats Summary</p>
@@ -558,6 +601,64 @@ export default function UserDetailPage() {
           </div>
         </SectionCard>
       </div>
+
+      {/* ============ ROW 3.5: GAME MODE USAGE ============ */}
+      {gameModes.length > 0 && (() => {
+        const modeLabels: Record<string, { label: string; color: string; bg: string }> = {
+          bet: { label: 'Betting', color: 'text-gold', bg: 'bg-gold' },
+          quick_race: { label: 'Quick Race', color: 'text-marble-blue', bg: 'bg-marble-blue' },
+          season: { label: 'Season', color: 'text-marble-green', bg: 'bg-marble-green' },
+          national_race: { label: 'National Race', color: 'text-[#c39bd3]', bg: 'bg-[#c39bd3]' },
+          tournament: { label: 'Tournament', color: 'text-marble-red', bg: 'bg-marble-red' },
+          playoff: { label: 'Playoff', color: 'text-[#f39c12]', bg: 'bg-[#f39c12]' },
+        };
+        const sortedModes = [...gameModes].sort((a: any, b: any) => b.count - a.count);
+        const totalModeRaces = sortedModes.reduce((s: number, m: any) => s + m.count, 0);
+        return (
+          <SectionCard title="Game Mode Usage">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+              {sortedModes.map((m: any) => {
+                const meta = modeLabels[m.mode] ?? { label: m.mode, color: 'text-white/60', bg: 'bg-white' };
+                const pct = totalModeRaces > 0 ? Math.round((m.count / totalModeRaces) * 100) : 0;
+                return (
+                  <div key={m.mode} className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center">
+                    <p className={`font-heading text-[22px] leading-none ${meta.color}`}>{m.count}</p>
+                    <p className="text-[10px] text-white/40 font-semibold uppercase tracking-wider mt-1">{meta.label}</p>
+                    <p className="text-[10px] text-white/25 mt-0.5">{pct}%</p>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Bar visualization */}
+            <div className="h-3 bg-white/[0.06] rounded-full overflow-hidden flex">
+              {sortedModes.map((m: any) => {
+                const meta = modeLabels[m.mode] ?? { label: m.mode, color: 'text-white/60', bg: 'bg-white' };
+                const pct = totalModeRaces > 0 ? (m.count / totalModeRaces) * 100 : 0;
+                return (
+                  <div
+                    key={m.mode}
+                    className={`h-full ${meta.bg} opacity-60 first:rounded-l-full last:rounded-r-full`}
+                    style={{ width: `${pct}%` }}
+                    title={`${meta.label}: ${m.count} (${Math.round(pct)}%)`}
+                  />
+                );
+              })}
+            </div>
+            {/* Legend */}
+            <div className="flex flex-wrap gap-3 mt-3">
+              {sortedModes.map((m: any) => {
+                const meta = modeLabels[m.mode] ?? { label: m.mode, color: 'text-white/60', bg: 'bg-white' };
+                return (
+                  <div key={m.mode} className="flex items-center gap-1.5">
+                    <div className={`w-2.5 h-2.5 rounded-full ${meta.bg} opacity-60`} />
+                    <span className="text-[11px] text-white/40">{meta.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </SectionCard>
+        );
+      })()}
 
       {/* ============ ROW 4: HEATMAP + COIN BALANCE + SEASON PASS ============ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
