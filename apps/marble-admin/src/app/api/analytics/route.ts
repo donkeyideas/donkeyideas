@@ -355,11 +355,15 @@ export async function GET(_request: NextRequest) {
         where: { racedAt: { gte: weekStart } },
       }),
       // betLimitHitRate: players with 10+ bets today
-      prisma.betRecord.groupBy({
-        by: ['playerId'],
-        where: { placedAt: { gte: todayStart } },
-        having: { id: { _count: { gte: 10 } } },
-      }),
+      prisma.$queryRawUnsafe<{ count: bigint }[]>(
+        `SELECT COUNT(*) as count FROM (
+          SELECT "playerId" FROM bet_records
+          WHERE "placedAt" >= $1
+          GROUP BY "playerId"
+          HAVING COUNT(*) >= 10
+        ) sub`,
+        todayStart,
+      ),
       // active players today for betLimitHitRate denominator
       prisma.gamePlayer.count({
         where: { lastActiveAt: { gte: todayStart } },
@@ -422,8 +426,9 @@ export async function GET(_request: NextRequest) {
       ? Math.round((spectatorRaces / totalRacesWeek) * 100 * 10) / 10
       : 0;
 
+    const heavyBettorsCount = Number((heavyBettors as any)[0]?.count ?? 0);
     const betLimitHitRate = activePlayersToday > 0
-      ? Math.round((heavyBettors.length / activePlayersToday) * 100 * 10) / 10
+      ? Math.round((heavyBettorsCount / activePlayersToday) * 100 * 10) / 10
       : 0;
 
     const stuckRichRaw = Number((stuckRichCount as any)[0]?.count ?? 0);

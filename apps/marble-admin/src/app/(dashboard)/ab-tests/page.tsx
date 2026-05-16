@@ -346,7 +346,7 @@ export default function ABTestsPage() {
 
   const { data: tests, isLoading, isError } = useQuery<ABTest[]>({
     queryKey: ['ab-tests'],
-    queryFn: () => api.get('/ab-tests').then((res: any) => res.data),
+    queryFn: () => api.get('/ab-tests').then((res: any) => res.data.tests ?? []),
   });
 
   const updateStatus = useMutation({

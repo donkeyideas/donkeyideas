@@ -122,22 +122,22 @@ export default function LiveOpsPage() {
 
   const { data: announcements, isLoading: annLoading } = useQuery<Announcement[]>({
     queryKey: ['announcements'],
-    queryFn: () => api.get('/announcements').then((r: any) => r.data),
+    queryFn: () => api.get('/announcements').then((r: any) => r.data.announcements ?? []),
   });
 
   const { data: promos, isLoading: promosLoading } = useQuery<Promo[]>({
     queryKey: ['promos'],
-    queryFn: () => api.get('/promos').then((r: any) => r.data),
+    queryFn: () => api.get('/promos').then((r: any) => r.data.promos ?? []),
   });
 
   const { data: tournaments, isLoading: tournamentsLoading } = useQuery<Tournament[]>({
     queryKey: ['tournaments-schedule'],
-    queryFn: () => api.get('/tournaments/schedule').then((r: any) => r.data),
+    queryFn: () => api.get('/tournaments/schedule').then((r: any) => r.data.tournaments ?? []),
   });
 
   const { data: messages } = useQuery<Message[]>({
     queryKey: ['messages'],
-    queryFn: () => api.get('/messages').then((r: any) => r.data),
+    queryFn: () => api.get('/messages').then((r: any) => r.data.messages ?? []),
   });
 
   const { data: configRaw } = useQuery<{ features: ConfigFeature[] }>({
