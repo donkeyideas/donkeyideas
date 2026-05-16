@@ -415,11 +415,27 @@ function BenchmarkTable() {
 
 export default function KpisPage() {
   const [showForm, setShowForm] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery<{ entries: KpiEntry[] }>({
     queryKey: ['kpis'],
     queryFn: () => api.get('/kpis').then((r) => r.data),
   });
+
+  const handleAutoFetch = async () => {
+    setFetching(true);
+    setFetchError(null);
+    try {
+      await api.post('/kpis/fetch');
+      queryClient.invalidateQueries({ queryKey: ['kpis'] });
+    } catch (err: any) {
+      setFetchError(err?.response?.data?.error?.message || 'Failed to fetch from GA4');
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const entries = data?.entries ?? [];
 
@@ -439,15 +455,25 @@ export default function KpisPage() {
           <p className="text-xs text-white/40">
             {entries.length > 0
               ? `${entries.length} week${entries.length > 1 ? 's' : ''} tracked · Last entry: ${new Date(entries[0].weekOf).toLocaleDateString()}`
-              : 'No data yet — log your first Monday metrics'}
+              : 'No data yet — fetch from GA4 or log manually'}
           </p>
+          {fetchError && <p className="text-xs text-marble-red mt-1">{fetchError}</p>}
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-4 py-2 rounded-xl text-xs font-bold bg-gold/15 text-gold border-2 border-gold/30 hover:bg-gold/25 transition-colors"
-        >
-          + Log This Week
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleAutoFetch}
+            disabled={fetching}
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-marble-blue/15 text-marble-blue border-2 border-marble-blue/30 hover:bg-marble-blue/25 transition-colors disabled:opacity-50"
+          >
+            {fetching ? 'Fetching...' : 'Fetch from GA4'}
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-gold/15 text-gold border-2 border-gold/30 hover:bg-gold/25 transition-colors"
+          >
+            + Manual Entry
+          </button>
+        </div>
       </div>
 
       {/* Empty state */}
