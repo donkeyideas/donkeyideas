@@ -270,6 +270,63 @@ export async function GET(_request: NextRequest) {
       })
       .sort((a, b) => b.winRate - a.winRate || b.totalBets - a.totalBets);
 
+    // --- Funnel Analytics ---
+    const playersWithRaces = await prisma.gamePlayer.count({ where: { totalRaces: { gt: 0 } } });
+    const playersWithBetsCount = playersWithBets.length;
+    const playersWithPurchasesCount = playersWithPurchases.length;
+
+    const funnel = [
+      { step: 'Installed', count: totalPlayersCount, pct: 100 },
+      { step: 'First Race', count: playersWithRaces, pct: totalPlayersCount > 0 ? Math.round((playersWithRaces / totalPlayersCount) * 100) : 0 },
+      { step: 'First Bet', count: playersWithBetsCount, pct: totalPlayersCount > 0 ? Math.round((playersWithBetsCount / totalPlayersCount) * 100) : 0 },
+      { step: 'First Purchase', count: playersWithPurchasesCount, pct: totalPlayersCount > 0 ? Math.round((playersWithPurchasesCount / totalPlayersCount) * 100) : 0 },
+    ];
+
+    // --- Player Segments ---
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [whaleCount, dolphinCount, minnowCount, freeCount, churnedCount] = await Promise.all([
+      // Whale: totalSpent > $20
+      prisma.gamePlayer.count({ where: { totalSpent: { gt: 20 }, status: { not: 'banned' } } }),
+      // Dolphin: totalSpent $5–$20
+      prisma.gamePlayer.count({ where: { totalSpent: { gte: 5, lte: 20 }, status: { not: 'banned' } } }),
+      // Minnow: totalSpent $0.01–$4.99
+      prisma.gamePlayer.count({ where: { totalSpent: { gt: 0, lt: 5 }, status: { not: 'banned' } } }),
+      // Free: totalSpent = 0, active in last 30 days
+      prisma.gamePlayer.count({ where: { totalSpent: { equals: 0 }, lastActiveAt: { gte: thirtyDaysAgo }, status: { not: 'banned' } } }),
+      // Churned: inactive 30+ days
+      prisma.gamePlayer.count({ where: { lastActiveAt: { lt: thirtyDaysAgo }, status: { not: 'banned' } } }),
+    ]);
+
+    const segments = [
+      { name: 'Whale', count: whaleCount, color: '#ffc220', desc: '$20+ spent' },
+      { name: 'Dolphin', count: dolphinCount, color: '#6ec1ff', desc: '$5–$20 spent' },
+      { name: 'Minnow', count: minnowCount, color: '#2ecc71', desc: '<$5 spent' },
+      { name: 'Free', count: freeCount, color: '#9b59b6', desc: 'No purchases, active' },
+      { name: 'Churned', count: churnedCount, color: '#e74c3c', desc: 'Inactive 30+ days' },
+    ];
+
+    // --- Revenue by week (last 8 weeks) ---
+    const revenueWeeks: { week: string; revenue: number; count: number }[] = [];
+    for (let w = 7; w >= 0; w--) {
+      const wStart = new Date();
+      wStart.setDate(wStart.getDate() - (w + 1) * 7);
+      const wEnd = new Date();
+      wEnd.setDate(wEnd.getDate() - w * 7);
+      const agg = await prisma.gamePurchase.aggregate({
+        where: { purchasedAt: { gte: wStart, lt: wEnd }, status: 'completed' },
+        _sum: { priceUsd: true },
+        _count: { id: true },
+      });
+      const weekLabel = `${(wStart.getMonth() + 1)}/${wStart.getDate()}`;
+      revenueWeeks.push({
+        week: weekLabel,
+        revenue: Number(agg._sum.priceUsd ?? 0),
+        count: agg._count.id,
+      });
+    }
+
     return NextResponse.json({
       marbles: marbleWinRates,
       marbleWinRates,
@@ -293,6 +350,9 @@ export async function GET(_request: NextRequest) {
       betDistribution,
       retentionCurve,
       featureAdoption,
+      funnel,
+      segments,
+      revenueWeeks,
     });
   } catch (error: any) {
     console.error('Admin analytics error:', error);

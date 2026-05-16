@@ -40,6 +40,25 @@ interface FeatureAdoptionEntry {
   textColor: string;
 }
 
+interface FunnelStep {
+  step: string;
+  count: number;
+  pct: number;
+}
+
+interface PlayerSegment {
+  name: string;
+  count: number;
+  color: string;
+  desc: string;
+}
+
+interface RevenueWeek {
+  week: string;
+  revenue: number;
+  count: number;
+}
+
 interface AnalyticsData {
   marbles: MarbleWinRate[];
   marbleWinRates: MarbleWinRate[];
@@ -51,6 +70,9 @@ interface AnalyticsData {
   betDistribution: BetDistEntry[];
   retentionCurve: RetentionEntry[];
   featureAdoption: FeatureAdoptionEntry[];
+  funnel?: FunnelStep[];
+  segments?: PlayerSegment[];
+  revenueWeeks?: RevenueWeek[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -75,6 +97,9 @@ export default function AnalyticsPage() {
   const features = data.featureAdoption ?? [];
   const kpis = data.kpis ?? { racesToday: 0, betsToday: 0, avgSession: 'N/A', d1Retention: 0 };
   const betting = data.betting ?? { totalBets: 0, totalWins: 0, winRate: 0, avgBetSize: 0, biggestWin: 0 };
+  const funnel = data.funnel ?? [];
+  const segments = data.segments ?? [];
+  const revenueWeeks = data.revenueWeeks ?? [];
 
   // Find most/least bet-on marble
   const sortedByBets = [...winRates].sort((a: any, b: any) => b.totalBets - a.totalBets);
@@ -327,6 +352,165 @@ export default function AnalyticsPage() {
           )}
         </div>
       </div>
+
+      {/* -- Conversion Funnel + Player Segments -- */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Conversion Funnel */}
+        <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+          <div className="font-heading text-base tracking-wide mb-4">
+            Conversion Funnel
+          </div>
+          {funnel.length === 0 ? (
+            <div className="text-center py-8 text-white/40 text-sm">No funnel data</div>
+          ) : (
+            <div className="space-y-3">
+              {funnel.map((step, i) => {
+                const funnelColors = ['#6ec1ff', '#2ecc71', '#ffc220', '#e74c3c'];
+                const maxCount = funnel[0]?.count || 1;
+                const barWidth = Math.max(8, (step.count / maxCount) * 100);
+                const dropOff = i > 0 ? funnel[i - 1].count - step.count : 0;
+                return (
+                  <div key={step.step}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[13px] text-white/70">{step.step}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold" style={{ color: funnelColors[i] }}>
+                          {step.count.toLocaleString()}
+                        </span>
+                        <span className="text-[11px] text-white/40">({step.pct}%)</span>
+                      </div>
+                    </div>
+                    <div className="h-6 bg-white/[0.04] rounded-lg overflow-hidden relative">
+                      <div
+                        className="h-full rounded-lg transition-all"
+                        style={{ width: `${barWidth}%`, background: funnelColors[i], opacity: 0.85 }}
+                      />
+                      {i > 0 && dropOff > 0 && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-white/30 font-semibold">
+                          -{dropOff.toLocaleString()} drop
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {/* Overall conversion */}
+              {funnel.length >= 4 && funnel[0].count > 0 && (
+                <div className="border-t border-white/[0.06] pt-3 mt-2 flex items-center justify-between">
+                  <span className="text-[11px] text-white/40 uppercase tracking-wider font-semibold">Install → Purchase</span>
+                  <span className="text-sm font-bold text-gold">
+                    {Math.round((funnel[3].count / funnel[0].count) * 100)}% conversion
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Player Segments */}
+        <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+          <div className="font-heading text-base tracking-wide mb-4">
+            Player Segments
+          </div>
+          {segments.length === 0 ? (
+            <div className="text-center py-8 text-white/40 text-sm">No segment data</div>
+          ) : (() => {
+            const totalSeg = segments.reduce((s, seg) => s + seg.count, 0) || 1;
+            return (
+              <div className="space-y-0">
+                {/* Segment bar */}
+                <div className="h-8 rounded-xl overflow-hidden flex mb-4">
+                  {segments.filter(s => s.count > 0).map((seg) => (
+                    <div
+                      key={seg.name}
+                      className="h-full relative group"
+                      style={{ width: `${Math.max(2, (seg.count / totalSeg) * 100)}%`, background: seg.color }}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold text-white drop-shadow">
+                        {seg.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Segment rows */}
+                {segments.map((seg) => (
+                  <div key={seg.name} className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-b-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 rounded-full" style={{ background: seg.color }} />
+                      <div>
+                        <span className="text-[13px] text-white/80 font-medium">{seg.name}</span>
+                        <span className="text-[10px] text-white/30 ml-2">{seg.desc}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold" style={{ color: seg.color }}>
+                        {seg.count.toLocaleString()}
+                      </span>
+                      <span className="text-[11px] text-white/40 w-10 text-right">
+                        {Math.round((seg.count / totalSeg) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+
+      {/* -- Revenue Trend -- */}
+      {revenueWeeks.length > 0 && (
+        <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+          <div className="font-heading text-base tracking-wide mb-4">
+            Weekly Revenue (Last 8 Weeks)
+          </div>
+          {(() => {
+            const maxRev = Math.max(...revenueWeeks.map((w) => w.revenue), 1);
+            const totalRev = revenueWeeks.reduce((s, w) => s + w.revenue, 0);
+            const totalTxns = revenueWeeks.reduce((s, w) => s + w.count, 0);
+            return (
+              <>
+                {/* Summary KPIs */}
+                <div className="grid grid-cols-3 gap-4 mb-5">
+                  <div className="bg-white/[0.03] rounded-xl p-3 text-center">
+                    <div className="text-[10px] text-white/40 uppercase tracking-wider font-semibold mb-1">Total Revenue</div>
+                    <div className="font-heading text-lg text-gold">${totalRev.toFixed(2)}</div>
+                  </div>
+                  <div className="bg-white/[0.03] rounded-xl p-3 text-center">
+                    <div className="text-[10px] text-white/40 uppercase tracking-wider font-semibold mb-1">Transactions</div>
+                    <div className="font-heading text-lg text-marble-blue">{totalTxns}</div>
+                  </div>
+                  <div className="bg-white/[0.03] rounded-xl p-3 text-center">
+                    <div className="text-[10px] text-white/40 uppercase tracking-wider font-semibold mb-1">Avg per Week</div>
+                    <div className="font-heading text-lg text-marble-green">${(totalRev / (revenueWeeks.length || 1)).toFixed(2)}</div>
+                  </div>
+                </div>
+
+                {/* Bar chart */}
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
+                  <div className="flex items-end gap-2" style={{ height: '140px' }}>
+                    {revenueWeeks.map((w) => (
+                      <div key={w.week} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                        <div className="text-[10px] font-bold text-gold">
+                          {w.revenue > 0 ? `$${w.revenue.toFixed(0)}` : ''}
+                        </div>
+                        <div
+                          className="w-full max-w-[36px] rounded-t-md"
+                          style={{
+                            height: `${Math.max(2, (w.revenue / maxRev) * 100)}%`,
+                            background: w.revenue > 0 ? 'linear-gradient(180deg, #ffc220, #e6a800)' : 'rgba(255,255,255,0.05)',
+                          }}
+                        />
+                        <div className="text-[10px] text-white/35 font-semibold">{w.week}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 }
