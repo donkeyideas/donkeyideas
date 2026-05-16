@@ -36,6 +36,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "app-store-scraper": "^0.18.0",
+    "google-play-scraper": "^10.1.2",
     "xlsx": "^0.18.5"
   }
 }

@@ -1229,3 +1229,44 @@ model TicketMessage {
   @@index([ticketId])
   @@map("ticket_messages")
 }
+
+// ASO Keyword Rankings (App Store Optimization)
+model AsoKeyword {
+  id             String   @id @default(cuid())
+  store          String   // play | ios
+  keyword        String
+  rank           Int?     // null = not ranking
+  volume         String?  // e.g. "4.8K"
+  difficulty     Int      @default(0) // 0-100
+  kei            Int      @default(0) // Keyword Effectiveness Index
+  topCompetitor  String?
+  relevance      Int      @default(0) // 0-99
+  intent         String   @default("informational") // informational | navigational | transactional
+  delta7d        Int?     // rank change in 7 days
+
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@unique([store, keyword])
+  @@index([store])
+  @@map("aso_keywords")
+}
+
+// ASO Store Snapshot (auto-fetched app metadata)
+model AsoStoreSnapshot {
+  id          String   @id @default(cuid())
+  store       String   // play | ios
+  rating      Decimal? // e.g. 4.5
+  reviews     Int      @default(0)
+  installs    String?  // e.g. "10,000+"
+  version     String?
+  lastUpdated String?  // store listing last updated date
+  genre       String?
+  developer   String?
+  rawData     Json?    // full scraper response
+
+  fetchedAt   DateTime @default(now())
+
+  @@index([store, fetchedAt])
+  @@map("aso_store_snapshots")
+}
