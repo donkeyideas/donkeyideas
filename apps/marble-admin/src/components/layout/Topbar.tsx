@@ -12,6 +12,7 @@ const titleMap: Record<string, string> = {
   '/economy': 'ECONOMY CONTROLS',
   '/seasons': 'SEASON MANAGEMENT',
   '/analytics': 'ANALYTICS',
+  '/kpis': 'KPI TRACKER',
   '/support': 'SUPPORT & TICKETS',
 };
 

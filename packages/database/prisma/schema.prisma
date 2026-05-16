@@ -1186,6 +1186,24 @@ model GameConfig {
   @@map("game_config")
 }
 
+model GameKpiEntry {
+  id             String   @id @default(cuid())
+  weekOf         DateTime @unique // Monday date for this week's data
+  dau            Int
+  d1Retention    Float    // percentage (e.g., 35.0)
+  d7Retention    Float
+  d30Retention   Float
+  sessionsPerDau Float
+  avgSessionSecs Int      // seconds
+  arpdau         Float    // dollars (e.g., 0.25)
+  rating         Float    // e.g., 4.2
+  crashRate      Float    // percentage (e.g., 1.5)
+  notes          String?  // optional weekly notes
+  createdAt      DateTime @default(now())
+
+  @@map("game_kpi_entries")
+}
+
 model SupportTicket {
   id           String   @id @default(cuid())
   ticketNumber String   @unique // e.g. TKT-0001
