@@ -3,7 +3,6 @@ import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
-import { AnalyticsAdminServiceClient } from '@google-analytics/admin';
 
 /* ------------------------------------------------------------------ */
 /*  GA4 Auth — uses service account from env var                       */
@@ -20,38 +19,10 @@ function getAnalyticsClient() {
   return new BetaAnalyticsDataClient({ credentials });
 }
 
-function getAdminClient() {
-  const credentials = getCredentials();
-  return new AnalyticsAdminServiceClient({ credentials });
-}
-
-/* ------------------------------------------------------------------ */
-/*  Auto-discover GA4 Property ID from Firebase project                */
-/* ------------------------------------------------------------------ */
-
-async function discoverPropertyId(): Promise<string> {
-  // Check if manually configured
-  if (process.env.GA4_PROPERTY_ID) {
-    return process.env.GA4_PROPERTY_ID;
-  }
-
-  // Auto-discover from the Firebase project
-  const credentials = getCredentials();
-  const projectId = credentials.project_id; // "donkey-marble-racing"
-  const adminClient = getAdminClient();
-
-  const [properties] = await adminClient.listProperties({
-    filter: `firebase_project:${projectId}`,
-    showDeleted: false,
-  });
-
-  if (properties && properties.length > 0 && properties[0].name) {
-    return properties[0].name.replace('properties/', '');
-  }
-
-  throw new Error(
-    `Could not auto-discover GA4 property for project "${projectId}". Set GA4_PROPERTY_ID env var manually.`
-  );
+function getPropertyId(): string {
+  const id = process.env.GA4_PROPERTY_ID;
+  if (!id) throw new Error('GA4_PROPERTY_ID env var not set');
+  return id;
 }
 
 /* ------------------------------------------------------------------ */
@@ -70,7 +41,7 @@ export async function POST() {
       return NextResponse.json({ error: { message: 'Invalid session' } }, { status: 401 });
     }
 
-    const propertyId = await discoverPropertyId();
+    const propertyId = getPropertyId();
     const analyticsClient = getAnalyticsClient();
 
     // Calculate date range: last 7 days (this week's data)
