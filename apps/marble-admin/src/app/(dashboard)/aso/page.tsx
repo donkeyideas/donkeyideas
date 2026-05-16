@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 
@@ -33,30 +33,9 @@ interface StoreSnapshot {
   lastUpdated: string | null;
   genre: string | null;
   developer: string | null;
+  rawData: any;
   fetchedAt: string;
 }
-
-/* ------------------------------------------------------------------ */
-/*  Seed data (used when database is empty to pre-populate)            */
-/* ------------------------------------------------------------------ */
-
-const SEED_KEYWORDS = [
-  { keyword: 'donkey marble racing', rank: 1, volume: '4.8K', difficulty: 29, kei: 164, topCompetitor: "Jelle's Marble Runs", relevance: 99, intent: 'informational' },
-  { keyword: 'marble racing stats', rank: 1, volume: '3.5K', difficulty: 28, kei: 126, topCompetitor: 'World Marble Race', relevance: 99, intent: 'informational' },
-  { keyword: 'marble racing bet', rank: 1, volume: '3.4K', difficulty: 24, kei: 140, topCompetitor: 'World Marble Race', relevance: 99, intent: 'informational' },
-  { keyword: 'marble race bet', rank: 1, volume: '4.3K', difficulty: 27, kei: 159, topCompetitor: 'World Marble Race', relevance: 99, intent: 'informational' },
-  { keyword: 'bet on marble race', rank: 1, volume: '1.2K', difficulty: 15, kei: 80, topCompetitor: 'World Marble Race', relevance: 99, intent: 'informational' },
-  { keyword: 'marble race stats', rank: 9, volume: '4.4K', difficulty: 21, kei: 211, topCompetitor: 'World Marble Race', relevance: 91, intent: 'informational' },
-  { keyword: 'marble racing 2D', rank: 245, volume: '4.0K', difficulty: 29, kei: 137, topCompetitor: 'Sandbox 2D: Marble Run', relevance: 10, intent: 'informational' },
-  { keyword: 'marble racing game', rank: null, volume: '7.1K', difficulty: 29, kei: 246, topCompetitor: 'Labo Marble Race:Stem Game', relevance: 30, intent: 'informational' },
-  { keyword: 'betting marble game', rank: null, volume: '7.2K', difficulty: 20, kei: 360, topCompetitor: 'World Marble Race', relevance: 30, intent: 'informational' },
-  { keyword: 'marble race track', rank: null, volume: '3.4K', difficulty: 25, kei: 136, topCompetitor: 'World Marble Race', relevance: 30, intent: 'informational' },
-  { keyword: 'marble racing app', rank: null, volume: '3.6K', difficulty: 20, kei: 180, topCompetitor: 'World Marble Race', relevance: 30, intent: 'informational' },
-  { keyword: 'marble racing betting', rank: null, volume: '3.9K', difficulty: 28, kei: 140, topCompetitor: 'World Marble Race', relevance: 30, intent: 'informational' },
-  { keyword: 'marble race game', rank: null, volume: '4.9K', difficulty: 22, kei: 224, topCompetitor: 'Simple Marble Race', relevance: 30, intent: 'informational' },
-  { keyword: 'marble racing simulator', rank: null, volume: '4.0K', difficulty: 21, kei: 192, topCompetitor: 'World Marble Race', relevance: 30, intent: 'informational' },
-  { keyword: 'marble racing tracks', rank: null, volume: '4.7K', difficulty: 27, kei: 173, topCompetitor: 'World Marble Race', relevance: 30, intent: 'informational' },
-];
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -70,16 +49,11 @@ function RankBadge({ rank }: { rank: number | null }) {
   return <span className="font-heading text-lg text-marble-red">#{rank}</span>;
 }
 
-function DifficultyBar({ value }: { value: number }) {
-  const color = value <= 20 ? 'bg-marble-green' : value <= 40 ? 'bg-gold' : value <= 60 ? 'bg-[#f39c12]' : 'bg-marble-red';
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-16 h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${value}%` }} />
-      </div>
-      <span className="text-xs text-white/40">{value}</span>
-    </div>
-  );
+function DeltaBadge({ delta }: { delta: number | null }) {
+  if (delta === null) return null;
+  if (delta > 0) return <span className="text-[10px] font-bold text-marble-green">&#9650;{delta}</span>;
+  if (delta < 0) return <span className="text-[10px] font-bold text-marble-red">&#9660;{Math.abs(delta)}</span>;
+  return <span className="text-[10px] font-bold text-white/30">&mdash;</span>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -96,7 +70,15 @@ export default function ASOPage() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
-  const [seeding, setSeeding] = useState(false);
+
+  // Search & Track state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResult, setSearchResult] = useState<{ keyword: string; rank: number | null; topCompetitor: string | null; totalResults: number } | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
 
   // Fetch keywords
   const { data: kwData, isLoading } = useQuery({
@@ -133,17 +115,67 @@ export default function ASOPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['aso-store', store] }),
   });
 
-  // Seed initial data
-  async function seedKeywords() {
-    setSeeding(true);
-    try {
-      for (const kw of SEED_KEYWORDS) {
-        await api.post('/aso/keywords', { store, ...kw });
+  const refreshAllMutation = useMutation({
+    mutationFn: () => api.post(`/aso/refresh?store=${store}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['aso-keywords', store] }),
+  });
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
       }
-      queryClient.invalidateQueries({ queryKey: ['aso-keywords', store] });
-    } finally {
-      setSeeding(false);
     }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  // Suggest keywords as user types
+  function handleSearchInput(val: string) {
+    setSearchTerm(val);
+    setSearchResult(null);
+    if (suggestTimeout.current) clearTimeout(suggestTimeout.current);
+    if (val.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    suggestTimeout.current = setTimeout(async () => {
+      try {
+        const res = await api.get(`/aso/suggest?term=${encodeURIComponent(val)}&store=${store}`);
+        setSuggestions(res.data.suggestions || []);
+        setShowSuggestions(true);
+      } catch { /* ignore */ }
+    }, 300);
+  }
+
+  // Search for a keyword on the store
+  async function handleSearch(term?: string) {
+    const kw = term || searchTerm;
+    if (!kw.trim()) return;
+    setSearchTerm(kw);
+    setIsSearching(true);
+    setShowSuggestions(false);
+    setSearchResult(null);
+    try {
+      const res = await api.post('/aso/search', { keyword: kw.trim().toLowerCase(), store });
+      setSearchResult(res.data);
+    } catch { /* ignore */ }
+    setIsSearching(false);
+  }
+
+  // Track a searched keyword (save to DB with real rank)
+  async function handleTrack() {
+    if (!searchResult) return;
+    setIsSearching(true);
+    try {
+      await api.post('/aso/search', {
+        keyword: searchResult.keyword,
+        store,
+        track: true,
+      });
+      queryClient.invalidateQueries({ queryKey: ['aso-keywords', store] });
+      setSearchTerm('');
+      setSearchResult(null);
+    } catch { /* ignore */ }
+    setIsSearching(false);
   }
 
   function handleSave() {
@@ -200,6 +232,8 @@ export default function ASOPage() {
     ? new Date(Math.max(...keywords.map((k) => new Date(k.updatedAt).getTime()))).toLocaleDateString()
     : 'Never';
 
+  const alreadyTracked = searchResult ? keywords.some(k => k.keyword === searchResult.keyword) : false;
+
   const SortIcon = ({ col }: { col: typeof sortKey }) => {
     if (sortKey !== col) return <span className="text-white/15 ml-1">&udarr;</span>;
     return <span className="text-gold ml-1">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>;
@@ -208,40 +242,121 @@ export default function ASOPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="font-heading text-2xl tracking-wide">App Store Optimization</h1>
-          <p className="text-[11px] text-white/35 mt-1">Keyword intelligence &middot; Last updated {lastUpdated}</p>
+          <p className="text-[11px] text-white/35 mt-1">Live keyword rankings &middot; Last updated {lastUpdated}</p>
         </div>
         <div className="flex gap-2">
           <div className="flex gap-1">
-            <button onClick={() => setStore('play')}
+            <button onClick={() => { setStore('play'); setSearchResult(null); setSuggestions([]); }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${store === 'play' ? 'bg-marble-green/20 text-marble-green border border-marble-green/30' : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10'}`}>
               Play Store
             </button>
-            <button onClick={() => setStore('ios')}
+            <button onClick={() => { setStore('ios'); setSearchResult(null); setSuggestions([]); }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${store === 'ios' ? 'bg-marble-blue/20 text-marble-blue border border-marble-blue/30' : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10'}`}>
               App Store
             </button>
           </div>
+          {keywords.length > 0 && (
+            <button onClick={() => refreshAllMutation.mutate()} disabled={refreshAllMutation.isPending}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 disabled:opacity-30 transition-colors">
+              {refreshAllMutation.isPending ? 'Refreshing...' : 'Refresh All Rankings'}
+            </button>
+          )}
           <button onClick={() => { setEditId(null); setForm(emptyForm); setShowForm(true); }}
             className="px-4 py-2 rounded-xl text-xs font-bold bg-gold text-navy-900 hover:bg-gold-light transition-colors">
-            + Add Keyword
+            + Manual Entry
           </button>
         </div>
       </div>
 
-      {/* Store Snapshot Card */}
-      {snapshot && (
-        <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="font-heading text-base tracking-wide">Store Listing</div>
-            <button onClick={() => refreshStoreMutation.mutate()}
-              disabled={refreshStoreMutation.isPending}
-              className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/[0.06] text-white/40 hover:bg-white/10 disabled:opacity-30 transition-colors">
-              {refreshStoreMutation.isPending ? 'Refreshing...' : 'Refresh'}
-            </button>
+      {/* Search & Track */}
+      <div className="bg-white/5 border-2 border-gold/20 rounded-2xl p-5">
+        <div className="font-heading text-base tracking-wide mb-3">Search &amp; Track Keywords</div>
+        <p className="text-[11px] text-white/35 mb-4">
+          Search the {store === 'play' ? 'Google Play Store' : 'Apple App Store'} to find your real ranking for any keyword
+        </p>
+        <div className="flex gap-3" ref={searchBoxRef}>
+          <div className="flex-1 relative">
+            <input
+              value={searchTerm}
+              onChange={e => handleSearchInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-gold/40"
+              placeholder="e.g. marble racing game, marble bet, racing simulator..."
+            />
+            {/* Suggestions dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#0d1b3e] border-2 border-white/10 rounded-xl overflow-hidden z-20 shadow-lg">
+                {suggestions.map((s) => (
+                  <button key={s} onClick={() => { setSearchTerm(s); setShowSuggestions(false); handleSearch(s); }}
+                    className="block w-full text-left px-4 py-2.5 text-sm text-white/60 hover:bg-white/5 hover:text-white transition-colors border-b border-white/[0.04] last:border-b-0">
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+          <button onClick={() => handleSearch()} disabled={isSearching || !searchTerm.trim()}
+            className="px-6 py-2.5 rounded-xl text-sm font-bold bg-gold text-navy-900 hover:bg-gold-light transition-colors disabled:opacity-50">
+            {isSearching ? 'Searching...' : 'Search'}
+          </button>
+        </div>
+
+        {/* Search Result */}
+        {searchResult && (
+          <div className="mt-4 bg-white/[0.03] border border-white/[0.08] rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div>
+                  <p className="text-[10px] text-white/30 uppercase font-bold tracking-wider mb-1">Keyword</p>
+                  <p className="text-sm font-semibold text-white/80">{searchResult.keyword}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-white/30 uppercase font-bold tracking-wider mb-1">Your Rank</p>
+                  {searchResult.rank !== null ? (
+                    <RankBadge rank={searchResult.rank} />
+                  ) : (
+                    <p className="text-sm text-marble-red font-semibold">Not ranking</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[10px] text-white/30 uppercase font-bold tracking-wider mb-1">Top Competitor</p>
+                  <p className="text-sm text-white/50">{searchResult.topCompetitor || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-white/30 uppercase font-bold tracking-wider mb-1">Results</p>
+                  <p className="text-sm text-white/50">{searchResult.totalResults} apps</p>
+                </div>
+              </div>
+              {alreadyTracked ? (
+                <span className="px-4 py-2 rounded-xl text-xs font-bold text-marble-green border border-marble-green/30 bg-marble-green/10">
+                  Already Tracked
+                </span>
+              ) : (
+                <button onClick={handleTrack} disabled={isSearching}
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-marble-green text-white hover:bg-marble-green/80 transition-colors disabled:opacity-50">
+                  {isSearching ? 'Saving...' : 'Track This Keyword'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Store Snapshot Card */}
+      <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="font-heading text-base tracking-wide">Store Listing</div>
+          <button onClick={() => refreshStoreMutation.mutate()}
+            disabled={refreshStoreMutation.isPending}
+            className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/[0.06] text-white/40 hover:bg-white/10 disabled:opacity-30 transition-colors">
+            {refreshStoreMutation.isPending ? 'Fetching...' : 'Fetch from Store'}
+          </button>
+        </div>
+        {snapshot ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
             <div>
               <p className="text-[10px] text-white/30 uppercase font-bold tracking-wider">Rating</p>
@@ -268,8 +383,16 @@ export default function ASOPage() {
               <p className="text-sm text-white/50">{new Date(snapshot.fetchedAt).toLocaleDateString()}</p>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-white/30 text-sm mb-3">No store data yet</p>
+            <button onClick={() => refreshStoreMutation.mutate()} disabled={refreshStoreMutation.isPending}
+              className="px-5 py-2 rounded-xl text-sm font-bold bg-gold text-navy-900 hover:bg-gold-light disabled:opacity-50 transition-colors">
+              {refreshStoreMutation.isPending ? 'Fetching...' : 'Fetch Store Data'}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -295,20 +418,11 @@ export default function ASOPage() {
         </div>
       </div>
 
-      {/* Empty state with seed button */}
+      {/* Empty state */}
       {!isLoading && keywords.length === 0 && (
         <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-8 text-center">
-          <p className="text-white/40 mb-3">No keywords tracked for {store === 'play' ? 'Play Store' : 'App Store'} yet</p>
-          <div className="flex gap-3 justify-center">
-            <button onClick={seedKeywords} disabled={seeding}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gold text-navy-900 hover:bg-gold-light disabled:opacity-50 transition-colors">
-              {seeding ? 'Importing...' : 'Import Starter Keywords'}
-            </button>
-            <button onClick={() => { setEditId(null); setForm(emptyForm); setShowForm(true); }}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold text-white/60 border border-white/10 hover:bg-white/5 transition-colors">
-              Add Manually
-            </button>
-          </div>
+          <p className="text-white/40 mb-2">No keywords tracked for {store === 'play' ? 'Play Store' : 'App Store'} yet</p>
+          <p className="text-[11px] text-white/25">Use the search above to find keywords and track your real rankings</p>
         </div>
       )}
 
@@ -318,7 +432,9 @@ export default function ASOPage() {
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <div>
               <div className="font-heading text-base tracking-wide">Keyword Rankings</div>
-              <p className="text-[11px] text-white/35 mt-0.5">{store === 'play' ? 'Google Play Store' : 'Apple App Store'} &middot; US Region</p>
+              <p className="text-[11px] text-white/35 mt-0.5">
+                {store === 'play' ? 'Google Play Store' : 'Apple App Store'} &middot; Live data from store search
+              </p>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -329,18 +445,12 @@ export default function ASOPage() {
                   <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider cursor-pointer select-none" onClick={() => handleSort('rank')}>
                     Rank <SortIcon col="rank" />
                   </th>
+                  <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider">Change</th>
+                  <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider">Top Competitor</th>
                   <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider cursor-pointer select-none" onClick={() => handleSort('volume')}>
                     Vol. <SortIcon col="volume" />
                   </th>
-                  <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider">Diff.</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider cursor-pointer select-none" onClick={() => handleSort('kei')}>
-                    KEI <SortIcon col="kei" />
-                  </th>
-                  <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider">Top Competitor</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider cursor-pointer select-none" onClick={() => handleSort('relevance')}>
-                    Rel. <SortIcon col="relevance" />
-                  </th>
-                  <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider">Intent</th>
+                  <th className="text-left px-4 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider">Updated</th>
                   <th className="text-left px-3 py-3 text-[10px] font-bold text-white/30 uppercase tracking-wider w-20">Actions</th>
                 </tr>
               </thead>
@@ -349,16 +459,10 @@ export default function ASOPage() {
                   <tr key={kw.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors group">
                     <td className="px-5 py-3 text-sm text-white/70 font-medium">{kw.keyword}</td>
                     <td className="px-4 py-3"><RankBadge rank={kw.rank} /></td>
-                    <td className="px-4 py-3 text-xs text-white/50">{kw.volume || '—'}</td>
-                    <td className="px-4 py-3"><DifficultyBar value={kw.difficulty} /></td>
-                    <td className="px-4 py-3 text-xs font-bold text-white/60">{kw.kei}</td>
+                    <td className="px-4 py-3"><DeltaBadge delta={kw.delta7d} /></td>
                     <td className="px-4 py-3 text-xs text-white/40">{kw.topCompetitor || '—'}</td>
-                    <td className="px-4 py-3 text-xs font-bold text-white/60">{kw.relevance}</td>
-                    <td className="px-4 py-3">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/30 bg-white/[0.05] px-2 py-0.5 rounded">
-                        {kw.intent}
-                      </span>
-                    </td>
+                    <td className="px-4 py-3 text-xs text-white/50">{kw.volume || '—'}</td>
+                    <td className="px-4 py-3 text-[10px] text-white/30">{new Date(kw.updatedAt).toLocaleDateString()}</td>
                     <td className="px-3 py-3">
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => startEdit(kw)} className="text-[10px] text-marble-blue hover:text-marble-blue/80 font-bold">Edit</button>
@@ -373,49 +477,43 @@ export default function ASOPage() {
         </div>
       )}
 
-      {/* Opportunities Section */}
+      {/* Opportunities + Competitors */}
       {keywords.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-white/5 border-2 border-marble-green/20 rounded-2xl p-5">
-            <div className="font-heading text-base tracking-wide mb-3">High Opportunity</div>
-            <p className="text-[11px] text-white/35 mb-4">High volume keywords where you&apos;re not yet ranking</p>
+            <div className="font-heading text-base tracking-wide mb-3">Not Ranking</div>
+            <p className="text-[11px] text-white/35 mb-4">Keywords where your app doesn&apos;t appear in search results</p>
             <div className="space-y-2">
               {keywords
                 .filter((k) => k.rank === null)
-                .sort((a, b) => parseFloat((b.volume || '0').replace('K', '')) - parseFloat((a.volume || '0').replace('K', '')))
-                .slice(0, 5)
                 .map((kw) => (
                   <div key={kw.id} className="flex items-center justify-between py-2 border-b border-white/[0.04]">
                     <span className="text-xs text-white/60">{kw.keyword}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[10px] text-white/30">{kw.volume} vol</span>
-                      <span className="text-[10px] font-bold text-gold">KEI {kw.kei}</span>
-                    </div>
+                    <span className="text-[10px] text-white/30">{kw.topCompetitor ? `#1: ${kw.topCompetitor}` : '—'}</span>
                   </div>
                 ))}
               {keywords.filter((k) => k.rank === null).length === 0 && (
-                <p className="text-xs text-white/30 py-2">All keywords are ranking</p>
+                <p className="text-xs text-marble-green py-2">All keywords are ranking!</p>
               )}
             </div>
           </div>
 
           <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
             <div className="font-heading text-base tracking-wide mb-3">Top Competitors</div>
-            <p className="text-[11px] text-white/35 mb-4">Most frequently appearing competitors</p>
+            <p className="text-[11px] text-white/35 mb-4">Most frequently appearing #1 competitors</p>
             <div className="space-y-2">
               {(() => {
                 const comp: Record<string, number> = {};
                 for (const kw of keywords) {
                   if (kw.topCompetitor) comp[kw.topCompetitor] = (comp[kw.topCompetitor] ?? 0) + 1;
                 }
-                return Object.entries(comp)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([name, count]) => (
-                    <div key={name} className="flex items-center justify-between py-2 border-b border-white/[0.04]">
-                      <span className="text-xs text-white/60">{name}</span>
-                      <span className="text-[10px] font-semibold text-white/40">{count} keywords</span>
-                    </div>
-                  ));
+                const entries = Object.entries(comp).sort(([, a], [, b]) => b - a);
+                return entries.length > 0 ? entries.map(([name, count]) => (
+                  <div key={name} className="flex items-center justify-between py-2 border-b border-white/[0.04]">
+                    <span className="text-xs text-white/60">{name}</span>
+                    <span className="text-[10px] font-semibold text-white/40">{count} keywords</span>
+                  </div>
+                )) : <p className="text-xs text-white/30 py-2">No competitor data yet</p>;
               })()}
             </div>
           </div>
@@ -426,7 +524,7 @@ export default function ASOPage() {
       {showForm && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
           <div className="bg-[#0d1b3e] border-2 border-white/10 rounded-2xl p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
-            <h3 className="font-heading text-lg text-gold mb-4">{editId ? 'Edit Keyword' : 'Add Keyword'}</h3>
+            <h3 className="font-heading text-lg text-gold mb-4">{editId ? 'Edit Keyword' : 'Add Keyword Manually'}</h3>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
@@ -448,23 +546,8 @@ export default function ASOPage() {
                   placeholder="4.8K" />
               </div>
               <div>
-                <label className="text-[10px] text-white/40 uppercase tracking-wider font-bold block mb-1">Difficulty (0-100)</label>
-                <input value={form.difficulty} onChange={e => setForm({ ...form, difficulty: e.target.value })} type="number"
-                  className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-gold/40" />
-              </div>
-              <div>
-                <label className="text-[10px] text-white/40 uppercase tracking-wider font-bold block mb-1">KEI</label>
-                <input value={form.kei} onChange={e => setForm({ ...form, kei: e.target.value })} type="number"
-                  className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-gold/40" />
-              </div>
-              <div>
                 <label className="text-[10px] text-white/40 uppercase tracking-wider font-bold block mb-1">Top Competitor</label>
                 <input value={form.topCompetitor} onChange={e => setForm({ ...form, topCompetitor: e.target.value })}
-                  className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-gold/40" />
-              </div>
-              <div>
-                <label className="text-[10px] text-white/40 uppercase tracking-wider font-bold block mb-1">Relevance (0-99)</label>
-                <input value={form.relevance} onChange={e => setForm({ ...form, relevance: e.target.value })} type="number"
                   className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 focus:outline-none focus:border-gold/40" />
               </div>
               <div>

@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const store = request.nextUrl.searchParams.get('store') || 'play';
 
     if (store === 'play') {
-      const gplay = require('google-play-scraper');
+      const gplay = require('google-play-scraper').default || require('google-play-scraper');
       const app = await gplay.app({ appId: APP_ID });
 
       const snapshot = await prisma.asoStoreSnapshot.create({
