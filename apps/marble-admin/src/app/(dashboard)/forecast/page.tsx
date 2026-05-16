@@ -239,37 +239,60 @@ export default function ForecastPage() {
       </div>
 
       {/* SUMMARY TILES */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-        <SummaryTile label="Users YTD" value={fmtNum(summary.totalActual)} />
-        <SummaryTile label="Forecast YTD" value={fmtNum(summary.totalFcstYTD)} />
-        <SummaryTile label="Total Forecast" value={fmtNum(summary.totalFcstAll)} />
-        <SummaryTile
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <KpiTile
+          label="Users YTD"
+          value={fmtNum(summary.totalActual)}
+          color="blue"
+          caption="Actual signups year-to-date"
+        />
+        <KpiTile
+          label="Forecast YTD"
+          value={fmtNum(summary.totalFcstYTD)}
+          color="gold"
+          caption="Projection for past months"
+        />
+        <KpiTile
+          label="Total Forecast"
+          value={fmtNum(summary.totalFcstAll)}
+          color="purple"
+          caption="Full-year projection"
+        />
+        <KpiTile
           label="Variance YTD"
           value={
             summary.varianceYTD == null
               ? '---'
               : `${summary.varianceYTD >= 0 ? '+' : ''}${fmtNum(summary.varianceYTD)}`
           }
-          tone={
-            summary.varianceYTD == null ? undefined : summary.varianceYTD >= 0 ? 'pos' : 'neg'
+          color={
+            summary.varianceYTD == null ? 'muted' : summary.varianceYTD >= 0 ? 'green' : 'red'
           }
+          caption="Actual minus forecast"
         />
-        <SummaryTile label="Avg Users / Mo" value={fmtNum(summary.avgUsersMo)} />
-        <SummaryTile
+        <KpiTile
+          label="Avg Users / Mo"
+          value={fmtNum(summary.avgUsersMo)}
+          color="blue"
+          caption="Monthly average actual"
+        />
+        <KpiTile
           label="Actual vs Forecast"
           value={summary.avf == null ? '---' : `${summary.avf}%`}
-          tone={summary.avf == null ? undefined : summary.avf >= 100 ? 'pos' : 'neg'}
+          color={summary.avf == null ? 'muted' : summary.avf >= 100 ? 'green' : 'red'}
+          caption="Performance to plan"
         />
-        <SummaryTile
+        <KpiTile
           label="Avg Growth"
           value={
             summary.avgGrowth == null
               ? '---'
               : `${summary.avgGrowth >= 0 ? '+' : ''}${summary.avgGrowth.toFixed(1)}%`
           }
-          tone={
-            summary.avgGrowth == null ? undefined : summary.avgGrowth >= 0 ? 'pos' : 'neg'
+          color={
+            summary.avgGrowth == null ? 'muted' : summary.avgGrowth >= 0 ? 'green' : 'red'
           }
+          caption="Month-over-month avg"
         />
       </div>
 
@@ -407,20 +430,36 @@ export default function ForecastPage() {
   );
 }
 
-function SummaryTile({
+type KpiColor = 'blue' | 'gold' | 'green' | 'red' | 'purple' | 'muted';
+
+function KpiTile({
   label,
   value,
-  tone,
+  color,
+  caption,
 }: {
   label: string;
   value: string;
-  tone?: 'pos' | 'neg';
+  color: KpiColor;
+  caption: string;
 }) {
-  const color = tone === 'pos' ? 'text-marble-green' : tone === 'neg' ? 'text-marble-red' : 'text-white';
+  const palette: Record<KpiColor, { border: string; blob: string; text: string }> = {
+    blue: { border: 'border-marble-blue/20', blob: 'bg-marble-blue', text: 'text-marble-blue' },
+    gold: { border: 'border-gold/20', blob: 'bg-gold', text: 'text-gold' },
+    green: { border: 'border-marble-green/20', blob: 'bg-marble-green', text: 'text-marble-green' },
+    red: { border: 'border-marble-red/20', blob: 'bg-marble-red', text: 'text-marble-red' },
+    purple: { border: 'border-marble-purple/20', blob: 'bg-marble-purple', text: 'text-marble-purple' },
+    muted: { border: 'border-white/[0.08]', blob: 'bg-white/30', text: 'text-white/50' },
+  };
+  const c = palette[color];
   return (
-    <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-4">
+    <div className={`bg-white/5 border-2 ${c.border} rounded-2xl p-5 relative overflow-hidden`}>
+      <div className={`absolute -top-4 -right-4 w-[60px] h-[60px] rounded-full ${c.blob} opacity-[0.08]`} />
       <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">{label}</div>
-      <div className={`font-heading text-2xl tracking-wide leading-none ${color}`}>{value}</div>
+      <div className={`font-heading text-[32px] tracking-wide leading-none ${c.text}`}>{value}</div>
+      <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">
+        {caption}
+      </div>
     </div>
   );
 }

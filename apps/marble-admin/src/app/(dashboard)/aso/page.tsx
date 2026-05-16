@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 
@@ -129,6 +129,234 @@ function CompetitorCard({ app, ourInstalls }: { app: AppData; ourInstalls: numbe
       {installDiff !== null && installDiff > 1 && (
         <div className="mt-2 text-[10px] text-marble-red/70">{installDiff}x more installs than you</div>
       )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Store Conversion: impressions -> installs funnel                   */
+/* ------------------------------------------------------------------ */
+
+interface ConversionData {
+  store: 'play' | 'ios';
+  months: { month: string; installs: number }[];
+  impressions: Record<string, number>;
+}
+
+function monthLabel(key: string) {
+  const [y, m] = key.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+function StoreConversion({ store }: { store: 'play' | 'ios' }) {
+  const queryClient = useQueryClient();
+  const benchmark = store === 'play' ? 25 : 18; // % conversion target
+  const benchmarkLabel = store === 'play' ? '25% (Play Store avg)' : '18% (App Store avg)';
+
+  const [edits, setEdits] = useState<Record<string, number | null>>({});
+  const [dirty, setDirty] = useState(false);
+
+  const { data, isLoading } = useQuery<ConversionData>({
+    queryKey: ['aso-conversion', store],
+    queryFn: () => api.get(`/aso/conversion?store=${store}`).then((r) => r.data),
+  });
+
+  // Reset edits when store changes
+  useEffect(() => {
+    setEdits({});
+    setDirty(false);
+  }, [store]);
+
+  const saveMutation = useMutation({
+    mutationFn: (impressions: Record<string, number>) =>
+      api.post('/aso/conversion', { store, impressions }).then((r) => r.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['aso-conversion', store] });
+      setEdits({});
+      setDirty(false);
+    },
+  });
+
+  const rows = useMemo(() => {
+    if (!data) return [];
+    const merged: Record<string, number> = { ...data.impressions };
+    for (const [m, v] of Object.entries(edits)) {
+      if (v == null) delete merged[m];
+      else merged[m] = v;
+    }
+    return data.months.slice(0, 6).map((m) => {
+      const impressions = merged[m.month] ?? null;
+      const cvr = impressions != null && impressions > 0 ? (m.installs / impressions) * 100 : null;
+      return { month: m.month, installs: m.installs, impressions, cvr };
+    });
+  }, [data, edits]);
+
+  const currentRow = rows[0];
+
+  function handleEdit(month: string, raw: string) {
+    const digits = raw.replace(/[^\d]/g, '');
+    setEdits((prev) => ({ ...prev, [month]: digits === '' ? null : Number(digits) }));
+    setDirty(true);
+  }
+
+  function handleSave() {
+    const merged: Record<string, number> = { ...(data?.impressions ?? {}) };
+    for (const [m, v] of Object.entries(edits)) {
+      if (v == null) delete merged[m];
+      else merged[m] = v;
+    }
+    saveMutation.mutate(merged);
+  }
+
+  return (
+    <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+      <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
+        <div>
+          <div className="font-heading text-base tracking-wide">Store Conversion</div>
+          <p className="text-[11px] text-white/35 mt-0.5">
+            Impressions &rarr; Installs funnel &middot; Target {benchmarkLabel}
+          </p>
+          <p className="text-[10px] text-white/25 mt-0.5">
+            {store === 'play'
+              ? 'Source: Play Console &rarr; Statistics &rarr; Store performance'
+              : 'Source: App Store Connect &rarr; Trends &rarr; Impressions'}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={!dirty || saveMutation.isPending}
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          {saveMutation.isPending ? 'Saving…' : 'Save Impressions'}
+        </button>
+      </div>
+
+      {/* Current-month summary tile */}
+      {currentRow && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+          <SummaryStat
+            label="Current Month"
+            value={monthLabel(currentRow.month)}
+          />
+          <SummaryStat
+            label="Impressions"
+            value={currentRow.impressions != null ? currentRow.impressions.toLocaleString() : '---'}
+          />
+          <SummaryStat
+            label="Installs"
+            value={currentRow.installs.toLocaleString()}
+          />
+          <SummaryStat
+            label="Conversion"
+            value={currentRow.cvr != null ? `${currentRow.cvr.toFixed(1)}%` : '---'}
+            tone={
+              currentRow.cvr == null
+                ? undefined
+                : currentRow.cvr >= benchmark
+                  ? 'pos'
+                  : 'neg'
+            }
+          />
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="w-5 h-5 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/[0.08]">
+                <th className="text-left px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">Month</th>
+                <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">Impressions</th>
+                <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">Installs</th>
+                <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">Conversion</th>
+                <th className="text-right px-3 py-2 text-[10px] font-bold text-white/40 uppercase tracking-wider">vs Benchmark</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const editedVal = edits[r.month];
+                const inputValue =
+                  editedVal === null
+                    ? ''
+                    : editedVal !== undefined
+                      ? editedVal
+                      : r.impressions ?? '';
+                const displayValue =
+                  inputValue === '' || inputValue == null
+                    ? ''
+                    : Number(inputValue).toLocaleString('en-US');
+                const delta = r.cvr != null ? r.cvr - benchmark : null;
+                return (
+                  <tr key={r.month} className="border-b border-white/[0.04]">
+                    <td className="px-3 py-3 text-sm font-semibold text-white/80">{monthLabel(r.month)}</td>
+                    <td className="px-3 py-3 text-right">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={displayValue}
+                        placeholder="Enter"
+                        aria-label={`Impressions for ${monthLabel(r.month)}`}
+                        onChange={(e) => handleEdit(r.month, e.target.value)}
+                        className="w-32 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white text-sm text-right font-semibold focus:outline-none focus:border-gold/50 focus:bg-gold/[0.08] placeholder:text-white/25 placeholder:italic placeholder:font-normal"
+                      />
+                    </td>
+                    <td className="px-3 py-3 text-right text-sm text-white/80">{r.installs.toLocaleString()}</td>
+                    <td className="px-3 py-3 text-right text-sm font-semibold">
+                      {r.cvr == null ? (
+                        <span className="text-white/30">---</span>
+                      ) : (
+                        <span className={r.cvr >= benchmark ? 'text-marble-green' : 'text-marble-red'}>
+                          {r.cvr.toFixed(1)}%
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-right text-xs">
+                      {delta == null ? (
+                        <span className="text-white/30">---</span>
+                      ) : (
+                        <span className={delta >= 0 ? 'text-marble-green' : 'text-marble-red'}>
+                          {delta >= 0 ? '+' : ''}
+                          {delta.toFixed(1)} pts
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-white/30 text-sm">
+                    No install data yet for this store.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SummaryStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: 'pos' | 'neg';
+}) {
+  const color = tone === 'pos' ? 'text-marble-green' : tone === 'neg' ? 'text-marble-red' : 'text-white/80';
+  return (
+    <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2.5">
+      <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">{label}</p>
+      <p className={`text-base font-semibold ${color}`}>{value}</p>
     </div>
   );
 }
@@ -320,6 +548,9 @@ export default function ASOPage() {
           )}
         </div>
       )}
+
+      {/* Store Conversion (Impressions → Installs) */}
+      {!isLoading && !data?.notListed && <StoreConversion store={store} />}
 
       {/* Competitor Landscape */}
       {competitors.length > 0 && (
