@@ -71,6 +71,42 @@ export async function GET(_request: NextRequest) {
       prisma.gamePurchase.count({ where: { status: 'refunded', refundedAt: { gte: todayStart } } }),
     ]);
 
+    // ── Anomaly Detection: 7-day daily metrics ──
+    const anomalyDays: { dau: number; races: number; bets: number; revenue: number }[] = [];
+    for (let i = 7; i >= 1; i--) {
+      const dayStart = new Date(todayStart);
+      dayStart.setDate(dayStart.getDate() - i);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      const [dayDau, dayRaces, dayBets, dayRev] = await Promise.all([
+        prisma.gamePlayer.count({ where: { lastActiveAt: { gte: dayStart, lt: dayEnd } } }),
+        prisma.raceRecord.count({ where: { racedAt: { gte: dayStart, lt: dayEnd } } }),
+        prisma.betRecord.count({ where: { placedAt: { gte: dayStart, lt: dayEnd } } }),
+        prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: dayStart, lt: dayEnd } } }),
+      ]);
+
+      anomalyDays.push({
+        dau: dayDau,
+        races: dayRaces,
+        bets: dayBets,
+        revenue: Number(dayRev._sum.priceUsd ?? 0),
+      });
+    }
+
+    // ── Concurrent users (active in last 5 min) ──
+    const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    const concurrentUsers = await prisma.gamePlayer.count({
+      where: { lastActiveAt: { gte: fiveMinAgo } },
+    });
+
+    // ── ARPDAU & ARPPU (today) ──
+    const payingPlayersToday = await prisma.gamePurchase.groupBy({
+      by: ['playerId'],
+      where: { status: 'completed', purchasedAt: { gte: todayStart } },
+    });
+    const payingPlayersTodayCount = payingPlayersToday.length;
+
     // ── Monthly revenue chart (last 12 months) ──
     const revenueChart: { month: string; revenue: number }[] = [];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -255,6 +291,45 @@ export async function GET(_request: NextRequest) {
       ? ((payingPlayersThisWeek - payingPlayersLastWeek) / payingPlayersLastWeek * 100)
       : (payingPlayersThisWeek > 0 ? 100 : 0);
 
+    // ── Anomaly Detection ──
+    interface Anomaly {
+      metric: string;
+      today: number;
+      average: number;
+      pctChange: number;
+      direction: 'up' | 'down';
+      severity: 'warning' | 'critical';
+    }
+
+    const anomalies: Anomaly[] = [];
+    const anomalyMetrics: { metric: string; today: number; values: number[] }[] = [
+      { metric: 'DAU', today: activeTodayCount, values: anomalyDays.map((d) => d.dau) },
+      { metric: 'Races per day', today: racesToday, values: anomalyDays.map((d) => d.races) },
+      { metric: 'Bets per day', today: betsToday, values: anomalyDays.map((d) => d.bets) },
+      { metric: 'Revenue per day', today: revToday, values: anomalyDays.map((d) => d.revenue) },
+    ];
+
+    for (const { metric, today, values } of anomalyMetrics) {
+      const avg = values.length > 0 ? values.reduce((s, v) => s + v, 0) / values.length : 0;
+      if (avg === 0 && today === 0) continue;
+      const pctChange = avg > 0 ? ((today - avg) / avg) * 100 : (today > 0 ? 100 : 0);
+      const absPct = Math.abs(pctChange);
+      if (absPct >= 30) {
+        anomalies.push({
+          metric,
+          today,
+          average: Math.round(avg * 100) / 100,
+          pctChange: Math.round(pctChange),
+          direction: pctChange >= 0 ? 'up' : 'down',
+          severity: absPct >= 50 ? 'critical' : 'warning',
+        });
+      }
+    }
+
+    // ── ARPDAU & ARPPU (computed) ──
+    const arpdau = activeTodayCount > 0 ? revToday / activeTodayCount : 0;
+    const arppuToday = payingPlayersTodayCount > 0 ? revToday / payingPlayersTodayCount : 0;
+
     return NextResponse.json({
       players: {
         total: totalPlayers,
@@ -292,6 +367,10 @@ export async function GET(_request: NextRequest) {
         dau: Number(dauTrend.toFixed(1)),
         paying: Number(payingTrend.toFixed(1)),
       },
+      anomalies,
+      concurrentUsers,
+      arpdau: Math.round(arpdau * 100) / 100,
+      arppu: Math.round(arppuToday * 100) / 100,
     });
   } catch (error: any) {
     console.error('Admin overview error:', error);

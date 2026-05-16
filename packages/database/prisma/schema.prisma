@@ -22,19 +22,19 @@ model User {
   updatedAt    DateTime @updatedAt
 
   // Two-Factor Authentication
-  totpSecret  String?  // Encrypted TOTP secret
-  totpEnabled Boolean  @default(false)
+  totpSecret  String? // Encrypted TOTP secret
+  totpEnabled Boolean @default(false)
 
-  companies          Company[]
-  sessions           Session[]
-  activities         Activity[]
-  settings           UserSettings?
-  apiUsage           ApiUsage[]
-  chats              Chat[]
-  blogPosts          BlogPost[]
-  socialPosts        SocialMediaPost[]
-  socialCredentials  SocialMediaCredential[]
-  socialAutomation   SocialMediaAutomation?
+  companies         Company[]
+  sessions          Session[]
+  activities        Activity[]
+  settings          UserSettings?
+  apiUsage          ApiUsage[]
+  chats             Chat[]
+  blogPosts         BlogPost[]
+  socialPosts       SocialMediaPost[]
+  socialCredentials SocialMediaCredential[]
+  socialAutomation  SocialMediaAutomation?
 
   @@map("users")
 }
@@ -105,27 +105,27 @@ model Company {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user                      User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plStatements              PLStatement[]
-  balanceSheets             BalanceSheet[]
-  cashFlows                 CashFlow[]
-  transactions              Transaction[]
-  kpis                      KPI[]
-  businessProfile           BusinessProfile?
-  boards                    Board[]
-  documents                 Document[]
-  decks                     Deck[]
-  pages                     Page[]
-  teamMembers               TeamMember[]
-  investorAccess            InvestorAccess[]
-  valuations                Valuation[]
-  whitepaper                Whitepaper?
-  budgetCategories          BudgetCategory[]
-  budgetPeriods             BudgetPeriod[]
-  budgetLines               BudgetLine[]
-  analyticsRecommendations  AnalyticsRecommendation[]
-  playStoreRecommendations  PlayStoreRecommendation[]
-  appStoreRecommendations   AppStoreRecommendation[]
+  user                     User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plStatements             PLStatement[]
+  balanceSheets            BalanceSheet[]
+  cashFlows                CashFlow[]
+  transactions             Transaction[]
+  kpis                     KPI[]
+  businessProfile          BusinessProfile?
+  boards                   Board[]
+  documents                Document[]
+  decks                    Deck[]
+  pages                    Page[]
+  teamMembers              TeamMember[]
+  investorAccess           InvestorAccess[]
+  valuations               Valuation[]
+  whitepaper               Whitepaper?
+  budgetCategories         BudgetCategory[]
+  budgetPeriods            BudgetPeriod[]
+  budgetLines              BudgetLine[]
+  analyticsRecommendations AnalyticsRecommendation[]
+  playStoreRecommendations PlayStoreRecommendation[]
+  appStoreRecommendations  AppStoreRecommendation[]
 
   @@map("companies")
 }
@@ -194,19 +194,19 @@ model CashFlow {
 }
 
 model Transaction {
-  id                    String   @id @default(cuid())
-  companyId             String
-  date                  DateTime
-  type                  String // revenue, expense, asset, liability, equity
-  category              String // Detailed category (e.g., "product_revenue", "salaries", "equipment")
-  amount                Decimal
-  description           String?
-  affectsPL             Boolean  @default(false) // Does this affect P&L?
-  affectsBalance        Boolean  @default(true) // Does this affect Balance Sheet?
-  affectsCashFlow       Boolean  @default(false) // Does this affect Cash Flow?
+  id                     String   @id @default(cuid())
+  companyId              String
+  date                   DateTime
+  type                   String // revenue, expense, asset, liability, equity
+  category               String // Detailed category (e.g., "product_revenue", "salaries", "equipment")
+  amount                 Decimal
+  description            String?
+  affectsPL              Boolean  @default(false) // Does this affect P&L?
+  affectsBalance         Boolean  @default(true) // Does this affect Balance Sheet?
+  affectsCashFlow        Boolean  @default(false) // Does this affect Cash Flow?
   intercompanyTransferId String? // Links related intercompany transactions together
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
@@ -256,23 +256,23 @@ model BusinessProfile {
   projectStatus        String? // Production, Beta, Alpha, Development, Idea
 
   // Google Analytics Integration
-  gaPropertyId         String?   // GA4 Property ID (e.g., "123456789")
-  gaRefreshToken       String?   // Encrypted OAuth refresh token (optional)
-  gaConnectedAt        DateTime? // When GA was connected
-  gaConnectionStatus   String?   // "connected", "pending", "error"
+  gaPropertyId       String? // GA4 Property ID (e.g., "123456789")
+  gaRefreshToken     String? // Encrypted OAuth refresh token (optional)
+  gaConnectedAt      DateTime? // When GA was connected
+  gaConnectionStatus String? // "connected", "pending", "error"
 
   // Google Play Console Integration
-  gpPackageName        String?   // Android package name (e.g., "com.donkeyideas.argufight")
-  gpConnectedAt        DateTime? // When Play Console was connected
-  gpConnectionStatus   String?   // "connected", "pending", "error"
+  gpPackageName      String? // Android package name (e.g., "com.donkeyideas.argufight")
+  gpConnectedAt      DateTime? // When Play Console was connected
+  gpConnectionStatus String? // "connected", "pending", "error"
 
   // App Store Connect Integration
-  ascBundleId          String?   // iOS bundle ID (e.g., "com.donkeyideas.argufight")
-  ascConnectedAt       DateTime? // When App Store Connect was connected
-  ascConnectionStatus  String?   // "connected", "pending", "error"
+  ascBundleId         String? // iOS bundle ID (e.g., "com.donkeyideas.argufight")
+  ascConnectedAt      DateTime? // When App Store Connect was connected
+  ascConnectionStatus String? // "connected", "pending", "error"
 
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
@@ -578,16 +578,16 @@ model Page {
 
 // Contact Submissions
 model ContactSubmission {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   email     String
   company   String?
   message   String
   interest  String // platform, services, partnership, other
-  source    String   @default("donkey-ideas") // which website sent this submission
-  read      Boolean  @default(false)
+  source    String    @default("donkey-ideas") // which website sent this submission
+  read      Boolean   @default(false)
   readAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([read, createdAt])
   @@index([source, createdAt])
@@ -596,26 +596,26 @@ model ContactSubmission {
 
 // AI Analytics Recommendations
 model AnalyticsRecommendation {
-  id            String   @id @default(cuid())
-  companyId     String
-  date          DateTime @db.Date // Date the recommendation was generated for
+  id        String   @id @default(cuid())
+  companyId String
+  date      DateTime @db.Date // Date the recommendation was generated for
 
   // Analytics snapshot at generation time
-  analyticsData Json     // Store the GA data used for analysis
+  analyticsData Json // Store the GA data used for analysis
 
   // AI-generated content
-  summary       String   // Brief summary of analytics performance
-  pros          Json     // Array of positive insights: [{title, description}]
-  cons          Json     // Array of areas for improvement: [{title, description}]
-  recommendations Json   // Array of actionable recommendations: [{title, description, priority}]
+  summary         String // Brief summary of analytics performance
+  pros            Json // Array of positive insights: [{title, description}]
+  cons            Json // Array of areas for improvement: [{title, description}]
+  recommendations Json // Array of actionable recommendations: [{title, description, priority}]
 
   // Metadata
-  tokensUsed    Int?     // For cost tracking
-  cost          Decimal? // Cost of this analysis
-  model         String   @default("deepseek-chat")
+  tokensUsed Int? // For cost tracking
+  cost       Decimal? // Cost of this analysis
+  model      String   @default("deepseek-chat")
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
@@ -625,23 +625,23 @@ model AnalyticsRecommendation {
 }
 
 model PlayStoreRecommendation {
-  id            String   @id @default(cuid())
-  companyId     String
-  date          DateTime @db.Date
+  id        String   @id @default(cuid())
+  companyId String
+  date      DateTime @db.Date
 
-  playStoreData Json     // Store the Play Store data used for analysis
+  playStoreData Json // Store the Play Store data used for analysis
 
-  summary       String
-  pros          Json     // Array of positive insights: [{title, description}]
-  cons          Json     // Array of areas for improvement: [{title, description}]
-  recommendations Json   // Array of actionable recommendations: [{title, description, priority}]
+  summary         String
+  pros            Json // Array of positive insights: [{title, description}]
+  cons            Json // Array of areas for improvement: [{title, description}]
+  recommendations Json // Array of actionable recommendations: [{title, description, priority}]
 
-  tokensUsed    Int?
-  cost          Decimal?
-  model         String   @default("deepseek-chat")
+  tokensUsed Int?
+  cost       Decimal?
+  model      String   @default("deepseek-chat")
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
@@ -651,23 +651,23 @@ model PlayStoreRecommendation {
 }
 
 model AppStoreRecommendation {
-  id            String   @id @default(cuid())
-  companyId     String
-  date          DateTime @db.Date
+  id        String   @id @default(cuid())
+  companyId String
+  date      DateTime @db.Date
 
-  appStoreData  Json     // Store the App Store data used for analysis
+  appStoreData Json // Store the App Store data used for analysis
 
-  summary       String
-  pros          Json     // Array of positive insights: [{title, description}]
-  cons          Json     // Array of areas for improvement: [{title, description}]
-  recommendations Json   // Array of actionable recommendations: [{title, description, priority}]
+  summary         String
+  pros            Json // Array of positive insights: [{title, description}]
+  cons            Json // Array of areas for improvement: [{title, description}]
+  recommendations Json // Array of actionable recommendations: [{title, description, priority}]
 
-  tokensUsed    Int?
-  cost          Decimal?
-  model         String   @default("deepseek-chat")
+  tokensUsed Int?
+  cost       Decimal?
+  model      String   @default("deepseek-chat")
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
@@ -791,39 +791,39 @@ enum CategoryType {
 
 // SEO & GEO Analytics
 model SeoGeoSnapshot {
-  id                  String   @id @default(cuid())
-  date                DateTime @db.Date
+  id   String   @id @default(cuid())
+  date DateTime @db.Date
 
   // Google Search Console metrics
-  totalClicks         Int?
-  totalImpressions    Int?
-  avgCtr              Decimal?
-  avgPosition         Decimal?
+  totalClicks      Int?
+  totalImpressions Int?
+  avgCtr           Decimal?
+  avgPosition      Decimal?
 
   // Core Web Vitals (from PageSpeed Insights)
-  lcp                 Decimal? // Largest Contentful Paint (ms)
-  fid                 Decimal? // First Input Delay (ms)
-  cls                 Decimal? // Cumulative Layout Shift
-  fcp                 Decimal? // First Contentful Paint (ms)
-  ttfb                Decimal? // Time to First Byte (ms)
-  performanceScore    Int?     // 0-100 Lighthouse performance
-  seoScore            Int?     // 0-100 Lighthouse SEO
-  accessibilityScore  Int?     // 0-100 Lighthouse accessibility
+  lcp                Decimal? // Largest Contentful Paint (ms)
+  fid                Decimal? // First Input Delay (ms)
+  cls                Decimal? // Cumulative Layout Shift
+  fcp                Decimal? // First Contentful Paint (ms)
+  ttfb               Decimal? // Time to First Byte (ms)
+  performanceScore   Int? // 0-100 Lighthouse performance
+  seoScore           Int? // 0-100 Lighthouse SEO
+  accessibilityScore Int? // 0-100 Lighthouse accessibility
 
   // GEO scores (computed by audit engine)
-  geoOverallScore       Int?     // 0-100
-  structuredDataScore   Int?     // 0-100
-  llmAccessScore        Int?     // 0-100
-  contentQualityScore   Int?     // 0-100
-  technicalSignalsScore Int?     // 0-100
+  geoOverallScore       Int? // 0-100
+  structuredDataScore   Int? // 0-100
+  llmAccessScore        Int? // 0-100
+  contentQualityScore   Int? // 0-100
+  technicalSignalsScore Int? // 0-100
 
   // On-page SEO audit
-  seoAuditScore       Int?     // 0-100
-  issuesFound         Int?
-  auditDetails        Json?
+  seoAuditScore Int? // 0-100
+  issuesFound   Int?
+  auditDetails  Json?
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([date])
   @@index([date])
@@ -840,7 +840,7 @@ model KeywordTracking {
   position    Decimal  @default(0)
   page        String?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([date, keyword])
   @@index([date])
@@ -849,23 +849,23 @@ model KeywordTracking {
 }
 
 model SeoGeoRecommendation {
-  id           String   @id @default(cuid())
-  date         DateTime @db.Date
+  id   String   @id @default(cuid())
+  date DateTime @db.Date
 
   snapshotData Json
 
   summary      String
-  seoInsights  Json     // [{title, description, priority, category}]
-  geoInsights  Json     // [{title, description, priority, category}]
-  actionItems  Json     // [{title, description, priority, effort, impact}]
-  overallGrade String   // A+, A, B+, B, C+, C, D, F
+  seoInsights  Json // [{title, description, priority, category}]
+  geoInsights  Json // [{title, description, priority, category}]
+  actionItems  Json // [{title, description, priority, effort, impact}]
+  overallGrade String // A+, A, B+, B, C+, C, D, F
 
-  tokensUsed   Int?
-  cost         Decimal?
-  model        String   @default("deepseek-chat")
+  tokensUsed Int?
+  cost       Decimal?
+  model      String   @default("deepseek-chat")
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([date])
   @@index([date])
@@ -874,27 +874,27 @@ model SeoGeoRecommendation {
 
 // Blog Posts
 model BlogPost {
-  id              String   @id @default(cuid())
-  title           String
-  slug            String   @unique
-  excerpt         String?
-  content         String   @db.Text
-  category        String?
-  tags            String[] @default([])
-  featuredImage   String?
-  published       Boolean  @default(false)
-  publishedAt     DateTime?
-  authorId        String
+  id             String    @id @default(cuid())
+  title          String
+  slug           String    @unique
+  excerpt        String?
+  content        String    @db.Text
+  category       String?
+  tags           String[]  @default([])
+  featuredImage  String?
+  published      Boolean   @default(false)
+  publishedAt    DateTime?
+  authorId       String
   // SEO fields
-  seoTitle        String?
-  seoDescription  String?
-  seoKeywords     String[] @default([])
-  focusKeyword    String?
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[]  @default([])
+  focusKeyword   String?
   // Metrics
-  wordCount       Int      @default(0)
-  readTime        Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  wordCount      Int       @default(0)
+  readTime       Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
@@ -990,40 +990,40 @@ model SocialMediaAutomation {
 // ═══════════════════════════════════════════════════════
 
 model GamePlayer {
-  id            String    @id @default(cuid())
-  deviceId      String    @unique
-  playerName    String
-  email         String?   @unique
-  platform      String    @default("unknown") // ios, android, web
-  appVersion    String?
-  deviceModel   String?
+  id          String  @id @default(cuid())
+  deviceId    String  @unique
+  playerName  String
+  email       String? @unique
+  platform    String  @default("unknown") // ios, android, web
+  appVersion  String?
+  deviceModel String?
 
   // Economy
-  coins         Int       @default(1000)
-  totalSpent    Decimal   @default(0) // Real money spent (USD)
+  coins      Int     @default(1000)
+  totalSpent Decimal @default(0) // Real money spent (USD)
 
   // Stats
-  totalRaces    Int       @default(0)
-  totalWins     Int       @default(0)
-  currentStreak Int       @default(0)
-  bestStreak    Int       @default(0)
-  dailyStreak   Int       @default(1)
+  totalRaces    Int @default(0)
+  totalWins     Int @default(0)
+  currentStreak Int @default(0)
+  bestStreak    Int @default(0)
+  dailyStreak   Int @default(1)
 
   // Pass
-  passLevel     Int       @default(1)
-  passXp        Int       @default(0)
-  passTier      String    @default("free") // free, premium, plus
+  passLevel Int    @default(1)
+  passXp    Int    @default(0)
+  passTier  String @default("free") // free, premium, plus
 
   // Status
-  status        String    @default("active") // active, banned, flagged, inactive
-  banReason     String?
-  bannedAt      DateTime?
-  bannedBy      String?
-  flagReason    String?
-  lastActiveAt  DateTime  @default(now())
+  status       String    @default("active") // active, banned, flagged, inactive
+  banReason    String?
+  bannedAt     DateTime?
+  bannedBy     String?
+  flagReason   String?
+  lastActiveAt DateTime  @default(now())
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   sessions         GamePlayerSession[]
   raceRecords      RaceRecord[]
@@ -1032,6 +1032,7 @@ model GamePlayer {
   purchases        GamePurchase[]
   seasonProgress   PlayerSeasonProgress[]
   supportTickets   SupportTicket[]
+  messages         GameMessage[]
 
   @@index([status])
   @@index([lastActiveAt])
@@ -1041,13 +1042,13 @@ model GamePlayer {
 }
 
 model GamePlayerSession {
-  id         String   @id @default(cuid())
-  playerId   String
-  token      String   @unique
-  deviceId   String
-  platform   String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  playerId  String
+  token     String   @unique
+  deviceId  String
+  platform  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
   player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
@@ -1056,23 +1057,23 @@ model GamePlayerSession {
 }
 
 model RaceRecord {
-  id              String   @id @default(cuid())
-  playerId        String
-  courseId         String
-  courseTheme      String
-  gameMode        String // quick_race, bet, season, national_race, tournament, playoff
+  id          String @id @default(cuid())
+  playerId    String
+  courseId    String
+  courseTheme String
+  gameMode    String // quick_race, bet, season, national_race, tournament, playoff
 
-  finishOrder     Json   // ["dash","rocky","lucky",...]
+  finishOrder     Json // ["dash","rocky","lucky",...]
   playerPickId    String?
-  betAmount       Int      @default(0)
-  payout          Int      @default(0)
-  playerPlacement Int      @default(0)
-  won             Boolean  @default(false)
+  betAmount       Int     @default(0)
+  payout          Int     @default(0)
+  playerPlacement Int     @default(0)
+  won             Boolean @default(false)
 
-  winnerTime      Decimal?
-  modeContext     Json?
+  winnerTime  Decimal?
+  modeContext Json?
 
-  racedAt         DateTime @default(now())
+  racedAt DateTime @default(now())
 
   player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
@@ -1084,16 +1085,16 @@ model RaceRecord {
 }
 
 model BetRecord {
-  id          String   @id @default(cuid())
-  playerId    String
-  marbleId    String
-  betAmount   Int
-  odds        Decimal
-  payout      Int      @default(0)
-  won         Boolean  @default(false)
-  placement   Int      @default(0)
+  id        String  @id @default(cuid())
+  playerId  String
+  marbleId  String
+  betAmount Int
+  odds      Decimal
+  payout    Int     @default(0)
+  won       Boolean @default(false)
+  placement Int     @default(0)
 
-  placedAt    DateTime @default(now())
+  placedAt DateTime @default(now())
 
   player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
@@ -1104,17 +1105,17 @@ model BetRecord {
 }
 
 model GameCoinTransaction {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   playerId    String
   type        String // bet, payout, daily_bonus, purchase, admin_adjustment, national_entry, tournament_entry
-  amount      Int    // positive = incoming, negative = outgoing
-  balance     Int    // player's balance after this transaction
+  amount      Int // positive = incoming, negative = outgoing
+  balance     Int // player's balance after this transaction
   description String
 
-  adminId     String?
-  adminNote   String?
+  adminId   String?
+  adminNote String?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
@@ -1136,7 +1137,7 @@ model GamePurchase {
   status             String    @default("completed") // completed, refunded, disputed
   refundedAt         DateTime?
 
-  purchasedAt        DateTime  @default(now())
+  purchasedAt DateTime @default(now())
 
   player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
@@ -1147,24 +1148,24 @@ model GamePurchase {
 }
 
 model PlayerSeasonProgress {
-  id                String   @id @default(cuid())
+  id                String  @id @default(cuid())
   playerId          String
   seasonNumber      Int
   mode              String // franchise, bettor
   franchiseMarbleId String?
 
-  racesCompleted    Int      @default(0)
-  betsPlaced        Int      @default(0)
-  betsWon           Int      @default(0)
-  coinsWagered      Int      @default(0)
-  coinsPaid         Int      @default(0)
+  racesCompleted Int @default(0)
+  betsPlaced     Int @default(0)
+  betsWon        Int @default(0)
+  coinsWagered   Int @default(0)
+  coinsPaid      Int @default(0)
 
-  playoffReached    Boolean  @default(false)
-  playoffSeed       Int?
-  playoffResult     String?
+  playoffReached Boolean @default(false)
+  playoffSeed    Int?
+  playoffResult  String?
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
@@ -1174,11 +1175,11 @@ model PlayerSeasonProgress {
 }
 
 model GameConfig {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String
-  label     String
-  group     String // rewards, betting, limits, features
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  label String
+  group String // rewards, betting, limits, features
 
   updatedAt DateTime @updatedAt
   updatedBy String?
@@ -1190,41 +1191,41 @@ model GameKpiEntry {
   id             String   @id @default(cuid())
   weekOf         DateTime @unique // Monday date for this week's data
   dau            Int
-  d1Retention    Float    // percentage (e.g., 35.0)
+  d1Retention    Float // percentage (e.g., 35.0)
   d7Retention    Float
   d30Retention   Float
   sessionsPerDau Float
-  avgSessionSecs Int      // seconds
-  arpdau         Float    // dollars (e.g., 0.25)
-  rating         Float    // e.g., 4.2
-  crashRate      Float    // percentage (e.g., 1.5)
-  notes          String?  // optional weekly notes
+  avgSessionSecs Int // seconds
+  arpdau         Float // dollars (e.g., 0.25)
+  rating         Float // e.g., 4.2
+  crashRate      Float // percentage (e.g., 1.5)
+  notes          String? // optional weekly notes
   createdAt      DateTime @default(now())
 
   @@map("game_kpi_entries")
 }
 
 model SupportTicket {
-  id           String   @id @default(cuid())
-  ticketNumber String   @unique // e.g. TKT-0001
+  id           String  @id @default(cuid())
+  ticketNumber String  @unique // e.g. TKT-0001
   playerId     String
   playerName   String
   playerEmail  String?
-  platform     String   @default("unknown") // ios, android
+  platform     String  @default("unknown") // ios, android
 
-  subject      String
-  category     String   // purchase, deletion, bug, account, refund
-  priority     String   @default("low") // low, high, urgent
-  status       String   @default("open") // open, pending, resolved
+  subject  String
+  category String // purchase, deletion, bug, account, refund
+  priority String @default("low") // low, high, urgent
+  status   String @default("open") // open, pending, resolved
 
-  assignedTo   String?
-  resolution   String?
+  assignedTo String?
+  resolution String?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  resolvedAt   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
 
-  player   GamePlayer     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  player   GamePlayer      @relation(fields: [playerId], references: [id], onDelete: Cascade)
   messages TicketMessage[]
 
   @@index([playerId])
@@ -1238,7 +1239,7 @@ model TicketMessage {
   id         String   @id @default(cuid())
   ticketId   String
   authorName String
-  authorType String   // player, admin
+  authorType String // player, admin
   content    String
   createdAt  DateTime @default(now())
 
@@ -1250,20 +1251,20 @@ model TicketMessage {
 
 // ASO Keyword Rankings (App Store Optimization)
 model AsoKeyword {
-  id             String   @id @default(cuid())
-  store          String   // play | ios
-  keyword        String
-  rank           Int?     // null = not ranking
-  volume         String?  // e.g. "4.8K"
-  difficulty     Int      @default(0) // 0-100
-  kei            Int      @default(0) // Keyword Effectiveness Index
-  topCompetitor  String?
-  relevance      Int      @default(0) // 0-99
-  intent         String   @default("informational") // informational | navigational | transactional
-  delta7d        Int?     // rank change in 7 days
+  id            String  @id @default(cuid())
+  store         String // play | ios
+  keyword       String
+  rank          Int? // null = not ranking
+  volume        String? // e.g. "4.8K"
+  difficulty    Int     @default(0) // 0-100
+  kei           Int     @default(0) // Keyword Effectiveness Index
+  topCompetitor String?
+  relevance     Int     @default(0) // 0-99
+  intent        String  @default("informational") // informational | navigational | transactional
+  delta7d       Int? // rank change in 7 days
 
-  updatedAt      DateTime @updatedAt
-  createdAt      DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
   @@unique([store, keyword])
   @@index([store])
@@ -1273,18 +1274,150 @@ model AsoKeyword {
 // ASO Store Snapshot (auto-fetched app metadata)
 model AsoStoreSnapshot {
   id          String   @id @default(cuid())
-  store       String   // play | ios
+  store       String // play | ios
   rating      Decimal? // e.g. 4.5
   reviews     Int      @default(0)
-  installs    String?  // e.g. "10,000+"
+  installs    String? // e.g. "10,000+"
   version     String?
-  lastUpdated String?  // store listing last updated date
+  lastUpdated String? // store listing last updated date
   genre       String?
   developer   String?
-  rawData     Json?    // full scraper response
+  rawData     Json? // full scraper response
 
-  fetchedAt   DateTime @default(now())
+  fetchedAt DateTime @default(now())
 
   @@index([store, fetchedAt])
   @@map("aso_store_snapshots")
+}
+
+// ═══════════════════════════════════════════════════════ LIVE OPS — Announcements, Promos, Messages, A/B Tests
+
+// In-app announcement banners shown to all players
+model GameAnnouncement {
+  id            String    @id @default(cuid())
+  title         String
+  body          String
+  type          String    @default("info") // info, warning, maintenance, promo
+  active        Boolean   @default(true)
+  priority      Int       @default(0) // higher = shown first
+  startDate     DateTime  @default(now())
+  endDate       DateTime?
+  targetSegment String? // null = all, or "whale", "new", "churned", etc.
+  createdBy     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([active, startDate, endDate])
+  @@map("game_announcements")
+}
+
+// Promo events (double coins, discount weekends, etc.)
+model GamePromo {
+  id         String   @id @default(cuid())
+  name       String
+  type       String // double_coins, bonus_reward, discount, free_entry
+  multiplier Decimal  @default(1.0) // e.g. 2.0 for double coins
+  config     Json? // extra config (e.g. which products, which modes)
+  active     Boolean  @default(true)
+  startDate  DateTime
+  endDate    DateTime
+  createdBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([active, startDate, endDate])
+  @@map("game_promos")
+}
+
+// Direct in-app messages to specific players
+model GameMessage {
+  id            String    @id @default(cuid())
+  playerId      String
+  title         String
+  body          String
+  type          String    @default("info") // info, reward, warning, compensation
+  coinsAttached Int       @default(0) // bonus coins given with the message
+  read          Boolean   @default(false)
+  readAt        DateTime?
+  createdBy     String?
+  createdAt     DateTime  @default(now())
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, read])
+  @@map("game_messages")
+}
+
+// A/B test definitions
+model GameABTest {
+  id           String    @id @default(cuid())
+  name         String
+  description  String?
+  variants     Json // e.g. [{"id":"A","name":"Control","weight":50},{"id":"B","name":"Treatment","weight":50}]
+  targetMetric String // e.g. "conversion", "retention", "revenue"
+  status       String    @default("draft") // draft, running, paused, completed
+  trafficPct   Int       @default(100) // % of eligible users enrolled
+  startDate    DateTime?
+  endDate      DateTime?
+  results      Json? // aggregated results per variant
+  createdBy    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  assignments GameABTestAssignment[]
+
+  @@map("game_ab_tests")
+}
+
+// Player-to-variant assignments for A/B tests
+model GameABTestAssignment {
+  id         String   @id @default(cuid())
+  testId     String
+  playerId   String
+  variant    String // variant id (e.g. "A", "B")
+  assignedAt DateTime @default(now())
+
+  test GameABTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, playerId])
+  @@index([playerId])
+  @@map("game_ab_test_assignments")
+}
+
+// Admin-scheduled tournaments
+model GameTournamentSchedule {
+  id        String    @id @default(cuid())
+  name      String
+  type      String // daily-blitz, weekly-cup, champion-invitational, custom
+  entryFee  Int       @default(0)
+  prizePool Int       @default(0)
+  marbleIds Json? // specific marbles to include, null = all
+  startDate DateTime
+  endDate   DateTime?
+  recurring String? // daily, weekly, null = one-time
+  active    Boolean   @default(true)
+  config    Json? // extra rules: maxEntrants, roundPayouts, etc.
+  createdBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([active, startDate])
+  @@map("game_tournament_schedules")
+}
+
+// API request/error logging for monitoring
+model GameApiLog {
+  id           String   @id @default(cuid())
+  method       String // GET, POST, PUT, DELETE
+  path         String
+  statusCode   Int
+  responseTime Int // ms
+  error        String? // error message if failed
+  playerId     String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([statusCode, createdAt])
+  @@map("game_api_logs")
 }

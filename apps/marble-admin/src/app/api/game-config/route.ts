@@ -1,0 +1,79 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@donkey-ideas/database';
+
+/* ------------------------------------------------------------------ */
+/*  Public endpoint — no auth required. Game app fetches this on load. */
+/* ------------------------------------------------------------------ */
+
+const DEFAULTS: Record<string, any> = {
+  bet_amount_1: 25,
+  bet_amount_2: 100,
+  bet_amount_3: 250,
+  bet_amount_4: 500,
+  daily_reward_1: 200,
+  daily_reward_2: 250,
+  daily_reward_3: 300,
+  daily_reward_4: 350,
+  daily_reward_5: 400,
+  daily_reward_6: 500,
+  daily_reward_7: 750,
+  house_edge: 0.10,
+  max_daily_purchases: 3,
+  max_daily_coins: 25000,
+  tournament_daily_prize: 4600,
+  tournament_weekly_prize: 23000,
+  tournament_champ_prize: 46000,
+  xp_per_level: 1000,
+};
+
+export async function GET() {
+  try {
+    const configs = await prisma.gameConfig.findMany({
+      where: { group: { in: ['rewards', 'betting', 'limits'] } },
+    });
+
+    // Build config map with defaults
+    const map: Record<string, number> = { ...DEFAULTS };
+    for (const c of configs) {
+      map[c.key] = parseFloat(c.value) || 0;
+    }
+
+    return NextResponse.json({
+      betAmounts: [
+        map.bet_amount_1,
+        map.bet_amount_2,
+        map.bet_amount_3,
+        map.bet_amount_4,
+      ],
+      dailyRewards: [
+        map.daily_reward_1,
+        map.daily_reward_2,
+        map.daily_reward_3,
+        map.daily_reward_4,
+        map.daily_reward_5,
+        map.daily_reward_6,
+        map.daily_reward_7,
+      ],
+      houseEdge: map.house_edge,
+      maxDailyPurchases: map.max_daily_purchases,
+      maxDailyCoins: map.max_daily_coins,
+      tournamentPrizes: {
+        daily: map.tournament_daily_prize,
+        weekly: map.tournament_weekly_prize,
+        champion: map.tournament_champ_prize,
+      },
+      xpPerLevel: map.xp_per_level,
+    });
+  } catch (error: any) {
+    // On error, return defaults so the game always works
+    return NextResponse.json({
+      betAmounts: [25, 100, 250, 500],
+      dailyRewards: [200, 250, 300, 350, 400, 500, 750],
+      houseEdge: 0.10,
+      maxDailyPurchases: 3,
+      maxDailyCoins: 25000,
+      tournamentPrizes: { daily: 4600, weekly: 23000, champion: 46000 },
+      xpPerLevel: 1000,
+    });
+  }
+}

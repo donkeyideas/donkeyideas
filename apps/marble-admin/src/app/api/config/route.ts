@@ -22,6 +22,30 @@ const featureDescs: Record<string, string> = {
   feature_sprite_rendering: 'Use Kenney sprite assets vs fallback shapes',
 };
 
+/* ------------------------------------------------------------------ */
+/*  Default economy config — seeded on first access if missing         */
+/* ------------------------------------------------------------------ */
+const SEED_CONFIGS: { key: string; value: string; label: string; group: string }[] = [
+  { key: 'daily_reward_1', value: '200', label: 'Daily Reward (Day 1)', group: 'rewards' },
+  { key: 'daily_reward_2', value: '250', label: 'Daily Reward (Day 2)', group: 'rewards' },
+  { key: 'daily_reward_3', value: '300', label: 'Daily Reward (Day 3)', group: 'rewards' },
+  { key: 'daily_reward_4', value: '350', label: 'Daily Reward (Day 4)', group: 'rewards' },
+  { key: 'daily_reward_5', value: '400', label: 'Daily Reward (Day 5)', group: 'rewards' },
+  { key: 'daily_reward_6', value: '500', label: 'Daily Reward (Day 6)', group: 'rewards' },
+  { key: 'daily_reward_7', value: '750', label: 'Daily Reward (Day 7)', group: 'rewards' },
+  { key: 'xp_per_level', value: '1000', label: 'XP Per Level', group: 'rewards' },
+  { key: 'tournament_daily_prize', value: '4600', label: 'Daily Blitz Prize', group: 'rewards' },
+  { key: 'tournament_weekly_prize', value: '23000', label: 'Weekly Cup Prize', group: 'rewards' },
+  { key: 'tournament_champ_prize', value: '46000', label: 'Champion Prize', group: 'rewards' },
+  { key: 'bet_amount_1', value: '25', label: 'Bet Tier 1', group: 'betting' },
+  { key: 'bet_amount_2', value: '100', label: 'Bet Tier 2', group: 'betting' },
+  { key: 'bet_amount_3', value: '250', label: 'Bet Tier 3', group: 'betting' },
+  { key: 'bet_amount_4', value: '500', label: 'Bet Tier 4', group: 'betting' },
+  { key: 'house_edge', value: '0.10', label: 'House Edge', group: 'betting' },
+  { key: 'max_daily_purchases', value: '3', label: 'Max Daily Purchases', group: 'limits' },
+  { key: 'max_daily_coins', value: '25000', label: 'Max Daily Coins', group: 'limits' },
+];
+
 export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -32,6 +56,14 @@ export async function GET(_request: NextRequest) {
     const user = await getUserByToken(token);
     if (!user) {
       return NextResponse.json({ error: { message: 'Invalid session' } }, { status: 401 });
+    }
+
+    // Auto-seed missing config keys
+    const existing = await prisma.gameConfig.findMany({ select: { key: true } });
+    const existingKeys = new Set(existing.map((e) => e.key));
+    const toCreate = SEED_CONFIGS.filter((s) => !existingKeys.has(s.key));
+    if (toCreate.length > 0) {
+      await prisma.gameConfig.createMany({ data: toCreate, skipDuplicates: true });
     }
 
     const configs = await prisma.gameConfig.findMany({ orderBy: { group: 'asc' } });

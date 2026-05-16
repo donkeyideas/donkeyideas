@@ -327,6 +327,140 @@ export async function GET(_request: NextRequest) {
       });
     }
 
+    // --- Engagement & Health Metrics ---
+    const twoWeeksAgo = new Date(todayStart);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+    const [
+      spectatorRaces,
+      totalRacesWeek,
+      heavyBettors,
+      activePlayersToday,
+      stuckRichCount,
+      totalActiveLastWeek,
+      activeThisWeekCount,
+      playersWithMultiplePurchases,
+      totalPayersEver,
+      racesThisWeekForVelocity,
+      racesLastWeekForVelocity,
+      activePlayersThisWeekForVelocity,
+      activePlayersLastWeekForVelocity,
+    ] = await Promise.all([
+      // spectatorRatio: races with betAmount=0 (quick_race mode) in last 7 days
+      prisma.raceRecord.count({
+        where: { racedAt: { gte: weekStart }, gameMode: 'quick_race' },
+      }),
+      // total races in last 7 days (already have racesThisWeek but need fresh for ratio)
+      prisma.raceRecord.count({
+        where: { racedAt: { gte: weekStart } },
+      }),
+      // betLimitHitRate: players with 10+ bets today
+      prisma.betRecord.groupBy({
+        by: ['playerId'],
+        where: { placedAt: { gte: todayStart } },
+        having: { id: { _count: { gte: 10 } } },
+      }),
+      // active players today for betLimitHitRate denominator
+      prisma.gamePlayer.count({
+        where: { lastActiveAt: { gte: todayStart } },
+      }),
+      // stuckRichPlayers: 50000+ coins, 0 bets in last 7 days
+      prisma.$queryRawUnsafe<{ count: bigint }[]>(
+        `SELECT COUNT(*) as count FROM game_players gp
+         WHERE gp.coins >= 50000
+         AND NOT EXISTS (
+           SELECT 1 FROM bet_records br
+           WHERE br."playerId" = gp.id
+           AND br."placedAt" >= $1
+         )`,
+        weekStart,
+      ),
+      // churnRate: distinct players who raced last week (7-14 days ago)
+      prisma.$queryRawUnsafe<{ count: bigint }[]>(
+        `SELECT COUNT(DISTINCT "playerId") as count FROM race_records
+         WHERE "racedAt" >= $1 AND "racedAt" < $2`,
+        twoWeeksAgo,
+        weekStart,
+      ),
+      // players who had activity last week AND also have activity this week
+      // Use race_records to check for activity in both weeks (lastActiveAt only stores the latest timestamp)
+      prisma.$queryRawUnsafe<{ count: bigint }[]>(
+        `SELECT COUNT(DISTINCT rr1."playerId") as count
+         FROM race_records rr1
+         WHERE rr1."racedAt" >= $1 AND rr1."racedAt" < $2
+         AND EXISTS (
+           SELECT 1 FROM race_records rr2
+           WHERE rr2."playerId" = rr1."playerId"
+           AND rr2."racedAt" >= $2
+         )`,
+        twoWeeksAgo,
+        weekStart,
+      ),
+      // purchaseRepeatRate: payers with 2+ purchases
+      prisma.$queryRawUnsafe<{ count: bigint }[]>(
+        `SELECT COUNT(*) as count FROM (
+           SELECT "playerId" FROM game_purchases
+           WHERE status = 'completed'
+           GROUP BY "playerId"
+           HAVING COUNT(*) >= 2
+         ) sub`,
+      ),
+      // total payers ever
+      prisma.gamePlayer.count({ where: { totalSpent: { gt: 0 } } }),
+      // engagementVelocity: races this week
+      prisma.raceRecord.count({ where: { racedAt: { gte: weekStart } } }),
+      // races last week
+      prisma.raceRecord.count({ where: { racedAt: { gte: twoWeeksAgo, lt: weekStart } } }),
+      // active players this week
+      prisma.gamePlayer.count({ where: { lastActiveAt: { gte: weekStart } } }),
+      // active players last week
+      prisma.gamePlayer.count({ where: { lastActiveAt: { gte: twoWeeksAgo, lt: weekStart } } }),
+    ]);
+
+    // Compute derived engagement metrics
+    const spectatorRatio = totalRacesWeek > 0
+      ? Math.round((spectatorRaces / totalRacesWeek) * 100 * 10) / 10
+      : 0;
+
+    const betLimitHitRate = activePlayersToday > 0
+      ? Math.round((heavyBettors.length / activePlayersToday) * 100 * 10) / 10
+      : 0;
+
+    const stuckRichRaw = Number((stuckRichCount as any)[0]?.count ?? 0);
+    const stuckRichPct = totalPlayersCount > 0
+      ? Math.round((stuckRichRaw / totalPlayersCount) * 100 * 10) / 10
+      : 0;
+    const stuckRichPlayers = { count: stuckRichRaw, pct: stuckRichPct };
+
+    // churnRate: % of last-week actives who did NOT come back this week
+    // totalActiveLastWeek = distinct players who raced 7-14 days ago
+    // activeThisWeekCount raw query = those from last week who also raced this week
+    const totalActiveLastWeekCount = Number((totalActiveLastWeek as any)[0]?.count ?? 0);
+    const returnedCount = Number((activeThisWeekCount as any)[0]?.count ?? 0);
+    const churnRate = totalActiveLastWeekCount > 0
+      ? Math.round(((totalActiveLastWeekCount - returnedCount) / totalActiveLastWeekCount) * 100 * 10) / 10
+      : 0;
+
+    const repeatPurchasersCount = Number((playersWithMultiplePurchases as any)[0]?.count ?? 0);
+    const purchaseRepeatRate = totalPayersEver > 0
+      ? Math.round((repeatPurchasersCount / totalPayersEver) * 100 * 10) / 10
+      : 0;
+
+    const velocityThisWeek = activePlayersThisWeekForVelocity > 0
+      ? Math.round((racesThisWeekForVelocity / activePlayersThisWeekForVelocity) * 100) / 100
+      : 0;
+    const velocityLastWeek = activePlayersLastWeekForVelocity > 0
+      ? Math.round((racesLastWeekForVelocity / activePlayersLastWeekForVelocity) * 100) / 100
+      : 0;
+    const velocityChange = velocityLastWeek > 0
+      ? Math.round(((velocityThisWeek - velocityLastWeek) / velocityLastWeek) * 100 * 10) / 10
+      : (velocityThisWeek > 0 ? 100 : 0);
+    const engagementVelocity = {
+      thisWeek: velocityThisWeek,
+      lastWeek: velocityLastWeek,
+      change: velocityChange,
+    };
+
     return NextResponse.json({
       marbles: marbleWinRates,
       marbleWinRates,
@@ -353,6 +487,12 @@ export async function GET(_request: NextRequest) {
       funnel,
       segments,
       revenueWeeks,
+      spectatorRatio,
+      betLimitHitRate,
+      stuckRichPlayers,
+      churnRate,
+      purchaseRepeatRate,
+      engagementVelocity,
     });
   } catch (error: any) {
     console.error('Admin analytics error:', error);
