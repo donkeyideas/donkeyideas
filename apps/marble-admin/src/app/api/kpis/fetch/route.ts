@@ -35,34 +35,18 @@ async function discoverPropertyId(): Promise<string> {
     return process.env.GA4_PROPERTY_ID;
   }
 
-  // Auto-discover from the service account's project
+  // Auto-discover from the Firebase project
+  const credentials = getCredentials();
+  const projectId = credentials.project_id; // "donkey-marble-racing"
   const adminClient = getAdminClient();
+
   const [properties] = await adminClient.listProperties({
-    filter: `parent:accounts/-`,
+    filter: `firebase_project:${projectId}`,
     showDeleted: false,
   });
 
-  // Find property linked to our Firebase project
-  const credentials = getCredentials();
-  const projectId = credentials.project_id; // "donkey-marble-racing"
-
-  for (const prop of properties || []) {
-    if (prop.name) {
-      // Check if this property has a Firebase link to our project
-      try {
-        const [links] = await adminClient.listFirebaseLinks({
-          parent: prop.name,
-        });
-        for (const link of links || []) {
-          if (link.project && link.project.includes(projectId)) {
-            // Extract property ID from "properties/123456789"
-            return prop.name.replace('properties/', '');
-          }
-        }
-      } catch {
-        // Skip properties we don't have access to
-      }
-    }
+  if (properties && properties.length > 0 && properties[0].name) {
+    return properties[0].name.replace('properties/', '');
   }
 
   throw new Error(
