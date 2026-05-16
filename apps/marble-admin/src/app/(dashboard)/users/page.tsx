@@ -348,11 +348,52 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-5">
+      {/* ============ KPI CARDS ============ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Users */}
+        <div className="bg-white/5 border-2 border-marble-blue/20 rounded-2xl p-5 relative overflow-hidden">
+          <div className="absolute -top-4 -right-4 w-[60px] h-[60px] rounded-full bg-marble-blue opacity-[0.08]" />
+          <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">Total Users</div>
+          <div className="font-heading text-[32px] tracking-wide leading-none text-marble-blue">{fmtNum(total)}</div>
+          <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">
+            All registered players
+          </div>
+        </div>
+
+        {/* Paying Users */}
+        <div className="bg-white/5 border-2 border-marble-green/20 rounded-2xl p-5 relative overflow-hidden">
+          <div className="absolute -top-4 -right-4 w-[60px] h-[60px] rounded-full bg-marble-green opacity-[0.08]" />
+          <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">Paying Users</div>
+          <div className="font-heading text-[32px] tracking-wide leading-none text-marble-green">{fmtNum(payingCount)}</div>
+          <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">
+            {total > 0 ? ((payingCount / total) * 100).toFixed(1) : 0}% conversion
+          </div>
+        </div>
+
+        {/* Free Users */}
+        <div className="bg-white/5 border-2 border-gold/20 rounded-2xl p-5 relative overflow-hidden">
+          <div className="absolute -top-4 -right-4 w-[60px] h-[60px] rounded-full bg-gold opacity-[0.08]" />
+          <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">Free Users</div>
+          <div className="font-heading text-[32px] tracking-wide leading-none text-gold">{fmtNum(total - payingCount - bannedCount)}</div>
+          <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">
+            Non-paying active
+          </div>
+        </div>
+
+        {/* Banned */}
+        <div className="bg-white/5 border-2 border-marble-red/20 rounded-2xl p-5 relative overflow-hidden">
+          <div className="absolute -top-4 -right-4 w-[60px] h-[60px] rounded-full bg-marble-red opacity-[0.08]" />
+          <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">Banned</div>
+          <div className="font-heading text-[32px] tracking-wide leading-none text-marble-red">{fmtNum(bannedCount)}</div>
+          <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">
+            Suspended accounts
+          </div>
+        </div>
+      </div>
+
       {/* ============ HEADER ROW ============ */}
       <div className="flex items-center justify-between">
-        <p className="text-xs text-white/40">
-          {fmtNum(total)} total users &bull; {fmtNum(payingCount)} paying &bull; {bannedCount} banned
-        </p>
+        <div />
         <div className="flex items-center gap-2">
           <button className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors">
             Export CSV

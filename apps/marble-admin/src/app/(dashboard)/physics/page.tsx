@@ -677,10 +677,15 @@ export default function PhysicsPage() {
 
 function KpiCard({ color, label, value, sub }: { color: string; label: string; value: string; sub?: string }) {
   const borderColor =
-    color === 'blue' ? 'border-marble-blue' :
-    color === 'gold' ? 'border-gold' :
-    color === 'green' ? 'border-marble-green' :
-    'border-marble-red';
+    color === 'blue' ? 'border-marble-blue/20' :
+    color === 'gold' ? 'border-gold/20' :
+    color === 'green' ? 'border-marble-green/20' :
+    'border-marble-red/20';
+  const bgColor =
+    color === 'blue' ? 'bg-marble-blue' :
+    color === 'gold' ? 'bg-gold' :
+    color === 'green' ? 'bg-marble-green' :
+    'bg-marble-red';
   const textColor =
     color === 'blue' ? 'text-marble-blue' :
     color === 'gold' ? 'text-gold' :
@@ -688,10 +693,11 @@ function KpiCard({ color, label, value, sub }: { color: string; label: string; v
     'text-marble-red';
 
   return (
-    <div className={`bg-white/5 rounded-2xl p-5 border-l-4 ${borderColor}`}>
-      <div className="text-[11px] text-white/40 uppercase tracking-wider">{label}</div>
-      <div className={`text-2xl font-heading mt-1 ${textColor}`}>{value}</div>
-      {sub && <div className="text-[10px] text-white/30 mt-0.5">{sub}</div>}
+    <div className={`bg-white/5 border-2 ${borderColor} rounded-2xl p-5 relative overflow-hidden`}>
+      <div className={`absolute -top-4 -right-4 w-[60px] h-[60px] rounded-full ${bgColor} opacity-[0.08]`} />
+      <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">{label}</div>
+      <div className={`font-heading text-[32px] tracking-wide leading-none ${textColor}`}>{value}</div>
+      {sub && <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">{sub}</div>}
     </div>
   );
 }

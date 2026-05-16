@@ -171,23 +171,17 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        {/* Daily Active Users */}
+        {/* Total Users */}
         <div className="bg-white/5 border-2 border-marble-blue/20 rounded-2xl p-5 relative overflow-hidden">
           <div className="absolute -top-4 -right-4 w-[60px] h-[60px] rounded-full bg-marble-blue opacity-[0.08]" />
           <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">
-            Daily Active Users
+            Total Users
           </div>
           <div className="font-heading text-[32px] tracking-wide leading-none text-marble-blue">
-            {dau.toLocaleString()}
+            {data.players.total.toLocaleString()}
           </div>
-          <div
-            className={`inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg ${
-              dauTrend.positive
-                ? 'bg-marble-green/15 text-marble-green'
-                : 'bg-marble-red/15 text-marble-red'
-            }`}
-          >
-            {dauTrend.text} vs yesterday
+          <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">
+            {dau.toLocaleString()} active today
           </div>
         </div>
 
