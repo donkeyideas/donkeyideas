@@ -357,7 +357,7 @@ export async function GET(_request: NextRequest) {
       // betLimitHitRate: players with 10+ bets today
       prisma.$queryRawUnsafe<{ count: bigint }[]>(
         `SELECT COUNT(*) as count FROM (
-          SELECT "playerId" FROM bet_records
+          SELECT "playerId" FROM game_bet_records
           WHERE "placedAt" >= $1
           GROUP BY "playerId"
           HAVING COUNT(*) >= 10
@@ -373,7 +373,7 @@ export async function GET(_request: NextRequest) {
         `SELECT COUNT(*) as count FROM game_players gp
          WHERE gp.coins >= 50000
          AND NOT EXISTS (
-           SELECT 1 FROM bet_records br
+           SELECT 1 FROM game_bet_records br
            WHERE br."playerId" = gp.id
            AND br."placedAt" >= $1
          )`,
@@ -381,7 +381,7 @@ export async function GET(_request: NextRequest) {
       ),
       // churnRate: distinct players who raced last week (7-14 days ago)
       prisma.$queryRawUnsafe<{ count: bigint }[]>(
-        `SELECT COUNT(DISTINCT "playerId") as count FROM race_records
+        `SELECT COUNT(DISTINCT "playerId") as count FROM game_race_records
          WHERE "racedAt" >= $1 AND "racedAt" < $2`,
         twoWeeksAgo,
         weekStart,
@@ -390,10 +390,10 @@ export async function GET(_request: NextRequest) {
       // Use race_records to check for activity in both weeks (lastActiveAt only stores the latest timestamp)
       prisma.$queryRawUnsafe<{ count: bigint }[]>(
         `SELECT COUNT(DISTINCT rr1."playerId") as count
-         FROM race_records rr1
+         FROM game_race_records rr1
          WHERE rr1."racedAt" >= $1 AND rr1."racedAt" < $2
          AND EXISTS (
-           SELECT 1 FROM race_records rr2
+           SELECT 1 FROM game_race_records rr2
            WHERE rr2."playerId" = rr1."playerId"
            AND rr2."racedAt" >= $2
          )`,
@@ -404,7 +404,7 @@ export async function GET(_request: NextRequest) {
       prisma.$queryRawUnsafe<{ count: bigint }[]>(
         `SELECT COUNT(*) as count FROM (
            SELECT "playerId" FROM game_purchases
-           WHERE status = 'completed'
+           WHERE "status" = 'completed'
            GROUP BY "playerId"
            HAVING COUNT(*) >= 2
          ) sub`,

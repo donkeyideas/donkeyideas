@@ -878,7 +878,7 @@ export default function LiveOpsPage() {
               <div key={toggle.key} className="flex items-center justify-between py-3.5 border-b border-white/[0.06] last:border-b-0">
                 <div>
                   <div className="font-medium text-[13px] text-marble-red">{toggle.label}</div>
-                  <div className="text-[11px] text-white/35 mt-0.5">{toggle.key}</div>
+                  <div className="text-[11px] text-white/35 mt-0.5">{toggle.value ? 'Active — affects live game' : 'Inactive'}</div>
                 </div>
                 <div
                   className={`w-11 h-6 rounded-xl relative cursor-pointer transition-colors ${toggle.value ? 'bg-marble-red' : 'bg-white/15'}`}
