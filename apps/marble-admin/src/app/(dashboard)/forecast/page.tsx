@@ -193,11 +193,14 @@ export default function ForecastPage() {
             <div className="flex items-center gap-2">
               <input
                 type="month"
+                aria-label="Forecast month"
+                placeholder="YYYY-MM"
                 value={addValue}
                 onChange={(e) => setAddValue(e.target.value)}
                 className="px-3 py-1.5 rounded-lg text-xs bg-white/5 border-2 border-white/10 text-white focus:outline-none focus:border-gold/40"
               />
               <button
+                type="button"
                 onClick={handleAddMonth}
                 disabled={!addValue}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 disabled:opacity-40 transition-colors"
@@ -205,6 +208,7 @@ export default function ForecastPage() {
                 Add
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setAddOpen(false);
                   setAddValue('');
@@ -216,6 +220,7 @@ export default function ForecastPage() {
             </div>
           ) : (
             <button
+              type="button"
               onClick={() => setAddOpen(true)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors"
             >
@@ -223,6 +228,7 @@ export default function ForecastPage() {
             </button>
           )}
           <button
+            type="button"
             onClick={handleSave}
             disabled={!dirty || saveMutation.isPending}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -313,12 +319,16 @@ export default function ForecastPage() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <input
-                        type="number"
-                        min={0}
-                        value={inputValue}
-                        onChange={(e) => handleEdit(r.month, e.target.value)}
+                        type="text"
+                        inputMode="numeric"
+                        value={
+                          inputValue === '' || inputValue == null
+                            ? ''
+                            : Number(inputValue).toLocaleString('en-US')
+                        }
+                        onChange={(e) => handleEdit(r.month, e.target.value.replace(/[^\d]/g, ''))}
                         placeholder="Set"
-                        className="w-20 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white text-sm text-right font-semibold focus:outline-none focus:border-gold/50 focus:bg-gold/[0.08] placeholder:text-white/25 placeholder:italic placeholder:font-normal"
+                        className="w-24 px-2 py-1 rounded-md bg-white/5 border border-white/10 text-white text-sm text-right font-semibold focus:outline-none focus:border-gold/50 focus:bg-gold/[0.08] placeholder:text-white/25 placeholder:italic placeholder:font-normal"
                       />
                     </td>
                     <td className="px-4 py-3 text-sm text-white/60">
