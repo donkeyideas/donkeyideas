@@ -60,8 +60,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const betAmount = Math.max(0, Math.floor(Number(rawBet ?? 0)));
-    const claimedPayout = Math.max(0, Math.floor(Number(rawPayout ?? 0)));
+    // Quick Race has no betting in the UI. Force-zero economic values
+    // server-side so a tampered or buggy client can't leak the global
+    // betAmount default (100) into Quick Race records.
+    const isQuickRace = gameMode === 'quick_race';
+    const betAmount = isQuickRace ? 0 : Math.max(0, Math.floor(Number(rawBet ?? 0)));
+    const claimedPayout = isQuickRace ? 0 : Math.max(0, Math.floor(Number(rawPayout ?? 0)));
 
     // Economic validation
     if (betAmount > MAX_BET_AMOUNT) {
