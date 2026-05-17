@@ -1107,10 +1107,14 @@ model BetRecord {
 model GameCoinTransaction {
   id          String @id @default(cuid())
   playerId    String
-  type        String // bet, payout, daily_bonus, purchase, admin_adjustment, national_entry, tournament_entry
+  type        String // bet, payout, daily_bonus, purchase, admin_adjustment, national_entry, tournament_entry, claim_achievement, claim_challenge, settle_bet
   amount      Int // positive = incoming, negative = outgoing
   balance     Int // player's balance after this transaction
   description String
+
+  // Client-generated UUID for replay-safe writes. Server enforces uniqueness
+  // so retried requests don't double-grant. Null for legacy / admin entries.
+  idempotencyKey String? @unique
 
   adminId   String?
   adminNote String?
