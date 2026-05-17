@@ -7,12 +7,12 @@ import { cookies } from 'next/headers';
 /*  Static product catalog (always shown in pricing matrix)            */
 /* ------------------------------------------------------------------ */
 const PRODUCT_CATALOG = [
-  { productId: 'coin_pack_starter', productName: 'Starter Pack (1,000 coins)', unitPrice: 0.99, coins: 1000 },
-  { productId: 'coin_pack_popular', productName: 'Popular Pack (6,000 coins)', unitPrice: 4.99, coins: 6000 },
-  { productId: 'coin_pack_big', productName: 'Big Spender (15,000 coins)', unitPrice: 9.99, coins: 15000 },
-  { productId: 'coin_pack_whale', productName: 'Whale Pack (40,000 coins)', unitPrice: 24.99, coins: 40000 },
-  { productId: 'season_pass_premium', productName: 'Season Pass — Premium', unitPrice: 9.99, coins: 0 },
-  { productId: 'season_pass_plus', productName: 'Season Pass — Plus', unitPrice: 24.99, coins: 0 },
+  { productId: 'starter',             productName: 'Starter Pack (1,000 coins)',  unitPrice: 0.99,  coins: 1000 },
+  { productId: 'popular',             productName: 'Popular Pack (6,000 coins)',  unitPrice: 4.99,  coins: 6000 },
+  { productId: 'big',                 productName: 'Big Spender (15,000 coins)',  unitPrice: 9.99,  coins: 15000 },
+  { productId: 'whale',               productName: 'Whale Pack (40,000 coins)',   unitPrice: 24.99, coins: 40000 },
+  { productId: 'season_pass_premium', productName: 'Season Pass — Premium',       unitPrice: 9.99,  coins: 0 },
+  { productId: 'season_pass_plus',    productName: 'Season Pass — Plus',          unitPrice: 24.99, coins: 0 },
 ];
 
 /* ------------------------------------------------------------------ */

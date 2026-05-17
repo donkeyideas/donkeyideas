@@ -6,13 +6,15 @@ import { verifyPurchase } from '@/lib/iap-verify';
 // Allowed product IDs and their canonical USD price + coin grants.
 // Server-trusted prices — we ignore whatever the client sends and use
 // these values, so a tampered client cannot inflate priceUsd.
+// These IDs must match COIN_PACKS in the game client (state/gameStore.ts)
+// and the PRODUCT_CATALOG in marble-admin/api/financials.
 const PRODUCTS: Record<string, { name: string; priceUsd: number; coinsGranted: number }> = {
-  coins_small:        { name: 'Coin Pack (Small)',  priceUsd: 1.99,  coinsGranted: 2000 },
-  coins_medium:       { name: 'Coin Pack (Medium)', priceUsd: 4.99,  coinsGranted: 6000 },
-  coins_large:        { name: 'Coin Pack (Large)',  priceUsd: 9.99,  coinsGranted: 15000 },
-  coins_xl:           { name: 'Coin Pack (XL)',     priceUsd: 19.99, coinsGranted: 35000 },
-  season_pass:        { name: 'Season Pass',        priceUsd: 4.99,  coinsGranted: 0 },
-  season_pass_premium:{ name: 'Season Pass Plus',   priceUsd: 9.99,  coinsGranted: 0 },
+  starter:             { name: 'Starter Pack (1,000 coins)', priceUsd: 0.99,  coinsGranted: 1000 },
+  popular:             { name: 'Popular Pack (6,000 coins)', priceUsd: 4.99,  coinsGranted: 6000 },
+  big:                 { name: 'Big Spender (15,000 coins)', priceUsd: 9.99,  coinsGranted: 15000 },
+  whale:               { name: 'Whale Pack (40,000 coins)',  priceUsd: 24.99, coinsGranted: 40000 },
+  season_pass_premium: { name: 'Season Pass — Premium',      priceUsd: 9.99,  coinsGranted: 0 },
+  season_pass_plus:    { name: 'Season Pass — Plus',         priceUsd: 24.99, coinsGranted: 0 },
 };
 
 export async function POST(request: NextRequest) {
