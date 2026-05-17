@@ -19,6 +19,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getGamePlayerByToken, extractGameToken } from '@/lib/game-auth';
+import { resolveChallenge } from '@/lib/marble-racing/challenges';
+import {
+  TOURNAMENT_CONFIGS,
+  NATIONAL_EVENTS,
+  CUSTOM_TRACK_ENTRY_FEE,
+  nationalPayoutForPlacement,
+} from '@/lib/marble-racing/economy-config';
 
 type Action =
   | 'claim_daily'
@@ -104,21 +111,31 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'claim_daily':
         return claimDaily(player.id, idempotencyKey, payload);
-
-      // Stubs — implemented in subsequent phases
-      case 'claim_achievement':
       case 'claim_challenge':
+        return claimChallenge(player.id, idempotencyKey, payload);
       case 'place_bet':
+        return placeBet(player.id, idempotencyKey, payload);
       case 'settle_bet':
+        return settleBet(player.id, idempotencyKey, payload);
       case 'tournament_entry':
-      case 'tournament_payout':
-      case 'playoff_payout':
+        return chargeEntryFee(player.id, idempotencyKey, payload, 'tournament_entry');
       case 'national_entry':
-      case 'national_payout':
+        return chargeEntryFee(player.id, idempotencyKey, payload, 'national_entry');
       case 'custom_track_entry':
+        return chargeEntryFee(player.id, idempotencyKey, payload, 'custom_track_entry');
+      case 'tournament_payout':
+        return creditPayout(player.id, idempotencyKey, payload, 'tournament_payout');
+      case 'national_payout':
+        return creditPayout(player.id, idempotencyKey, payload, 'national_payout');
+      case 'playoff_payout':
+        return creditPayout(player.id, idempotencyKey, payload, 'playoff_payout');
+
+      case 'claim_achievement':
+        // Achievements in this game don't grant coins — they unlock skins
+        // and badges, which are state-only. No-op endpoint.
         return NextResponse.json(
-          { error: { message: `Action ${action} not yet implemented` } },
-          { status: 501 },
+          { error: { message: 'Achievements do not grant coins; no transaction needed' } },
+          { status: 400 },
         );
 
       default:
@@ -225,5 +242,395 @@ async function claimDaily(
       createdAt: result.createdAt.toISOString(),
     },
     result: { streak: newStreak, bonus },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// claim_challenge — server resolves the challenge ID to its canonical reward
+// (no client-supplied reward value is trusted), then dedupes via the natural
+// idempotency key (claim_challenge:{playerId}:{challengeId}).
+// ─────────────────────────────────────────────────────────────────────────
+async function claimChallenge(
+  playerId: string,
+  idempotencyKey: string,
+  payload: Record<string, unknown>,
+): Promise<NextResponse> {
+  const challengeId = typeof payload.challengeId === 'string' ? payload.challengeId : null;
+  if (!challengeId) {
+    return NextResponse.json({ error: { message: 'challengeId required' } }, { status: 400 });
+  }
+
+  const canonical = resolveChallenge(challengeId);
+  if (!canonical) {
+    return NextResponse.json(
+      { error: { message: `Unknown or expired challenge: ${challengeId}` } },
+      { status: 400 },
+    );
+  }
+
+  // Hard guard against reward inflation: cap at 5000 even if config drifts.
+  const reward = Math.min(canonical.reward, 5000);
+
+  const player = await prisma.gamePlayer.findUnique({
+    where: { id: playerId },
+    select: { coins: true },
+  });
+  if (!player) {
+    return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
+  }
+
+  const newBalance = player.coins + reward;
+  const result = await prisma.$transaction(async (tx) => {
+    const txRow = await tx.gameCoinTransaction.create({
+      data: {
+        playerId,
+        type: 'claim_challenge',
+        amount: reward,
+        balance: newBalance,
+        description: `Challenge: ${canonical.description}`,
+        idempotencyKey,
+      },
+      select: { id: true, type: true, amount: true, createdAt: true },
+    });
+    await tx.gamePlayer.update({
+      where: { id: playerId },
+      data: { coins: { increment: reward }, lastActiveAt: new Date() },
+    });
+    return txRow;
+  });
+
+  return NextResponse.json({
+    success: true,
+    balance: newBalance,
+    transaction: {
+      id: result.id,
+      type: result.type,
+      amount: result.amount,
+      createdAt: result.createdAt.toISOString(),
+    },
+    result: { challengeId, reward, description: canonical.description },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Entry fees (debit) — tournament_entry, national_entry, custom_track_entry
+// Server validates the entry fee matches the canonical config, balance is
+// sufficient, then debits.
+// ─────────────────────────────────────────────────────────────────────────
+async function chargeEntryFee(
+  playerId: string,
+  idempotencyKey: string,
+  payload: Record<string, unknown>,
+  kind: 'tournament_entry' | 'national_entry' | 'custom_track_entry',
+): Promise<NextResponse> {
+  let fee = 0;
+  let description = '';
+
+  if (kind === 'tournament_entry') {
+    const id = typeof payload.tournamentId === 'string' ? payload.tournamentId : '';
+    const cfg = TOURNAMENT_CONFIGS[id];
+    if (!cfg) {
+      return NextResponse.json({ error: { message: `Unknown tournament: ${id}` } }, { status: 400 });
+    }
+    fee = cfg.entryFee;
+    description = `${cfg.name} entry fee`;
+  } else if (kind === 'national_entry') {
+    const id = typeof payload.eventId === 'string' ? payload.eventId : '';
+    const cfg = NATIONAL_EVENTS[id];
+    if (!cfg) {
+      return NextResponse.json({ error: { message: `Unknown national event: ${id}` } }, { status: 400 });
+    }
+    fee = cfg.entryFee;
+    description = `${cfg.name} entry fee`;
+  } else {
+    fee = CUSTOM_TRACK_ENTRY_FEE;
+    description = 'Custom track entry fee';
+  }
+
+  const player = await prisma.gamePlayer.findUnique({
+    where: { id: playerId },
+    select: { coins: true },
+  });
+  if (!player) {
+    return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
+  }
+  if (player.coins < fee) {
+    return NextResponse.json(
+      { error: { message: `Insufficient balance: ${player.coins} < ${fee}` } },
+      { status: 402 },
+    );
+  }
+
+  const newBalance = player.coins - fee;
+  const result = await prisma.$transaction(async (tx) => {
+    const txRow = await tx.gameCoinTransaction.create({
+      data: {
+        playerId,
+        type: kind,
+        amount: -fee,
+        balance: newBalance,
+        description,
+        idempotencyKey,
+      },
+      select: { id: true, type: true, amount: true, createdAt: true },
+    });
+    await tx.gamePlayer.update({
+      where: { id: playerId },
+      data: { coins: { decrement: fee }, lastActiveAt: new Date() },
+    });
+    return txRow;
+  });
+
+  return NextResponse.json({
+    success: true,
+    balance: newBalance,
+    transaction: {
+      id: result.id,
+      type: result.type,
+      amount: result.amount,
+      createdAt: result.createdAt.toISOString(),
+    },
+    result: { fee },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Payouts (credit) — tournament_payout, national_payout, playoff_payout
+// Server validates the payout amount against canonical max for that event.
+// Caps prevent client-claimed inflated payouts.
+// ─────────────────────────────────────────────────────────────────────────
+async function creditPayout(
+  playerId: string,
+  idempotencyKey: string,
+  payload: Record<string, unknown>,
+  kind: 'tournament_payout' | 'national_payout' | 'playoff_payout',
+): Promise<NextResponse> {
+  let payout = 0;
+  let description = '';
+
+  if (kind === 'tournament_payout') {
+    const id = typeof payload.tournamentId === 'string' ? payload.tournamentId : '';
+    const cfg = TOURNAMENT_CONFIGS[id];
+    if (!cfg) {
+      return NextResponse.json({ error: { message: `Unknown tournament: ${id}` } }, { status: 400 });
+    }
+    const claimed = Number(payload.amount ?? 0);
+    if (claimed <= 0 || claimed > cfg.prizePool) {
+      return NextResponse.json(
+        { error: { message: `Payout out of range (0..${cfg.prizePool}): ${claimed}` } },
+        { status: 400 },
+      );
+    }
+    payout = Math.round(claimed);
+    description = `${cfg.name} payout`;
+  } else if (kind === 'national_payout') {
+    const id = typeof payload.eventId === 'string' ? payload.eventId : '';
+    const placement = Number(payload.placement ?? 0);
+    const cfg = NATIONAL_EVENTS[id];
+    if (!cfg) {
+      return NextResponse.json({ error: { message: `Unknown national event: ${id}` } }, { status: 400 });
+    }
+    payout = nationalPayoutForPlacement(id, placement);
+    if (payout <= 0) {
+      return NextResponse.json(
+        { error: { message: `No payout for placement ${placement}` } },
+        { status: 400 },
+      );
+    }
+    description = `${cfg.name} payout (placement ${placement})`;
+  } else {
+    // playoff_payout — until Phase 4 server-side playoffs, validate range only.
+    const claimed = Number(payload.amount ?? 0);
+    if (claimed <= 0 || claimed > 50000) {
+      return NextResponse.json(
+        { error: { message: `Playoff payout out of range (0..50000): ${claimed}` } },
+        { status: 400 },
+      );
+    }
+    payout = Math.round(claimed);
+    description = 'Playoff payout';
+  }
+
+  const player = await prisma.gamePlayer.findUnique({
+    where: { id: playerId },
+    select: { coins: true },
+  });
+  if (!player) {
+    return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
+  }
+
+  const newBalance = player.coins + payout;
+  const result = await prisma.$transaction(async (tx) => {
+    const txRow = await tx.gameCoinTransaction.create({
+      data: {
+        playerId,
+        type: kind,
+        amount: payout,
+        balance: newBalance,
+        description,
+        idempotencyKey,
+      },
+      select: { id: true, type: true, amount: true, createdAt: true },
+    });
+    await tx.gamePlayer.update({
+      where: { id: playerId },
+      data: { coins: { increment: payout }, lastActiveAt: new Date() },
+    });
+    return txRow;
+  });
+
+  return NextResponse.json({
+    success: true,
+    balance: newBalance,
+    transaction: {
+      id: result.id,
+      type: result.type,
+      amount: result.amount,
+      createdAt: result.createdAt.toISOString(),
+    },
+    result: { payout },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// place_bet — debits the bet amount up front, returns server-issued bet id.
+// settle_bet — credits the payout. Will be replaced by Phase 4 atomic race
+// flow; included here for non-race betting contexts (e.g., side bets).
+// ─────────────────────────────────────────────────────────────────────────
+async function placeBet(
+  playerId: string,
+  idempotencyKey: string,
+  payload: Record<string, unknown>,
+): Promise<NextResponse> {
+  const amount = Number(payload.amount ?? 0);
+  if (!Number.isInteger(amount) || amount <= 0 || amount > 10000) {
+    return NextResponse.json(
+      { error: { message: 'Bet amount must be a positive integer ≤ 10000' } },
+      { status: 400 },
+    );
+  }
+
+  const player = await prisma.gamePlayer.findUnique({
+    where: { id: playerId },
+    select: { coins: true },
+  });
+  if (!player) {
+    return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
+  }
+  if (player.coins < amount) {
+    return NextResponse.json(
+      { error: { message: `Insufficient balance: ${player.coins} < ${amount}` } },
+      { status: 402 },
+    );
+  }
+
+  const marbleId = String(payload.marbleId ?? '');
+  const courseId = String(payload.courseId ?? '');
+  const description = `Bet ${amount} on ${marbleId} - ${courseId}`;
+
+  const newBalance = player.coins - amount;
+  const result = await prisma.$transaction(async (tx) => {
+    const txRow = await tx.gameCoinTransaction.create({
+      data: {
+        playerId,
+        type: 'bet',
+        amount: -amount,
+        balance: newBalance,
+        description,
+        idempotencyKey,
+      },
+      select: { id: true, type: true, amount: true, createdAt: true },
+    });
+    await tx.gamePlayer.update({
+      where: { id: playerId },
+      data: { coins: { decrement: amount }, lastActiveAt: new Date() },
+    });
+    return txRow;
+  });
+
+  return NextResponse.json({
+    success: true,
+    balance: newBalance,
+    transaction: {
+      id: result.id,
+      type: result.type,
+      amount: result.amount,
+      createdAt: result.createdAt.toISOString(),
+    },
+    result: { betId: result.id, amount, marbleId, courseId },
+  });
+}
+
+async function settleBet(
+  playerId: string,
+  idempotencyKey: string,
+  payload: Record<string, unknown>,
+): Promise<NextResponse> {
+  // Cap payout at 20x bet amount as a sanity check. Phase 4 will replace
+  // this with server-decided race outcomes.
+  const betAmount = Number(payload.betAmount ?? 0);
+  const payout = Number(payload.payout ?? 0);
+  const MAX_MULTIPLIER = 20;
+
+  if (!Number.isFinite(payout) || payout < 0) {
+    return NextResponse.json(
+      { error: { message: 'payout must be non-negative' } },
+      { status: 400 },
+    );
+  }
+  if (betAmount > 0 && payout > betAmount * MAX_MULTIPLIER) {
+    return NextResponse.json(
+      { error: { message: `Payout exceeds ${MAX_MULTIPLIER}x bet cap` } },
+      { status: 400 },
+    );
+  }
+
+  const player = await prisma.gamePlayer.findUnique({
+    where: { id: playerId },
+    select: { coins: true },
+  });
+  if (!player) {
+    return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
+  }
+
+  const newBalance = player.coins + Math.round(payout);
+  const description = String(payload.description ?? 'Bet settle');
+
+  const result = await prisma.$transaction(async (tx) => {
+    const txRow = await tx.gameCoinTransaction.create({
+      data: {
+        playerId,
+        type: 'payout',
+        amount: Math.round(payout),
+        balance: newBalance,
+        description,
+        idempotencyKey,
+      },
+      select: { id: true, type: true, amount: true, createdAt: true },
+    });
+    if (payout > 0) {
+      await tx.gamePlayer.update({
+        where: { id: playerId },
+        data: { coins: { increment: Math.round(payout) }, lastActiveAt: new Date() },
+      });
+    } else {
+      await tx.gamePlayer.update({
+        where: { id: playerId },
+        data: { lastActiveAt: new Date() },
+      });
+    }
+    return txRow;
+  });
+
+  return NextResponse.json({
+    success: true,
+    balance: newBalance,
+    transaction: {
+      id: result.id,
+      type: result.type,
+      amount: result.amount,
+      createdAt: result.createdAt.toISOString(),
+    },
+    result: { payout: Math.round(payout) },
   });
 }
