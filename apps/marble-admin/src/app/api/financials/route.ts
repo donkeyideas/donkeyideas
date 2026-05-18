@@ -5,15 +5,70 @@ import { cookies } from 'next/headers';
 
 /* ------------------------------------------------------------------ */
 /*  Static product catalog (always shown in pricing matrix)            */
+/*                                                                     */
+/*  Each entry carries `matchIds` (every known stored productId for    */
+/*  this product across code paths and platforms) and `matchKeywords`  */
+/*  (lowercased substrings that must all appear in productName for the */
+/*  fallback match). Purchases written through the sync/purchase route */
+/*  use the canonical short IDs, but older or test-path rows may carry */
+/*  the raw store SKU (com.donkeymarble.racing.pass.premium.v1) or a   */
+/*  shorter display name like "Premium Pass". Without flexible         */
+/*  matching, Units Sold (Month) renders 0 even when a sale exists.    */
 /* ------------------------------------------------------------------ */
-const PRODUCT_CATALOG = [
-  { productId: 'starter',             productName: 'Starter Pack (1,000 coins)',  unitPrice: 0.99,  coins: 1000 },
-  { productId: 'popular',             productName: 'Popular Pack (6,000 coins)',  unitPrice: 4.99,  coins: 6000 },
-  { productId: 'big',                 productName: 'Big Spender (15,000 coins)',  unitPrice: 9.99,  coins: 15000 },
-  { productId: 'whale',               productName: 'Whale Pack (40,000 coins)',   unitPrice: 24.99, coins: 40000 },
-  { productId: 'season_pass_premium', productName: 'Season Pass — Premium',       unitPrice: 9.99,  coins: 0 },
-  { productId: 'season_pass_plus',    productName: 'Season Pass — Plus',          unitPrice: 24.99, coins: 0 },
+interface CatalogEntry {
+  productId: string;
+  productName: string;
+  unitPrice: number;
+  coins: number;
+  matchIds: string[];
+  matchKeywords: string[];
+}
+
+const PRODUCT_CATALOG: CatalogEntry[] = [
+  {
+    productId: 'starter', productName: 'Starter Pack (1,000 coins)', unitPrice: 0.99, coins: 1000,
+    matchIds: ['starter', 'com.donkeymarble.racing.coins.starter'],
+    matchKeywords: ['starter'],
+  },
+  {
+    productId: 'popular', productName: 'Popular Pack (6,000 coins)', unitPrice: 4.99, coins: 6000,
+    matchIds: ['popular', 'com.donkeymarble.racing.coins.popular'],
+    matchKeywords: ['popular'],
+  },
+  {
+    productId: 'big', productName: 'Big Spender (15,000 coins)', unitPrice: 9.99, coins: 15000,
+    matchIds: ['big', 'com.donkeymarble.racing.coins.big'],
+    matchKeywords: ['big', 'spender'],
+  },
+  {
+    productId: 'whale', productName: 'Whale Pack (40,000 coins)', unitPrice: 24.99, coins: 40000,
+    matchIds: ['whale', 'com.donkeymarble.racing.coins.whale'],
+    matchKeywords: ['whale'],
+  },
+  {
+    productId: 'season_pass_premium', productName: 'Season Pass — Premium', unitPrice: 9.99, coins: 0,
+    matchIds: ['season_pass_premium', 'season_pass1', 'com.donkeymarble.racing.pass.premium.v1'],
+    matchKeywords: ['premium', 'pass'],
+  },
+  {
+    productId: 'season_pass_plus', productName: 'Season Pass — Plus', unitPrice: 24.99, coins: 0,
+    matchIds: ['season_pass_plus', 'season_pass_premium1', 'com.donkeymarble.racing.pass.plus.v1'],
+    matchKeywords: ['plus', 'pass'],
+  },
 ];
+
+function matchCatalogEntry(saleProductId: string, saleProductName: string): CatalogEntry | null {
+  // Exact id match across any known SKU
+  for (const entry of PRODUCT_CATALOG) {
+    if (entry.matchIds.includes(saleProductId)) return entry;
+  }
+  // Fallback: every keyword must appear in the product name
+  const lower = saleProductName.toLowerCase();
+  for (const entry of PRODUCT_CATALOG) {
+    if (entry.matchKeywords.every((k) => lower.includes(k))) return entry;
+  }
+  return null;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Fee impact revenue tiers (always shown)                            */
@@ -31,19 +86,30 @@ export async function GET() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
+    // Exclude purchases from internal/test users (player.flagReason =
+    // 'test_user'). Lets the operator mark known QA accounts so their
+    // sandbox purchases and refunds don't skew revenue numbers.
+    const TEST_USER_FLAG = 'test_user';
+    const testUserPlayers = await prisma.gamePlayer.findMany({
+      where: { flagReason: TEST_USER_FLAG },
+      select: { id: true },
+    });
+    const testUserIds = testUserPlayers.map((p) => p.id);
+    const excludeTest = testUserIds.length > 0 ? { playerId: { notIn: testUserIds } } : {};
+
     // Revenue by product — both monthly (for the pricing matrix, whose
     // columns are labelled "Units Sold (Month)" / "Monthly Revenue") and
     // lifetime (for the byProduct payload that callers may use elsewhere).
     const [byProductMonth, byProduct] = await Promise.all([
       prisma.gamePurchase.groupBy({
         by: ['productId', 'productName'],
-        where: { status: 'completed', purchasedAt: { gte: monthStart } },
+        where: { status: 'completed', purchasedAt: { gte: monthStart }, ...excludeTest },
         _sum: { priceUsd: true, coinsGranted: true },
         _count: { id: true },
       }),
       prisma.gamePurchase.groupBy({
         by: ['productId', 'productName'],
-        where: { status: 'completed' },
+        where: { status: 'completed', ...excludeTest },
         _sum: { priceUsd: true, coinsGranted: true },
         _count: { id: true },
       }),
@@ -52,34 +118,35 @@ export async function GET() {
     // Revenue by platform
     const byPlatform = await prisma.gamePurchase.groupBy({
       by: ['platform'],
-      where: { status: 'completed' },
+      where: { status: 'completed', ...excludeTest },
       _sum: { priceUsd: true },
       _count: { id: true },
     });
 
     // Monthly revenue
     const monthlyRevenue = await prisma.gamePurchase.aggregate({
-      where: { status: 'completed', purchasedAt: { gte: monthStart } },
+      where: { status: 'completed', purchasedAt: { gte: monthStart }, ...excludeTest },
       _sum: { priceUsd: true },
       _count: { id: true },
     });
 
     // Total revenue
     const totalRevenue = await prisma.gamePurchase.aggregate({
-      where: { status: 'completed' },
+      where: { status: 'completed', ...excludeTest },
       _sum: { priceUsd: true },
       _count: { id: true },
     });
 
     // Refunds
     const refunds = await prisma.gamePurchase.aggregate({
-      where: { status: 'refunded' },
+      where: { status: 'refunded', ...excludeTest },
       _sum: { priceUsd: true },
       _count: { id: true },
     });
 
-    // Recent transactions
+    // Recent transactions — also hide test-user rows from the operator view
     const recentTransactions = await prisma.gamePurchase.findMany({
+      where: excludeTest,
       orderBy: { purchasedAt: 'desc' },
       take: 10,
       select: { id: true, productName: true, priceUsd: true, platform: true, status: true, purchasedAt: true, player: { select: { playerName: true } } },
@@ -90,13 +157,21 @@ export async function GET() {
     const fees = gross * feeRate;
     const net = gross - fees;
 
-    // ── Pricing matrix: merge static catalog with month-scoped sales ──
-    const salesByProduct = new Map(
-      byProductMonth.map((p) => [p.productId, { units: p._count.id, revenue: Number(p._sum.priceUsd ?? 0) }]),
-    );
+    // ── Pricing matrix: merge static catalog with month-scoped sales,
+    // matching on productId OR productName-keyword fallback so we count
+    // rows recorded by older code paths or with raw store SKUs. ──
+    const aggregatedByCatalog = new Map<string, { units: number; revenue: number }>();
+    for (const sale of byProductMonth) {
+      const entry = matchCatalogEntry(sale.productId, sale.productName);
+      if (!entry) continue;
+      const existing = aggregatedByCatalog.get(entry.productId) ?? { units: 0, revenue: 0 };
+      existing.units += sale._count.id;
+      existing.revenue += Number(sale._sum.priceUsd ?? 0);
+      aggregatedByCatalog.set(entry.productId, existing);
+    }
 
     const pricingMatrix = PRODUCT_CATALOG.map((cat) => {
-      const sales = salesByProduct.get(cat.productId);
+      const sales = aggregatedByCatalog.get(cat.productId);
       const unitsSold = sales?.units ?? 0;
       const grossRevenue = sales?.revenue ?? 0;
       const appStoreFeeRate = 0.15;

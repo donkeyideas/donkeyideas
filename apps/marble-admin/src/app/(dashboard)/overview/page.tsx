@@ -45,6 +45,8 @@ interface RevenueChartPoint {
 interface UserGrowthPoint {
   month: string;
   newUsers: number;
+  newUsersIos: number;
+  newUsersAndroid: number;
   totalUsers: number;
 }
 
@@ -394,11 +396,32 @@ export default function OverviewPage() {
                 <Line
                   yAxisId="left"
                   type="monotone"
-                  dataKey="newUsers"
-                  name="New Users"
+                  dataKey="newUsersIos"
+                  name="iOS"
                   stroke="#6ec1ff"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: '#6ec1ff', stroke: '#6ec1ff' }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="newUsersAndroid"
+                  name="Android"
+                  stroke="#a4c639"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: '#a4c639', stroke: '#a4c639' }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="newUsers"
+                  name="Combined"
+                  stroke="#ffc220"
                   strokeWidth={2.5}
-                  dot={{ r: 4, fill: '#6ec1ff', stroke: '#6ec1ff' }}
+                  strokeDasharray="5 3"
+                  dot={{ r: 4, fill: '#ffc220', stroke: '#ffc220' }}
                   activeDot={{ r: 6 }}
                 />
                 <Line

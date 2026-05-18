@@ -123,8 +123,14 @@ export async function GET(_request: NextRequest) {
       });
     }
 
-    // ── User growth (last 6 months): new signups per month + cumulative total ──
-    const userGrowthChart: { month: string; newUsers: number; totalUsers: number }[] = [];
+    // ── User growth (last 6 months): per-platform new signups + combined ──
+    const userGrowthChart: {
+      month: string;
+      newUsers: number;
+      newUsersIos: number;
+      newUsersAndroid: number;
+      totalUsers: number;
+    }[] = [];
     const sixMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
     const baselineTotal = await prisma.gamePlayer.count({
       where: { createdAt: { lt: sixMonthsAgoStart } },
@@ -133,13 +139,17 @@ export async function GET(_request: NextRequest) {
     for (let i = 5; i >= 0; i--) {
       const mStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-      const newUsers = await prisma.gamePlayer.count({
-        where: { createdAt: { gte: mStart, lt: mEnd } },
-      });
+      const [newUsers, newUsersIos, newUsersAndroid] = await Promise.all([
+        prisma.gamePlayer.count({ where: { createdAt: { gte: mStart, lt: mEnd } } }),
+        prisma.gamePlayer.count({ where: { createdAt: { gte: mStart, lt: mEnd }, platform: 'ios' } }),
+        prisma.gamePlayer.count({ where: { createdAt: { gte: mStart, lt: mEnd }, platform: 'android' } }),
+      ]);
       runningTotal += newUsers;
       userGrowthChart.push({
         month: monthNames[mStart.getMonth()],
         newUsers,
+        newUsersIos,
+        newUsersAndroid,
         totalUsers: runningTotal,
       });
     }

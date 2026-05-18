@@ -23,7 +23,10 @@ interface Player {
   lastActiveAt: string;
   createdAt: string;
   bannedAt: string | null;
+  flagReason: string | null;
 }
+
+const TEST_USER_FLAG = 'test_user';
 
 /* ------------------------------------------------------------------ */
 /*  Filter pill definitions                                            */
@@ -141,11 +144,43 @@ function PlayerSummaryModal({
   onClose: () => void;
   onViewFull: (id: string) => void;
 }) {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery<PlayerDetail>({
     queryKey: ['player-summary', playerId],
     queryFn: () => api.get(`/players/${playerId}`).then((r) => r.data),
     enabled: !!playerId,
   });
+
+  const adjustCoins = useMutation({
+    mutationFn: (vars: { amount: number; note: string }) =>
+      api.post(`/players/${playerId}/adjust-coins`, vars),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['player-summary', playerId] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+    },
+  });
+
+  const handleAdjustCoins = () => {
+    const currentBalance = data?.player?.coins ?? 0;
+    const input = window.prompt(
+      `Adjust coins for ${data?.player?.playerName}.\nCurrent balance: ${currentBalance.toLocaleString()}\n\nEnter NEW balance (positive integer):`,
+      String(currentBalance),
+    );
+    if (input === null) return;
+    const target = Number(input);
+    if (!Number.isFinite(target) || target < 0 || !Number.isInteger(target)) {
+      alert('New balance must be a non-negative integer.');
+      return;
+    }
+    const delta = target - currentBalance;
+    if (delta === 0) return;
+    const note = window.prompt(
+      `Reason for ${delta > 0 ? 'granting' : 'removing'} ${Math.abs(delta).toLocaleString()} coins?\n(Recorded as admin_adjustment with your admin ID)`,
+      '',
+    );
+    if (note === null) return;
+    adjustCoins.mutate({ amount: delta, note: note || `Adjusted from ${currentBalance} to ${target}` });
+  };
 
   const player = data?.player;
   const betting = data?.betting;
@@ -220,7 +255,18 @@ function PlayerSummaryModal({
             <div className="px-6 py-4 grid grid-cols-2 gap-3">
               {/* Coins */}
               <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5">
-                <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">Coins</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold">Coins</p>
+                  <button
+                    type="button"
+                    onClick={handleAdjustCoins}
+                    disabled={adjustCoins.isPending}
+                    className="text-[9px] font-bold uppercase tracking-wider text-marble-blue hover:text-marble-blue/80 disabled:opacity-40"
+                    title="Reconcile coins (records an admin_adjustment transaction)"
+                  >
+                    {adjustCoins.isPending ? 'Saving...' : 'Adjust'}
+                  </button>
+                </div>
                 <p className="text-sm font-semibold text-gold flex items-center gap-1">
                   <span className="w-2.5 h-2.5 rounded-full bg-gold inline-block flex-shrink-0" />
                   {fmtNum(player.coins)}
@@ -341,6 +387,16 @@ export default function UsersPage() {
 
   const banPlayer = useMutation({
     mutationFn: (id: string) => api.post(`/players/${id}/ban`, { reason: 'Banned from Users tab' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['players'] }),
+  });
+
+  const markTestUser = useMutation({
+    mutationFn: (id: string) => api.post(`/players/${id}/mark-test`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['players'] }),
+  });
+
+  const unmarkTestUser = useMutation({
+    mutationFn: (id: string) => api.delete(`/players/${id}/mark-test`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['players'] }),
   });
 
@@ -526,7 +582,14 @@ export default function UsersPage() {
                           {p.playerName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white/90">{p.playerName}</p>
+                          <p className="text-sm font-semibold text-white/90 flex items-center gap-1.5">
+                            {p.playerName}
+                            {p.flagReason === TEST_USER_FLAG && (
+                              <span className="inline-flex px-1.5 py-0 rounded text-[9px] font-bold uppercase tracking-wider bg-marble-blue/15 text-marble-blue border border-marble-blue/30">
+                                TEST
+                              </span>
+                            )}
+                          </p>
                           <p className="text-[10px] text-white/30">#{p.id.slice(0, 8)}</p>
                           {p.deviceId && (
                             <p className="text-[9px] text-white/20 font-mono mt-0.5" title={p.deviceId}>
@@ -612,6 +675,33 @@ export default function UsersPage() {
                             className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-marble-red hover:bg-marble-red/10 border border-marble-red/30 transition-colors disabled:opacity-40"
                           >
                             {banPlayer.isPending && banPlayer.variables === p.id ? '...' : 'Ban'}
+                          </button>
+                        )}
+                        {p.flagReason === TEST_USER_FLAG ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              unmarkTestUser.mutate(p.id);
+                            }}
+                            disabled={unmarkTestUser.isPending}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-marble-blue hover:bg-marble-blue/10 border border-marble-blue/30 transition-colors disabled:opacity-40"
+                            title="Untag this player as a test user (their purchases will count toward revenue again)"
+                          >
+                            {unmarkTestUser.isPending && unmarkTestUser.variables === p.id ? '...' : 'Untest'}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`Mark "${p.playerName}" as a test user? Their purchases and refunds will be excluded from Financials.`)) {
+                                markTestUser.mutate(p.id);
+                              }
+                            }}
+                            disabled={markTestUser.isPending}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-white/50 hover:text-marble-blue hover:bg-marble-blue/10 border border-white/15 hover:border-marble-blue/30 transition-colors disabled:opacity-40"
+                            title="Mark as test/QA user — excludes purchases from Financials"
+                          >
+                            {markTestUser.isPending && markTestUser.variables === p.id ? '...' : 'Mark Test'}
                           </button>
                         )}
                       </div>
