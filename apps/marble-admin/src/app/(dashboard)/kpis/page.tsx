@@ -264,6 +264,8 @@ function BenchmarkBar({ metricKey, value }: { metricKey: MetricKey; value: numbe
     excellent: 'bg-marble-blue',
   };
 
+  // Status label is rendered inline next to the metric value in KpiCard,
+  // so the bar itself is just the colored segments.
   return (
     <div className="flex items-center gap-1 mt-2">
       {segments.map((seg) => (
@@ -272,12 +274,17 @@ function BenchmarkBar({ metricKey, value }: { metricKey: MetricKey; value: numbe
           className={`h-1.5 flex-1 rounded-full ${seg === status ? activeColors[seg] : segColors[seg]}`}
         />
       ))}
-      <span className={`text-[9px] font-bold uppercase ml-1 ${STATUS_STYLES[status].split(' ')[1]}`}>
-        {status}
-      </span>
     </div>
   );
 }
+
+// Color class for the inline status label next to a metric value.
+const STATUS_TEXT_COLOR: Record<'bad' | 'ok' | 'good' | 'excellent', string> = {
+  bad: 'text-marble-red',
+  ok: 'text-gold',
+  good: 'text-marble-green',
+  excellent: 'text-marble-blue',
+};
 
 /* ------------------------------------------------------------------ */
 /*  KPI Card                                                           */
@@ -285,6 +292,7 @@ function BenchmarkBar({ metricKey, value }: { metricKey: MetricKey; value: numbe
 
 function KpiCard({ metricKey, entries }: { metricKey: MetricKey; entries: KpiEntry[] }) {
   const b = BENCHMARKS[metricKey];
+  const hasBenchmarks = !('noBenchmark' in b && b.noBenchmark);
   const latest = entries[0];
   if (!latest) return null;
 
@@ -300,9 +308,14 @@ function KpiCard({ metricKey, entries }: { metricKey: MetricKey; entries: KpiEnt
       {/* Label */}
       <p className="text-[10px] text-white/45 font-bold uppercase tracking-wider mb-1.5">{b.label}</p>
 
-      {/* Value */}
-      <p className="font-heading text-2xl tracking-wide text-white/90 leading-none">
-        {formatValue(metricKey, value)}
+      {/* Value + inline status (status matched to value size per request) */}
+      <p className="font-heading text-2xl tracking-wide text-white/90 leading-none flex items-baseline gap-3 flex-wrap">
+        <span>{formatValue(metricKey, value)}</span>
+        {hasBenchmarks && (
+          <span className={`font-heading text-2xl tracking-wide ${STATUS_TEXT_COLOR[status]}`}>
+            {status}
+          </span>
+        )}
       </p>
 
       {/* Change */}
