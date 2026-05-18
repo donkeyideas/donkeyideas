@@ -434,14 +434,17 @@ async function seasonStarterBonus(
 // got auto-adjusted and by how much.
 // ─────────────────────────────────────────────────────────────────────────
 const RECONCILE_MAX_DELTA = 50_000;
-/* v2 bump: closes the race-sync drift that accumulated on installs before
- * the mobile-side race-sync retry queue existed (commit adding
- * raceSyncQueue.ts). Pre-queue, fire-and-forget /sync/race failures lost
- * coin deltas server-side. Bumping the version lets the per-player lock
- * release for a fresh single reconciliation pass on those accounts.
+/* v3 bump: v2 silently no-op'd on every install because the client read
+ * its local coin balance BEFORE Zustand persist hydration finished —
+ * it saw the default 1000 instead of the persisted balance. Server saw
+ * "1000 < real_balance" → no gap → returned success → client marked v2
+ * as done. v3 ships alongside a client-side hydration-wait fix so the
+ * comparison uses the real local balance. The version bump is the only
+ * way to unlock the per-player natural-key lock for accounts that need
+ * the v2 backfill to actually run.
  * Always bump BOTH this constant and the matching one in
  * lib/balanceReconcile.ts on the client. */
-const RECONCILE_VERSION = 'v2';
+const RECONCILE_VERSION = 'v3';
 
 async function reconcileClientBalance(
   playerId: string,
