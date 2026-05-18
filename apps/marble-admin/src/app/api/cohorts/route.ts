@@ -3,6 +3,49 @@ import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
+/**
+ * Cohort builder. The page sends a flat filter object whose keys match the UI
+ * labels (coinBalanceMin, totalSpentMin, etc.); the response shape matches
+ * what the page consumes (totalMatched, samplePlayers, breakdowns with
+ * label + pct already computed). Earlier revisions of this file used
+ * different field names on both sides — every result card on the page came
+ * back empty as a result.
+ */
+
+interface IncomingFilters {
+  platform?: string;
+  passTier?: string;
+  status?: string;
+  coinBalanceMin?: string;
+  coinBalanceMax?: string;
+  totalSpentMin?: string;
+  totalSpentMax?: string;
+  totalRacesMin?: string;
+  totalRacesMax?: string;
+  minStreak?: string;
+  lastActiveAfter?: string;
+  lastActiveBefore?: string;
+  createdAfter?: string;
+  createdBefore?: string;
+}
+
+function num(s: string | undefined): number | undefined {
+  if (s === undefined || s === '' || s === null) return undefined;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function nonAll(s: string | undefined): string | undefined {
+  if (!s || s === 'all') return undefined;
+  return s;
+}
+
+function date(s: string | undefined): Date | undefined {
+  if (!s) return undefined;
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -15,96 +58,77 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: { message: 'Invalid session' } }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { filters } = body;
-
-    if (!filters || typeof filters !== 'object') {
-      return NextResponse.json(
-        { error: { message: 'Missing or invalid filters object' } },
-        { status: 400 },
-      );
-    }
-
-    // Build dynamic where clause
+    const body = (await request.json()) as IncomingFilters;
     const where: any = {};
 
-    if (filters.platform) {
-      where.platform = filters.platform;
-    }
+    const platform = nonAll(body.platform);
+    if (platform) where.platform = platform;
 
-    if (filters.passTier) {
-      where.passTier = filters.passTier;
-    }
+    const passTier = nonAll(body.passTier);
+    if (passTier) where.passTier = passTier;
 
-    if (filters.status) {
-      where.status = filters.status;
-    }
+    const status = nonAll(body.status);
+    if (status) where.status = status;
 
-    if (filters.minCoins !== undefined || filters.maxCoins !== undefined) {
+    const minCoins = num(body.coinBalanceMin);
+    const maxCoins = num(body.coinBalanceMax);
+    if (minCoins !== undefined || maxCoins !== undefined) {
       where.coins = {};
-      if (filters.minCoins !== undefined) where.coins.gte = filters.minCoins;
-      if (filters.maxCoins !== undefined) where.coins.lte = filters.maxCoins;
+      if (minCoins !== undefined) where.coins.gte = minCoins;
+      if (maxCoins !== undefined) where.coins.lte = maxCoins;
     }
 
-    if (filters.minSpent !== undefined || filters.maxSpent !== undefined) {
+    const minSpent = num(body.totalSpentMin);
+    const maxSpent = num(body.totalSpentMax);
+    if (minSpent !== undefined || maxSpent !== undefined) {
       where.totalSpent = {};
-      if (filters.minSpent !== undefined) where.totalSpent.gte = filters.minSpent;
-      if (filters.maxSpent !== undefined) where.totalSpent.lte = filters.maxSpent;
+      if (minSpent !== undefined) where.totalSpent.gte = minSpent;
+      if (maxSpent !== undefined) where.totalSpent.lte = maxSpent;
     }
 
-    if (filters.minRaces !== undefined || filters.maxRaces !== undefined) {
+    const minRaces = num(body.totalRacesMin);
+    const maxRaces = num(body.totalRacesMax);
+    if (minRaces !== undefined || maxRaces !== undefined) {
       where.totalRaces = {};
-      if (filters.minRaces !== undefined) where.totalRaces.gte = filters.minRaces;
-      if (filters.maxRaces !== undefined) where.totalRaces.lte = filters.maxRaces;
+      if (minRaces !== undefined) where.totalRaces.gte = minRaces;
+      if (maxRaces !== undefined) where.totalRaces.lte = maxRaces;
     }
 
-    if (filters.minStreak !== undefined) {
-      where.currentStreak = { gte: filters.minStreak };
-    }
+    const minStreak = num(body.minStreak);
+    if (minStreak !== undefined) where.currentStreak = { gte: minStreak };
 
-    if (filters.lastActiveAfter || filters.lastActiveBefore) {
+    const lastAfter = date(body.lastActiveAfter);
+    const lastBefore = date(body.lastActiveBefore);
+    if (lastAfter || lastBefore) {
       where.lastActiveAt = {};
-      if (filters.lastActiveAfter) where.lastActiveAt.gte = new Date(filters.lastActiveAfter);
-      if (filters.lastActiveBefore) where.lastActiveAt.lte = new Date(filters.lastActiveBefore);
+      if (lastAfter) where.lastActiveAt.gte = lastAfter;
+      if (lastBefore) where.lastActiveAt.lte = lastBefore;
     }
 
-    if (filters.createdAfter || filters.createdBefore) {
+    const createdAfter = date(body.createdAfter);
+    const createdBefore = date(body.createdBefore);
+    if (createdAfter || createdBefore) {
       where.createdAt = {};
-      if (filters.createdAfter) where.createdAt.gte = new Date(filters.createdAfter);
-      if (filters.createdBefore) where.createdAt.lte = new Date(filters.createdBefore);
+      if (createdAfter) where.createdAt.gte = createdAfter;
+      if (createdBefore) where.createdAt.lte = createdBefore;
     }
 
-    // Execute queries in parallel
-    const [count, aggregates, platformBreakdown, tierBreakdown, sample] = await Promise.all([
-      // Total count
+    const [totalMatched, aggregates, platformGroups, tierGroups, samplePlayers] = await Promise.all([
       prisma.gamePlayer.count({ where }),
-
-      // Aggregates
       prisma.gamePlayer.aggregate({
         where,
-        _avg: {
-          coins: true,
-          totalSpent: true,
-          totalRaces: true,
-          currentStreak: true,
-        },
+        _avg: { coins: true, totalSpent: true, totalRaces: true, currentStreak: true },
       }),
-
-      // Platform breakdown
       prisma.gamePlayer.groupBy({
         by: ['platform'],
         where,
         _count: { platform: true },
       }),
-
-      // Tier breakdown
       prisma.gamePlayer.groupBy({
         by: ['passTier'],
         where,
         _count: { passTier: true },
       }),
-
-      // Sample of first 20 players
       prisma.gamePlayer.findMany({
         where,
         take: 20,
@@ -122,25 +146,29 @@ export async function POST(request: NextRequest) {
       }),
     ]);
 
+    const platformTotal = platformGroups.reduce((s, p) => s + p._count.platform, 0) || 1;
+    const tierTotal = tierGroups.reduce((s, t) => s + t._count.passTier, 0) || 1;
+
     return NextResponse.json({
-      count,
-      aggregates: {
-        avgCoins: Math.round(aggregates._avg.coins ?? 0),
-        avgSpent: Number((aggregates._avg.totalSpent ?? 0).toString()),
-        avgRaces: Math.round(aggregates._avg.totalRaces ?? 0),
-        avgStreak: Math.round(aggregates._avg.currentStreak ?? 0),
-        platformBreakdown: platformBreakdown.map((p) => ({
-          platform: p.platform,
-          count: p._count.platform,
-        })),
-        tierBreakdown: tierBreakdown.map((t) => ({
-          tier: t.passTier,
-          count: t._count.passTier,
-        })),
-      },
-      sample: sample.map((p) => ({
+      totalMatched,
+      avgCoins: Math.round(aggregates._avg.coins ?? 0),
+      avgSpent: Number(aggregates._avg.totalSpent ?? 0),
+      avgRaces: Math.round(aggregates._avg.totalRaces ?? 0),
+      avgStreak: Number(aggregates._avg.currentStreak ?? 0),
+      platformBreakdown: platformGroups.map((p) => ({
+        label: p.platform,
+        count: p._count.platform,
+        pct: Math.round((p._count.platform / platformTotal) * 100),
+      })),
+      tierBreakdown: tierGroups.map((t) => ({
+        label: t.passTier,
+        count: t._count.passTier,
+        pct: Math.round((t._count.passTier / tierTotal) * 100),
+      })),
+      samplePlayers: samplePlayers.map((p) => ({
         ...p,
         totalSpent: Number(p.totalSpent),
+        lastActiveAt: p.lastActiveAt.toISOString(),
       })),
     });
   } catch (error: any) {

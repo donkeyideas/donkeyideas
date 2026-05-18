@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 
@@ -12,7 +12,6 @@ import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 
 interface Player {
   id: string;
-  visibleId: string;
   deviceId: string;
   playerName: string;
   platform: string;
@@ -23,6 +22,7 @@ interface Player {
   status: string;
   lastActiveAt: string;
   createdAt: string;
+  bannedAt: string | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -108,7 +108,6 @@ function PassBadge({ tier }: { tier: string }) {
 interface PlayerDetail {
   player: {
     id: string;
-    visibleId: string;
     playerName: string;
     platform: string;
     coins: number;
@@ -208,7 +207,7 @@ function PlayerSummaryModal({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-lg font-bold text-white/90 truncate">{player.playerName}</p>
-                  <p className="text-[10px] text-white/30 mb-1.5">{player.visibleId ?? `#${player.id.slice(0, 8)}`}</p>
+                  <p className="text-[10px] text-white/30 mb-1.5">#{player.id.slice(0, 8)}</p>
                   <div className="flex items-center gap-2">
                     <StatusBadge status={player.status} />
                     <PlatformBadge platform={player.platform || '---'} />
@@ -315,27 +314,57 @@ type SortKey = 'playerName' | 'status' | 'platform' | 'coins' | 'totalRaces' | '
 
 export default function UsersPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  const { sortKey, sortDir, handleSort, sortItems } = useSort<SortKey>('createdAt', 'desc');
+  // Sort state drives the server request — pass it through as sort/dir params
+  // so the entire result set is ordered, not just the current 20-row page.
+  const { sortKey, sortDir, handleSort } = useSort<SortKey>('createdAt', 'desc');
   const perPage = 20;
 
   const { data, isLoading } = useQuery({
-    queryKey: ['players', page, filter, search],
+    queryKey: ['players', page, filter, search, sortKey, sortDir],
     queryFn: () =>
-      api.get('/players', { params: { page, limit: perPage, search, filter } }).then((r) => r.data),
+      api.get('/players', {
+        params: { page, limit: perPage, search, filter, sort: sortKey, dir: sortDir },
+      }).then((r) => r.data),
   });
 
-  const rawPlayers: Player[] = data?.players ?? [];
+  const players: Player[] = data?.players ?? [];
   const total = data?.pagination?.total ?? 0;
   const totalPages = data?.pagination?.totalPages ?? 0;
 
-  const players = sortItems(rawPlayers);
-
   const payingCount = data?.summary?.paying ?? 0;
   const bannedCount = data?.summary?.banned ?? 0;
+
+  const banPlayer = useMutation({
+    mutationFn: (id: string) => api.post(`/players/${id}/ban`, { reason: 'Banned from Users tab' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['players'] }),
+  });
+
+  const handleExportCsv = () => {
+    if (players.length === 0) return;
+    const cols = ['id', 'playerName', 'platform', 'status', 'coins', 'totalRaces', 'totalSpent', 'passTier', 'createdAt', 'lastActiveAt'] as const;
+    const esc = (v: unknown) => {
+      const s = v === null || v === undefined ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [cols.join(',')];
+    for (const p of players) {
+      lines.push(cols.map((c) => esc((p as any)[c])).join(','));
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `players-${filter}-page${page}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
 
   /* ---- Pagination helpers ---- */
   const buildPageNumbers = () => {
@@ -382,9 +411,9 @@ export default function UsersPage() {
         <div className="bg-white/5 border-2 border-gold/20 rounded-2xl p-5 relative overflow-hidden">
           <div className="absolute -top-4 -right-4 w-[60px] h-[60px] rounded-full bg-gold opacity-[0.08]" />
           <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">Free Users</div>
-          <div className="font-heading text-[32px] tracking-wide leading-none text-gold">{fmtNum(total - payingCount - bannedCount)}</div>
+          <div className="font-heading text-[32px] tracking-wide leading-none text-gold">{fmtNum(Math.max(0, total - payingCount - bannedCount))}</div>
           <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">
-            Non-paying active
+            Non-paying (excl. banned)
           </div>
         </div>
 
@@ -403,11 +432,13 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <div />
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors">
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={players.length === 0}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
             Export CSV
-          </button>
-          <button className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-marble-blue/15 text-marble-blue border border-marble-blue/30 hover:bg-marble-blue/25 transition-colors">
-            + Add Admin
           </button>
         </div>
       </div>
@@ -496,7 +527,7 @@ export default function UsersPage() {
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-white/90">{p.playerName}</p>
-                          <p className="text-[10px] text-white/30">{p.visibleId ?? `#${p.id.slice(0, 8)}`}</p>
+                          <p className="text-[10px] text-white/30">#{p.id.slice(0, 8)}</p>
                           {p.deviceId && (
                             <p className="text-[9px] text-white/20 font-mono mt-0.5" title={p.deviceId}>
                               device: {p.deviceId.slice(0, 8)}...
@@ -548,7 +579,13 @@ export default function UsersPage() {
 
                     {/* Last Active */}
                     <td className="px-4 py-3.5 align-middle text-xs text-white/40">
-                      {isBanned ? 'Banned 3d ago' : p.lastActiveAt ? timeAgo(p.lastActiveAt) : '---'}
+                      {isBanned
+                        ? p.bannedAt
+                          ? `Banned ${timeAgo(p.bannedAt)}`
+                          : 'Banned'
+                        : p.lastActiveAt
+                          ? timeAgo(p.lastActiveAt)
+                          : '---'}
                     </td>
 
                     {/* Actions */}
@@ -567,10 +604,14 @@ export default function UsersPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              if (confirm(`Ban "${p.playerName}"? This invalidates their sessions.`)) {
+                                banPlayer.mutate(p.id);
+                              }
                             }}
-                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-marble-red hover:bg-marble-red/10 border border-marble-red/30 transition-colors"
+                            disabled={banPlayer.isPending}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-marble-red hover:bg-marble-red/10 border border-marble-red/30 transition-colors disabled:opacity-40"
                           >
-                            Ban
+                            {banPlayer.isPending && banPlayer.variables === p.id ? '...' : 'Ban'}
                           </button>
                         )}
                       </div>

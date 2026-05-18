@@ -31,13 +31,23 @@ export async function GET() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Revenue by product
-    const byProduct = await prisma.gamePurchase.groupBy({
-      by: ['productId', 'productName'],
-      where: { status: 'completed' },
-      _sum: { priceUsd: true, coinsGranted: true },
-      _count: { id: true },
-    });
+    // Revenue by product — both monthly (for the pricing matrix, whose
+    // columns are labelled "Units Sold (Month)" / "Monthly Revenue") and
+    // lifetime (for the byProduct payload that callers may use elsewhere).
+    const [byProductMonth, byProduct] = await Promise.all([
+      prisma.gamePurchase.groupBy({
+        by: ['productId', 'productName'],
+        where: { status: 'completed', purchasedAt: { gte: monthStart } },
+        _sum: { priceUsd: true, coinsGranted: true },
+        _count: { id: true },
+      }),
+      prisma.gamePurchase.groupBy({
+        by: ['productId', 'productName'],
+        where: { status: 'completed' },
+        _sum: { priceUsd: true, coinsGranted: true },
+        _count: { id: true },
+      }),
+    ]);
 
     // Revenue by platform
     const byPlatform = await prisma.gamePurchase.groupBy({
@@ -80,9 +90,9 @@ export async function GET() {
     const fees = gross * feeRate;
     const net = gross - fees;
 
-    // ── Pricing matrix: merge static catalog with actual sales ──
+    // ── Pricing matrix: merge static catalog with month-scoped sales ──
     const salesByProduct = new Map(
-      byProduct.map((p) => [p.productId, { units: p._count.id, revenue: Number(p._sum.priceUsd ?? 0) }]),
+      byProductMonth.map((p) => [p.productId, { units: p._count.id, revenue: Number(p._sum.priceUsd ?? 0) }]),
     );
 
     const pricingMatrix = PRODUCT_CATALOG.map((cat) => {

@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
           status: true,
           lastActiveAt: true,
           createdAt: true,
+          bannedAt: true,
         },
       }),
       prisma.gamePlayer.count({ where }),

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -93,6 +94,9 @@ export default function FinancialsPage() {
 
   const { sortKey: pricingSortKey, sortDir: pricingSortDir, handleSort: handlePricingSort, sortItems: sortPricingItems } = useSort<PricingSortKey>();
   const { sortKey: feeSortKey, sortDir: feeSortDir, handleSort: handleFeeSort, sortItems: sortFeeItems } = useSort<FeeTierSortKey>();
+  // Pricing matrix fee-rate toggle. 0.15 = Small Business Program (default
+  // for the first $1M/year), 0.30 = standard rate beyond that threshold.
+  const [pricingFeeRate, setPricingFeeRate] = useState<0.15 | 0.30>(0.15);
 
   if (isLoading) return <LoadingSpinner />;
   if (isError || !data)
@@ -185,13 +189,21 @@ export default function FinancialsPage() {
       <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="font-heading text-base tracking-wide">
-            Pricing Matrix — Net Revenue Per Sale
+            Pricing Matrix — Net Revenue Per Sale ({(pricingFeeRate * 100).toFixed(0)}% Fee)
           </div>
           <div className="flex gap-1">
-            <button className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-gold/20 text-gold">
+            <button
+              type="button"
+              onClick={() => setPricingFeeRate(0.15)}
+              className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-colors ${pricingFeeRate === 0.15 ? 'bg-gold/20 text-gold' : 'bg-white/[0.06] text-white/40 hover:bg-white/10'}`}
+            >
               15% Fee
             </button>
-            <button className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-white/[0.06] text-white/40">
+            <button
+              type="button"
+              onClick={() => setPricingFeeRate(0.30)}
+              className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-colors ${pricingFeeRate === 0.30 ? 'bg-gold/20 text-gold' : 'bg-white/[0.06] text-white/40 hover:bg-white/10'}`}
+            >
               30% Fee
             </button>
           </div>
@@ -202,27 +214,34 @@ export default function FinancialsPage() {
               <tr className="border-b border-white/[0.08]">
                 <SortableHeader label="Product" sortKey="productName" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} />
                 <SortableHeader label="Price" sortKey="unitPrice" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
-                <SortableHeader label="App Store Fee (15%)" sortKey="appStoreFee" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
+                <SortableHeader label={`App Store Fee (${(pricingFeeRate * 100).toFixed(0)}%)`} sortKey="appStoreFee" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
                 <SortableHeader label="You Receive" sortKey="netPerUnit" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
                 <SortableHeader label="Units Sold (Month)" sortKey="unitsSold" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
                 <SortableHeader label="Monthly Revenue" sortKey="monthlyRevenue" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
-                <SortableHeader label="If 30% Fee" sortKey="netAt30PerUnit" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
-                <SortableHeader label="Savings from 15%" sortKey="savingsPerUnit" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
+                <SortableHeader label={pricingFeeRate === 0.15 ? 'If 30% Fee' : 'If 15% Fee'} sortKey="netAt30PerUnit" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
+                <SortableHeader label="Tier Savings" sortKey="savingsPerUnit" currentSort={pricingSortKey} currentDir={pricingSortDir} onSort={handlePricingSort} className="text-right" />
               </tr>
             </thead>
             <tbody>
-              {sortPricingItems(pricingMatrix).map((row) => (
-                <tr key={row.productId} className="border-b border-white/[0.04]">
-                  <td className="px-3 py-2.5 text-sm text-white/70">{row.productName}</td>
-                  <td className="px-3 py-2.5 text-sm text-right text-white/60">{formatCurrency(row.unitPrice)}</td>
-                  <td className="px-3 py-2.5 text-sm text-right text-marble-red/70">-{formatCurrency(row.appStoreFee)}</td>
-                  <td className="px-3 py-2.5 text-sm text-right text-marble-green font-medium">{formatCurrency(row.netPerUnit)}</td>
-                  <td className="px-3 py-2.5 text-sm text-right text-white/60">{row.unitsSold}</td>
-                  <td className="px-3 py-2.5 text-sm text-right text-gold font-medium">{formatCurrency(row.monthlyRevenue)}</td>
-                  <td className="px-3 py-2.5 text-sm text-right text-white/40">{formatCurrency(row.netAt30PerUnit)}</td>
-                  <td className="px-3 py-2.5 text-sm text-right text-marble-green font-semibold">+{formatCurrency(row.savingsPerUnit * row.unitsSold)}</td>
-                </tr>
-              ))}
+              {sortPricingItems(pricingMatrix).map((row) => {
+                const fee = row.unitPrice * pricingFeeRate;
+                const net = row.unitPrice - fee;
+                const altRate = pricingFeeRate === 0.15 ? 0.30 : 0.15;
+                const altNet = row.unitPrice * (1 - altRate);
+                const savingsPerUnit = Math.abs(net - altNet);
+                return (
+                  <tr key={row.productId} className="border-b border-white/[0.04]">
+                    <td className="px-3 py-2.5 text-sm text-white/70">{row.productName}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-white/60">{formatCurrency(row.unitPrice)}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-marble-red/70">-{formatCurrency(fee)}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-marble-green font-medium">{formatCurrency(net)}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-white/60">{row.unitsSold}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-gold font-medium">{formatCurrency(row.monthlyRevenue)}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-white/40">{formatCurrency(altNet)}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-marble-green font-semibold">{pricingFeeRate === 0.15 ? '+' : '-'}{formatCurrency(savingsPerUnit * row.unitsSold)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-white/[0.08]">

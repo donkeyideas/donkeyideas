@@ -77,7 +77,9 @@ export async function GET() {
     const premiumCount = tierCounts['premium'] || 0;
     const plusCount = tierCounts['plus'] || 0;
 
-    // Pass revenue
+    // Pass revenue — lifetime totals across all completed pass purchases.
+    // (Per-season scoping would require a `purchasedDuringSeasonNumber`
+    // field that doesn't exist on GamePurchase yet.)
     const passRevenue = await prisma.gamePurchase.aggregate({
       where: {
         status: 'completed',
@@ -121,7 +123,7 @@ export async function GET() {
       {
         label: 'Pass Revenue',
         value: `$${(Number(passRevenue._sum.priceUsd ?? 0) / 1000).toFixed(1)}K`,
-        sub: 'This season',
+        sub: 'Lifetime',
         color: 'text-marble-green',
         border: 'border-marble-green/20',
       },
@@ -135,14 +137,21 @@ export async function GET() {
     ];
 
     // ── Marble standings: always show all 8, merge DB data ──
+    // Scope to season and playoff modes only — earlier revisions aggregated
+    // all-time across every gameMode (including quick_race and tournaments),
+    // which made the Seasons page show all-time records labelled as
+    // season standings.
+    const seasonModeFilter = { gameMode: { in: ['season', 'playoff'] as string[] } };
+
     const marbleWins = await prisma.raceRecord.groupBy({
       by: ['playerPickId'],
-      where: { won: true },
+      where: { ...seasonModeFilter, won: true },
       _count: { id: true },
     });
 
     const marbleRaces = await prisma.raceRecord.groupBy({
       by: ['playerPickId'],
+      where: seasonModeFilter,
       _count: { id: true },
     });
 

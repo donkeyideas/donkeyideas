@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
@@ -289,6 +289,11 @@ export default function SupportPage() {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const { sortKey, sortDir, handleSort, sortItems } = useSort<TicketSortKey>();
 
+  const banFlagged = useMutation({
+    mutationFn: (id: string) => api.post(`/players/${id}/ban`, { reason: 'Banned from Support flagged-players panel' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['support'] }),
+  });
+
   if (isLoading) return <LoadingSpinner />;
   if (isError || !data) return <div className="text-center py-20 text-white/40">Failed to load</div>;
 
@@ -470,8 +475,21 @@ export default function SupportPage() {
                       <span className="bg-white/[0.06] px-2 py-0.5 rounded text-white/40">{p.totalRaces} races</span>
                     </div>
                     <div className="flex gap-1.5">
-                      <button className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-marble-red/20 text-marble-red">Ban</button>
-                      <button className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/40">Review</button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Ban "${p.playerName}"? This invalidates their sessions.`)) {
+                            banFlagged.mutate(p.id);
+                          }
+                        }}
+                        disabled={banFlagged.isPending}
+                        className="text-[11px] font-semibold px-3 py-1.5 rounded-lg bg-marble-red/20 text-marble-red hover:bg-marble-red/30 transition-colors disabled:opacity-40"
+                      >
+                        {banFlagged.isPending && banFlagged.variables === p.id ? '...' : 'Ban'}
+                      </button>
+                      {/* Review action removed — there's no per-player review
+                          flow yet. Operator can click the player elsewhere
+                          (Users tab) for full context. */}
                     </div>
                   </div>
                 ))}

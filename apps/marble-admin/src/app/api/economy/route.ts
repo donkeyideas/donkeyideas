@@ -34,9 +34,13 @@ export async function GET(_request: NextRequest) {
         _sum: { amount: true },
         where: { amount: { gt: 0 }, createdAt: { gte: todayStart } },
       }),
+      // The card label says "Coins Burned Today (Bets)" so we filter to
+       // bet-type transactions only. Previously this summed ALL negative
+       // transactions (payouts, admin adjustments, etc.) and overstated the
+       // bet sink.
       prisma.gameCoinTransaction.aggregate({
         _sum: { amount: true },
-        where: { amount: { lt: 0 }, createdAt: { gte: todayStart } },
+        where: { type: 'bet', amount: { lt: 0 }, createdAt: { gte: todayStart } },
       }),
       prisma.gamePlayer.count({ where: { coins: { lt: 100 } } }),
       prisma.gameConfig.findMany({ orderBy: { group: 'asc' } }),

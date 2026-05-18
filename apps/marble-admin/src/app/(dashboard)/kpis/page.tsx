@@ -31,6 +31,16 @@ interface KpiEntry {
   rating: number;
   crashRate: number;
   notes: string | null;
+  autoFetched?: boolean;
+}
+
+// Metrics that GA4 auto-fetch does NOT collect today. When the latest entry
+// is auto-fetched, these display as N/A instead of "0% — bad".
+const AUTO_FETCH_MISSING: ReadonlyArray<keyof typeof BENCHMARKS> = ['d30Retention', 'crashRate'];
+
+function isMetricMissing(entry: KpiEntry | undefined, key: MetricKey): boolean {
+  if (!entry || !entry.autoFetched) return false;
+  return AUTO_FETCH_MISSING.includes(key as any) && (entry[key as keyof KpiEntry] as number) === 0;
 }
 
 type MetricKey = keyof typeof BENCHMARKS;
@@ -297,39 +307,56 @@ function KpiCard({ metricKey, entries }: { metricKey: MetricKey; entries: KpiEnt
   if (!latest) return null;
 
   const value = latest[metricKey] as number;
+  const missing = isMetricMissing(latest, metricKey);
   const status = getBenchmarkStatus(metricKey, value);
-  const change = getChange(entries, metricKey);
+  const change = missing ? null : getChange(entries, metricKey);
 
   return (
     <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-4 relative overflow-hidden">
-      {/* Status dot */}
-      <div className={`absolute top-3 right-3 w-2.5 h-2.5 rounded-full ${STATUS_DOT[status]}`} />
+      {/* Status dot — hide for missing-data metrics so we don't mislabel them */}
+      {!missing && (
+        <div className={`absolute top-3 right-3 w-2.5 h-2.5 rounded-full ${STATUS_DOT[status]}`} />
+      )}
 
       {/* Label */}
       <p className="text-[10px] text-white/45 font-bold uppercase tracking-wider mb-1.5">{b.label}</p>
 
       {/* Value + inline status (status matched to value size per request) */}
-      <p className="font-heading text-2xl tracking-wide text-white/90 leading-none flex items-baseline gap-3 flex-wrap">
-        <span>{formatValue(metricKey, value)}</span>
-        {hasBenchmarks && (
-          <span className={`font-heading text-2xl tracking-wide ${STATUS_TEXT_COLOR[status]}`}>
-            {status}
-          </span>
-        )}
-      </p>
+      {missing ? (
+        <>
+          <p className="font-heading text-2xl tracking-wide text-white/50 leading-none">
+            N/A
+          </p>
+          <p className="text-[11px] text-white/35 mt-1.5">
+            {metricKey === 'd30Retention'
+              ? 'GA4 needs 30 days of cohort data'
+              : 'Requires Play Developer Reporting API'}
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="font-heading text-2xl tracking-wide text-white/90 leading-none flex items-baseline gap-3 flex-wrap">
+            <span>{formatValue(metricKey, value)}</span>
+            {hasBenchmarks && (
+              <span className={`font-heading text-2xl tracking-wide ${STATUS_TEXT_COLOR[status]}`}>
+                {status}
+              </span>
+            )}
+          </p>
 
-      {/* Change */}
-      {change && (
-        <p className={`text-[11px] font-semibold mt-1.5 ${change.isUp ? 'text-marble-green' : 'text-marble-red'}`}>
-          {change.isUp ? '▲' : '▼'} {change.value.toFixed(1)}% vs last week
-        </p>
-      )}
-      {!change && entries.length > 0 && (
-        <p className="text-[11px] text-white/25 mt-1.5">No prior week</p>
-      )}
+          {change && (
+            <p className={`text-[11px] font-semibold mt-1.5 ${change.isUp ? 'text-marble-green' : 'text-marble-red'}`}>
+              {change.isUp ? '▲' : '▼'} {change.value.toFixed(1)}% vs last week
+            </p>
+          )}
+          {!change && entries.length > 0 && (
+            <p className="text-[11px] text-white/25 mt-1.5">No prior week</p>
+          )}
 
-      {/* Benchmark bar */}
-      <BenchmarkBar metricKey={metricKey} value={value} />
+          {/* Benchmark bar */}
+          <BenchmarkBar metricKey={metricKey} value={value} />
+        </>
+      )}
     </div>
   );
 }
@@ -569,11 +596,15 @@ export default function KpisPage() {
                     <td className="text-right px-3 py-2.5 text-xs text-white/60">{e.dau.toLocaleString()}</td>
                     <td className="text-right px-3 py-2.5 text-xs text-white/60">{e.d1Retention}%</td>
                     <td className="text-right px-3 py-2.5 text-xs text-white/60">{e.d7Retention}%</td>
-                    <td className="text-right px-3 py-2.5 text-xs text-white/60">{e.d30Retention}%</td>
+                    <td className="text-right px-3 py-2.5 text-xs text-white/60">
+                      {isMetricMissing(e, 'd30Retention') ? <span className="text-white/30">N/A</span> : `${e.d30Retention}%`}
+                    </td>
                     <td className="text-right px-3 py-2.5 text-xs text-white/60">{e.sessionsPerDau}</td>
                     <td className="text-right px-3 py-2.5 text-xs text-white/60">${e.arpdau.toFixed(2)}</td>
                     <td className="text-right px-3 py-2.5 text-xs text-white/60">{e.rating.toFixed(1)}</td>
-                    <td className="text-right px-3 py-2.5 text-xs text-white/60">{e.crashRate}%</td>
+                    <td className="text-right px-3 py-2.5 text-xs text-white/60">
+                      {isMetricMissing(e, 'crashRate') ? <span className="text-white/30">N/A</span> : `${e.crashRate}%`}
+                    </td>
                     <td className="px-3 py-2.5 text-xs text-white/30 max-w-[150px] truncate">{e.notes || '—'}</td>
                   </tr>
                 ))}

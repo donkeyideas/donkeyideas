@@ -155,6 +155,21 @@ export async function GET() {
       }),
     ]);
 
+    // Lifetime doomsday count per course. Previously doomsdayPct mixed
+    // recent-500 numerator with the full courseTimeStats denominator, which
+    // understated the rate on popular courses. Now both numerator and
+    // denominator are lifetime so the percentage is honest.
+    const doomsdayThresholdMs = 45000;
+    const lifetimeDoomsday = await prisma.raceRecord.groupBy({
+      by: ['courseId'],
+      where: { winnerTime: { gte: doomsdayThresholdMs } },
+      _count: { id: true },
+    });
+    const lifetimeDoomsdayMap: Record<string, number> = {};
+    for (const row of lifetimeDoomsday) {
+      lifetimeDoomsdayMap[row.courseId] = row._count.id;
+    }
+
     // --- B. Marble Dynamics ---
     const winMap: Record<string, number> = {};
     betWins.forEach((b: any) => { winMap[b.marbleId] = b._count.id; });
@@ -266,17 +281,19 @@ export async function GET() {
       count: timeBucketCounts[i],
     }));
 
-    // Per-course difficulty
+    // Per-course difficulty: use the lifetime doomsday count divided by the
+    // lifetime race count (c._count.id) so both sides match.
     const courseDifficulty = courseTimeStats.map((c: any) => {
-      const cd = courseDoomsdayMap[c.courseId] || { total: 0, doomsday: 0 };
+      const doomsday = lifetimeDoomsdayMap[c.courseId] ?? 0;
+      const total = c._count.id;
       return {
         courseId: c.courseId,
         theme: normalizeTheme(c.courseTheme || 'unknown'),
         avgTime: fmtTime(Number(c._avg.winnerTime ?? 0)),
         minTime: fmtTime(Number(c._min.winnerTime ?? 0)),
         maxTime: fmtTime(Number(c._max.winnerTime ?? 0)),
-        races: c._count.id,
-        doomsdayPct: cd.total > 0 ? Math.round((cd.doomsday / cd.total) * 100) : 0,
+        races: total,
+        doomsdayPct: total > 0 ? Math.round((doomsday / total) * 100) : 0,
       };
     });
 

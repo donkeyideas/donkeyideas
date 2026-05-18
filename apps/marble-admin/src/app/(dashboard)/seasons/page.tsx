@@ -83,11 +83,12 @@ export default function SeasonsPage() {
   const week = data?.seasonMeta?.week ?? 0;
   const totalWeeks = data?.seasonMeta?.totalWeeks ?? 10;
   const daysRemaining = data?.seasonMeta?.daysRemaining ?? 0;
-  const marblesCompeting = data?.standings?.length ?? 0;
+  const playersInSeason = data?.players ?? 0;
   const progressPct = data?.seasonMeta?.progressPct ?? 0;
   const standings = data?.standings ?? [];
   const courses = data?.courses ?? [];
   const passKpis = data?.passKpis ?? [];
+  const seasonStats = data?.stats ?? { totalRaces: 0, totalBets: 0, coinsWon: 0, avgRacesPerPlayer: 0 };
 
   const rankClass = (i: number) => {
     if (i === 0) return 'bg-gold text-navy-900';
@@ -124,17 +125,11 @@ export default function SeasonsPage() {
               SEASON {seasonNumber} &mdash; {seasonName}
             </h2>
             <p className="text-[13px] text-white/60 mt-1">
-              Week {week} of {totalWeeks} &bull; {daysRemaining} days remaining &bull; {marblesCompeting} marbles competing
+              Week {week} of {totalWeeks} &bull; {daysRemaining} days remaining &bull; {playersInSeason.toLocaleString()} players in season
             </p>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <button className="px-4 py-2 bg-gold text-navy-900 font-bold text-[13px] rounded-xl hover:bg-gold-light transition-colors">
-              Advance Week
-            </button>
-            <button className="px-4 py-2 border border-white/20 text-white/70 font-semibold text-[13px] rounded-xl hover:bg-white/[0.06] transition-colors">
-              Edit Season
-            </button>
-          </div>
+          {/* Advance Week / Edit Season are not yet wired — hidden until the
+              season-progression service exists rather than rendering dead buttons. */}
         </div>
 
         {/* Progress bar */}
@@ -149,6 +144,28 @@ export default function SeasonsPage() {
               style={{ width: `${progressPct}%` }}
             />
           </div>
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/*  Season Participation strip                                   */}
+      {/* ============================================================ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white/5 border-2 border-marble-blue/20 rounded-2xl p-4">
+          <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-1">Races (Season)</div>
+          <div className="font-heading text-[22px] text-marble-blue leading-none">{seasonStats.totalRaces.toLocaleString()}</div>
+        </div>
+        <div className="bg-white/5 border-2 border-gold/20 rounded-2xl p-4">
+          <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-1">Bets (Season)</div>
+          <div className="font-heading text-[22px] text-gold leading-none">{seasonStats.totalBets.toLocaleString()}</div>
+        </div>
+        <div className="bg-white/5 border-2 border-marble-green/20 rounded-2xl p-4">
+          <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-1">Coins Paid Out</div>
+          <div className="font-heading text-[22px] text-marble-green leading-none">{seasonStats.coinsWon.toLocaleString()}</div>
+        </div>
+        <div className="bg-white/5 border-2 border-[#c39bd3]/20 rounded-2xl p-4">
+          <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-1">Avg Races / Player</div>
+          <div className="font-heading text-[22px] text-[#c39bd3] leading-none">{seasonStats.avgRacesPerPlayer.toLocaleString()}</div>
         </div>
       </div>
 

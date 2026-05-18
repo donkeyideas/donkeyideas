@@ -30,7 +30,7 @@ interface ABTest {
   description: string;
   status: 'draft' | 'running' | 'paused' | 'completed';
   targetMetric: string;
-  trafficPercent: number;
+  trafficPct: number;
   variants: Variant[];
   enrolledCount: number;
   startDate: string | null;
@@ -111,7 +111,7 @@ function CreateTestForm({ onClose }: { onClose: () => void }) {
       name: name.trim(),
       description: description.trim(),
       targetMetric,
-      trafficPercent,
+      trafficPct: trafficPercent,
       variants,
     });
   };
@@ -253,8 +253,27 @@ function CreateTestForm({ onClose }: { onClose: () => void }) {
 /*  Test Detail (expandable)                                           */
 /* ------------------------------------------------------------------ */
 
+interface DetailResponse {
+  test: ABTest;
+  enrolledCount: number;
+  variantBreakdown: { variant: string; count: number }[];
+  assignments: Assignment[];
+}
+
 function TestDetail({ test }: { test: ABTest }) {
-  const totalEnrolled = test.variants.reduce((s, v) => s + (v.count ?? 0), 0) || 1;
+  // The list endpoint doesn't carry per-variant counts or assignment history.
+  // Fetch the detail endpoint on expand so those sections render real data
+  // instead of empty/zero bars.
+  const { data, isLoading, isError } = useQuery<DetailResponse>({
+    queryKey: ['ab-test', test.id],
+    queryFn: () => api.get(`/ab-tests/${test.id}`).then((r: any) => r.data),
+  });
+
+  const variantCounts: Record<string, number> = {};
+  for (const v of data?.variantBreakdown ?? []) {
+    variantCounts[v.variant] = v.count;
+  }
+  const totalEnrolled = Object.values(variantCounts).reduce((s, n) => s + n, 0);
 
   return (
     <div className="mt-4 pt-4 border-t border-white/[0.06] space-y-4">
@@ -263,26 +282,38 @@ function TestDetail({ test }: { test: ABTest }) {
         <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">
           Variant Breakdown
         </div>
-        <div className="space-y-2">
-          {test.variants.map((v) => {
-            const pct = totalEnrolled > 0 ? Math.round(((v.count ?? 0) / totalEnrolled) * 100) : 0;
-            return (
-              <div key={v.id} className="flex items-center gap-3">
-                <span className="text-xs font-bold text-gold w-5">{v.id}</span>
-                <span className="text-xs text-white/60 w-24 truncate">{v.name}</span>
-                <div className="flex-1 h-2.5 bg-white/[0.06] rounded">
-                  <div
-                    className="h-full rounded bg-marble-blue transition-all"
-                    style={{ width: `${pct}%` }}
-                  />
+        {isLoading ? (
+          <div className="text-xs text-white/30">Loading...</div>
+        ) : isError ? (
+          <div className="text-xs text-marble-red/70">Failed to load variant data</div>
+        ) : (
+          <div className="space-y-2">
+            {test.variants.map((v) => {
+              const count = variantCounts[v.id] ?? 0;
+              const pct = totalEnrolled > 0 ? Math.round((count / totalEnrolled) * 100) : 0;
+              return (
+                <div key={v.id} className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gold w-5">{v.id}</span>
+                  <span className="text-xs text-white/60 w-24 truncate">{v.name}</span>
+                  <div className="flex-1 h-2.5 bg-white/[0.06] rounded">
+                    <div
+                      className="h-full rounded bg-marble-blue transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-white/50 w-16 text-right">
+                    {count.toLocaleString()} ({pct}%)
+                  </span>
                 </div>
-                <span className="text-xs font-semibold text-white/50 w-16 text-right">
-                  {(v.count ?? 0).toLocaleString()} ({pct}%)
-                </span>
+              );
+            })}
+            {totalEnrolled === 0 && (
+              <div className="text-[11px] text-white/30 italic">
+                No players enrolled yet.
               </div>
-            );
-          })}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Results (if completed) */}
@@ -298,7 +329,7 @@ function TestDetail({ test }: { test: ABTest }) {
       )}
 
       {/* Recent Assignments */}
-      {test.assignments && test.assignments.length > 0 && (
+      {data?.assignments && data.assignments.length > 0 && (
         <div>
           <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">
             Recent Assignments
@@ -313,7 +344,7 @@ function TestDetail({ test }: { test: ABTest }) {
                 </tr>
               </thead>
               <tbody>
-                {test.assignments.slice(0, 10).map((a, i) => (
+                {data.assignments.slice(0, 10).map((a, i) => (
                   <tr key={i} className="border-b border-white/[0.03] last:border-b-0">
                     <td className="py-2 px-3 text-white/70">{a.playerName}</td>
                     <td className="py-2 px-3">
@@ -474,7 +505,7 @@ export default function ABTestsPage() {
 
                     {/* Traffic */}
                     <span className="text-xs text-white/50">
-                      {test.trafficPercent}% traffic
+                      {test.trafficPct}% traffic
                     </span>
 
                     {/* Enrolled */}

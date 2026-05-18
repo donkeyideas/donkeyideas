@@ -20,7 +20,17 @@ export async function GET() {
       take: 52, // Up to 1 year of weekly data
     });
 
-    return NextResponse.json({ entries });
+    // Flag GA4 auto-fetched entries so the UI can render N/A for metrics that
+    // GA4 doesn't actually supply (d30Retention requires 30+ days of cohort
+    // data; crashRate requires the Play Developer Reporting API). Without
+    // this flag the page renders "0% — bad" for D30 retention even when no
+    // data was ever collected.
+    const enriched = entries.map((e) => ({
+      ...e,
+      autoFetched: typeof e.notes === 'string' && e.notes.toLowerCase().includes('auto-fetched'),
+    }));
+
+    return NextResponse.json({ entries: enriched });
   } catch (error: any) {
     console.error('KPIs GET error:', error);
     return NextResponse.json(

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -133,11 +134,22 @@ function h12(h: number): string {
 /*  Component                                                         */
 /* ------------------------------------------------------------------ */
 
+// Apple/Google take a 15% cut for the first $1M/year under the Small Business
+// Program. Used to translate gross revenue into net for the chart toggle.
+const NET_REVENUE_FACTOR = 1 - 0.15;
+
 export default function OverviewPage() {
   const { data, isLoading, isError } = useQuery<OverviewData>({
     queryKey: ['overview'],
     queryFn: () => api.get('/overview').then((res) => res.data),
   });
+  const [revenueView, setRevenueView] = useState<'gross' | 'net'>('gross');
+
+  const revenueChartData = useMemo(() => {
+    if (!data?.revenueChart) return [];
+    if (revenueView === 'gross') return data.revenueChart;
+    return data.revenueChart.map((p) => ({ ...p, revenue: Math.round(p.revenue * NET_REVENUE_FACTOR * 100) / 100 }));
+  }, [data?.revenueChart, revenueView]);
 
   if (isLoading) return <LoadingSpinner />;
   if (isError || !data)
@@ -215,7 +227,7 @@ export default function OverviewPage() {
                 : 'bg-marble-red/15 text-marble-red'
             }`}
           >
-            {payTrend.text} this week &middot; +{newToday} new today
+            {payTrend.text} new payers vs last wk &middot; +{newToday} new today
           </div>
         </div>
 
@@ -411,37 +423,40 @@ export default function OverviewPage() {
         <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="font-heading text-base tracking-wide">
-              Revenue &mdash; Last 12 Months
+              Revenue &mdash; Last 12 Months ({revenueView === 'gross' ? 'Gross' : 'Net'})
             </div>
             <div className="flex gap-1">
-              <button className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-gold/20 text-gold">
+              <button
+                type="button"
+                onClick={() => setRevenueView('gross')}
+                className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-colors ${revenueView === 'gross' ? 'bg-gold/20 text-gold' : 'bg-white/[0.06] text-white/40 hover:bg-white/10'}`}
+              >
                 Gross
               </button>
-              <button className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-white/[0.06] text-white/40">
+              <button
+                type="button"
+                onClick={() => setRevenueView('net')}
+                className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-colors ${revenueView === 'net' ? 'bg-marble-green/20 text-marble-green' : 'bg-white/[0.06] text-white/40 hover:bg-white/10'}`}
+              >
                 Net
               </button>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={data.revenueChart}>
+            <BarChart data={revenueChartData}>
               <XAxis
                 dataKey="month"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
               />
-              <Bar dataKey="revenue" fill="#ffc220" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="revenue" fill={revenueView === 'gross' ? '#ffc220' : '#2ecc71'} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <div className="flex items-center gap-5 mt-3">
-            <div className="flex items-center gap-1.5 text-[11px] text-white/50">
-              <span className="w-2 h-2 rounded-full bg-gold inline-block" />
-              Gross Revenue
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-white/50">
-              <span className="w-2 h-2 rounded-full bg-marble-green inline-block" />
-              Net
-            </div>
+          <div className="mt-3 text-[11px] text-white/40">
+            {revenueView === 'net'
+              ? 'Net = gross × 0.85 (after 15% Small Business Program fee).'
+              : 'Gross revenue before App Store / Play Store fees.'}
           </div>
         </div>
 
