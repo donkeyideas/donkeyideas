@@ -157,6 +157,38 @@ function PlayerSummaryModal({
     },
   });
 
+  const reconcileBalance = useMutation({
+    mutationFn: (mobileBalance: number) =>
+      api.post(`/players/${playerId}/reconcile-balance`, { mobileBalance }),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ['player-summary', playerId] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      const data = res?.data ?? res;
+      if (data?.replayed) {
+        alert(`Already reconciled (server balance: ${data.balance}). The "v1" backfill only runs once per player.`);
+      } else if (data?.credited === 0) {
+        alert(`No gap to reconcile — server already has ${data.balance} coins.`);
+      } else {
+        alert(`Credited ${data.credited} coins. New server balance: ${data.balance}.${data.capped ? ' (Capped at 50,000 — partial credit.)' : ''}`);
+      }
+    },
+  });
+
+  const handleReconcile = () => {
+    const current = data?.player?.coins ?? 0;
+    const input = window.prompt(
+      `Reconcile ${data?.player?.playerName} from their mobile balance.\n\nLook at their phone. Type the coin number shown there.\n\nServer currently shows: ${current.toLocaleString()}\nIf you type a number HIGHER than that, the gap is credited (capped at 50,000).\nIf you type a LOWER or equal number, nothing happens.\nThis only works ONCE per player.`,
+      String(current),
+    );
+    if (input === null) return;
+    const mobileBalance = Number(input);
+    if (!Number.isFinite(mobileBalance) || mobileBalance < 0 || !Number.isInteger(mobileBalance)) {
+      alert('Mobile balance must be a non-negative integer.');
+      return;
+    }
+    reconcileBalance.mutate(mobileBalance);
+  };
+
   const handleAdjustCoins = () => {
     const currentBalance = data?.player?.coins ?? 0;
     const input = window.prompt(
@@ -254,15 +286,26 @@ function PlayerSummaryModal({
               <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold">Coins</p>
-                  <button
-                    type="button"
-                    onClick={handleAdjustCoins}
-                    disabled={adjustCoins.isPending}
-                    className="text-[9px] font-bold uppercase tracking-wider text-marble-blue hover:text-marble-blue/80 disabled:opacity-40"
-                    title="Reconcile coins (records an admin_adjustment transaction)"
-                  >
-                    {adjustCoins.isPending ? 'Saving...' : 'Adjust'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleReconcile}
+                      disabled={reconcileBalance.isPending}
+                      className="text-[9px] font-bold uppercase tracking-wider text-marble-green hover:text-marble-green/80 disabled:opacity-40"
+                      title="Reconcile from mobile — type the player's actual phone balance, server credits the gap (one-time, capped at 50K)"
+                    >
+                      {reconcileBalance.isPending ? '...' : 'Reconcile'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAdjustCoins}
+                      disabled={adjustCoins.isPending}
+                      className="text-[9px] font-bold uppercase tracking-wider text-marble-blue hover:text-marble-blue/80 disabled:opacity-40"
+                      title="Set an exact balance (records as admin_adjustment, repeatable)"
+                    >
+                      {adjustCoins.isPending ? 'Saving...' : 'Adjust'}
+                    </button>
+                  </div>
                 </div>
                 <p className="text-sm font-semibold text-gold flex items-center gap-1">
                   <span className="w-2.5 h-2.5 rounded-full bg-gold inline-block flex-shrink-0" />
