@@ -434,7 +434,14 @@ async function seasonStarterBonus(
 // got auto-adjusted and by how much.
 // ─────────────────────────────────────────────────────────────────────────
 const RECONCILE_MAX_DELTA = 50_000;
-const RECONCILE_VERSION = 'v1';
+/* v2 bump: closes the race-sync drift that accumulated on installs before
+ * the mobile-side race-sync retry queue existed (commit adding
+ * raceSyncQueue.ts). Pre-queue, fire-and-forget /sync/race failures lost
+ * coin deltas server-side. Bumping the version lets the per-player lock
+ * release for a fresh single reconciliation pass on those accounts.
+ * Always bump BOTH this constant and the matching one in
+ * lib/balanceReconcile.ts on the client. */
+const RECONCILE_VERSION = 'v2';
 
 async function reconcileClientBalance(
   playerId: string,
