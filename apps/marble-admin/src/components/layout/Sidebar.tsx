@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
   { name: 'Seasons', href: '/seasons', icon: '●' },
   { name: 'Analytics', href: '/analytics', icon: '☰' },
   { name: 'Live Ops', href: '/live-ops', icon: '◇' },
+  { name: 'Track Backgrounds', href: '/track-backgrounds', icon: '▦' },
   { name: 'Cohorts', href: '/cohorts', icon: '◫' },
   { name: 'A/B Tests', href: '/ab-tests', icon: '⇄' },
   { name: 'KPIs', href: '/kpis', icon: '◉' },

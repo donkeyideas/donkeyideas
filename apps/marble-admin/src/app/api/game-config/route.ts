@@ -29,13 +29,20 @@ const DEFAULTS: Record<string, any> = {
 export async function GET() {
   try {
     const configs = await prisma.gameConfig.findMany({
-      where: { group: { in: ['rewards', 'betting', 'limits'] } },
+      where: { group: { in: ['rewards', 'betting', 'limits', 'track-bg'] } },
     });
 
-    // Build config map with defaults
+    // Build numeric config map with defaults (numeric groups)
     const map: Record<string, number> = { ...DEFAULTS };
+    // Build per-track background image URL map (group: 'track-bg')
+    const trackBgImages: Record<string, string> = {};
+
     for (const c of configs) {
-      map[c.key] = parseFloat(c.value) || 0;
+      if (c.group === 'track-bg') {
+        trackBgImages[c.key] = c.value;
+      } else {
+        map[c.key] = parseFloat(c.value) || 0;
+      }
     }
 
     return NextResponse.json({
@@ -63,6 +70,7 @@ export async function GET() {
         champion: map.tournament_champ_prize,
       },
       xpPerLevel: map.xp_per_level,
+      trackBgImages,
     });
   } catch (error: any) {
     // On error, return defaults so the game always works
@@ -74,6 +82,7 @@ export async function GET() {
       maxDailyCoins: 25000,
       tournamentPrizes: { daily: 4600, weekly: 23000, champion: 46000 },
       xpPerLevel: 1000,
+      trackBgImages: {},
     });
   }
 }
