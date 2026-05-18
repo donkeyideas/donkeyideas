@@ -44,14 +44,21 @@ function formatHour(h: number): string {
   return h > 12 ? `${h - 12}pm` : `${h}am`;
 }
 
-/** Generate dynamic announcements for national race events */
+/** Generate dynamic announcements for national race events. An event is
+ *  "live" only within its daypart window: [startHourET, nextEvent.startHourET).
+ *  After its window closes the announcement disappears so we don't leave a
+ *  stale "Speed Demon is LIVE!" banner up after Marble Mile has opened. */
 function getEventAnnouncements(): { id: string; title: string; body: string; type: string; priority: number }[] {
   const currentHour = getEasternHour();
   const announcements: { id: string; title: string; body: string; type: string; priority: number }[] = [];
 
-  for (const event of NATIONAL_EVENTS) {
+  const sortedByStart = [...NATIONAL_EVENTS].sort((a, b) => a.startHourET - b.startHourET);
+
+  for (let i = 0; i < sortedByStart.length; i++) {
+    const event = sortedByStart[i];
+    const nextStart = sortedByStart[i + 1]?.startHourET ?? 24;
     const hoursUntil = event.startHourET - currentHour;
-    const isLive = currentHour >= event.startHourET;
+    const isLive = currentHour >= event.startHourET && currentHour < nextStart;
 
     if (isLive) {
       announcements.push({
