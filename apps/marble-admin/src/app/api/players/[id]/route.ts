@@ -60,7 +60,13 @@ export async function GET(
       return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
     }
 
-    // Fetch related data in parallel
+    // Fetch related data in parallel. Session metrics are kept OUT of this
+    // Promise.all because the game_app_sessions table may not exist yet on
+    // older environments (the push-delivery migration that introduced it
+    // hasn't been applied everywhere). A throw there would tank the whole
+    // detail response with a 500 and the modal would show "Failed to load
+    // player data." We swallow + log instead so the rest of the page still
+    // renders.
     const [
       recentRaces,
       recentBets,
@@ -69,8 +75,6 @@ export async function GET(
       seasonProgress,
       betStats,
       marbleBets,
-      sessionStats,
-      sessionsByDayRaw,
     ] = await Promise.all([
       prisma.raceRecord.findMany({
         where: { playerId: id },
@@ -108,24 +112,35 @@ export async function GET(
         _count: { id: true },
         _sum: { betAmount: true, payout: true },
       }),
-      // Avg Session length — average duration across all completed app
-      // sessions for this player. gameAppSession is populated by the mobile
-      // app on background/kill, so this number reflects real foreground
-      // time, not just race count.
-      prisma.gameAppSession.aggregate({
+    ]);
+
+    // Optional session metrics — gracefully degrades when the table isn't
+    // present on this DB.
+    let avgSessionSecs = 0;
+    let totalSessions = 0;
+    let distinctSessionDays = 1;
+    try {
+      const sessionStats = await prisma.gameAppSession.aggregate({
         where: { playerId: id },
         _count: { id: true },
         _avg: { durationSecs: true },
-      }),
-      // Distinct calendar days the player has opened the app. Sessions/Day
-      // = totalSessions / distinctDays. Counted via raw SQL because Prisma
-      // doesn't expose a DATE_TRUNC groupBy.
-      prisma.$queryRaw<{ day: Date }[]>`
-        SELECT DISTINCT DATE_TRUNC('day', "createdAt") AS day
-        FROM "game_app_sessions"
-        WHERE "playerId" = ${id}
-      `,
-    ]);
+      });
+      totalSessions = sessionStats._count?.id ?? 0;
+      avgSessionSecs = Math.round(Number(sessionStats._avg?.durationSecs ?? 0));
+      if (totalSessions > 0) {
+        const days = await prisma.$queryRaw<{ day: Date }[]>`
+          SELECT DISTINCT DATE_TRUNC('day', "createdAt") AS day
+          FROM "game_app_sessions"
+          WHERE "playerId" = ${id}
+        `;
+        distinctSessionDays = Math.max(1, days.length);
+      }
+    } catch (sessionErr: any) {
+      console.warn(
+        `[players/${id}] session metrics unavailable — table missing or query failed:`,
+        sessionErr?.message ?? sessionErr,
+      );
+    }
 
     // Calculate betting wins
     const totalBetWins = await prisma.betRecord.count({
@@ -168,7 +183,8 @@ export async function GET(
 
     /* Avg Session: mean foreground-session duration in mm:ss format.
      * Falls back to "N/A" when the player has no recorded sessions (older
-     * installs from before the session tracker shipped).
+     * installs from before the session tracker shipped, or environments
+     * where the game_app_sessions table isn't present yet — caught above).
      *
      * Sessions / Day: total recorded sessions divided by distinct calendar
      * days the player has had ANY session. Previously this label held
@@ -182,18 +198,15 @@ export async function GET(
      * per month on average — that's LTV / months active. Shown only for
      * paying users; non-payers see "N/A".
      */
-    const totalSessions = sessionStats._count?.id ?? 0;
-    const avgSessionSecs = Math.round(Number(sessionStats._avg?.durationSecs ?? 0));
     const fmtMMSS = (secs: number) => {
       const m = Math.floor(secs / 60);
       const s = secs % 60;
       return `${m}:${String(s).padStart(2, '0')}`;
     };
     const avgSessionLabel = totalSessions > 0 ? fmtMMSS(avgSessionSecs) : 'N/A';
-    const distinctSessionDays = Math.max(1, sessionsByDayRaw.length);
     const sessionsPerDay = totalSessions > 0
       ? (totalSessions / distinctSessionDays).toFixed(1)
-      : '0.0';
+      : 'N/A';
 
     const kpis = [
       { label: 'Monthly Spend', value: isPaying ? `$${(totalSpentNum / monthsSinceCreation).toFixed(2)}` : 'N/A', color: 'gold' },
