@@ -170,6 +170,22 @@ export async function GET(_request: NextRequest) {
     const arppu = payingPlayersCount > 0 ? revTotal / payingPlayersCount : 0;
     const ltv = totalPlayers > 0 ? revTotal / totalPlayers : 0;
 
+    // Avg Session Length over the last 30 days, computed from
+    // game_app_sessions written by the mobile session tracker. Shows N/A
+    // when no sessions have been recorded yet (e.g. before the next mobile
+    // build ships with the tracker, or for a brand-new env).
+    const avgSessionAgg = await prisma.gameAppSession.aggregate({
+      where: { createdAt: { gte: monthStart } },
+      _avg: { durationSecs: true },
+      _count: { id: true },
+    });
+    const avgSessionSecs = Math.round(Number(avgSessionAgg._avg.durationSecs ?? 0));
+    const avgSessionLabel = avgSessionAgg._count.id === 0
+      ? 'N/A'
+      : avgSessionSecs >= 60
+        ? `${Math.floor(avgSessionSecs / 60)}m ${avgSessionSecs % 60}s`
+        : `${avgSessionSecs}s`;
+
     // ── Quick Stats ──
     const quickStats = [
       { name: 'Total Registered Users', value: totalPlayers.toLocaleString(), color: 'text-white' },
@@ -179,7 +195,7 @@ export async function GET(_request: NextRequest) {
       { name: 'LTV', value: `$${ltv.toFixed(2)}`, color: 'text-marble-blue' },
       { name: 'Races Today', value: racesToday.toLocaleString(), color: 'text-white' },
       { name: 'Bets Placed Today', value: betsToday.toLocaleString(), color: 'text-white' },
-      { name: 'Avg Session Length', value: 'N/A', color: 'text-marble-blue' },
+      { name: 'Avg Session Length', value: avgSessionLabel, color: 'text-marble-blue' },
     ];
 
     // ── Alerts ──

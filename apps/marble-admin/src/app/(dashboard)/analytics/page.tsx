@@ -149,7 +149,7 @@ export default function AnalyticsPage() {
             {kpis.avgSession}
           </div>
           <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">
-            No session model
+            {kpis.avgSession === 'N/A' ? 'Awaiting mobile session data' : 'Last 30 days'}
           </div>
         </div>
 

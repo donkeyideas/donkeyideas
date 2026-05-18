@@ -103,23 +103,50 @@ export async function GET(_request: NextRequest) {
       prisma.gamePlayer.count(),
     ]);
 
-    // D1 Retention: players whose lastActiveAt is >= 1 day after createdAt / total players
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-    const eligibleForD1 = await prisma.gamePlayer.count({
-      where: { createdAt: { lte: oneDayAgo } },
-    });
-    const retainedD1 = await prisma.$queryRawUnsafe<{ count: bigint }[]>(
-      `SELECT COUNT(*) as count FROM game_players WHERE "createdAt" <= $1 AND "lastActiveAt" >= "createdAt" + interval '1 day'`,
-      oneDayAgo,
-    );
-    const d1RetainedCount = Number(retainedD1[0]?.count ?? 0);
+    // D1 Retention KPI: true cohort window — player raced in [D1, D2)
+    // after install. Mirrors the retention curve math below.
+    const [d1EligibleRows, d1RetainedRows] = await Promise.all([
+      prisma.$queryRawUnsafe<{ count: bigint }[]>(
+        `SELECT COUNT(*) as count
+         FROM game_players gp
+         WHERE gp."createdAt" + interval '2 days' <= now()`,
+      ),
+      prisma.$queryRawUnsafe<{ count: bigint }[]>(
+        `SELECT COUNT(DISTINCT gp.id) as count
+         FROM game_players gp
+         WHERE gp."createdAt" + interval '2 days' <= now()
+         AND EXISTS (
+           SELECT 1 FROM game_race_records rr
+           WHERE rr."playerId" = gp.id
+           AND rr."racedAt" >= gp."createdAt" + interval '1 day'
+           AND rr."racedAt" <  gp."createdAt" + interval '2 days'
+         )`,
+      ),
+    ]);
+    const eligibleForD1 = Number(d1EligibleRows[0]?.count ?? 0);
+    const d1RetainedCount = Number(d1RetainedRows[0]?.count ?? 0);
     const d1Retention = eligibleForD1 > 0 ? Math.round((d1RetainedCount / eligibleForD1) * 100) : 0;
+
+    // Avg Session length over the last 30 days, derived from real
+    // foreground/background sessions recorded by the mobile tracker.
+    const sessionWindowStart = new Date();
+    sessionWindowStart.setDate(sessionWindowStart.getDate() - 30);
+    const sessionAgg = await prisma.gameAppSession.aggregate({
+      where: { createdAt: { gte: sessionWindowStart } },
+      _avg: { durationSecs: true },
+      _count: { id: true },
+    });
+    const avgSessSecs = Math.round(Number(sessionAgg._avg.durationSecs ?? 0));
+    const avgSession = sessionAgg._count.id === 0
+      ? 'N/A'
+      : avgSessSecs >= 60
+        ? `${Math.floor(avgSessSecs / 60)}m ${avgSessSecs % 60}s`
+        : `${avgSessSecs}s`;
 
     const kpis = {
       racesToday,
       betsToday,
-      avgSession: 'N/A',
+      avgSession,
       d1Retention,
     };
 
@@ -146,35 +173,44 @@ export async function GET(_request: NextRequest) {
       pct: totalBetsForDist > 0 ? Math.round((betDistributionResults[i] / totalBetsForDist) * 100) : 0,
     }));
 
-    // --- Retention Curve ---
+    // --- Retention Curve (true cohort window) ---
+    // For day N, count players who had ANY race in the 24-hour window
+    // starting at createdAt + N days. Denominator is players whose cohort
+    // window has fully elapsed (createdAt + N + 1 days <= now). This is
+    // strict cohort retention, not the looser "ever active after N days"
+    // proxy used previously, which overstated retention by counting any
+    // future activity as a hit.
     const retentionDays = [0, 1, 3, 7, 14, 30, 60, 90];
     const retentionLabels = ['D0', 'D1', 'D3', 'D7', 'D14', 'D30', 'D60', 'D90'];
 
     const retentionCurve = await Promise.all(
-      retentionDays.map(async (days: any, i: number) => {
-        if (days === 0) {
-          return { label: retentionLabels[i], pct: 100, value: '100%' };
-        }
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - days);
+      retentionDays.map(async (days: number, i: number) => {
+        // D0 = "did the player race on their install day at all". Same query
+        // structure as the others, just with a 0-day offset.
+        const eligibleSql = `SELECT COUNT(*) as count
+          FROM game_players gp
+          WHERE gp."createdAt" + (($1::int + 1) * interval '1 day') <= now()`;
+        const retainedSql = `SELECT COUNT(DISTINCT gp.id) as count
+          FROM game_players gp
+          WHERE gp."createdAt" + (($1::int + 1) * interval '1 day') <= now()
+          AND EXISTS (
+            SELECT 1 FROM game_race_records rr
+            WHERE rr."playerId" = gp.id
+            AND rr."racedAt" >= gp."createdAt" + ($1::int * interval '1 day')
+            AND rr."racedAt" <  gp."createdAt" + (($1::int + 1) * interval '1 day')
+          )`;
 
-        // Players created at least X days ago
-        const eligible = await prisma.gamePlayer.count({
-          where: { createdAt: { lte: cutoffDate } },
-        });
+        const [eligibleRows, retainedRows] = await Promise.all([
+          prisma.$queryRawUnsafe<{ count: bigint }[]>(eligibleSql, days),
+          prisma.$queryRawUnsafe<{ count: bigint }[]>(retainedSql, days),
+        ]);
 
+        const eligible = Number(eligibleRows[0]?.count ?? 0);
+        const retained = Number(retainedRows[0]?.count ?? 0);
         if (eligible === 0) {
-          return { label: retentionLabels[i], pct: 0, value: '0%' };
+          return { label: retentionLabels[i], pct: 0, value: '—' };
         }
-
-        // Of those, how many have lastActiveAt >= createdAt + X days
-        const retained = await prisma.$queryRawUnsafe<{ count: bigint }[]>(
-          `SELECT COUNT(*) as count FROM game_players WHERE "createdAt" <= $1 AND "lastActiveAt" >= "createdAt" + interval '${days} days'`,
-          cutoffDate,
-        );
-
-        const retainedCount = Number(retained[0]?.count ?? 0);
-        const pct = Math.round((retainedCount / eligible) * 100);
+        const pct = Math.round((retained / eligible) * 100);
         return { label: retentionLabels[i], pct, value: `${pct}%` };
       }),
     );

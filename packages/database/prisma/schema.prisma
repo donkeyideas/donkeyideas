@@ -1032,6 +1032,7 @@ model GamePlayer {
   updatedAt DateTime @updatedAt
 
   sessions             GamePlayerSession[]
+  appSessions          GameAppSession[]
   raceRecords          RaceRecord[]
   betRecords           BetRecord[]
   coinTransactions     GameCoinTransaction[]
@@ -1062,6 +1063,27 @@ model GamePlayerSession {
 
   @@index([playerId])
   @@map("game_player_sessions")
+}
+
+// App foreground/background session for "Avg Session Length" telemetry. Each
+// row represents one in-app session from when the player foregrounded the
+// app to when they backgrounded or killed it. Posted by the mobile app once
+// the session ends; durationSecs is the authoritative value (clocks can
+// drift / clients can fake startedAt).
+model GameAppSession {
+  id           String   @id @default(cuid())
+  playerId     String
+  platform     String   // ios, android, web
+  durationSecs Int      // length of the session in seconds
+  startedAt    DateTime
+  endedAt      DateTime
+  createdAt    DateTime @default(now())
+
+  player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@index([createdAt])
+  @@map("game_app_sessions")
 }
 
 model RaceRecord {

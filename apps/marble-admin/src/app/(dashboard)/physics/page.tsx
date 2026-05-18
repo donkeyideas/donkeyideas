@@ -197,9 +197,15 @@ export default function PhysicsPage() {
       {/*  ROW 2: Engine Configuration Panel                           */}
       {/* ============================================================ */}
       <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
-        <h2 className="font-heading text-lg tracking-wide mb-4 flex items-center gap-2">
+        <h2 className="font-heading text-lg tracking-wide mb-1 flex items-center gap-2">
           <span className="text-gold">MATTER.JS</span> ENGINE CONFIGURATION
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/[0.08] text-white/40 tracking-wider">
+            REFERENCE CATALOG
+          </span>
         </h2>
+        <p className="text-[11px] text-white/40 mb-4">
+          Static reference values describing the tuning shipped with the current game build. Not pulled live from the running app &mdash; update these constants in <code className="text-white/60">apps/marble-admin/src/app/api/physics/route.ts</code> when the mobile build changes.
+        </p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-3 text-sm">
           <ConfigRow label="Engine" value={ec.engine} />
           <ConfigRow label="Substeps / Frame" value={String(ec.substeps)} />
@@ -242,9 +248,14 @@ export default function PhysicsPage() {
       {/*  ROW 2.5: Physics Obstacle Toolkit                           */}
       {/* ============================================================ */}
       <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
-        <h2 className="font-heading text-lg tracking-wide mb-2">PHYSICS OBSTACLE TOOLKIT</h2>
+        <h2 className="font-heading text-lg tracking-wide mb-2 flex items-center gap-2">
+          PHYSICS OBSTACLE TOOLKIT
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/[0.08] text-white/40 tracking-wider">
+            REFERENCE CATALOG
+          </span>
+        </h2>
         <p className="text-xs text-white/40 mb-5">
-          Every obstacle type in the simulation — physics properties, track usage, and real-time behavior.
+          Every obstacle type in the simulation — physics properties, track usage, and per-tool behavior. Static catalog; instance counts come from the obstacleTools constant, not from a live track scan.
         </p>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {data.obstacleTools?.map((tool) => (
@@ -288,7 +299,15 @@ export default function PhysicsPage() {
       {/*  ROW 3: Marble Dynamics Table                                */}
       {/* ============================================================ */}
       <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
-        <h2 className="font-heading text-lg tracking-wide mb-4">MARBLE DYNAMICS PROFILES</h2>
+        <h2 className="font-heading text-lg tracking-wide mb-1 flex items-center gap-2">
+          MARBLE DYNAMICS PROFILES
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/[0.08] text-white/40 tracking-wider">
+            STAT CATALOG + LIVE OUTCOMES
+          </span>
+        </h2>
+        <p className="text-[11px] text-white/40 mb-4">
+          Spd/Pwr/Bnc/Luck and the derived physics columns are static catalog data from the game build. <span className="text-marble-blue">Avg Finish, Win Rate, Races, Bets</span> are computed live from the last 500 races.
+        </p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
