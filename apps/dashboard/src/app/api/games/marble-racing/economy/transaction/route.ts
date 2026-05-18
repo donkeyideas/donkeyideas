@@ -38,7 +38,8 @@ type Action =
   | 'playoff_payout'
   | 'national_entry'
   | 'national_payout'
-  | 'custom_track_entry';
+  | 'custom_track_entry'
+  | 'season_starter_bonus';
 
 interface TransactionRequest {
   action: Action;
@@ -137,6 +138,9 @@ export async function POST(request: NextRequest) {
           { error: { message: 'Achievements do not grant coins; no transaction needed' } },
           { status: 400 },
         );
+
+      case 'season_starter_bonus':
+        return seasonStarterBonus(player.id, idempotencyKey, payload);
 
       default:
         return NextResponse.json(
@@ -309,6 +313,101 @@ async function claimChallenge(
       createdAt: result.createdAt.toISOString(),
     },
     result: { challengeId, reward, description: canonical.description },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// season_starter_bonus — returning players get a coin gift on starting a
+// new season (Season 2+). Server derives the bonus amount from the
+// requested seasonNumber so the client can't inflate it.
+//
+// Formula (matches gameStore.startNewSeason):
+//   bonus = min(2500, 500 + (seasonNumber - 2) * 250)
+//
+// Idempotency uses the natural key `season_starter:{playerId}:{seasonNumber}`
+// — without this, the action would be re-applied every time the player
+// reopened the app while the season was active.
+// ─────────────────────────────────────────────────────────────────────────
+async function seasonStarterBonus(
+  playerId: string,
+  _transportIdempotencyKey: string,
+  payload: Record<string, unknown>,
+): Promise<NextResponse> {
+  const seasonNumber = typeof payload.seasonNumber === 'number' ? payload.seasonNumber : null;
+  if (!seasonNumber || seasonNumber < 2 || !Number.isInteger(seasonNumber)) {
+    return NextResponse.json(
+      { error: { message: 'seasonNumber (integer >= 2) required' } },
+      { status: 400 },
+    );
+  }
+  // Same formula as the mobile client (gameStore.startNewSeason). Server
+  // re-derives so the client can't ask for a bigger reward than allowed.
+  const bonus = Math.min(2500, 500 + (seasonNumber - 2) * 250);
+
+  // Natural idempotency key constructed server-side from authenticated
+  // playerId + seasonNumber. This guarantees a player can only claim the
+  // bonus for a given season ONCE, regardless of how many times the client
+  // POSTs (cold start, retry queue replay, double-tap). The transport-level
+  // idempotencyKey the client sent is ignored for this action.
+  const naturalKey = `season_starter:${playerId}:${seasonNumber}`;
+
+  const existing = await prisma.gameCoinTransaction.findUnique({
+    where: { idempotencyKey: naturalKey },
+    select: { id: true, type: true, amount: true, balance: true, createdAt: true },
+  });
+  if (existing) {
+    return NextResponse.json({
+      success: true,
+      balance: existing.balance,
+      transaction: {
+        id: existing.id,
+        type: existing.type,
+        amount: existing.amount,
+        createdAt: existing.createdAt.toISOString(),
+      },
+      replayed: true,
+      result: { seasonNumber, bonus: existing.amount },
+    });
+  }
+
+  const player = await prisma.gamePlayer.findUnique({
+    where: { id: playerId },
+    select: { coins: true },
+  });
+  if (!player) {
+    return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
+  }
+
+  const newBalance = player.coins + bonus;
+  const result = await prisma.$transaction(async (tx) => {
+    const txRow = await tx.gameCoinTransaction.create({
+      data: {
+        playerId,
+        type: 'season_starter_bonus',
+        amount: bonus,
+        balance: newBalance,
+        description: `Season ${seasonNumber} Starter Bonus`,
+        idempotencyKey: naturalKey,
+      },
+      select: { id: true, type: true, amount: true, createdAt: true },
+    });
+    await tx.gamePlayer.update({
+      where: { id: playerId },
+      data: { coins: { increment: bonus }, lastActiveAt: new Date() },
+    });
+    return txRow;
+  });
+
+  return NextResponse.json({
+    success: true,
+    balance: newBalance,
+    transaction: {
+      id: result.id,
+      type: result.type,
+      amount: result.amount,
+      createdAt: result.createdAt.toISOString(),
+    },
+    result: { seasonNumber, bonus },
   });
 }
 
