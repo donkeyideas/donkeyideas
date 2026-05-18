@@ -129,19 +129,27 @@ export async function GET(_request: NextRequest) {
 
     // Avg Session length over the last 30 days, derived from real
     // foreground/background sessions recorded by the mobile tracker.
-    const sessionWindowStart = new Date();
-    sessionWindowStart.setDate(sessionWindowStart.getDate() - 30);
-    const sessionAgg = await prisma.gameAppSession.aggregate({
-      where: { createdAt: { gte: sessionWindowStart } },
-      _avg: { durationSecs: true },
-      _count: { id: true },
-    });
-    const avgSessSecs = Math.round(Number(sessionAgg._avg.durationSecs ?? 0));
-    const avgSession = sessionAgg._count.id === 0
-      ? 'N/A'
-      : avgSessSecs >= 60
-        ? `${Math.floor(avgSessSecs / 60)}m ${avgSessSecs % 60}s`
-        : `${avgSessSecs}s`;
+    // Wrapped in try/catch so the whole Analytics endpoint doesn't 500
+    // before the migration has been applied or before the mobile tracker
+    // has shipped — falls back to 'N/A' which the UI handles.
+    let avgSession = 'N/A';
+    try {
+      const sessionWindowStart = new Date();
+      sessionWindowStart.setDate(sessionWindowStart.getDate() - 30);
+      const sessionAgg = await prisma.gameAppSession.aggregate({
+        where: { createdAt: { gte: sessionWindowStart } },
+        _avg: { durationSecs: true },
+        _count: { id: true },
+      });
+      const avgSessSecs = Math.round(Number(sessionAgg._avg.durationSecs ?? 0));
+      if (sessionAgg._count.id > 0) {
+        avgSession = avgSessSecs >= 60
+          ? `${Math.floor(avgSessSecs / 60)}m ${avgSessSecs % 60}s`
+          : `${avgSessSecs}s`;
+      }
+    } catch (err) {
+      // Table likely doesn't exist yet (migration unapplied). Leave as 'N/A'.
+    }
 
     const kpis = {
       racesToday,
