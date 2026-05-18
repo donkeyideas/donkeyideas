@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
+import { getNonSandboxPurchaseFilter } from '@/lib/sandboxFilter';
 import { cookies } from 'next/headers';
 
 /* ------------------------------------------------------------------ */
@@ -78,8 +79,8 @@ export async function GET() {
     const plusCount = tierCounts['plus'] || 0;
 
     // Pass revenue — lifetime totals across all completed pass purchases.
-    // (Per-season scoping would require a `purchasedDuringSeasonNumber`
-    // field that doesn't exist on GamePurchase yet.)
+    // Excludes Apple sandbox/TestFlight rows via the shared filter.
+    const excludePurchaseTest = await getNonSandboxPurchaseFilter();
     const passRevenue = await prisma.gamePurchase.aggregate({
       where: {
         status: 'completed',
@@ -87,6 +88,7 @@ export async function GET() {
           { productName: { contains: 'pass', mode: 'insensitive' } },
           { productName: { contains: 'season', mode: 'insensitive' } },
         ],
+        ...excludePurchaseTest,
       },
       _sum: { priceUsd: true },
     });

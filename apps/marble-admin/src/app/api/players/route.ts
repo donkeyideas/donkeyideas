@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
+import { getSandboxAwareReport } from '@/lib/sandboxFilter';
 import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
@@ -24,6 +25,13 @@ export async function GET(request: NextRequest) {
     const dir = searchParams.get('dir') || 'desc';
     const skip = (page - 1) * limit;
 
+    // Sandbox-aware payer set. We use this instead of player.totalSpent
+    // for paying/free filtering and the headline count because totalSpent
+    // is incremented on sandbox purchases too — so a TestFlight tester
+    // would always be misclassified as "paying" otherwise.
+    const sandbox = await getSandboxAwareReport();
+    const payerIdsArr = [...sandbox.payerIds];
+
     // Build where clause
     const where: any = {};
     if (search) {
@@ -33,9 +41,11 @@ export async function GET(request: NextRequest) {
         { id: { contains: search } },
       ];
     }
-    if (filter === 'paying') where.totalSpent = { gt: 0 };
-    else if (filter === 'free') where.totalSpent = { equals: 0 };
-    else if (filter === 'banned') where.status = 'banned';
+    if (filter === 'paying') {
+      where.id = payerIdsArr.length > 0 ? { in: payerIdsArr } : { in: ['__no_payers__'] };
+    } else if (filter === 'free') {
+      where.id = payerIdsArr.length > 0 ? { notIn: payerIdsArr } : undefined;
+    } else if (filter === 'banned') where.status = 'banned';
     else if (filter === 'flagged') where.status = 'flagged';
 
     // Build orderBy
@@ -73,15 +83,20 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.gamePlayer.count({ where }),
-      prisma.gamePlayer.count({ where: { totalSpent: { gt: 0 } } }),
+      // Headline "paying" KPI matches the filter pill semantics
+      Promise.resolve(sandbox.payerIds.size),
       prisma.gamePlayer.count({ where: { status: 'banned' } }),
       prisma.gamePlayer.count({ where: { status: 'flagged' } }),
     ]);
 
     return NextResponse.json({
+      // Use the sandbox-aware per-player non-sandbox spend, not the raw
+      // totalSpent column (which double-counts sandbox purchases). The
+      // table's "Total Spent" column shows what the player actually paid
+      // and that we'd report as revenue.
       players: players.map(p => ({
         ...p,
-        totalSpent: Number(p.totalSpent),
+        totalSpent: sandbox.spendByPlayer.get(p.id) ?? 0,
         winRate: p.totalRaces > 0 ? Math.round((p.totalWins / p.totalRaces) * 100) : 0,
       })),
       pagination: {

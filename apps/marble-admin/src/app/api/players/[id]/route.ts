@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
+import { getSandboxAwareReport } from '@/lib/sandboxFilter';
 import { cookies } from 'next/headers';
 
 export async function GET(
@@ -133,8 +134,13 @@ export async function GET(
     const createdAt = new Date(player.createdAt);
     const monthsSinceCreation = Math.max(1, (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24 * 30));
     const daysSinceCreation = Math.max(1, Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)));
-    const totalSpentNum = Number(player.totalSpent);
-    const isPaying = totalSpentNum > 0;
+    // Use sandbox-aware non-sandbox spend instead of player.totalSpent
+    // (which is polluted by sandbox / TestFlight purchases). Keeps this
+    // player's LTV / ARPPU / paying status in lockstep with the rest of
+    // the dashboard.
+    const sandbox = await getSandboxAwareReport();
+    const totalSpentNum = sandbox.spendByPlayer.get(id) ?? 0;
+    const isPaying = sandbox.payerIds.has(id);
 
     const lastActiveAt = player.lastActiveAt ? new Date(player.lastActiveAt) : createdAt;
     const daysSinceActive = Math.floor((now.getTime() - lastActiveAt.getTime()) / (1000 * 60 * 60 * 24));
@@ -256,7 +262,9 @@ export async function GET(
     return NextResponse.json({
       player: {
         ...player,
-        totalSpent: Number(player.totalSpent),
+        // Use sandbox-aware non-sandbox spend so the modal matches what
+        // Financials counts as revenue for this player.
+        totalSpent: totalSpentNum,
       },
       betting: {
         totalBets,

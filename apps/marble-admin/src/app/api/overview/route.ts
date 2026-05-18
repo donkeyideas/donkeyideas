@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
+import { getSandboxAwareReport } from '@/lib/sandboxFilter';
 import { cookies } from 'next/headers';
 
 export async function GET(_request: NextRequest) {
@@ -25,6 +26,22 @@ export async function GET(_request: NextRequest) {
     lastWeekStart.setDate(lastWeekStart.getDate() - 7);
     const monthStart = new Date(todayStart);
     monthStart.setDate(monthStart.getDate() - 30);
+
+    // Single sandbox-aware lookup powers BOTH the revenue queries below
+    // (via .excludeFilter) AND the "paying users" derivation (via
+    // .payerIds). Critically, paying user counts come from this set, NOT
+    // from player.totalSpent — that field gets incremented at sync time
+    // regardless of sandbox status, so it returns 1 for a player whose
+    // only purchase was a TestFlight test. The numbers wouldn't reconcile
+    // unless every "paying" check uses the same source as revenue.
+    const sandbox = await getSandboxAwareReport();
+    const excludePurchaseTest = sandbox.excludeFilter;
+    const payerIdsArr = [...sandbox.payerIds];
+    // Prisma needs `id: { in: [...] }` — if no payers, use a query that
+    // matches nothing rather than returning every row.
+    const payerWhere = payerIdsArr.length > 0
+      ? { id: { in: payerIdsArr } }
+      : { id: { in: ['__no_payers__'] } };
 
     // ── Core queries (parallel) ──
     const [
@@ -56,19 +73,22 @@ export async function GET(_request: NextRequest) {
       prisma.gamePlayer.count({ where: { status: 'banned' } }),
       prisma.raceRecord.count({ where: { racedAt: { gte: todayStart } } }),
       prisma.raceRecord.count(),
-      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed' } }),
-      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: todayStart } } }),
-      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: yesterdayStart, lt: todayStart } } }),
-      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: weekStart } } }),
-      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: monthStart } } }),
-      prisma.gamePlayer.count({ where: { totalSpent: { gt: 0 } } }),
-      prisma.gamePlayer.count({ where: { totalSpent: { gt: 0 }, createdAt: { gte: weekStart } } }),
-      prisma.gamePlayer.count({ where: { totalSpent: { gt: 0 }, createdAt: { gte: lastWeekStart, lt: weekStart } } }),
+      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', ...excludePurchaseTest } }),
+      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: todayStart }, ...excludePurchaseTest } }),
+      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: yesterdayStart, lt: todayStart }, ...excludePurchaseTest } }),
+      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: weekStart }, ...excludePurchaseTest } }),
+      prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: monthStart }, ...excludePurchaseTest } }),
+      // Paying user counts derived from the non-sandbox payer set,
+      // not from gamePlayer.totalSpent (which is polluted by sandbox
+      // purchases — see comment at top of route).
+      prisma.gamePlayer.count({ where: payerWhere }),
+      prisma.gamePlayer.count({ where: { AND: [payerWhere, { createdAt: { gte: weekStart } }] } }),
+      prisma.gamePlayer.count({ where: { AND: [payerWhere, { createdAt: { gte: lastWeekStart, lt: weekStart } }] } }),
       prisma.gamePlayer.count({ where: { createdAt: { gte: todayStart } } }),
       prisma.gamePlayer.count({ where: { createdAt: { gte: weekStart } } }),
       prisma.gamePlayer.aggregate({ _sum: { coins: true } }),
       prisma.betRecord.count({ where: { placedAt: { gte: todayStart } } }),
-      prisma.gamePurchase.count({ where: { status: 'refunded', refundedAt: { gte: todayStart } } }),
+      prisma.gamePurchase.count({ where: { status: 'refunded', refundedAt: { gte: todayStart }, ...excludePurchaseTest } }),
     ]);
 
     // ── Anomaly Detection: 7-day daily metrics ──
@@ -83,7 +103,7 @@ export async function GET(_request: NextRequest) {
         prisma.gamePlayer.count({ where: { lastActiveAt: { gte: dayStart, lt: dayEnd } } }),
         prisma.raceRecord.count({ where: { racedAt: { gte: dayStart, lt: dayEnd } } }),
         prisma.betRecord.count({ where: { placedAt: { gte: dayStart, lt: dayEnd } } }),
-        prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: dayStart, lt: dayEnd } } }),
+        prisma.gamePurchase.aggregate({ _sum: { priceUsd: true }, where: { status: 'completed', purchasedAt: { gte: dayStart, lt: dayEnd }, ...excludePurchaseTest } }),
       ]);
 
       anomalyDays.push({
@@ -103,7 +123,7 @@ export async function GET(_request: NextRequest) {
     // ── ARPDAU & ARPPU (today) ──
     const payingPlayersToday = await prisma.gamePurchase.groupBy({
       by: ['playerId'],
-      where: { status: 'completed', purchasedAt: { gte: todayStart } },
+      where: { status: 'completed', purchasedAt: { gte: todayStart }, ...excludePurchaseTest },
     });
     const payingPlayersTodayCount = payingPlayersToday.length;
 
@@ -115,7 +135,7 @@ export async function GET(_request: NextRequest) {
       const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
       const agg = await prisma.gamePurchase.aggregate({
         _sum: { priceUsd: true },
-        where: { status: 'completed', purchasedAt: { gte: mStart, lt: mEnd } },
+        where: { status: 'completed', purchasedAt: { gte: mStart, lt: mEnd }, ...excludePurchaseTest },
       });
       revenueChart.push({
         month: monthNames[mStart.getMonth()],
@@ -158,7 +178,7 @@ export async function GET(_request: NextRequest) {
     const productGroups = await prisma.gamePurchase.groupBy({
       by: ['productName'],
       _sum: { priceUsd: true },
-      where: { status: 'completed' },
+      where: { status: 'completed', ...excludePurchaseTest },
       orderBy: { _sum: { priceUsd: 'desc' } },
     });
     const donutColors = ['#ffc220', '#6ec1ff', '#c39bd3', '#2ecc71', '#e74c3c', '#f39c12', '#1abc9c', '#e67e22'];

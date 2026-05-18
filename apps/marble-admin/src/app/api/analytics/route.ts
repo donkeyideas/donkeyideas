@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
+import { getSandboxAwareReport } from '@/lib/sandboxFilter';
 import { cookies } from 'next/headers';
 
 const ALL_MARBLES = ['dash', 'spike', 'rocky', 'lucky', 'frosty', 'nova', 'shadow', 'aqua'];
@@ -43,6 +44,13 @@ export async function GET(_request: NextRequest) {
     todayStart.setHours(0, 0, 0, 0);
     const weekStart = new Date(todayStart);
     weekStart.setDate(weekStart.getDate() - 7);
+
+    // Single source of truth for sandbox-aware payer counts + spend.
+    // .excludeFilter scopes gamePurchase aggregates; .payerIds + .spendByPlayer
+    // replace the polluted gamePlayer.totalSpent column for "is paying"
+    // and tier classification (Whale / Dolphin / Minnow).
+    const sandbox = await getSandboxAwareReport();
+    const excludePurchaseTest = sandbox.excludeFilter;
 
     // Per-marble betting stats (used by Betting Analytics card for Most/Least
     // Bet-On). These are bet-side numbers, NOT race outcomes.
@@ -256,9 +264,11 @@ export async function GET(_request: NextRequest) {
       where: { gameMode: 'tournament' },
     });
 
-    // Coin Purchases
+    // Coin Purchases — exclude sandbox so TestFlight buyers don't inflate
+    // Feature Adoption percentages
     const playersWithPurchases = await prisma.gamePurchase.groupBy({
       by: ['playerId'],
+      where: excludePurchaseTest,
       _count: { id: true },
     });
 
@@ -345,22 +355,25 @@ export async function GET(_request: NextRequest) {
     // Segments are mutually exclusive: a player belongs to exactly one bucket.
     // Spend tiers (Whale/Dolphin/Minnow/Free) require lastActiveAt within the
     // 30-day window; anyone inactive 30+ days lands in Churned regardless of
-    // spend. Without the active filter on the spend tiers, a $50 whale who
-    // hasn't opened the app in two months would be counted in BOTH Whale and
-    // Churned, and the segment bar would sum to >100% of unique players.
+    // spend.
+    //
+    // Tier classification uses sandbox-aware spend (sandbox.spendByPlayer),
+    // NOT player.totalSpent — the column gets incremented on sandbox
+    // syncs and would misclassify TestFlight testers as Whales. We pull
+    // the candidate active players once and bucket in-memory.
     const activeWhere = { lastActiveAt: { gte: thirtyDaysAgo }, status: { not: 'banned' as const } };
-    const [whaleCount, dolphinCount, minnowCount, freeCount, churnedCount] = await Promise.all([
-      // Whale: totalSpent > $20, active
-      prisma.gamePlayer.count({ where: { ...activeWhere, totalSpent: { gt: 20 } } }),
-      // Dolphin: totalSpent $5–$20, active
-      prisma.gamePlayer.count({ where: { ...activeWhere, totalSpent: { gte: 5, lte: 20 } } }),
-      // Minnow: totalSpent $0.01–$4.99, active
-      prisma.gamePlayer.count({ where: { ...activeWhere, totalSpent: { gt: 0, lt: 5 } } }),
-      // Free: totalSpent = 0, active in last 30 days
-      prisma.gamePlayer.count({ where: { ...activeWhere, totalSpent: { equals: 0 } } }),
-      // Churned: inactive 30+ days (any spend level)
+    const [activePlayersList, churnedCount] = await Promise.all([
+      prisma.gamePlayer.findMany({ where: activeWhere, select: { id: true } }),
       prisma.gamePlayer.count({ where: { lastActiveAt: { lt: thirtyDaysAgo }, status: { not: 'banned' } } }),
     ]);
+    let whaleCount = 0, dolphinCount = 0, minnowCount = 0, freeCount = 0;
+    for (const p of activePlayersList) {
+      const spent = sandbox.spendByPlayer.get(p.id) ?? 0;
+      if (spent > 20) whaleCount++;
+      else if (spent >= 5) dolphinCount++;
+      else if (spent > 0) minnowCount++;
+      else freeCount++;
+    }
 
     const segments = [
       { name: 'Whale', count: whaleCount, color: '#ffc220', desc: '$20+ spent' },
@@ -378,7 +391,7 @@ export async function GET(_request: NextRequest) {
       const wEnd = new Date();
       wEnd.setDate(wEnd.getDate() - w * 7);
       const agg = await prisma.gamePurchase.aggregate({
-        where: { purchasedAt: { gte: wStart, lt: wEnd }, status: 'completed' },
+        where: { purchasedAt: { gte: wStart, lt: wEnd }, status: 'completed', ...excludePurchaseTest },
         _sum: { priceUsd: true },
         _count: { id: true },
       });
@@ -463,7 +476,9 @@ export async function GET(_request: NextRequest) {
         twoWeeksAgo,
         weekStart,
       ),
-      // purchaseRepeatRate: payers with 2+ purchases
+      // purchaseRepeatRate: payers with 2+ NON-SANDBOX completed purchases.
+      // (Sandbox rows are excluded so a TestFlight tester making two test
+      // buys doesn't count as a repeat payer.)
       prisma.$queryRawUnsafe<{ count: bigint }[]>(
         `SELECT COUNT(*) as count FROM (
            SELECT "playerId" FROM game_purchases
@@ -472,8 +487,8 @@ export async function GET(_request: NextRequest) {
            HAVING COUNT(*) >= 2
          ) sub`,
       ),
-      // total payers ever
-      prisma.gamePlayer.count({ where: { totalSpent: { gt: 0 } } }),
+      // total payers ever — sandbox-aware (matches Overview / Users)
+      Promise.resolve(sandbox.payerIds.size),
       // engagementVelocity: races this week
       prisma.raceRecord.count({ where: { racedAt: { gte: weekStart } } }),
       // races last week

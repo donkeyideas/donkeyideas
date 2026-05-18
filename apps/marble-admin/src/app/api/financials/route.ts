@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
+import { getNonSandboxPurchaseFilter } from '@/lib/sandboxFilter';
 import { cookies } from 'next/headers';
 
 /* ------------------------------------------------------------------ */
@@ -86,36 +87,10 @@ export async function GET() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Auto-exclude sandbox / TestFlight purchases from Financials. Two
-    // layers of detection:
-    //   1. status='sandbox' — newly recorded purchases tagged by the
-    //      Apple verifyReceipt environment field at sync time.
-    //   2. Legacy heuristic — pre-tagging iOS purchases whose
-    //      storeTransactionId doesn't match Apple's production format
-    //      (long numeric string, typically 16+ digits). Catches the
-    //      kxtyqh-class noise that's already in the DB.
-    //
-    // Production Apple transaction IDs look like 2000000xxxxxxxxxxx
-    // (length >= 13, all digits). Sandbox IDs are usually shorter and
-    // can contain non-numeric prefixes. We exclude anything that doesn't
-    // pass the strict production check.
-    const APPLE_PROD_TXN_REGEX = /^\d{13,}$/;
-    const allPurchaseIds = await prisma.gamePurchase.findMany({
-      where: { status: { in: ['completed', 'refunded'] } },
-      select: { id: true, platform: true, storeTransactionId: true },
-    });
-    const legacySandboxIds = allPurchaseIds
-      .filter((p) =>
-        p.platform === 'ios' &&
-        (!p.storeTransactionId || !APPLE_PROD_TXN_REGEX.test(p.storeTransactionId)),
-      )
-      .map((p) => p.id);
-    const excludeTest = {
-      AND: [
-        { status: { not: 'sandbox' as const } },
-        ...(legacySandboxIds.length > 0 ? [{ id: { notIn: legacySandboxIds } }] : []),
-      ],
-    };
+    // See lib/sandboxFilter.ts for the exclusion strategy (status='sandbox'
+    // + iOS legacy-heuristic). Computed once per request and spread into
+    // every gamePurchase query below.
+    const excludeTest = await getNonSandboxPurchaseFilter();
 
     // Revenue by product — both monthly (for the pricing matrix, whose
     // columns are labelled "Units Sold (Month)" / "Monthly Revenue") and

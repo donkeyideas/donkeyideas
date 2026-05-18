@@ -149,10 +149,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // For sandbox purchases, DO NOT increment totalSpent — that field
+    // feeds every "paying user / conversion / segments" calculation on
+    // the admin dashboard and we don't want TestFlight test buys to
+    // inflate it. Coins still get granted so the in-app UX works.
     await prisma.gamePlayer.update({
       where: { id: player.id },
       data: {
-        totalSpent: { increment: product.priceUsd },
+        ...(verify.isTest ? {} : { totalSpent: { increment: product.priceUsd } }),
         coins: currentCoins ?? { increment: product.coinsGranted },
         lastActiveAt: new Date(),
       },

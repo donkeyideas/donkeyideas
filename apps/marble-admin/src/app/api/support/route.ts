@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
+import { getNonSandboxPurchaseFilter } from '@/lib/sandboxFilter';
 import { cookies } from 'next/headers';
 
 export async function GET() {
@@ -13,6 +14,9 @@ export async function GET() {
 
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - 7);
+
+    // Sandbox/TestFlight exclusion so support refund stats match Financials.
+    const excludePurchaseTest = await getNonSandboxPurchaseFilter();
 
     const [
       tickets,
@@ -32,9 +36,9 @@ export async function GET() {
       prisma.supportTicket.count({ where: { status: { in: ['open', 'pending'] } } }),
       prisma.supportTicket.count({ where: { status: 'resolved', resolvedAt: { gte: weekStart } } }),
       prisma.supportTicket.count({ where: { priority: 'urgent', status: { not: 'resolved' } } }),
-      prisma.gamePurchase.count({ where: { status: 'refunded' } }),
+      prisma.gamePurchase.count({ where: { status: 'refunded', ...excludePurchaseTest } }),
       prisma.gamePurchase.aggregate({
-        where: { status: 'refunded' },
+        where: { status: 'refunded', ...excludePurchaseTest },
         _sum: { priceUsd: true },
         _count: true,
       }),
@@ -49,7 +53,7 @@ export async function GET() {
         orderBy: { lastActiveAt: 'desc' },
       }),
       prisma.gamePurchase.findMany({
-        where: { status: 'refunded' },
+        where: { status: 'refunded', ...excludePurchaseTest },
         select: {
           id: true, productName: true, priceUsd: true, platform: true,
           purchasedAt: true, refundedAt: true,
