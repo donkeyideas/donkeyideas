@@ -89,16 +89,57 @@ export async function GET(request: NextRequest) {
       prisma.gamePlayer.count({ where: { status: 'flagged' } }),
     ]);
 
+    // Pre-compute bet-win and bet-total per player so the quick-view modal
+    // can show the SAME betWinRate definition as the full detail page.
+    // (Earlier the list returned a race-win-rate while the detail returned
+    // a bet-win-rate, both called "winRate" — they showed different numbers
+    // for the same user.) One groupBy per filtered page is fine.
+    const playerIds = players.map((p) => p.id);
+    const [betTotalsByPlayer, betWinsByPlayer] = playerIds.length === 0
+      ? [[], []]
+      : await Promise.all([
+          prisma.betRecord.groupBy({
+            by: ['playerId'],
+            where: { playerId: { in: playerIds } },
+            _count: { id: true },
+          }),
+          prisma.betRecord.groupBy({
+            by: ['playerId'],
+            where: { playerId: { in: playerIds }, won: true },
+            _count: { id: true },
+          }),
+        ]);
+    const totalBetMap = new Map(betTotalsByPlayer.map((r) => [r.playerId, r._count.id]));
+    const wonBetMap = new Map(betWinsByPlayer.map((r) => [r.playerId, r._count.id]));
+
     return NextResponse.json({
       // Use the sandbox-aware per-player non-sandbox spend, not the raw
       // totalSpent column (which double-counts sandbox purchases). The
       // table's "Total Spent" column shows what the player actually paid
       // and that we'd report as revenue.
-      players: players.map(p => ({
-        ...p,
-        totalSpent: sandbox.spendByPlayer.get(p.id) ?? 0,
-        winRate: p.totalRaces > 0 ? Math.round((p.totalWins / p.totalRaces) * 100) : 0,
-      })),
+      //
+      // Field naming convention:
+      //   raceWinRate — totalWins / totalRaces (their pick finished 1st)
+      //   betWinRate  — betsWon / betsPlaced  (their bet paid out)
+      // These ARE different metrics; we expose both so every card can
+      // pick the one it actually wants and label it correctly.
+      players: players.map(p => {
+        const tBets = totalBetMap.get(p.id) ?? 0;
+        const wBets = wonBetMap.get(p.id) ?? 0;
+        return {
+          ...p,
+          totalSpent: sandbox.spendByPlayer.get(p.id) ?? 0,
+          raceWinRate: p.totalRaces > 0 ? Math.round((p.totalWins / p.totalRaces) * 100) : 0,
+          betWinRate: tBets > 0 ? Math.round((wBets / tBets) * 100) : 0,
+          totalBets: tBets,
+          totalBetWins: wBets,
+          // Deprecated alias — kept so any pre-existing reader that hasn't
+          // migrated yet doesn't break. Points at the canonical bet-based
+          // value (what the detail page returns). Remove once all callers
+          // use betWinRate / raceWinRate explicitly.
+          winRate: tBets > 0 ? Math.round((wBets / tBets) * 100) : 0,
+        };
+      }),
       pagination: {
         page,
         limit,

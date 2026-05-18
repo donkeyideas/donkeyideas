@@ -69,6 +69,8 @@ export async function GET(
       seasonProgress,
       betStats,
       marbleBets,
+      sessionStats,
+      sessionsByDayRaw,
     ] = await Promise.all([
       prisma.raceRecord.findMany({
         where: { playerId: id },
@@ -106,6 +108,23 @@ export async function GET(
         _count: { id: true },
         _sum: { betAmount: true, payout: true },
       }),
+      // Avg Session length — average duration across all completed app
+      // sessions for this player. gameAppSession is populated by the mobile
+      // app on background/kill, so this number reflects real foreground
+      // time, not just race count.
+      prisma.gameAppSession.aggregate({
+        where: { playerId: id },
+        _count: { id: true },
+        _avg: { durationSecs: true },
+      }),
+      // Distinct calendar days the player has opened the app. Sessions/Day
+      // = totalSessions / distinctDays. Counted via raw SQL because Prisma
+      // doesn't expose a DATE_TRUNC groupBy.
+      prisma.$queryRaw<{ day: Date }[]>`
+        SELECT DISTINCT DATE_TRUNC('day', "createdAt") AS day
+        FROM "game_app_sessions"
+        WHERE "playerId" = ${id}
+      `,
     ]);
 
     // Calculate betting wins
@@ -147,12 +166,41 @@ export async function GET(
     const churnRisk = daysSinceActive <= 7 ? 'Low' : daysSinceActive <= 30 ? 'Medium' : 'High';
     const churnRiskLevel = daysSinceActive <= 7 ? 2 : daysSinceActive <= 30 ? 3 : 5;
 
+    /* Avg Session: mean foreground-session duration in mm:ss format.
+     * Falls back to "N/A" when the player has no recorded sessions (older
+     * installs from before the session tracker shipped).
+     *
+     * Sessions / Day: total recorded sessions divided by distinct calendar
+     * days the player has had ANY session. Previously this label held
+     * `totalRaces / daysSinceCreation`, which is races/day mislabeled
+     * (a player who hasn't opened the app in 30 days would show a
+     * deceptively-low number, AND races aren't sessions).
+     *
+     * Monthly Spend: replaces the per-user "ARPPU" label, which is a
+     * population-level metric and is meaningless on a single player row.
+     * For one user, what the dashboard actually wants is what they spent
+     * per month on average — that's LTV / months active. Shown only for
+     * paying users; non-payers see "N/A".
+     */
+    const totalSessions = sessionStats._count?.id ?? 0;
+    const avgSessionSecs = Math.round(Number(sessionStats._avg?.durationSecs ?? 0));
+    const fmtMMSS = (secs: number) => {
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    };
+    const avgSessionLabel = totalSessions > 0 ? fmtMMSS(avgSessionSecs) : 'N/A';
+    const distinctSessionDays = Math.max(1, sessionsByDayRaw.length);
+    const sessionsPerDay = totalSessions > 0
+      ? (totalSessions / distinctSessionDays).toFixed(1)
+      : '0.0';
+
     const kpis = [
-      { label: 'ARPPU', value: isPaying ? `$${(totalSpentNum / monthsSinceCreation).toFixed(2)}` : 'N/A', color: 'gold' },
+      { label: 'Monthly Spend', value: isPaying ? `$${(totalSpentNum / monthsSinceCreation).toFixed(2)}` : 'N/A', color: 'gold' },
       { label: 'Lifetime Value', value: `$${totalSpentNum.toFixed(2)}`, color: 'green' },
-      { label: 'Avg Session', value: 'N/A', color: 'blue' },
+      { label: 'Avg Session', value: avgSessionLabel, color: 'blue' },
       { label: 'Bet Win Rate', value: `${winRate}%`, color: 'purple' },
-      { label: 'Sessions / Day', value: (player.totalRaces / daysSinceCreation).toFixed(1), color: 'white' },
+      { label: 'Sessions / Day', value: sessionsPerDay, color: 'white' },
       { label: 'Churn Risk', value: churnRisk, color: churnRisk === 'Low' ? 'green' : churnRisk === 'Medium' ? 'gold' : 'red', riskLevel: churnRiskLevel },
     ];
 

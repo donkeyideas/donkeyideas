@@ -224,10 +224,12 @@ function PlayerSummaryModal({
         ? 'text-gold'
         : 'text-marble-red';
 
-  const winRate =
-    player && player.totalRaces > 0
-      ? Math.round(((player.totalWins ?? 0) / player.totalRaces) * 100)
-      : 0;
+  // Single source of truth: use the betting.winRate the detail endpoint
+  // returns. Previously this modal computed its own race-based winRate
+  // (totalWins / totalRaces) while the panel below showed betting.winRate
+  // — same label, different numbers. Always use the bet-based metric so
+  // the modal matches the full profile page.
+  const winRate = betting?.winRate ?? 0;
 
   return (
     /* Backdrop */
@@ -327,9 +329,9 @@ function PlayerSummaryModal({
                 <p className="text-sm font-semibold text-white/80">{fmtNum(player.totalRaces)}</p>
               </div>
 
-              {/* Win Rate */}
+              {/* Bet Win Rate (matches full detail page label) */}
               <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2.5">
-                <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">Win Rate</p>
+                <p className="text-[10px] text-white/35 uppercase tracking-wider font-bold mb-1">Bet Win Rate</p>
                 <p className="text-sm font-semibold text-marble-blue">{winRate}%</p>
               </div>
 
