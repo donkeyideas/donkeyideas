@@ -1022,22 +1022,30 @@ model GamePlayer {
   flagReason   String?
   lastActiveAt DateTime  @default(now())
 
+  // Push notifications (registered by the mobile app; null until the user
+  // grants permission and getDevicePushTokenAsync resolves).
+  pushToken          String?   // Expo push token or raw FCM/APNs token
+  pushTokenPlatform  String?   // ios, android
+  pushTokenUpdatedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sessions         GamePlayerSession[]
-  raceRecords      RaceRecord[]
-  betRecords       BetRecord[]
-  coinTransactions GameCoinTransaction[]
-  purchases        GamePurchase[]
-  seasonProgress   PlayerSeasonProgress[]
-  supportTickets   SupportTicket[]
-  messages         GameMessage[]
+  sessions             GamePlayerSession[]
+  raceRecords          RaceRecord[]
+  betRecords           BetRecord[]
+  coinTransactions     GameCoinTransaction[]
+  purchases            GamePurchase[]
+  seasonProgress       PlayerSeasonProgress[]
+  supportTickets       SupportTicket[]
+  messages             GameMessage[]
+  announcementDeliveries GameAnnouncementDelivery[]
 
   @@index([status])
   @@index([lastActiveAt])
   @@index([createdAt])
   @@index([coins])
+  @@index([pushToken])
   @@map("game_players")
 }
 
@@ -1311,8 +1319,40 @@ model GameAnnouncement {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  deliveries GameAnnouncementDelivery[]
+
   @@index([active, startDate, endDate])
   @@map("game_announcements")
+}
+
+// Per-device push delivery result for each announcement send.
+//
+// One row per (announcement, player) push attempt. Records which platform was
+// targeted, which provider the row was sent through (Expo, FCM, APNs), and
+// what status the receipt came back as. The Live Ops dashboard aggregates
+// these rows into per-platform pass/fail counts so the operator can verify
+// notifications are reaching both iOS and Android.
+model GameAnnouncementDelivery {
+  id             String    @id @default(cuid())
+  announcementId String
+  playerId       String
+  platform       String // ios, android
+  provider       String    @default("expo") // expo, fcm, apns
+  token          String // the push token used (truncated/hashed is fine for storage)
+  status         String    @default("queued") // queued, sent, delivered, failed
+  errorCode      String?
+  errorMessage   String?
+  providerMessageId String? // Expo ticket id or FCM/APNs message id
+  attemptedAt    DateTime  @default(now())
+  deliveredAt    DateTime?
+
+  announcement GameAnnouncement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  player       GamePlayer       @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([announcementId, platform, status])
+  @@index([playerId])
+  @@index([attemptedAt])
+  @@map("game_announcement_deliveries")
 }
 
 // Promo events (double coins, discount weekends, etc.)

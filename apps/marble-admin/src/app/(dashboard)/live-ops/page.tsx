@@ -32,6 +32,22 @@ interface Announcement {
   status: 'active' | 'scheduled' | 'expired';
 }
 
+interface DeliveryStat {
+  sent: number;
+  delivered: number;
+  failed: number;
+  status: 'pending' | 'passed' | 'failed' | 'partial';
+}
+
+interface AnnouncementDelivery {
+  id: string;
+  title: string;
+  type: string;
+  sentAt: string;
+  ios: DeliveryStat;
+  android: DeliveryStat;
+}
+
 interface Promo {
   id: string;
   name: string;
@@ -128,6 +144,22 @@ export default function LiveOpsPage() {
   const { data: promos, isLoading: promosLoading } = useQuery<Promo[]>({
     queryKey: ['promos'],
     queryFn: () => api.get('/promos').then((r: any) => r.data.promos ?? []),
+  });
+
+  const { data: deliveries } = useQuery<AnnouncementDelivery[]>({
+    queryKey: ['announcements-delivery'],
+    queryFn: () => api.get('/announcements/delivery').then((r: any) => r.data.deliveries ?? []),
+    refetchInterval: 60000,
+  });
+
+  const resendPush = useMutation({
+    mutationFn: (id: string) => api.post(`/announcements/${id}/resend`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['announcements-delivery'] }); },
+  });
+
+  const checkReceipts = useMutation({
+    mutationFn: (id: string) => api.post(`/announcements/${id}/resend?receiptsOnly=1`),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['announcements-delivery'] }); },
   });
 
   const { data: tournaments, isLoading: tournamentsLoading } = useQuery<Tournament[]>({
@@ -469,6 +501,90 @@ export default function LiveOpsPage() {
                   ))}
                   {annList.length === 0 && (
                     <tr><td colSpan={7} className="py-6 text-center text-white/30 text-sm">No announcements</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* ---- Notification Delivery History ---- */}
+          <Card title="Notification Delivery History">
+            <p className="text-[11px] text-white/40 mb-3">
+              Per-platform push delivery results for each announcement. Verify notifications reach both iOS and Android users.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[12px]">
+                <thead>
+                  <tr className="border-b border-white/[0.08]">
+                    <th className="text-left py-2 text-white/40 font-medium">Title</th>
+                    <th className="text-left py-2 text-white/40 font-medium">Type</th>
+                    <th className="text-left py-2 text-white/40 font-medium">Sent</th>
+                    <th className="text-center py-2 text-white/40 font-medium">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-marble-blue" />
+                        iOS
+                      </span>
+                    </th>
+                    <th className="text-center py-2 text-white/40 font-medium">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-marble-green" />
+                        Android
+                      </span>
+                    </th>
+                    <th className="text-right py-2 text-white/40 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(deliveries ?? []).map((d) => {
+                    const renderPlatform = (p: DeliveryStat) => {
+                      const variant: 'success' | 'error' | 'warning' | 'neutral' =
+                        p.status === 'passed' ? 'success'
+                        : p.status === 'failed' ? 'error'
+                        : p.status === 'partial' ? 'warning'
+                        : 'neutral';
+                      const label = p.status === 'pending'
+                        ? 'Pending'
+                        : `${p.delivered}/${p.sent} ${p.status}`;
+                      return (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <Badge label={label.toUpperCase()} variant={variant} />
+                          {p.failed > 0 && (
+                            <span className="text-[10px] text-marble-red">{p.failed} failed</span>
+                          )}
+                        </div>
+                      );
+                    };
+                    const busy =
+                      (resendPush.isPending && resendPush.variables === d.id) ||
+                      (checkReceipts.isPending && checkReceipts.variables === d.id);
+                    return (
+                      <tr key={d.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                        <td className="py-2 text-white/80 font-medium">{d.title}</td>
+                        <td className="py-2"><Badge label={d.type} variant={typeBadgeVariant(d.type)} /></td>
+                        <td className="py-2 text-white/40">{fmtDate(d.sentAt)}</td>
+                        <td className="py-2">{renderPlatform(d.ios)}</td>
+                        <td className="py-2">{renderPlatform(d.android)}</td>
+                        <td className="py-2 text-right space-x-1 whitespace-nowrap">
+                          <button
+                            onClick={() => resendPush.mutate(d.id)}
+                            disabled={busy}
+                            className="px-2 py-1 rounded bg-gold/15 text-gold text-[10px] font-bold hover:bg-gold/25 disabled:opacity-40"
+                          >
+                            {resendPush.isPending && resendPush.variables === d.id ? '...' : 'Resend'}
+                          </button>
+                          <button
+                            onClick={() => checkReceipts.mutate(d.id)}
+                            disabled={busy}
+                            className="px-2 py-1 rounded bg-marble-blue/15 text-marble-blue text-[10px] font-bold hover:bg-marble-blue/25 disabled:opacity-40"
+                          >
+                            {checkReceipts.isPending && checkReceipts.variables === d.id ? '...' : 'Receipts'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {(!deliveries || deliveries.length === 0) && (
+                    <tr><td colSpan={6} className="py-6 text-center text-white/30 text-sm">No delivery history</td></tr>
                   )}
                 </tbody>
               </table>

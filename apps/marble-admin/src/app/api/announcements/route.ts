@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getUserByToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { dispatchAnnouncement } from '@/lib/pushDispatch';
 
 export async function GET() {
   try {
@@ -65,6 +66,13 @@ export async function POST(request: NextRequest) {
         targetSegment: targetSegment || null,
         createdBy: user.id,
       },
+    });
+
+    // Fire push to every registered device in the background. We don't await
+    // here so the operator's create request returns promptly; the dispatch
+    // can take several seconds for large player bases.
+    dispatchAnnouncement(announcement.id).catch((err) => {
+      console.error(`Auto-dispatch failed for announcement ${announcement.id}:`, err);
     });
 
     return NextResponse.json({ announcement }, { status: 201 });

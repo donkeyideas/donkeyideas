@@ -123,6 +123,27 @@ export async function GET(_request: NextRequest) {
       });
     }
 
+    // ── User growth (last 6 months): new signups per month + cumulative total ──
+    const userGrowthChart: { month: string; newUsers: number; totalUsers: number }[] = [];
+    const sixMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const baselineTotal = await prisma.gamePlayer.count({
+      where: { createdAt: { lt: sixMonthsAgoStart } },
+    });
+    let runningTotal = baselineTotal;
+    for (let i = 5; i >= 0; i--) {
+      const mStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      const newUsers = await prisma.gamePlayer.count({
+        where: { createdAt: { gte: mStart, lt: mEnd } },
+      });
+      runningTotal += newUsers;
+      userGrowthChart.push({
+        month: monthNames[mStart.getMonth()],
+        newUsers,
+        totalUsers: runningTotal,
+      });
+    }
+
     // ── Revenue by product (donut chart) ──
     const productGroups = await prisma.gamePurchase.groupBy({
       by: ['productName'],
@@ -355,6 +376,7 @@ export async function GET(_request: NextRequest) {
       },
       heatmap,
       revenueChart,
+      userGrowthChart,
       revenueByProduct,
       quickStats,
       gameModes: gameModeDistribution.map((g) => ({

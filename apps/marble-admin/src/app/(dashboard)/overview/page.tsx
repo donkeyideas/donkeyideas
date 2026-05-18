@@ -7,9 +7,15 @@ import {
   BarChart,
   Bar,
   XAxis,
+  YAxis,
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
+  Tooltip,
+  CartesianGrid,
+  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
@@ -33,6 +39,12 @@ interface QuickStat {
 interface RevenueChartPoint {
   month: string;
   revenue: number;
+}
+
+interface UserGrowthPoint {
+  month: string;
+  newUsers: number;
+  totalUsers: number;
 }
 
 interface ProductSlice {
@@ -66,6 +78,7 @@ interface OverviewData {
   economy: { totalCoinsInCirculation: number };
   heatmap: HeatmapData;
   revenueChart: RevenueChartPoint[];
+  userGrowthChart: UserGrowthPoint[];
   revenueByProduct: ProductSlice[];
   quickStats: QuickStat[];
   alerts: AlertItem[];
@@ -293,6 +306,104 @@ export default function OverviewPage() {
           <span className="text-[10px] text-white/25 ml-1">More</span>
         </div>
       </div>
+
+      {/* -- User Growth (Last 6 Months) -- */}
+      {(() => {
+        const growth = data.userGrowthChart ?? [];
+        const totalNew = growth.reduce((s, p) => s + p.newUsers, 0);
+        const endTotal = growth.length > 0 ? growth[growth.length - 1].totalUsers : 0;
+        const startTotal = growth.length > 0 ? growth[0].totalUsers - growth[0].newUsers : 0;
+        const growthPct = startTotal > 0
+          ? Math.round(((endTotal - startTotal) / startTotal) * 100)
+          : (endTotal > 0 ? 100 : 0);
+        return (
+          <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="font-heading text-base tracking-wide">User Growth &mdash; Last 6 Months</div>
+                <p className="text-[11px] text-white/35 mt-0.5">
+                  {totalNew.toLocaleString()} new signups &middot; {endTotal.toLocaleString()} total users
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-[10px] text-white/30 uppercase tracking-wider font-bold">6-Mo Growth</p>
+                  <p className={`text-sm font-semibold ${growthPct >= 0 ? 'text-marble-green' : 'text-marble-red'}`}>
+                    {growthPct >= 0 ? '+' : ''}{growthPct}%
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-white/30 uppercase tracking-wider font-bold">Avg / Mo</p>
+                  <p className="text-sm font-semibold text-marble-blue">
+                    {growth.length > 0 ? Math.round(totalNew / growth.length).toLocaleString() : '0'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={growth} margin={{ top: 5, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
+                />
+                <YAxis
+                  yAxisId="left"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
+                  width={40}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
+                  width={40}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(10,26,58,0.95)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  labelStyle={{ color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}
+                  itemStyle={{ color: 'rgba(255,255,255,0.9)' }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', paddingTop: 8 }}
+                  iconType="circle"
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="newUsers"
+                  name="New Users"
+                  stroke="#6ec1ff"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#6ec1ff', stroke: '#6ec1ff' }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="totalUsers"
+                  name="Total Users"
+                  stroke="#2ecc71"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#2ecc71', stroke: '#2ecc71' }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      })()}
 
       {/* -- Charts Row -- */}
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
