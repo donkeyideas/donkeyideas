@@ -44,7 +44,8 @@ export async function GET(_request: NextRequest) {
     const weekStart = new Date(todayStart);
     weekStart.setDate(weekStart.getDate() - 7);
 
-    // Marble win rates from bet records
+    // Per-marble betting stats (used by Betting Analytics card for Most/Least
+    // Bet-On). These are bet-side numbers, NOT race outcomes.
     const marbleStats = await prisma.betRecord.groupBy({
       by: ['marbleId'],
       _count: { id: true },
@@ -52,16 +53,21 @@ export async function GET(_request: NextRequest) {
       _avg: { odds: true },
     });
 
-    const marbleWins = await prisma.betRecord.groupBy({
-      by: ['marbleId'],
-      _count: { id: true },
-      where: { won: true },
-    });
-
-    const winMap = marbleWins.reduce(
-      (acc: any, m: any) => ({ ...acc, [m.marbleId]: m._count.id }),
-      {} as Record<string, number>,
+    // True marble win rate = % of races where the marble finished first.
+    // finishOrder is a JSON array of marble ids; index 0 is the winner.
+    // Previously this card derived "wins" from BetRecord.won, which is
+    // actually the bet-hit rate — marbles that nobody bets on (Shadow, Aqua)
+    // always reported 0% even when they were winning races.
+    const raceWinnerGroups = await prisma.$queryRawUnsafe<{ winner: string | null; wins: bigint }[]>(
+      `SELECT "finishOrder"->>0 AS winner, COUNT(*) AS wins
+       FROM game_race_records
+       GROUP BY winner`,
     );
+    const totalRacesForWinRate = await prisma.raceRecord.count();
+    const raceWinMap: Record<string, number> = {};
+    for (const row of raceWinnerGroups) {
+      if (row.winner) raceWinMap[row.winner] = Number(row.wins);
+    }
 
     // Game mode distribution
     const modeStats = await prisma.raceRecord.groupBy({
@@ -229,8 +235,12 @@ export async function GET(_request: NextRequest) {
       where: { gameMode: 'playoff' },
     });
 
+    // Each metric is "% of active players who have used the feature at least
+    // once, lifetime". The "Daily Betting" label previously implied a 24h
+    // window which didn't match the underlying lifetime aggregation; renamed
+    // to "Placed a Bet" to match the math.
     const featureAdoption = [
-      { name: 'Daily Betting', pct: Math.round((playersWithBets.length / activeBase) * 100), barColor: '#2ecc71', textColor: 'text-marble-green' },
+      { name: 'Placed a Bet', pct: Math.round((playersWithBets.length / activeBase) * 100), barColor: '#2ecc71', textColor: 'text-marble-green' },
       { name: 'Season Mode', pct: Math.round((playersWithSeason.length / activeBase) * 100), barColor: '#ffc220', textColor: 'text-gold' },
       { name: 'Quick Race', pct: Math.round((playersWithQuickRace.length / activeBase) * 100), barColor: '#ffc220', textColor: 'text-gold' },
       { name: 'Tournaments', pct: Math.round((playersWithTournament.length / activeBase) * 100), barColor: '#6ec1ff', textColor: 'text-marble-blue' },
@@ -254,7 +264,7 @@ export async function GET(_request: NextRequest) {
     const marbleWinRates = ALL_MARBLES
       .map((id) => {
         const s = statsMap[id] || { bets: 0, wagered: 0, paidOut: 0, avgOdds: 0 };
-        const wins = winMap[id] ?? 0;
+        const raceWins = raceWinMap[id] ?? 0;
         return {
           marbleId: id,
           name: id.charAt(0).toUpperCase() + id.slice(1),
@@ -262,8 +272,10 @@ export async function GET(_request: NextRequest) {
           totalWagered: s.wagered,
           totalPaidOut: s.paidOut,
           avgOdds: s.avgOdds,
-          wins,
-          winRate: s.bets > 0 ? Math.round((wins / s.bets) * 100) : 0,
+          wins: raceWins,
+          winRate: totalRacesForWinRate > 0
+            ? Math.round((raceWins / totalRacesForWinRate) * 100)
+            : 0,
           color: MARBLE_COLORS[id] || '#ffffff',
           grad: MARBLE_GRADIENTS[id] || 'radial-gradient(circle at 35% 30%, #888, #555)',
         };
@@ -286,16 +298,23 @@ export async function GET(_request: NextRequest) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    // Segments are mutually exclusive: a player belongs to exactly one bucket.
+    // Spend tiers (Whale/Dolphin/Minnow/Free) require lastActiveAt within the
+    // 30-day window; anyone inactive 30+ days lands in Churned regardless of
+    // spend. Without the active filter on the spend tiers, a $50 whale who
+    // hasn't opened the app in two months would be counted in BOTH Whale and
+    // Churned, and the segment bar would sum to >100% of unique players.
+    const activeWhere = { lastActiveAt: { gte: thirtyDaysAgo }, status: { not: 'banned' as const } };
     const [whaleCount, dolphinCount, minnowCount, freeCount, churnedCount] = await Promise.all([
-      // Whale: totalSpent > $20
-      prisma.gamePlayer.count({ where: { totalSpent: { gt: 20 }, status: { not: 'banned' } } }),
-      // Dolphin: totalSpent $5–$20
-      prisma.gamePlayer.count({ where: { totalSpent: { gte: 5, lte: 20 }, status: { not: 'banned' } } }),
-      // Minnow: totalSpent $0.01–$4.99
-      prisma.gamePlayer.count({ where: { totalSpent: { gt: 0, lt: 5 }, status: { not: 'banned' } } }),
+      // Whale: totalSpent > $20, active
+      prisma.gamePlayer.count({ where: { ...activeWhere, totalSpent: { gt: 20 } } }),
+      // Dolphin: totalSpent $5–$20, active
+      prisma.gamePlayer.count({ where: { ...activeWhere, totalSpent: { gte: 5, lte: 20 } } }),
+      // Minnow: totalSpent $0.01–$4.99, active
+      prisma.gamePlayer.count({ where: { ...activeWhere, totalSpent: { gt: 0, lt: 5 } } }),
       // Free: totalSpent = 0, active in last 30 days
-      prisma.gamePlayer.count({ where: { totalSpent: { equals: 0 }, lastActiveAt: { gte: thirtyDaysAgo }, status: { not: 'banned' } } }),
-      // Churned: inactive 30+ days
+      prisma.gamePlayer.count({ where: { ...activeWhere, totalSpent: { equals: 0 } } }),
+      // Churned: inactive 30+ days (any spend level)
       prisma.gamePlayer.count({ where: { lastActiveAt: { lt: thirtyDaysAgo }, status: { not: 'banned' } } }),
     ]);
 
