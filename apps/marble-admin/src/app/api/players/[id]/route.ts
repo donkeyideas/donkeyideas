@@ -20,7 +20,41 @@ export async function GET(
 
     const { id } = await params;
 
-    const player = await prisma.gamePlayer.findUnique({ where: { id } });
+    // Explicit select so we don't blow up on environments where newer
+    // additive columns (e.g. pushToken, pushTokenPlatform, pushTokenUpdatedAt
+    // from the push-delivery migration) haven't been applied yet. Without
+    // this, Prisma issues SELECT * and Postgres throws "column does not
+    // exist", returning 500 on every player detail load.
+    const player = await prisma.gamePlayer.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        deviceId: true,
+        playerName: true,
+        email: true,
+        platform: true,
+        appVersion: true,
+        deviceModel: true,
+        coins: true,
+        totalSpent: true,
+        totalRaces: true,
+        totalWins: true,
+        currentStreak: true,
+        bestStreak: true,
+        dailyStreak: true,
+        passLevel: true,
+        passXp: true,
+        passTier: true,
+        status: true,
+        banReason: true,
+        bannedAt: true,
+        bannedBy: true,
+        flagReason: true,
+        lastActiveAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
     if (!player) {
       return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
     }
