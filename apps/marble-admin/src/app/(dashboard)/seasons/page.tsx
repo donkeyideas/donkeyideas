@@ -4,6 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { Card } from '@/components/ui/Card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import tracksRaw from '@/data/tracks.json';
+
+/* Authoritative track count for any "X total courses" label. Pulls from
+ * the same tracks.json snapshot the Track Backgrounds page uses, so
+ * one place to update when courses change in the game repo (re-run
+ * scripts/export-courses-for-admin.ts there). */
+const TOTAL_TRACKS = (tracksRaw as unknown[]).length;
 
 /* ------------------------------------------------------------------ */
 /*  Marble gradients (display constants for marble colors)             */
@@ -210,7 +217,7 @@ export default function SeasonsPage() {
         <Card
           title="Course Rotation"
           headerAction={
-            <span className="text-[11px] text-white/35">96 total courses</span>
+            <span className="text-[11px] text-white/35">{TOTAL_TRACKS} total courses</span>
           }
         >
           {courses.length === 0 ? (
