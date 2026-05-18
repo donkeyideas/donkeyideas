@@ -86,16 +86,36 @@ export async function GET() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Exclude purchases from internal/test users (player.flagReason =
-    // 'test_user'). Lets the operator mark known QA accounts so their
-    // sandbox purchases and refunds don't skew revenue numbers.
-    const TEST_USER_FLAG = 'test_user';
-    const testUserPlayers = await prisma.gamePlayer.findMany({
-      where: { flagReason: TEST_USER_FLAG },
-      select: { id: true },
+    // Auto-exclude sandbox / TestFlight purchases from Financials. Two
+    // layers of detection:
+    //   1. status='sandbox' — newly recorded purchases tagged by the
+    //      Apple verifyReceipt environment field at sync time.
+    //   2. Legacy heuristic — pre-tagging iOS purchases whose
+    //      storeTransactionId doesn't match Apple's production format
+    //      (long numeric string, typically 16+ digits). Catches the
+    //      kxtyqh-class noise that's already in the DB.
+    //
+    // Production Apple transaction IDs look like 2000000xxxxxxxxxxx
+    // (length >= 13, all digits). Sandbox IDs are usually shorter and
+    // can contain non-numeric prefixes. We exclude anything that doesn't
+    // pass the strict production check.
+    const APPLE_PROD_TXN_REGEX = /^\d{13,}$/;
+    const allPurchaseIds = await prisma.gamePurchase.findMany({
+      where: { status: { in: ['completed', 'refunded'] } },
+      select: { id: true, platform: true, storeTransactionId: true },
     });
-    const testUserIds = testUserPlayers.map((p) => p.id);
-    const excludeTest = testUserIds.length > 0 ? { playerId: { notIn: testUserIds } } : {};
+    const legacySandboxIds = allPurchaseIds
+      .filter((p) =>
+        p.platform === 'ios' &&
+        (!p.storeTransactionId || !APPLE_PROD_TXN_REGEX.test(p.storeTransactionId)),
+      )
+      .map((p) => p.id);
+    const excludeTest = {
+      AND: [
+        { status: { not: 'sandbox' as const } },
+        ...(legacySandboxIds.length > 0 ? [{ id: { notIn: legacySandboxIds } }] : []),
+      ],
+    };
 
     // Revenue by product — both monthly (for the pricing matrix, whose
     // columns are labelled "Units Sold (Month)" / "Monthly Revenue") and

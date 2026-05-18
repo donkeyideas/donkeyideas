@@ -120,6 +120,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Record using canonical values, not whatever the client claimed.
+    // Sandbox/TestFlight transactions are tagged with status='sandbox' so
+    // Financials can exclude them from revenue and refund metrics without
+    // breaking the player's in-app experience (they still get the coins).
+    const purchaseStatus = verify.isTest ? 'sandbox' : 'completed';
     await prisma.gamePurchase.create({
       data: {
         playerId: player.id,
@@ -129,7 +133,7 @@ export async function POST(request: NextRequest) {
         coinsGranted: product.coinsGranted,
         platform: player.platform,
         storeTransactionId: verify.orderId,
-        status: 'completed',
+        status: purchaseStatus,
       },
     });
 

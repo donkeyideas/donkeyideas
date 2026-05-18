@@ -23,10 +23,7 @@ interface Player {
   lastActiveAt: string;
   createdAt: string;
   bannedAt: string | null;
-  flagReason: string | null;
 }
-
-const TEST_USER_FLAG = 'test_user';
 
 /* ------------------------------------------------------------------ */
 /*  Filter pill definitions                                            */
@@ -390,16 +387,6 @@ export default function UsersPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['players'] }),
   });
 
-  const markTestUser = useMutation({
-    mutationFn: (id: string) => api.post(`/players/${id}/mark-test`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['players'] }),
-  });
-
-  const unmarkTestUser = useMutation({
-    mutationFn: (id: string) => api.delete(`/players/${id}/mark-test`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['players'] }),
-  });
-
   const handleExportCsv = () => {
     if (players.length === 0) return;
     const cols = ['id', 'playerName', 'platform', 'status', 'coins', 'totalRaces', 'totalSpent', 'passTier', 'createdAt', 'lastActiveAt'] as const;
@@ -582,14 +569,7 @@ export default function UsersPage() {
                           {p.playerName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white/90 flex items-center gap-1.5">
-                            {p.playerName}
-                            {p.flagReason === TEST_USER_FLAG && (
-                              <span className="inline-flex px-1.5 py-0 rounded text-[9px] font-bold uppercase tracking-wider bg-marble-blue/15 text-marble-blue border border-marble-blue/30">
-                                TEST
-                              </span>
-                            )}
-                          </p>
+                          <p className="text-sm font-semibold text-white/90">{p.playerName}</p>
                           <p className="text-[10px] text-white/30">#{p.id.slice(0, 8)}</p>
                           {p.deviceId && (
                             <p className="text-[9px] text-white/20 font-mono mt-0.5" title={p.deviceId}>
@@ -675,33 +655,6 @@ export default function UsersPage() {
                             className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-marble-red hover:bg-marble-red/10 border border-marble-red/30 transition-colors disabled:opacity-40"
                           >
                             {banPlayer.isPending && banPlayer.variables === p.id ? '...' : 'Ban'}
-                          </button>
-                        )}
-                        {p.flagReason === TEST_USER_FLAG ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              unmarkTestUser.mutate(p.id);
-                            }}
-                            disabled={unmarkTestUser.isPending}
-                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-marble-blue hover:bg-marble-blue/10 border border-marble-blue/30 transition-colors disabled:opacity-40"
-                            title="Untag this player as a test user (their purchases will count toward revenue again)"
-                          >
-                            {unmarkTestUser.isPending && unmarkTestUser.variables === p.id ? '...' : 'Untest'}
-                          </button>
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm(`Mark "${p.playerName}" as a test user? Their purchases and refunds will be excluded from Financials.`)) {
-                                markTestUser.mutate(p.id);
-                              }
-                            }}
-                            disabled={markTestUser.isPending}
-                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-white/50 hover:text-marble-blue hover:bg-marble-blue/10 border border-white/15 hover:border-marble-blue/30 transition-colors disabled:opacity-40"
-                            title="Mark as test/QA user — excludes purchases from Financials"
-                          >
-                            {markTestUser.isPending && markTestUser.variables === p.id ? '...' : 'Mark Test'}
                           </button>
                         )}
                       </div>
