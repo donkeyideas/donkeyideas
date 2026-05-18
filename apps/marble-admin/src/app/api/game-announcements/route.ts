@@ -6,12 +6,14 @@ import { prisma } from '@donkey-ideas/database';
 /*  Returns manual announcements + auto-generated national race ones. */
 /* ------------------------------------------------------------------ */
 
-// National race schedule (mirrors game app's data/nationalRaces.ts)
+// National race schedule (MUST mirror game app's data/nationalRaces.ts —
+// auto-announcement copy will be wrong if these drift apart). One event
+// per daypart: chaos cup 8am, speed demon 12pm, marble mile 5pm, GP 8pm.
 const NATIONAL_EVENTS = [
-  { id: 'grand-prix', name: 'THE GRAND PRIX', multiplier: 5, entryFee: 500, startHourET: 20 },
-  { id: 'marble-mile', name: 'THE MARBLE MILE', multiplier: 3, entryFee: 300, startHourET: 18 },
+  { id: 'chaos-cup', name: 'CHAOS CUP', multiplier: 4, entryFee: 400, startHourET: 8 },
   { id: 'speed-demon', name: 'SPEED DEMON DASH', multiplier: 2, entryFee: 200, startHourET: 12 },
-  { id: 'chaos-cup', name: 'CHAOS CUP', multiplier: 4, entryFee: 400, startHourET: 22 },
+  { id: 'marble-mile', name: 'THE MARBLE MILE', multiplier: 3, entryFee: 300, startHourET: 17 },
+  { id: 'grand-prix', name: 'THE GRAND PRIX', multiplier: 5, entryFee: 500, startHourET: 20 },
 ];
 
 function getETOffset(): number {
