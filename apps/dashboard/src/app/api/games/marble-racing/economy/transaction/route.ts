@@ -39,7 +39,8 @@ type Action =
   | 'national_entry'
   | 'national_payout'
   | 'custom_track_entry'
-  | 'season_starter_bonus';
+  | 'season_starter_bonus'
+  | 'client_balance_reconciliation';
 
 interface TransactionRequest {
   action: Action;
@@ -141,6 +142,8 @@ export async function POST(request: NextRequest) {
 
       case 'season_starter_bonus':
         return seasonStarterBonus(player.id, idempotencyKey, payload);
+      case 'client_balance_reconciliation':
+        return reconcileClientBalance(player.id, idempotencyKey, payload);
 
       default:
         return NextResponse.json(
@@ -408,6 +411,118 @@ async function seasonStarterBonus(
       createdAt: result.createdAt.toISOString(),
     },
     result: { seasonNumber, bonus },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// client_balance_reconciliation — one-time backfill for accounts that have
+// drifted because of historical local-only coin grants (claimed challenges,
+// season starter bonuses, MP refunds) that pre-date the wiring of those
+// actions to applyEconomyAction.
+//
+// Contract:
+//   - Mobile reads its local coins, compares to server.
+//   - If local > server by > 0, posts { localBalance: number }.
+//   - Server caps the credit at RECONCILE_MAX_DELTA so a tampered client
+//     can't claim millions of coins. Server also locks the action to once-
+//     per-player via a natural idempotency key (the version suffix lets us
+//     allow a second one if we ever need to backfill again).
+//   - On replay (same key), returns the original balance — no double credit.
+//
+// Records the transaction as type='client_balance_reconciliation' with an
+// adminNote describing the gap, so an operator can audit which accounts
+// got auto-adjusted and by how much.
+// ─────────────────────────────────────────────────────────────────────────
+const RECONCILE_MAX_DELTA = 50_000;
+const RECONCILE_VERSION = 'v1';
+
+async function reconcileClientBalance(
+  playerId: string,
+  _transportIdempotencyKey: string,
+  payload: Record<string, unknown>,
+): Promise<NextResponse> {
+  const localBalance = typeof payload.localBalance === 'number' ? payload.localBalance : null;
+  if (localBalance === null || !Number.isFinite(localBalance) || localBalance < 0) {
+    return NextResponse.json(
+      { error: { message: 'localBalance (non-negative number) required' } },
+      { status: 400 },
+    );
+  }
+
+  // Lock to one reconciliation per player per version.
+  const naturalKey = `balance_reconcile:${playerId}:${RECONCILE_VERSION}`;
+  const existing = await prisma.gameCoinTransaction.findUnique({
+    where: { idempotencyKey: naturalKey },
+    select: { id: true, type: true, amount: true, balance: true, createdAt: true },
+  });
+  if (existing) {
+    return NextResponse.json({
+      success: true,
+      balance: existing.balance,
+      transaction: {
+        id: existing.id,
+        type: existing.type,
+        amount: existing.amount,
+        createdAt: existing.createdAt.toISOString(),
+      },
+      replayed: true,
+      result: { credited: existing.amount, reason: 'already_reconciled' },
+    });
+  }
+
+  const player = await prisma.gamePlayer.findUnique({
+    where: { id: playerId },
+    select: { coins: true },
+  });
+  if (!player) {
+    return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
+  }
+
+  // Only credit positive gaps (mobile thinks it has MORE than the server).
+  // If local <= server, no action — server is truth.
+  const rawDelta = Math.floor(localBalance) - player.coins;
+  if (rawDelta <= 0) {
+    return NextResponse.json({
+      success: true,
+      balance: player.coins,
+      transaction: { id: '', type: 'client_balance_reconciliation', amount: 0, createdAt: new Date().toISOString() },
+      result: { credited: 0, reason: 'no_gap' },
+    });
+  }
+
+  const credited = Math.min(rawDelta, RECONCILE_MAX_DELTA);
+  const newBalance = player.coins + credited;
+
+  const result = await prisma.$transaction(async (tx) => {
+    const txRow = await tx.gameCoinTransaction.create({
+      data: {
+        playerId,
+        type: 'client_balance_reconciliation',
+        amount: credited,
+        balance: newBalance,
+        description: `Client balance reconciliation (mobile=${localBalance}, server=${player.coins}, credited=${credited})`,
+        idempotencyKey: naturalKey,
+        adminNote: `auto-reconcile v${RECONCILE_VERSION}: closed ${credited} of ${rawDelta} coin gap`,
+      },
+      select: { id: true, type: true, amount: true, createdAt: true },
+    });
+    await tx.gamePlayer.update({
+      where: { id: playerId },
+      data: { coins: { increment: credited }, lastActiveAt: new Date() },
+    });
+    return txRow;
+  });
+
+  return NextResponse.json({
+    success: true,
+    balance: newBalance,
+    transaction: {
+      id: result.id,
+      type: result.type,
+      amount: result.amount,
+      createdAt: result.createdAt.toISOString(),
+    },
+    result: { credited, capped: rawDelta > RECONCILE_MAX_DELTA },
   });
 }
 
