@@ -136,6 +136,24 @@ async function callAppleVerify(url: string, receiptData: string): Promise<AppleR
   }
 }
 
+/** Map an Apple verifyReceipt status code to a human-readable explanation
+ *  so the server logs (and the mobile error toast) actually tell us what
+ *  went wrong instead of just "rejected (status=21002)". */
+function explainAppleStatus(status: number): string {
+  switch (status) {
+    case 21000: return 'request not application/json';
+    case 21002: return 'receipt-data malformed or missing';
+    case 21003: return 'receipt could not be authenticated';
+    case 21004: return 'shared secret mismatch (subscription receipts only)';
+    case 21005: return 'receipt server temporarily unavailable';
+    case 21006: return 'receipt valid but subscription expired';
+    case 21007: return 'sandbox receipt sent to production endpoint';
+    case 21008: return 'production receipt sent to sandbox endpoint';
+    case 21010: return 'account not found or deleted';
+    default: return `unmapped status ${status}`;
+  }
+}
+
 export async function verifyApplePurchase(opts: {
   productId: string;
   purchaseToken: string;
@@ -145,20 +163,40 @@ export async function verifyApplePurchase(opts: {
     return { ok: false, reason: 'Missing productId or purchaseToken' };
   }
 
+  // Quick sanity check on the receipt shape. verifyReceipt expects a base64
+  // string; anything short or whitespace-only will produce status 21002.
+  // Logging the length helps diagnose client-side receipt-extraction bugs
+  // where transactionReceipt comes back empty or already-decoded JWS.
+  const receiptLen = purchaseToken.length;
+  if (receiptLen < 100) {
+    console.warn(
+      `[iap-verify:apple] suspiciously short receipt (${receiptLen} chars) for productId=${productId}. ` +
+      `Expected a base64-encoded app receipt blob (typically 1000+ chars).`,
+    );
+  }
+
   // 1) Try production endpoint
   let resp = await callAppleVerify(APPLE_PROD_URL, purchaseToken);
   if (!resp) {
-    return { ok: false, reason: 'Apple verifyReceipt unreachable' };
+    return { ok: false, reason: 'Apple verifyReceipt unreachable (network/HTTP error)' };
   }
 
   // 2) Status 21007 = sandbox receipt — retry against sandbox endpoint
   if (resp.status === 21007) {
     resp = await callAppleVerify(APPLE_SANDBOX_URL, purchaseToken);
-    if (!resp) return { ok: false, reason: 'Apple sandbox verifyReceipt unreachable' };
+    if (!resp) return { ok: false, reason: 'Apple sandbox verifyReceipt unreachable (network/HTTP error)' };
   }
 
   if (resp.status !== 0) {
-    return { ok: false, reason: `Apple verifyReceipt rejected (status=${resp.status})` };
+    const explanation = explainAppleStatus(resp.status);
+    console.warn(
+      `[iap-verify:apple] REJECTED productId=${productId} status=${resp.status} ` +
+      `meaning="${explanation}" env=${resp.environment ?? '?'} receiptLen=${receiptLen}`,
+    );
+    return {
+      ok: false,
+      reason: `Apple rejected receipt (status=${resp.status}: ${explanation})`,
+    };
   }
 
   // Find the in-app entry that matches this purchase
@@ -166,7 +204,15 @@ export async function verifyApplePurchase(opts: {
   const match = inApps.find((entry) => entry.product_id === productId);
   const orderId = match?.transaction_id ?? match?.original_transaction_id ?? '';
   if (!orderId) {
-    return { ok: false, reason: 'Apple receipt did not contain a matching transaction_id' };
+    const seenIds = inApps.map((e) => e.product_id).filter(Boolean).join(', ') || '(none)';
+    console.warn(
+      `[iap-verify:apple] receipt valid but no match for productId=${productId}. ` +
+      `Receipt contained product_ids: ${seenIds}. Likely a store-ID-map mismatch.`,
+    );
+    return {
+      ok: false,
+      reason: `Receipt valid but did not contain ${productId} (saw: ${seenIds})`,
+    };
   }
 
   const isSandbox = resp.environment === 'Sandbox';
