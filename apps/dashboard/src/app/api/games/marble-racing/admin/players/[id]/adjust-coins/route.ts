@@ -29,33 +29,64 @@ export async function POST(
       );
     }
 
-    const player = await prisma.gamePlayer.findUnique({ where: { id } });
-    if (!player) {
-      return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
+    /* ATOMIC + LEDGER-CONSISTENT.
+     * Previously the player read and the two writes (update + ledger row)
+     * ran as separate statements. Two issues that this fixes:
+     *   1. A crash between writes could leave the balance changed with no
+     *      ledger evidence (or vice versa). Now wrapped in $transaction.
+     *   2. Math.max(0, ...) silently clamps a negative delta. The ledger
+     *      then recorded `amount = requested delta` while `balance = clamped
+     *      value`, breaking the invariant that sum(amount) == latest balance.
+     *      Now: reject the request if it would drop below 0 OR record only
+     *      the actual delta applied (the clamp). Choosing the former — an
+     *      operator removing more coins than the player has is almost
+     *      certainly a typo; ask them to confirm. */
+    const result = await prisma.$transaction(async (tx) => {
+      const player = await tx.gamePlayer.findUnique({
+        where: { id },
+        select: { coins: true },
+      });
+      if (!player) {
+        return { __error: { status: 404, message: 'Player not found' } } as const;
+      }
+      const newBalance = player.coins + amount;
+      if (newBalance < 0) {
+        return {
+          __error: {
+            status: 400,
+            message: `Adjustment would drop balance below 0 (current=${player.coins}, delta=${amount}). Use a smaller magnitude or set balance to 0 explicitly first.`,
+          },
+        } as const;
+      }
+      const updated = await tx.gamePlayer.update({
+        where: { id },
+        data: { coins: amount > 0 ? { increment: amount } : { decrement: -amount } },
+        select: { coins: true },
+      });
+      await tx.gameCoinTransaction.create({
+        data: {
+          playerId: id,
+          type: 'admin_adjustment',
+          amount,
+          balance: updated.coins,
+          description: note || `Admin adjustment: ${amount > 0 ? '+' : ''}${amount} coins`,
+          adminId: admin.id,
+          adminNote: note || null,
+        },
+      });
+      return { __ok: { newBalance: updated.coins } } as const;
+    });
+
+    if ('__error' in result) {
+      return NextResponse.json(
+        { error: { message: result.__error.message } },
+        { status: result.__error.status },
+      );
     }
-
-    const newBalance = Math.max(0, player.coins + amount);
-
-    await prisma.gamePlayer.update({
-      where: { id },
-      data: { coins: newBalance },
-    });
-
-    await prisma.gameCoinTransaction.create({
-      data: {
-        playerId: id,
-        type: 'admin_adjustment',
-        amount,
-        balance: newBalance,
-        description: note || `Admin adjustment: ${amount > 0 ? '+' : ''}${amount} coins`,
-        adminId: admin.id,
-        adminNote: note || null,
-      },
-    });
 
     return NextResponse.json({
       success: true,
-      newBalance,
+      newBalance: result.__ok.newBalance,
     });
   } catch (error: any) {
     console.error('Admin adjust coins error:', error);

@@ -42,6 +42,13 @@ export async function POST(request: NextRequest) {
 
     // Only let the client influence non-economy fields. Server is source of
     // truth for: coins, totalRaces, totalWins, dailyStreak, totalSpent.
+    //
+    // MONOTONICITY: passLevel, passXp, bestStreak can ONLY MOVE UP via this
+    // endpoint. A tampered client otherwise can downgrade passLevel from
+    // 50 → 1 to grind a fresh pass, or zero out passXp / bestStreak.
+    // currentStreak intentionally allows decreases (loss resets it to 0)
+    // but post-race-sync this is mostly redundant — sync/race already
+    // updates it server-side.
     const update: Record<string, any> = { lastActiveAt: new Date() };
 
     if (typeof playerName === 'string' && playerName.trim().length >= 2) {
@@ -53,10 +60,21 @@ export async function POST(request: NextRequest) {
     if (typeof bestStreak === 'number' && bestStreak >= 0 && bestStreak >= (player.bestStreak ?? 0)) {
       update.bestStreak = bestStreak;
     }
-    if (typeof passLevel === 'number' && passLevel >= 1 && passLevel <= 200) {
+    if (
+      typeof passLevel === 'number' &&
+      passLevel >= 1 &&
+      passLevel <= 200 &&
+      passLevel >= (player.passLevel ?? 1)
+    ) {
       update.passLevel = passLevel;
     }
-    if (typeof passXp === 'number' && passXp >= 0) {
+    if (
+      typeof passXp === 'number' &&
+      passXp >= 0 &&
+      // Allow XP to reset to 0 when leveling up (passLevel increased AND xp lower
+      // is valid), otherwise enforce monotonic increase.
+      (passXp >= (player.passXp ?? 0) || (update.passLevel ?? player.passLevel) > player.passLevel)
+    ) {
       update.passXp = passXp;
     }
 

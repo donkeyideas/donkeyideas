@@ -72,7 +72,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { productId: storeProductId, purchaseToken, currentCoins } = body;
+    /* `currentCoins` was previously read from the request and used as a
+     * direct write value into both the ledger snapshot and gamePlayer.coins.
+     * That made the purchase endpoint a coin-overwrite oracle for any
+     * tampered client. Dropped — server now always derives the new balance
+     * from `coins + product.coinsGranted` via Prisma increment. */
+    const { productId: storeProductId, purchaseToken } = body;
 
     if (!storeProductId || !purchaseToken) {
       return NextResponse.json(
@@ -123,43 +128,55 @@ export async function POST(request: NextRequest) {
     // Sandbox/TestFlight transactions are tagged with status='sandbox' so
     // Financials can exclude them from revenue and refund metrics without
     // breaking the player's in-app experience (they still get the coins).
+    //
+    // ATOMIC: all four writes (purchase row, ledger row, player coin
+    // increment, player totalSpent increment) run inside a single Prisma
+    // $transaction. Partial failures roll back — a crash between writes
+    // can't leave the player paid-but-not-credited or vice versa. Also
+    // prevents the concurrent double-credit race where two near-simultaneous
+    // sync calls both pass the non-transactional idempotency check.
     const purchaseStatus = verify.isTest ? 'sandbox' : 'completed';
-    await prisma.gamePurchase.create({
-      data: {
-        playerId: player.id,
-        productId: product.id,
-        productName: product.name,
-        priceUsd: product.priceUsd,
-        coinsGranted: product.coinsGranted,
-        platform: player.platform,
-        storeTransactionId: verify.orderId,
-        status: purchaseStatus,
-      },
-    });
-
-    if (product.coinsGranted > 0) {
-      await prisma.gameCoinTransaction.create({
+    await prisma.$transaction(async (tx) => {
+      await tx.gamePurchase.create({
         data: {
           playerId: player.id,
-          type: 'purchase',
-          amount: product.coinsGranted,
-          balance: currentCoins ?? player.coins + product.coinsGranted,
-          description: `Purchased ${product.name}`,
+          productId: product.id,
+          productName: product.name,
+          priceUsd: product.priceUsd,
+          coinsGranted: product.coinsGranted,
+          platform: player.platform,
+          storeTransactionId: verify.orderId,
+          status: purchaseStatus,
         },
       });
-    }
 
-    // For sandbox purchases, DO NOT increment totalSpent — that field
-    // feeds every "paying user / conversion / segments" calculation on
-    // the admin dashboard and we don't want TestFlight test buys to
-    // inflate it. Coins still get granted so the in-app UX works.
-    await prisma.gamePlayer.update({
-      where: { id: player.id },
-      data: {
-        ...(verify.isTest ? {} : { totalSpent: { increment: product.priceUsd } }),
-        coins: currentCoins ?? { increment: product.coinsGranted },
-        lastActiveAt: new Date(),
-      },
+      // Atomic coin increment. Read the post-increment balance from the
+      // SAME update so the ledger snapshot is server-authoritative (no
+      // more trust-the-client `currentCoins` overwrite). For sandbox
+      // purchases, do NOT increment totalSpent — that column feeds every
+      // "paying user / conversion / segments" calculation and TestFlight
+      // test buys would inflate revenue analytics.
+      const updated = await tx.gamePlayer.update({
+        where: { id: player.id },
+        data: {
+          ...(verify.isTest ? {} : { totalSpent: { increment: product.priceUsd } }),
+          coins: { increment: product.coinsGranted },
+          lastActiveAt: new Date(),
+        },
+        select: { coins: true },
+      });
+
+      if (product.coinsGranted > 0) {
+        await tx.gameCoinTransaction.create({
+          data: {
+            playerId: player.id,
+            type: 'purchase',
+            amount: product.coinsGranted,
+            balance: updated.coins,
+            description: `Purchased ${product.name}`,
+          },
+        });
+      }
     });
 
     return NextResponse.json({ success: true });

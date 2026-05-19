@@ -101,9 +101,20 @@ export async function POST(request: NextRequest) {
     }
 
     const netChange = claimedPayout - betAmount;
-    const newBalance = player.coins + netChange;
 
-    // Atomic: write race + bet + coin transaction + player update
+    // Atomic: write race + bet + coin transaction + player update.
+    //
+    // Key invariants:
+    //   - All player.* reads happen INSIDE the transaction (Postgres
+    //     read-committed semantics) so the ledger snapshot is consistent
+    //     under concurrency. Previously player.coins was read pre-tx
+    //     (line 35-38 via auth helper), so two concurrent race syncs would
+    //     both compute newBalance from the same stale read and write
+    //     conflicting balance snapshots even though gamePlayer.coins was
+    //     correct via increment.
+    //   - Streak counters update server-side: currentStreak resets on loss,
+    //     bumps on win; bestStreak is the running max. Previously these
+    //     came from /sync/state which raced against race sync.
     const result = await prisma.$transaction(async (tx) => {
       const race = await tx.raceRecord.create({
         data: {
@@ -136,14 +147,45 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Single ledger entry capturing the net change so idempotencyKey
-      // dedupes the whole race result.
+      // Atomic player update with all derived fields. Server-side streak
+      // logic so race and state syncs can't race each other.
+      const updateData: Record<string, any> = {
+        totalRaces: { increment: 1 },
+        lastActiveAt: new Date(),
+      };
+      if (won) {
+        updateData.totalWins = { increment: 1 };
+        updateData.currentStreak = { increment: 1 };
+      } else {
+        updateData.currentStreak = 0;
+      }
+      if (netChange !== 0) {
+        updateData.coins = netChange > 0 ? { increment: netChange } : { decrement: -netChange };
+      }
+      const updated = await tx.gamePlayer.update({
+        where: { id: player.id },
+        data: updateData,
+        select: { coins: true, currentStreak: true, bestStreak: true },
+      });
+
+      // bestStreak is a running max — must read the post-update currentStreak
+      // and bump bestStreak only when it surpasses the previous max.
+      if (won && updated.currentStreak > updated.bestStreak) {
+        await tx.gamePlayer.update({
+          where: { id: player.id },
+          data: { bestStreak: updated.currentStreak },
+        });
+      }
+
+      // Single ledger entry with the SERVER-AUTHORITATIVE post-update balance
+      // so the snapshot is correct even under concurrent updates. Replaces
+      // the previous stale-read computation `player.coins + netChange`.
       await tx.gameCoinTransaction.create({
         data: {
           playerId: player.id,
           type: 'bet',
           amount: netChange,
-          balance: newBalance,
+          balance: updated.coins,
           description: betAmount > 0
             ? `Race on ${playerPickId || 'no pick'} - ${courseId} (net ${netChange >= 0 ? '+' : ''}${netChange})`
             : `Quick race - ${courseId}`,
@@ -151,25 +193,17 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      const updateData: Record<string, any> = {
-        totalRaces: { increment: 1 },
-        lastActiveAt: new Date(),
-      };
-      if (won) updateData.totalWins = { increment: 1 };
-      if (netChange !== 0) updateData.coins = netChange > 0 ? { increment: netChange } : { decrement: -netChange };
-
-      await tx.gamePlayer.update({
-        where: { id: player.id },
-        data: updateData,
-      });
-
-      return race;
+      return { race, balance: updated.coins };
     });
+
+    console.log(
+      `[sync/race] player=${player.id} mode=${gameMode} course=${courseId} bet=${betAmount} payout=${claimedPayout} net=${netChange} newBalance=${result.balance} won=${!!won}`,
+    );
 
     return NextResponse.json({
       success: true,
-      raceId: result.id,
-      balance: newBalance,
+      raceId: result.race.id,
+      balance: result.balance,
       banned: false,
     });
   } catch (error: any) {
