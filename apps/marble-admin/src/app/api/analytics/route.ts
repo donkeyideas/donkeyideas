@@ -167,11 +167,17 @@ export async function GET(_request: NextRequest) {
     };
 
     // --- Bet Distribution ---
+    // Buckets cover the full range — previously 25-500 only, which dropped
+    // sub-25 micro-bets (custom-track free entries, demo bets) and 500+ heavy
+    // bets entirely. The percentages still added to 100 but the chart visually
+    // implied "nobody bets less than 25 or more than 500" which was false.
     const betRanges = [
+      { label: '<25', min: 0, max: 24 },
       { label: '25-50', min: 25, max: 50 },
       { label: '51-100', min: 51, max: 100 },
       { label: '101-250', min: 101, max: 250 },
       { label: '251-500', min: 251, max: 500 },
+      { label: '500+', min: 501, max: Number.MAX_SAFE_INTEGER },
     ];
 
     const betDistributionResults = await Promise.all(
@@ -272,9 +278,16 @@ export async function GET(_request: NextRequest) {
       _count: { id: true },
     });
 
-    // Season Pass (passTier != 'free')
+    // Season Pass (passTier != 'free') — scoped to ACTIVE players so the
+    // numerator and denominator agree. Previously this counted every player
+    // with a non-free passTier including dormant accounts, while the
+    // denominator (`activeBase`) only counted players who'd raced or won.
+    // That inflated "Season Pass" adoption above 100% in small cohorts.
     const playersWithPass = await prisma.gamePlayer.count({
-      where: { passTier: { not: 'free' } },
+      where: {
+        passTier: { not: 'free' },
+        OR: [{ totalRaces: { gt: 0 } }, { totalWins: { gt: 0 } }],
+      },
     });
 
     // National Races
@@ -477,16 +490,16 @@ export async function GET(_request: NextRequest) {
         weekStart,
       ),
       // purchaseRepeatRate: payers with 2+ NON-SANDBOX completed purchases.
-      // (Sandbox rows are excluded so a TestFlight tester making two test
-      // buys doesn't count as a repeat payer.)
-      prisma.$queryRawUnsafe<{ count: bigint }[]>(
-        `SELECT COUNT(*) as count FROM (
-           SELECT "playerId" FROM game_purchases
-           WHERE "status" = 'completed'
-           GROUP BY "playerId"
-           HAVING COUNT(*) >= 2
-         ) sub`,
-      ),
+      // The previous raw SQL filtered only on `status = 'completed'` and
+      // ignored excludePurchaseTest, so two TestFlight sandbox buys made the
+      // same player look like a repeat payer. Using groupBy + the sandbox
+      // filter keeps the numerator consistent with `payerIds` (denominator).
+      prisma.gamePurchase.groupBy({
+        by: ['playerId'],
+        where: { status: 'completed', ...excludePurchaseTest },
+        _count: { id: true },
+        having: { id: { _count: { gte: 2 } } },
+      }).then((rows) => [{ count: BigInt(rows.length) }]),
       // total payers ever — sandbox-aware (matches Overview / Users)
       Promise.resolve(sandbox.payerIds.size),
       // engagementVelocity: races this week

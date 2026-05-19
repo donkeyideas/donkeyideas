@@ -92,6 +92,21 @@ export async function GET() {
     // every gamePurchase query below.
     const excludeTest = await getNonSandboxPurchaseFilter();
 
+    /* App Store fee rate — admin-configurable via GameConfig
+     * (group='financials', key='app_store_fee_rate'). Default 0.15 is the
+     * Small Business Program rate; the comparison reference 0.30 stays
+     * hardcoded because it's the "what we'd pay without SBP" benchmark.
+     * Previously baked in three places, so changing programs (or running
+     * a what-if scenario) required code edits. */
+    const feeRateConfig = await prisma.gameConfig.findUnique({
+      where: { key: 'app_store_fee_rate' },
+    });
+    const parsedFeeRate = Number(feeRateConfig?.value);
+    const feeRate = Number.isFinite(parsedFeeRate) && parsedFeeRate >= 0 && parsedFeeRate < 1
+      ? parsedFeeRate
+      : 0.15;
+    const REFERENCE_FEE_RATE = 0.30;
+
     // Revenue by product — both monthly (for the pricing matrix, whose
     // columns are labelled "Units Sold (Month)" / "Monthly Revenue") and
     // lifetime (for the byProduct payload that callers may use elsewhere).
@@ -148,7 +163,6 @@ export async function GET() {
     });
 
     const gross = Number(monthlyRevenue._sum.priceUsd ?? 0);
-    const feeRate = 0.15; // Small Business Program
     const fees = gross * feeRate;
     const net = gross - fees;
 
@@ -169,10 +183,10 @@ export async function GET() {
       const sales = aggregatedByCatalog.get(cat.productId);
       const unitsSold = sales?.units ?? 0;
       const grossRevenue = sales?.revenue ?? 0;
-      const appStoreFeeRate = 0.15;
+      const appStoreFeeRate = feeRate;
       const appStoreFee = cat.unitPrice * appStoreFeeRate;
       const netPerUnit = cat.unitPrice - appStoreFee;
-      const fee30 = cat.unitPrice * 0.30;
+      const fee30 = cat.unitPrice * REFERENCE_FEE_RATE;
       const netAt30 = cat.unitPrice - fee30;
 
       return {
@@ -201,22 +215,26 @@ export async function GET() {
     ];
 
     // ── Fee impact tiers ──
+    // Compares the configured SBP rate (feeRate) against the reference rate
+    // (REFERENCE_FEE_RATE — 30%). Field names retain the "30pct/15pct"
+    // suffix so existing UI bindings keep working; semantically they now
+    // mean "reference-rate" and "current-rate" respectively.
     const feeTiers = FEE_TIERS.map((annual) => ({
       annualRevenue: annual,
-      at30pct: annual * 0.30,
-      at15pct: annual * 0.15,
-      keep30: annual * 0.70,
-      keep15: annual * 0.85,
-      savings: annual * 0.15, // difference between 30% and 15%
+      at30pct: annual * REFERENCE_FEE_RATE,
+      at15pct: annual * feeRate,
+      keep30: annual * (1 - REFERENCE_FEE_RATE),
+      keep15: annual * (1 - feeRate),
+      savings: annual * (REFERENCE_FEE_RATE - feeRate),
     }));
 
     // ── Actual fee comparison (current revenue) ──
     const totalGross = Number(totalRevenue._sum.priceUsd ?? 0);
     const feeComparison = {
       totalRevenue: totalGross,
-      at15pct: totalGross * 0.15,
-      at30pct: totalGross * 0.30,
-      savings: totalGross * 0.15,
+      at15pct: totalGross * feeRate,
+      at30pct: totalGross * REFERENCE_FEE_RATE,
+      savings: totalGross * (REFERENCE_FEE_RATE - feeRate),
     };
 
     return NextResponse.json({

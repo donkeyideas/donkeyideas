@@ -17,6 +17,17 @@ import { cookies } from 'next/headers';
 
 const GROUP = 'track-bg';
 
+/* Namespaced key prefix so a courseId can NEVER collide with a different
+ * group's key (rewards, betting, limits, etc.). Previously the upsert
+ * used the bare courseId as the key — an admin typing `daily_reward_1`
+ * would silently overwrite the daily reward config with an image URL,
+ * breaking the live economy. Now keys are stored as `track-bg:gen-1043`
+ * and the courseId portion is what we expose to the client / mobile. */
+const KEY_PREFIX = 'track-bg:';
+const toKey = (courseId: string) => `${KEY_PREFIX}${courseId}`;
+const fromKey = (key: string) =>
+  key.startsWith(KEY_PREFIX) ? key.slice(KEY_PREFIX.length) : key;
+
 async function requireAuth() {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
@@ -37,7 +48,7 @@ export async function GET() {
     });
 
     const images = rows.map((r) => ({
-      courseId: r.key,
+      courseId: fromKey(r.key),
       imageUrl: r.value,
       label: r.label,
       updatedAt: r.updatedAt,
@@ -79,10 +90,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const key = toKey(courseId);
     const row = await prisma.gameConfig.upsert({
-      where: { key: courseId },
+      where: { key },
       create: {
-        key: courseId,
+        key,
         value: imageUrl,
         label: label || `Background for ${courseId}`,
         group: GROUP,
@@ -98,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       image: {
-        courseId: row.key,
+        courseId: fromKey(row.key),
         imageUrl: row.value,
         label: row.label,
         updatedAt: row.updatedAt,
@@ -129,7 +141,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const existing = await prisma.gameConfig.findUnique({ where: { key: courseId } });
+    const key = toKey(courseId);
+    const existing = await prisma.gameConfig.findUnique({ where: { key } });
     if (!existing || existing.group !== GROUP) {
       return NextResponse.json(
         { error: { message: 'Track background not found' } },
@@ -137,7 +150,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await prisma.gameConfig.delete({ where: { key: courseId } });
+    await prisma.gameConfig.delete({ where: { key } });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

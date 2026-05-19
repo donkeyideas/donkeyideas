@@ -70,9 +70,14 @@ export async function GET(_request: NextRequest) {
       totalCoinsInCirculation: totalCoins._sum.coins ?? 0,
       avgBalance: Math.round(Number(avgCoins._avg.coins ?? 0)),
       playerCount,
-      coinsMintedToday: mintedToday._sum.amount ?? 0,
+      coinsMintedToday: Number(mintedToday._sum.amount ?? 0),
       coinsBurnedToday: Math.abs(Number(burnedToday._sum.amount ?? 0)),
-      netCoinFlowToday: (mintedToday._sum.amount ?? 0) + (Number(burnedToday._sum.amount) ?? 0),
+      // Net flow = minted (positive) + burned (negative) so the sum is the
+      // actual treasury delta. NaN guarding: `??` must be inside `Number()`,
+      // otherwise `Number(undefined)` → NaN, and `NaN ?? 0` stays NaN (NaN is
+      // not nullish). Prisma sometimes returns Decimal here, hence the wrap.
+      netCoinFlowToday:
+        Number(mintedToday._sum.amount ?? 0) + Number(burnedToday._sum.amount ?? 0),
       lowBalancePlayers,
       distribution,
       config: config.reduce(

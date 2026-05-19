@@ -270,25 +270,33 @@ export async function GET(
     };
 
     // ---- Compute Coin History ----
-    const txAmounts = recentTransactions.map((t) => Number(t.amount));
-    const coinBars = txAmounts.length > 0 ? txAmounts.reverse() : [];
-    const totalIn = recentTransactions.filter((t) => Number(t.amount) > 0).reduce((s, t) => s + Number(t.amount), 0);
-    const totalOut = recentTransactions.filter((t) => Number(t.amount) < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
-
-    // Build a running balance from transactions (approximate)
-    let runningBalance = player.coins;
-    const balanceBars: number[] = [];
-    // Walk backwards through transactions to reconstruct balance history
-    const sortedTx = [...recentTransactions].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    for (const tx of sortedTx) {
-      balanceBars.push(Math.max(0, runningBalance));
-      runningBalance = runningBalance - Number(tx.amount);
-    }
-    // If no transactions, just show current balance
+    // recentTransactions is fetched newest-first. Reverse to oldest-first so
+    // the chart reads left-to-right as time advances. Use the LEDGER'S
+    // recorded `balance` snapshot (post-tx balance) instead of re-deriving
+    // by subtracting amounts: the old code initialised runningBalance to
+    // `player.coins` then walked oldest→newest while SUBTRACTING each amount,
+    // which produces a backwards reconstruction (final value ends up equal
+    // to balance-before-oldest-tx, not current). Plus the bars displayed
+    // were each off-by-one in time. tx.balance is authoritative and is
+    // written atomically with the coin update everywhere (admin adjust-coins,
+    // economy/transaction, sync/race, sync/purchase — see Wave 1).
+    const sortedTx = [...recentTransactions].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+    const coinBars = sortedTx.map((t) => Number(t.amount));
+    const balanceBars = sortedTx.map((t) => Math.max(0, Number(t.balance)));
     const finalBars = balanceBars.length > 0 ? balanceBars : [player.coins];
+
+    const totalIn = recentTransactions
+      .filter((t) => Number(t.amount) > 0)
+      .reduce((s, t) => s + Number(t.amount), 0);
+    const totalOut = recentTransactions
+      .filter((t) => Number(t.amount) < 0)
+      .reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
 
     const coinHistory = {
       bars: finalBars,
+      amounts: coinBars,
       high: finalBars.length > 0 ? Math.max(...finalBars) : player.coins,
       low: finalBars.length > 0 ? Math.min(...finalBars) : player.coins,
       current: player.coins,

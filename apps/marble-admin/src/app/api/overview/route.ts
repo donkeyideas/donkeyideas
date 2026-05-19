@@ -336,10 +336,17 @@ export async function GET(_request: NextRequest) {
     const fmtHour = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
     const totalActivity = heatRaces.length + heatBets.length;
 
+    // Peak-time window wraps past midnight. Previously the end was clamped
+    // to `Math.min(23, peakHour + 2)`, which produced a degenerate "11 PM -
+    // 11 PM" string when peak hour was 22 or 23, and silently lost the
+    // late-night chunk of the window. Modulo 24 wrap shows "11 PM - 1 AM"
+    // correctly.
+    const peakEndHour = (peakHour + 2) % 24;
+
     const heatmap = {
       days: dayNames,
       grid: scaledGrid,
-      peakTime: `${fmtHour(peakHour)}-${fmtHour(Math.min(23, peakHour + 2))}`,
+      peakTime: `${fmtHour(peakHour)}-${fmtHour(peakEndHour)}`,
       mostActiveDay: dayNames[mostActiveDayIdx],
       totalEvents: totalActivity,
       totalRaces: heatRaces.length,

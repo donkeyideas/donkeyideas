@@ -70,12 +70,20 @@ export async function GET() {
         },
       }),
 
-      // Active promos (now between startDate and endDate)
+      // Active promos: live now AND not yet expired. The Announcements query
+      // above already handles a null endDate as "no expiry"; promos had the
+      // same intent (an admin creating an evergreen "10% off" promo leaves
+      // endDate null) but previously hard-required endDate >= now, which
+      // returned 0 for any evergreen promo. Matched to the Announcements
+      // logic so the two cards on the dashboard count the same way.
       prisma.gamePromo.count({
         where: {
           active: true,
           startDate: { lte: now },
-          endDate: { gte: now },
+          OR: [
+            { endDate: null },
+            { endDate: { gte: now } },
+          ],
         },
       }),
 

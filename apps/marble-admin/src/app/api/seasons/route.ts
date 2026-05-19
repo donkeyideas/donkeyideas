@@ -21,20 +21,55 @@ const MARBLE_COLORS: Record<string, string> = {
   aqua: '#1abc9c',
 };
 
-const SEASON_NAMES: Record<number, string> = {
+/* Default season names. Admins can override via GameConfig rows in group
+ * 'seasons' with key `season_name_<N>` — see resolveSeasonName() below.
+ * Seasons past 4 fall back to "SEASON N" until an admin sets a custom name. */
+const DEFAULT_SEASON_NAMES: Record<number, string> = {
   1: 'INAUGURAL SEASON',
   2: 'RISING THUNDER',
   3: 'GOLDEN ERA',
   4: 'WINTER BLITZ',
 };
 
-const COURSE_ROTATION = [
-  { name: 'Classic Falls', meta: 'Difficulty: Medium • 4 obstacles', theme: 'GRASS', thumbBg: 'bg-emerald-900', letter: 'CF', tagClass: 'bg-marble-green/15 text-marble-green', disabled: false },
-  { name: 'Volcano Rush', meta: 'Difficulty: Hard • 6 obstacles', theme: 'LAVA', thumbBg: 'bg-red-900', letter: 'VR', tagClass: 'bg-marble-red/15 text-marble-red', disabled: false },
-  { name: 'Glacier Run', meta: 'Difficulty: Easy • 3 obstacles', theme: 'ICE', thumbBg: 'bg-marble-blue/20', letter: 'GR', tagClass: 'bg-marble-blue/15 text-marble-blue', disabled: false },
-  { name: 'Neon Circuit', meta: 'Difficulty: Hard • 5 obstacles', theme: 'CYBER', thumbBg: 'bg-purple-900', letter: 'NC', tagClass: 'bg-[#c39bd3]/15 text-[#c39bd3]', disabled: false },
-  { name: 'Forest Trail', meta: 'Difficulty: Medium • 4 obstacles', theme: 'GRASS', thumbBg: 'bg-emerald-900', letter: 'FT', tagClass: 'bg-marble-green/15 text-marble-green', disabled: true },
-];
+/* Theme → display-style mapping. The previous COURSE_ROTATION was a fixed
+ * 5-row decorative list ("Classic Falls" etc.) that had no relationship to
+ * the actual 96 courses in the game — admins editing this page couldn't tell
+ * which courses were really being played. Now we pull the actual top
+ * courses from RaceRecord aggregates and decorate them by theme. */
+type ThemeStyle = {
+  theme: string;
+  thumbBg: string;
+  tagClass: string;
+};
+const THEME_STYLES: Record<string, ThemeStyle> = {
+  grass: { theme: 'GRASS', thumbBg: 'bg-emerald-900', tagClass: 'bg-marble-green/15 text-marble-green' },
+  lava: { theme: 'LAVA', thumbBg: 'bg-red-900', tagClass: 'bg-marble-red/15 text-marble-red' },
+  ice: { theme: 'ICE', thumbBg: 'bg-marble-blue/20', tagClass: 'bg-marble-blue/15 text-marble-blue' },
+  cyber: { theme: 'CYBER', thumbBg: 'bg-purple-900', tagClass: 'bg-[#c39bd3]/15 text-[#c39bd3]' },
+};
+const DEFAULT_THEME_STYLE: ThemeStyle = THEME_STYLES.grass;
+
+function inferTheme(courseId: string): ThemeStyle {
+  const id = courseId.toLowerCase();
+  if (id.includes('lava') || id.includes('volcano') || id.includes('fire')) return THEME_STYLES.lava;
+  if (id.includes('ice') || id.includes('frost') || id.includes('glacier')) return THEME_STYLES.ice;
+  if (id.includes('cyber') || id.includes('neon') || id.includes('grid')) return THEME_STYLES.cyber;
+  return DEFAULT_THEME_STYLE;
+}
+
+function prettyCourseName(courseId: string): string {
+  return courseId
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(' ');
+}
+
+function courseInitials(name: string): string {
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
 
 export async function GET() {
   try {
@@ -196,13 +231,51 @@ export async function GET() {
     const daysRemaining = Math.max(0, (totalWeeks * 7) - daysSinceStart);
     const progressPct = Math.round((week / totalWeeks) * 100);
 
+    /* Season name: admin-configurable via GameConfig (group='seasons',
+     * key=`season_name_<N>`). Falls back to baked-in defaults, then to the
+     * generic "SEASON N" — so seasons past 4 stop showing "undefined" or an
+     * accidental default. */
+    const seasonNameConfig = await prisma.gameConfig.findUnique({
+      where: { key: `season_name_${currentSeason}` },
+    });
+    const seasonName = seasonNameConfig?.value
+      || DEFAULT_SEASON_NAMES[currentSeason]
+      || `SEASON ${currentSeason}`;
+
     const seasonMeta = {
-      seasonName: SEASON_NAMES[currentSeason] || `SEASON ${currentSeason}`,
+      seasonName,
       week,
       totalWeeks,
       daysRemaining,
       progressPct,
     };
+
+    /* Course rotation: top 5 most-played courses in season/playoff modes
+     * for THIS season. Previously hardcoded to 5 decorative entries that
+     * had no relation to actual gameplay. Falls back to an empty list when
+     * no races have been played yet (rather than misleadingly showing the
+     * old hardcoded names). */
+    const topSeasonCourses = await prisma.raceRecord.groupBy({
+      by: ['courseId'],
+      where: { ...seasonModeFilter, racedAt: { gte: seasonStartDate } },
+      _count: { id: true },
+      orderBy: { _count: { id: 'desc' } },
+      take: 5,
+    });
+
+    const courses = topSeasonCourses.map((c) => {
+      const style = inferTheme(c.courseId);
+      const name = prettyCourseName(c.courseId);
+      return {
+        name,
+        meta: `${c._count.id} race${c._count.id === 1 ? '' : 's'} this season`,
+        theme: style.theme,
+        thumbBg: style.thumbBg,
+        letter: courseInitials(name),
+        tagClass: style.tagClass,
+        disabled: false,
+      };
+    });
 
     return NextResponse.json({
       currentSeason,
@@ -216,7 +289,7 @@ export async function GET() {
       standings,
       passKpis,
       seasonMeta,
-      courses: COURSE_ROTATION,
+      courses,
     });
   } catch (error: any) {
     console.error('Seasons error:', error);

@@ -45,8 +45,14 @@ function fmtNum(n: number) {
   return new Intl.NumberFormat('en-US').format(n);
 }
 
-function timeAgo(date: string) {
-  const sec = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+function timeAgo(date: string | null | undefined) {
+  // Guard invalid / missing inputs — previously a null lastActiveAt threw
+  // "Invalid Date" in the table cell and the whole row failed to render.
+  if (!date) return '—';
+  const t = new Date(date).getTime();
+  if (!Number.isFinite(t)) return '—';
+  const sec = Math.floor((Date.now() - t) / 1000);
+  if (sec < 0) return 'just now'; // clock skew
   if (sec < 60) return 'just now';
   if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
   if (sec < 86400) return `${Math.floor(sec / 3600)} hr${Math.floor(sec / 3600) > 1 ? 's' : ''} ago`;

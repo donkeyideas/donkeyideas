@@ -101,11 +101,17 @@ export default function AnalyticsPage() {
   const segments = data.segments ?? [];
   const revenueWeeks = data.revenueWeeks ?? [];
 
-  // Find most/least bet-on marble
+  // Find most/least bet-on marble. Only valid when SOMEONE has actually
+  // placed a bet — on a freshly wiped DB every marble has 0 bets and the
+  // sorted array would still return the alphabetically-first marble as
+  // "Most Bet" with "(0%)", which looks like a UI bug. Setting both to
+  // null when no bets exist makes the consumer-side render guards work as
+  // intended (the existing `{mostBetOn && (...)}` checks already short-
+  // circuit on null).
   const sortedByBets = [...winRates].sort((a: any, b: any) => b.totalBets - a.totalBets);
-  const mostBetOn = sortedByBets[0];
-  const leastBetOn = sortedByBets[sortedByBets.length - 1];
   const totalMarbleBets = winRates.reduce((s: number, m: any) => s + m.totalBets, 0);
+  const mostBetOn = totalMarbleBets > 0 ? sortedByBets[0] : null;
+  const leastBetOn = totalMarbleBets > 0 ? sortedByBets[sortedByBets.length - 1] : null;
 
   return (
     <div className="space-y-6">

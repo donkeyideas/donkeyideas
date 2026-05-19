@@ -37,9 +37,16 @@ export async function GET() {
     // Build per-track background image URL map (group: 'track-bg')
     const trackBgImages: Record<string, string> = {};
 
+    /* track-bg keys are now stored namespaced as `track-bg:<courseId>` to
+     * prevent collisions with other GameConfig groups (rewards, betting,
+     * limits) — see track-bg-images/route.ts. Strip the prefix when
+     * emitting to the mobile client so trackBgImages still maps
+     * courseId → URL the same way the client expects. */
+    const BG_PREFIX = 'track-bg:';
     for (const c of configs) {
       if (c.group === 'track-bg') {
-        trackBgImages[c.key] = c.value;
+        const courseId = c.key.startsWith(BG_PREFIX) ? c.key.slice(BG_PREFIX.length) : c.key;
+        trackBgImages[courseId] = c.value;
       } else {
         map[c.key] = parseFloat(c.value) || 0;
       }
