@@ -3,7 +3,18 @@ import { prisma } from '@donkey-ideas/database';
 
 /* ------------------------------------------------------------------ */
 /*  Public endpoint — no auth required. Game app fetches this on load. */
+/*                                                                     */
+/*  CACHING: opted out of Vercel's edge cache via `force-dynamic`.     */
+/*  Without this Next.js + Vercel were serving a CDN-cached response   */
+/*  for up to ~10 minutes after an admin pushed a new track background */
+/*  via /track-bg-images. Symptom: DB has 3 track-bg rows, API returns */
+/*  the 1 row that was present when the response first cached. Mobile  */
+/*  reads the stale list and shows only the old background. Live-ops   */
+/*  values MUST round-trip from DB on every request — they're the      */
+/*  whole point of the endpoint.                                       */
 /* ------------------------------------------------------------------ */
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const DEFAULTS: Record<string, any> = {
   bet_amount_1: 25,
