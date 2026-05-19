@@ -28,6 +28,7 @@
 
 import { prisma } from '@donkey-ideas/database';
 import { getSandboxAwareReport } from './sandboxFilter';
+import { CURRENT_BUILDS, APP_NAMES, APP_IDS } from './keyword-playbook';
 
 // ─────────────────────────────────────────────────────────────────────
 // Strategic content (same for every deck — narrative, not data)
@@ -637,6 +638,7 @@ function discoverabilitySlide(num: string, s: DeckSnapshot): string {
     <div class="eyebrow">Keyword playbook</div>
     <h2>Where players will find us.</h2>
     <p class="body-text">${k.totalTracked} curated keywords spanning core marble-racing terms, social-casino adjacency, and long-tail discovery. Live ranks pulled from Apple App Store and Google Play; volume, difficulty, and intent computed via a tuned heuristic engine (no third-party keyword API needed). Last synced ${esc(lastSyncedLabel)}.</p>
+    <p class="meta" style="margin-top:8px">Live production builds: <strong style="color:#6ec1ff">${esc(APP_NAMES.ios)}</strong> ${esc(CURRENT_BUILDS.ios.version)} (${esc(CURRENT_BUILDS.ios.build)}) · App Store ID ${esc(APP_IDS.ios)} &nbsp;|&nbsp; <strong style="color:#2ecc71">${esc(APP_NAMES.android)}</strong> ${esc(CURRENT_BUILDS.android.version)} (release ${esc(CURRENT_BUILDS.android.build)}) · ${esc(APP_IDS.android)}</p>
     <div class="kpi-grid">
       <div class="kpi"><div class="kpi-label">Tracked</div><div class="kpi-value">${fmtNum(k.totalTracked)}</div></div>
       <div class="kpi"><div class="kpi-label">Ranking (iOS)</div><div class="kpi-value kpi-blue">${fmtNum(k.iosRanked)}</div></div>

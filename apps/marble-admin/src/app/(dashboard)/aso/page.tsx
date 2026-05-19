@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
 import { KeywordIntelligence } from '@/components/aso/KeywordIntelligence';
+import { CURRENT_BUILDS } from '@/lib/keyword-playbook';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -490,8 +491,9 @@ export default function ASOPage() {
             </div>
           </div>
 
-          {/* Stats Row */}
-          <div className="border-t border-white/[0.06] px-6 py-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+          {/* Stats Row. Build # comes from CURRENT_BUILDS since the public
+              store APIs don't expose it — bump that constant on release. */}
+          <div className="border-t border-white/[0.06] px-6 py-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
             <div>
               <p className="text-[10px] text-white/25 uppercase font-bold tracking-wider mb-1">Installs</p>
               <p className="font-heading text-xl text-marble-green">{ourApp.installs}</p>
@@ -502,7 +504,11 @@ export default function ASOPage() {
             </div>
             <div>
               <p className="text-[10px] text-white/25 uppercase font-bold tracking-wider mb-1">Version</p>
-              <p className="font-heading text-xl text-white/50">{ourApp.version || 'N/A'}</p>
+              <p className="font-heading text-xl text-white/50">{ourApp.version || CURRENT_BUILDS[store === 'play' ? 'android' : 'ios'].version}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-white/25 uppercase font-bold tracking-wider mb-1">{store === 'play' ? 'Release #' : 'Build #'}</p>
+              <p className="font-heading text-xl text-gold">{CURRENT_BUILDS[store === 'play' ? 'android' : 'ios'].build}</p>
             </div>
             <div>
               <p className="text-[10px] text-white/25 uppercase font-bold tracking-wider mb-1">Last Updated</p>

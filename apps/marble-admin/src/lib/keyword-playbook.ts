@@ -22,6 +22,30 @@ export const APP_IDS = {
   ios: '6769627792',
 } as const;
 
+/**
+ * Current production build numbers per store. The public store APIs
+ * return marketing `version` (e.g. "1.0.5") but NOT the platform-specific
+ * build/release number, so we surface them here as constants.
+ *
+ *   iOS:     App Store Connect → TestFlight → iOS Builds (e.g. 1.0.5 (57))
+ *   Android: Play Console → Test and release → Latest production
+ *            release number (e.g. release 29 = "1.0.5")
+ *
+ * Bump these whenever a new build is promoted to the respective store
+ * so the ASO page + decks reflect what's live.
+ */
+export const CURRENT_BUILDS = {
+  ios: { version: '1.0.5', build: '57' },
+  android: { version: '1.0.5', build: '29' },
+} as const;
+
+/** App display names per store (live store APIs sometimes lag; these
+ *  reflect the production listings the IDs above resolve to). */
+export const APP_NAMES = {
+  ios: 'Marble Race: Physics Bet',
+  android: 'Marble Race Bet Game',
+} as const;
+
 export const SEED_KEYWORDS: string[] = [
   // Core — high-volume head terms
   'marble race',
