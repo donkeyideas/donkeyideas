@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { getGamePlayerByToken, extractGameToken } from '@/lib/game-auth';
 
+// XP required to complete a single pass level. Must match the client value
+// in `state/gameStore.ts`. Default 3500 if not exported from a shared module.
+const XP_PER_LEVEL = 3500;
+
 /**
  * Player state sync — server is authoritative.
  *
@@ -51,8 +55,21 @@ export async function POST(request: NextRequest) {
     // updates it server-side.
     const update: Record<string, any> = { lastActiveAt: new Date() };
 
-    if (typeof playerName === 'string' && playerName.trim().length >= 2) {
-      update.playerName = playerName.trim().slice(0, 30);
+    if (typeof playerName === 'string') {
+      // Sanitize playerName — strip control characters, RTL overrides, and
+      // zero-width joiners that could spoof admin/leaderboard rows. Matches
+      // the same regex used in auth/register/route.ts.
+      // Strip C0 control chars (\x00-\x1f), DEL (\x7f), RTL/zero-width marks
+      // (-), line/paragraph separators and RLM/LRE/etc.
+      // (-), and word-joiner/invisible-times range
+      // (-). Same intent as auth/register/route.ts.
+      const safePlayerName = playerName
+        .replace(/[\u0000-\u001F\u007F\u200B-\u200F\u2028-\u202F\u2060-\u206F]/g, '')
+        .trim()
+        .slice(0, 30);
+      if (safePlayerName.length >= 2) {
+        update.playerName = safePlayerName;
+      }
     }
     if (typeof currentStreak === 'number' && currentStreak >= 0) {
       update.currentStreak = currentStreak;
@@ -75,6 +92,18 @@ export async function POST(request: NextRequest) {
       // is valid), otherwise enforce monotonic increase.
       (passXp >= (player.passXp ?? 0) || (update.passLevel ?? player.passLevel) > player.passLevel)
     ) {
+      // UPPER CAP: when the client claims a level-up, also enforce that the
+      // post-level-up XP is within one level's worth. Without this, a tampered
+      // client could submit `passLevel = old+1, passXp = 999999` and bank
+      // hundreds of unearned level-ups in subsequent calls (since passXp is
+      // monotonic going forward).
+      const isLevelUp = (update.passLevel ?? player.passLevel) > player.passLevel;
+      if (isLevelUp && passXp > XP_PER_LEVEL) {
+        return NextResponse.json(
+          { error: { message: `passXp ${passXp} exceeds XP_PER_LEVEL ${XP_PER_LEVEL} on level-up` } },
+          { status: 400 },
+        );
+      }
       update.passXp = passXp;
     }
 

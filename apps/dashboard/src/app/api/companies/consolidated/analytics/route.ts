@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
-import { getUserByToken } from '@/lib/auth';
+import { getUserByToken, getTokenFromRequest } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 
@@ -135,7 +135,7 @@ async function fetchCompanyAnalytics(
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('auth-token')?.value;
+    const token = getTokenFromRequest(request, cookieStore.get('auth-token')?.value);
 
     if (!token) {
       return NextResponse.json(

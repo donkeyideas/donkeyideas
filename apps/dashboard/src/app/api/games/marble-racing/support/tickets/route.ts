@@ -87,9 +87,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate ticket number
-    const count = await prisma.supportTicket.count();
-    const ticketNumber = `TKT-${String(count + 1).padStart(4, '0')}`;
+    // Generate ticket number using timestamp + random suffix instead of
+    // `count + 1`. The old scheme had a race: two parallel POSTs could both
+    // read the same count and both insert TKT-0042. Timestamp + 6-char base36
+    // random avoids the collision without needing a sequence or extra lock.
+    const ticketNumber = `TKT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const ticket = await prisma.supportTicket.create({
       data: {

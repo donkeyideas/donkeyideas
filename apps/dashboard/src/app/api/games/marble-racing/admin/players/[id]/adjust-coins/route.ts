@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
-import { getUserByToken } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function POST(
@@ -13,9 +13,9 @@ export async function POST(
     if (!token) {
       return NextResponse.json({ error: { message: 'Not authenticated' } }, { status: 401 });
     }
-    const admin = await getUserByToken(token);
+    const admin = await requireAdmin(token);
     if (!admin) {
-      return NextResponse.json({ error: { message: 'Invalid session' } }, { status: 401 });
+      return NextResponse.json({ error: { message: 'Forbidden' } }, { status: 403 });
     }
 
     const { id } = await params;

@@ -26,16 +26,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (player.status === 'banned') {
-      return NextResponse.json({
-        player: {
-          id: player.id,
-          playerName: player.playerName,
-          status: 'banned',
-          banReason: player.banReason,
-        },
-        token: null,
-        banned: true,
-      });
+      // Do NOT leak banReason or playerId to a banned client — both fields
+      // were previously returned and helped scrapers triangulate which device
+      // ids were flagged plus tell tampered clients exactly what to spoof
+      // around. Return a generic 403 with no identifying fields.
+      return NextResponse.json(
+        { error: { message: 'Account suspended' }, banned: true },
+        { status: 403 },
+      );
     }
 
     const token = await createGamePlayerSession(

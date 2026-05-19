@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
-import { getUserByToken } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function POST(
@@ -13,32 +13,52 @@ export async function POST(
     if (!token) {
       return NextResponse.json({ error: { message: 'Not authenticated' } }, { status: 401 });
     }
-    const admin = await getUserByToken(token);
+    const admin = await requireAdmin(token);
     if (!admin) {
-      return NextResponse.json({ error: { message: 'Invalid session' } }, { status: 401 });
+      return NextResponse.json({ error: { message: 'Forbidden' } }, { status: 403 });
     }
 
     const { id } = await params;
     const body = await request.json();
     const { reason } = body;
 
+    // Validate banReason — required non-empty string, trimmed length 3..500.
+    // Prevents blank/garbage reasons from being recorded against players.
+    if (typeof reason !== 'string') {
+      return NextResponse.json(
+        { error: { message: 'banReason must be a string' } },
+        { status: 400 },
+      );
+    }
+    const trimmedReason = reason.trim();
+    if (trimmedReason.length < 3 || trimmedReason.length > 500) {
+      return NextResponse.json(
+        { error: { message: 'banReason must be 3-500 characters after trimming' } },
+        { status: 400 },
+      );
+    }
+
     const player = await prisma.gamePlayer.findUnique({ where: { id } });
     if (!player) {
       return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
     }
 
-    await prisma.gamePlayer.update({
-      where: { id },
-      data: {
-        status: 'banned',
-        banReason: reason || 'Banned by admin',
-        bannedAt: new Date(),
-        bannedBy: admin.id,
-      },
+    // ATOMIC: ban-flag flip and session invalidation must happen together.
+    // A crash between them previously left a player half-banned (status=banned
+    // but live sessions still valid, or sessions wiped but status not updated).
+    await prisma.$transaction(async (tx) => {
+      await tx.gamePlayer.update({
+        where: { id },
+        data: {
+          status: 'banned',
+          banReason: trimmedReason,
+          bannedAt: new Date(),
+          bannedBy: admin.id,
+        },
+      });
+      // Invalidate all sessions
+      await tx.gamePlayerSession.deleteMany({ where: { playerId: id } });
     });
-
-    // Invalidate all sessions
-    await prisma.gamePlayerSession.deleteMany({ where: { playerId: id } });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -134,6 +134,52 @@ export async function getUserByToken(token: string) {
   return session.user;
 }
 
+/**
+ * Admin allowlist — used by `requireAdmin()` below.
+ *
+ * TODO: replace with a proper `role` column on the User model. The User
+ * schema currently has no role field, so until a migration adds one we
+ * gate admin endpoints by hardcoded email allowlist. Add new admins here
+ * (or via env var ADMIN_EMAILS, comma-separated) and migrate to a DB role
+ * column before the team grows past a handful of operators.
+ */
+const ADMIN_EMAIL_ALLOWLIST: string[] = (() => {
+  const fromEnv = (process.env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return fromEnv.length > 0 ? fromEnv : ['info@donkeyideas.com'];
+})();
+
+/**
+ * Returns the user iff the bearer token is valid AND the user is an admin.
+ * Returns null otherwise. Callers should treat null as 401/403.
+ *
+ * Usage at the top of every admin route:
+ *   const admin = await requireAdmin(token);
+ *   if (!admin) return NextResponse.json({ error: { message: 'Forbidden' } }, { status: 403 });
+ */
+export async function requireAdmin(token: string) {
+  const user = await getUserByToken(token);
+  if (!user) return null;
+  if (!ADMIN_EMAIL_ALLOWLIST.includes(user.email.toLowerCase())) {
+    return null;
+  }
+  return user;
+}
+
+// Read auth token from either the auth-token cookie or the Authorization: Bearer header.
+// Mobile clients send Bearer tokens; the web client uses cookies. Avoids depending on
+// middleware doing the bearer→cookie bridge (which is unreliable on Vercel serverless).
+export function getTokenFromRequest(request: { headers: { get(name: string): string | null } }, cookieToken: string | undefined): string | null {
+  if (cookieToken) return cookieToken;
+  const authHeader = request.headers.get('authorization');
+  if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
+    return authHeader.substring(7).trim();
+  }
+  return null;
+}
+
 export async function logoutUser(token: string) {
   await prisma.session.deleteMany({
     where: { token },

@@ -135,49 +135,70 @@ export async function POST(request: NextRequest) {
     // can't leave the player paid-but-not-credited or vice versa. Also
     // prevents the concurrent double-credit race where two near-simultaneous
     // sync calls both pass the non-transactional idempotency check.
+    //
+    // RACE PROTECTION: the pre-tx findFirst() is a TOCTOU check — two
+    // concurrent purchases with the same orderId can both pass it and
+    // double-credit coins. The real guarantee comes from the
+    // `@@unique([storeTransactionId])` constraint on GamePurchase (must
+    // be present in schema.prisma); when both transactions race the
+    // insert, exactly one wins and the loser throws P2002, which we
+    // catch and treat as the duplicate branch.
     const purchaseStatus = verify.isTest ? 'sandbox' : 'completed';
-    await prisma.$transaction(async (tx) => {
-      await tx.gamePurchase.create({
-        data: {
-          playerId: player.id,
-          productId: product.id,
-          productName: product.name,
-          priceUsd: product.priceUsd,
-          coinsGranted: product.coinsGranted,
-          platform: player.platform,
-          storeTransactionId: verify.orderId,
-          status: purchaseStatus,
-        },
-      });
-
-      // Atomic coin increment. Read the post-increment balance from the
-      // SAME update so the ledger snapshot is server-authoritative (no
-      // more trust-the-client `currentCoins` overwrite). For sandbox
-      // purchases, do NOT increment totalSpent — that column feeds every
-      // "paying user / conversion / segments" calculation and TestFlight
-      // test buys would inflate revenue analytics.
-      const updated = await tx.gamePlayer.update({
-        where: { id: player.id },
-        data: {
-          ...(verify.isTest ? {} : { totalSpent: { increment: product.priceUsd } }),
-          coins: { increment: product.coinsGranted },
-          lastActiveAt: new Date(),
-        },
-        select: { coins: true },
-      });
-
-      if (product.coinsGranted > 0) {
-        await tx.gameCoinTransaction.create({
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.gamePurchase.create({
           data: {
             playerId: player.id,
-            type: 'purchase',
-            amount: product.coinsGranted,
-            balance: updated.coins,
-            description: `Purchased ${product.name}`,
+            productId: product.id,
+            productName: product.name,
+            priceUsd: product.priceUsd,
+            coinsGranted: product.coinsGranted,
+            platform: player.platform,
+            storeTransactionId: verify.orderId,
+            status: purchaseStatus,
           },
         });
+
+        // Atomic coin increment. Read the post-increment balance from the
+        // SAME update so the ledger snapshot is server-authoritative (no
+        // more trust-the-client `currentCoins` overwrite). For sandbox
+        // purchases, do NOT increment totalSpent — that column feeds every
+        // "paying user / conversion / segments" calculation and TestFlight
+        // test buys would inflate revenue analytics.
+        const updated = await tx.gamePlayer.update({
+          where: { id: player.id },
+          data: {
+            ...(verify.isTest ? {} : { totalSpent: { increment: product.priceUsd } }),
+            coins: { increment: product.coinsGranted },
+            lastActiveAt: new Date(),
+          },
+          select: { coins: true },
+        });
+
+        if (product.coinsGranted > 0) {
+          await tx.gameCoinTransaction.create({
+            data: {
+              playerId: player.id,
+              type: 'purchase',
+              amount: product.coinsGranted,
+              balance: updated.coins,
+              description: `Purchased ${product.name}`,
+            },
+          });
+        }
+      });
+    } catch (txError: any) {
+      // P2002 = unique constraint violation on storeTransactionId. Means
+      // a concurrent sync won the race and already credited this order.
+      // Treat as duplicate-success so the client doesn't retry forever.
+      if (txError?.code === 'P2002') {
+        console.warn(
+          `[sync/purchase] duplicate orderId via P2002 player=${player.id} orderId=${verify.orderId}`,
+        );
+        return NextResponse.json({ success: true, duplicate: true });
       }
-    });
+      throw txError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

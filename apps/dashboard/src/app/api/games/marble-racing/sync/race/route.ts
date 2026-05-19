@@ -26,6 +26,27 @@ import { getGamePlayerByToken, extractGameToken } from '@/lib/game-auth';
 const MAX_BET_PAYOUT_MULTIPLIER = 20;
 const MAX_BET_AMOUNT = 10_000;
 
+const VALID_GAME_MODES = new Set([
+  'quick_race',
+  'bet',
+  'season',
+  'national_race',
+  'tournament',
+  'playoff',
+  'multiplayer_tournament',
+]);
+
+const MARBLE_IDS = new Set([
+  'dash',
+  'spike',
+  'rocky',
+  'lucky',
+  'frosty',
+  'nova',
+  'shadow',
+  'aqua',
+]);
+
 export async function POST(request: NextRequest) {
   try {
     const token = extractGameToken(request);
@@ -60,12 +81,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate gameMode against the known discriminated union. A bogus mode
+    // here would otherwise flow through to downstream stats/analytics and
+    // muddy aggregation.
+    if (!VALID_GAME_MODES.has(gameMode)) {
+      return NextResponse.json(
+        { error: { message: `Invalid gameMode: ${gameMode}` } },
+        { status: 400 },
+      );
+    }
+
+    // Validate finishOrder shape: exactly 8 strings, each a known marble id,
+    // and no duplicates. Anything else means the client is sending a
+    // corrupted/spoofed payload.
+    if (!Array.isArray(finishOrder) || finishOrder.length !== 8) {
+      return NextResponse.json(
+        { error: { message: 'finishOrder must be an array of exactly 8 marble ids' } },
+        { status: 400 },
+      );
+    }
+    const seenMarbles = new Set<string>();
+    for (const m of finishOrder) {
+      if (typeof m !== 'string' || !MARBLE_IDS.has(m) || seenMarbles.has(m)) {
+        return NextResponse.json(
+          { error: { message: `Invalid finishOrder entry: ${m}` } },
+          { status: 400 },
+        );
+      }
+      seenMarbles.add(m);
+    }
+
+    // Numeric guards — NaN/Infinity slipped through `Math.floor(Number(...))`
+    // because `Math.floor(NaN) === NaN` and `Math.max(0, NaN) === NaN`,
+    // which Prisma then coerces to 0 (silent data loss). Reject explicitly.
+    const rawBetNum = Number(rawBet ?? 0);
+    const rawPayoutNum = Number(rawPayout ?? 0);
+    if (!Number.isFinite(rawBetNum) || !Number.isFinite(rawPayoutNum)) {
+      return NextResponse.json(
+        { error: { message: 'betAmount and payout must be finite numbers' } },
+        { status: 400 },
+      );
+    }
+
     // Quick Race has no betting in the UI. Force-zero economic values
     // server-side so a tampered or buggy client can't leak the global
     // betAmount default (100) into Quick Race records.
     const isQuickRace = gameMode === 'quick_race';
-    const betAmount = isQuickRace ? 0 : Math.max(0, Math.floor(Number(rawBet ?? 0)));
-    const claimedPayout = isQuickRace ? 0 : Math.max(0, Math.floor(Number(rawPayout ?? 0)));
+    const betAmount = isQuickRace ? 0 : Math.max(0, Math.floor(rawBetNum));
+    const claimedPayout = isQuickRace ? 0 : Math.max(0, Math.floor(rawPayoutNum));
 
     // Economic validation
     if (betAmount > MAX_BET_AMOUNT) {
@@ -134,12 +197,18 @@ export async function POST(request: NextRequest) {
       });
 
       if (betAmount > 0 && playerPickId) {
+        // Validate odds: must be a finite number in (0, 100]. Defaults to 1
+        // so a missing/bogus client value doesn't corrupt the bet record.
+        const rawOdds = Number(body.odds);
+        const safeOdds = Number.isFinite(rawOdds) && rawOdds > 0 && rawOdds <= 100
+          ? rawOdds
+          : 1;
         await tx.betRecord.create({
           data: {
             playerId: player.id,
             marbleId: playerPickId,
             betAmount,
-            odds: body.odds || 0,
+            odds: safeOdds,
             payout: claimedPayout,
             won: won || false,
             placement: playerPlacement || 0,
@@ -168,13 +237,13 @@ export async function POST(request: NextRequest) {
         select: { coins: true, currentStreak: true, bestStreak: true },
       });
 
-      // bestStreak is a running max — must read the post-update currentStreak
-      // and bump bestStreak only when it surpasses the previous max.
-      if (won && updated.currentStreak > updated.bestStreak) {
-        await tx.gamePlayer.update({
-          where: { id: player.id },
-          data: { bestStreak: updated.currentStreak },
-        });
+      // bestStreak is a running max — use Postgres GREATEST() in a single
+      // atomic statement so a concurrent race-sync can't read a stale
+      // bestStreak and overwrite a higher value. The two-step "read max
+      // then update" pattern this replaces was vulnerable to lost-update
+      // anomalies even inside a transaction.
+      if (won) {
+        await tx.$executeRaw`UPDATE game_players SET "bestStreak" = GREATEST("bestStreak", "currentStreak") WHERE id = ${player.id}`;
       }
 
       // Single ledger entry with the SERVER-AUTHORITATIVE post-update balance

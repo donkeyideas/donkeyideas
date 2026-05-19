@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
-import { getUserByToken } from '@/lib/auth';
+import { requireAdmin } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function GET(
@@ -13,9 +13,9 @@ export async function GET(
     if (!token) {
       return NextResponse.json({ error: { message: 'Not authenticated' } }, { status: 401 });
     }
-    const user = await getUserByToken(token);
+    const user = await requireAdmin(token);
     if (!user) {
-      return NextResponse.json({ error: { message: 'Invalid session' } }, { status: 401 });
+      return NextResponse.json({ error: { message: 'Forbidden' } }, { status: 403 });
     }
 
     const { id } = await params;
@@ -96,6 +96,11 @@ export async function GET(
     return NextResponse.json({
       player: {
         ...player,
+        // Redact the push token — admins don't need to see the full APNs/FCM
+        // token, and leaving it in the response means anyone with admin-panel
+        // access (or its logs) gets a credential they could use to push
+        // arbitrary notifications to the player's device.
+        pushToken: player.pushToken ? '***' : null,
         totalSpent: Number(player.totalSpent),
       },
       betting: {

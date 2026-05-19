@@ -173,89 +173,110 @@ export async function POST(request: NextRequest) {
 
 async function claimDaily(
   playerId: string,
-  idempotencyKey: string,
+  _idempotencyKey: string,
   _payload: Record<string, unknown>,
 ): Promise<NextResponse<TransactionResponse | { error: { message: string } }>> {
-  // Compute today's bonus from the player's current streak. Authoritative
-  // check that the player hasn't already claimed today happens by looking
-  // for a daily_bonus transaction on the current calendar day.
+  /* Natural idempotency key — `daily_bonus:{playerId}:{YYYY-MM-DD}`.
+   *
+   * Previously the "already claimed today" lookup ran outside the
+   * transaction; two simultaneous POSTs could both pass the check and
+   * double-credit. The natural key now leverages the @unique constraint
+   * on idempotencyKey so the second concurrent write fails at the DB
+   * level (no race window). Also moved the reads inside $transaction so
+   * the ledger balance snapshot stays consistent under concurrency. */
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yyyy = todayStart.getFullYear();
+  const mm = String(todayStart.getMonth() + 1).padStart(2, '0');
+  const dd = String(todayStart.getDate()).padStart(2, '0');
+  const naturalKey = `daily_bonus:${playerId}:${yyyy}-${mm}-${dd}`;
 
-  const alreadyClaimed = await prisma.gameCoinTransaction.findFirst({
-    where: {
-      playerId,
-      type: 'daily_bonus',
-      createdAt: { gte: todayStart },
-    },
-    select: { id: true },
+  const existing = await prisma.gameCoinTransaction.findUnique({
+    where: { idempotencyKey: naturalKey },
+    select: { id: true, type: true, amount: true, balance: true, createdAt: true },
   });
-  if (alreadyClaimed) {
-    return NextResponse.json(
-      { error: { message: 'Daily bonus already claimed today' } },
-      { status: 409 },
-    );
+  if (existing) {
+    return NextResponse.json({
+      success: true,
+      balance: existing.balance,
+      transaction: {
+        id: existing.id,
+        type: existing.type,
+        amount: existing.amount,
+        createdAt: existing.createdAt.toISOString(),
+      },
+      replayed: true,
+    });
   }
 
-  // Compute streak based on yesterday's claim
   const yesterdayStart = new Date(todayStart);
   yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-  const yesterdayClaim = await prisma.gameCoinTransaction.findFirst({
-    where: {
-      playerId,
-      type: 'daily_bonus',
-      createdAt: { gte: yesterdayStart, lt: todayStart },
-    },
-    select: { id: true },
-  });
 
-  const player = await prisma.gamePlayer.findUnique({
-    where: { id: playerId },
-    select: { coins: true, dailyStreak: true },
-  });
-  if (!player) {
-    return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
-  }
-
-  const newStreak = yesterdayClaim ? player.dailyStreak + 1 : 1;
-  const streakIndex = Math.min(newStreak, DAILY_BONUS_BY_STREAK.length - 1);
-  const bonus = DAILY_BONUS_BY_STREAK[streakIndex];
-  const newBalance = player.coins + bonus;
-
-  // Atomic apply: increment coins + update streak + write ledger row
   const result = await prisma.$transaction(async (tx) => {
-    const txRow = await tx.gameCoinTransaction.create({
-      data: {
+    const player = await tx.gamePlayer.findUnique({
+      where: { id: playerId },
+      select: { coins: true, dailyStreak: true },
+    });
+    if (!player) throw new Error('Player not found');
+
+    const yesterdayClaim = await tx.gameCoinTransaction.findFirst({
+      where: {
         playerId,
         type: 'daily_bonus',
-        amount: bonus,
-        balance: newBalance,
-        description: `Daily bonus day ${newStreak}`,
-        idempotencyKey,
+        createdAt: { gte: yesterdayStart, lt: todayStart },
       },
-      select: { id: true, type: true, amount: true, createdAt: true },
+      select: { id: true },
     });
-    await tx.gamePlayer.update({
+    const newStreak = yesterdayClaim ? player.dailyStreak + 1 : 1;
+    const streakIndex = Math.min(newStreak, DAILY_BONUS_BY_STREAK.length - 1);
+    const bonus = DAILY_BONUS_BY_STREAK[streakIndex];
+
+    const updated = await tx.gamePlayer.update({
       where: { id: playerId },
       data: {
         coins: { increment: bonus },
         dailyStreak: newStreak,
         lastActiveAt: now,
       },
+      select: { coins: true },
     });
-    return txRow;
+    const txRow = await tx.gameCoinTransaction.create({
+      data: {
+        playerId,
+        type: 'daily_bonus',
+        amount: bonus,
+        balance: updated.coins,
+        description: `Daily bonus day ${newStreak}`,
+        idempotencyKey: naturalKey,
+      },
+      select: { id: true, type: true, amount: true, createdAt: true, balance: true },
+    });
+    return { txRow, newStreak, bonus };
+  }).catch((err: any) => {
+    if (err?.message === 'Player not found') {
+      return { __error: { status: 404, message: 'Player not found' } } as const;
+    }
+    if (err?.code === 'P2002') {
+      return { __error: { status: 409, message: 'Daily bonus already claimed today' } } as const;
+    }
+    throw err;
   });
 
-  console.log(`[economy] claimDaily player=${playerId} streak=${newStreak} bonus=${bonus} newBalance=${newBalance}`);
+  if ('__error' in result) {
+    return NextResponse.json({ error: { message: result.__error.message } }, { status: result.__error.status });
+  }
+
+  const { txRow, newStreak, bonus } = result;
+  console.log(`[economy] claimDaily player=${playerId} streak=${newStreak} bonus=${bonus} newBalance=${txRow.balance}`);
 
   return NextResponse.json({
     success: true,
-    balance: newBalance,
+    balance: txRow.balance,
     transaction: {
-      id: result.id,
-      type: result.type,
-      amount: result.amount,
-      createdAt: result.createdAt.toISOString(),
+      id: txRow.id,
+      type: txRow.type,
+      amount: txRow.amount,
+      createdAt: txRow.createdAt.toISOString(),
     },
     result: { streak: newStreak, bonus },
   });

@@ -38,26 +38,48 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create new player
-    const player = await prisma.gamePlayer.create({
-      data: {
-        deviceId,
-        playerName: playerName.slice(0, 30),
-        platform: platform || 'unknown',
-        appVersion: appVersion || null,
-        deviceModel: deviceModel || null,
-      },
-    });
+    /* Sanitize playerName — strip control characters, RTL overrides, and
+     * zero-width joiners that could spoof admin/leaderboard rows. Keep
+     * common Unicode letters/digits/spaces and a small punctuation set. */
+    const safePlayerName = String(playerName)
+      .replace(/[\u0000-\u001F\u007F\u200B-\u200F\u2028-\u202F\u2060-\u206F]/g, '')
+      .trim()
+      .slice(0, 30);
+    if (safePlayerName.length < 2) {
+      return NextResponse.json(
+        { error: { message: 'playerName must be at least 2 characters after sanitization' } },
+        { status: 400 },
+      );
+    }
 
-    // Log welcome bonus
-    await prisma.gameCoinTransaction.create({
-      data: {
-        playerId: player.id,
-        type: 'daily_bonus',
-        amount: 1000,
-        balance: 1000,
-        description: 'Welcome bonus',
-      },
+    /* ATOMIC welcome bonus.
+     *
+     * Previously: gamePlayer.create + gameCoinTransaction.create as two
+     * separate writes. A crash between them left the player with 1000
+     * coins and no audit trail (or vice versa), breaking the
+     * sum(amount) == balance invariant for every new install. Wrapped in
+     * $transaction so both land together or neither does. */
+    const player = await prisma.$transaction(async (tx) => {
+      const created = await tx.gamePlayer.create({
+        data: {
+          deviceId,
+          playerName: safePlayerName,
+          platform: platform || 'unknown',
+          appVersion: appVersion || null,
+          deviceModel: deviceModel || null,
+        },
+      });
+      await tx.gameCoinTransaction.create({
+        data: {
+          playerId: created.id,
+          type: 'daily_bonus',
+          amount: 1000,
+          balance: 1000,
+          description: 'Welcome bonus',
+          idempotencyKey: `welcome:${created.id}`,
+        },
+      });
+      return created;
     });
 
     const token = await createGamePlayerSession(player.id, deviceId, platform || 'unknown');

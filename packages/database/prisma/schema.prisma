@@ -1175,6 +1175,7 @@ model GamePurchase {
 
   player GamePlayer @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
+  @@unique([storeTransactionId])
   @@index([playerId, purchasedAt])
   @@index([purchasedAt])
   @@index([status])
@@ -1386,7 +1387,7 @@ model GamePromo {
   config     Json? // extra config (e.g. which products, which modes)
   active     Boolean  @default(true)
   startDate  DateTime
-  endDate    DateTime
+  endDate    DateTime? // null = evergreen (no expiry)
   createdBy  String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
