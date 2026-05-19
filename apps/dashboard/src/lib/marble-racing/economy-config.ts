@@ -38,6 +38,23 @@ export const NATIONAL_EVENTS: Record<string, NationalEventConfig> = {
 
 export const CUSTOM_TRACK_ENTRY_FEE = 50;
 
+/* Multiplayer lobby tiers. Must mirror MP_TIERS in
+ * e:/Donkey.Marble.Racing/lib/multiplayer.ts. Used by the server to
+ * validate the client-supplied entry fee and to cap payouts at the
+ * tier's prize pool. */
+export interface MpTierConfig {
+  id: 'daily' | 'weekly' | 'champion';
+  label: string;
+  entryFee: number;
+  prizePool: number;
+}
+
+export const MP_TIER_CONFIGS: Record<string, MpTierConfig> = {
+  daily:    { id: 'daily',    label: 'Daily Blitz',           entryFee: 100,  prizePool: 5_000 },
+  weekly:   { id: 'weekly',   label: 'Weekly Cup',            entryFee: 500,  prizePool: 25_000 },
+  champion: { id: 'champion', label: 'Champion Invitational', entryFee: 1000, prizePool: 50_000 },
+};
+
 /** Max coins a player can possibly win on a single national race payout. */
 export function maxNationalPayout(eventId: string): number {
   const event = NATIONAL_EVENTS[eventId];
