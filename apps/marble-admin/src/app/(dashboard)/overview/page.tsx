@@ -58,7 +58,10 @@ interface ProductSlice {
 
 interface HeatmapData {
   days: string[];
-  grid: number[][];
+  grid: number[][];       // 0..5 color level
+  racesGrid?: number[][]; // races count per cell (for click details)
+  betsGrid?: number[][];  // bets count per cell
+  totalsGrid?: number[][];// races + bets total per cell
   peakTime: string;
   mostActiveDay: string;
   totalEvents: number;
@@ -130,6 +133,148 @@ function h12(h: number): string {
   if (h < 12) return `${h} AM`;
   if (h === 12) return '12 PM';
   return `${h - 12} PM`;
+}
+
+function hourWindow(h: number): string {
+  const next = (h + 1) % 24;
+  return `${h12(h)} – ${h12(next)}`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  System Activity Heatmap                                            */
+/*                                                                     */
+/*  Each cell is clickable; selecting one shows a breakdown of races + */
+/*  bets for that day/hour bucket in a panel below the grid. The panel */
+/*  reads from racesGrid / betsGrid which the API now returns alongside */
+/*  the pre-existing color-level grid. Without the per-cell raw counts  */
+/*  the panel can only display the color bucket, which carries roughly  */
+/*  no information.                                                    */
+/* ------------------------------------------------------------------ */
+function ActivityHeatmap({ heatmap }: { heatmap: HeatmapData }) {
+  const [selected, setSelected] = useState<{ day: number; hour: number } | null>(null);
+
+  const cellLevel = (level: number) => {
+    if (level === 0) return 'bg-white/[0.04]';
+    if (level === 1) return 'bg-marble-blue/[0.15]';
+    if (level === 2) return 'bg-marble-blue/[0.30]';
+    if (level === 3) return 'bg-marble-blue/[0.50]';
+    if (level === 4) return 'bg-marble-blue/[0.75]';
+    return 'bg-marble-blue';
+  };
+
+  const races = selected ? heatmap.racesGrid?.[selected.day]?.[selected.hour] ?? 0 : 0;
+  const bets = selected ? heatmap.betsGrid?.[selected.day]?.[selected.hour] ?? 0 : 0;
+  const total = races + bets;
+
+  return (
+    <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <div className="font-heading text-base tracking-wide">System Activity &mdash; Last 30 Days</div>
+          <p className="text-[11px] text-white/35 mt-0.5">
+            {heatmap.totalEvents.toLocaleString()} events &middot; {heatmap.totalRaces.toLocaleString()} races &middot; {heatmap.totalBets.toLocaleString()} bets
+            <span className="ml-2 text-white/25">&middot; click a cell for details</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-[10px] text-white/30 uppercase tracking-wider font-bold">Peak Time</p>
+            <p className="text-sm font-semibold text-gold">{heatmap.peakTime}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-white/30 uppercase tracking-wider font-bold">Most Active</p>
+            <p className="text-sm font-semibold text-marble-green">{heatmap.mostActiveDay}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Heatmap grid */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-[3px] ml-10">
+          {Array.from({ length: 24 }, (_, h) => (
+            <div key={h} className="flex-1 text-center">
+              {h % 3 === 0 && <span className="text-[9px] text-white/25">{h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`}</span>}
+            </div>
+          ))}
+        </div>
+        {heatmap.days.map((day, di) => (
+          <div key={day} className="flex items-center gap-[3px]">
+            <span className="text-[10px] text-white/30 w-9 text-right pr-1.5 flex-shrink-0 font-semibold">{day}</span>
+            {(heatmap.grid[di] ?? []).map((level, hi) => {
+              const isSelected = selected?.day === di && selected?.hour === hi;
+              const cellRaces = heatmap.racesGrid?.[di]?.[hi] ?? 0;
+              const cellBets = heatmap.betsGrid?.[di]?.[hi] ?? 0;
+              const cellTotal = cellRaces + cellBets;
+              return (
+                <button
+                  key={hi}
+                  type="button"
+                  onClick={() => setSelected(isSelected ? null : { day: di, hour: hi })}
+                  className={`flex-1 aspect-square rounded-[3px] transition-all cursor-pointer ${cellLevel(level)} ${
+                    isSelected ? 'ring-2 ring-gold ring-offset-1 ring-offset-[#0a1a3a] scale-110 z-10 relative' : 'hover:ring-1 hover:ring-white/30'
+                  }`}
+                  title={`${day} ${hourWindow(hi)} — ${cellTotal} event${cellTotal === 1 ? '' : 's'}`}
+                  aria-label={`${day} ${hourWindow(hi)}, ${cellTotal} events`}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-1.5 mt-3">
+        <span className="text-[10px] text-white/25 mr-1">Less</span>
+        {[0, 1, 2, 3, 4, 5].map((l) => (
+          <div key={l} className={`w-3.5 h-3.5 rounded-[3px] ${cellLevel(l)}`} />
+        ))}
+        <span className="text-[10px] text-white/25 ml-1">More</span>
+      </div>
+
+      {/* Selected-cell detail panel */}
+      {selected && (
+        <div className="mt-4 p-4 rounded-xl bg-marble-blue/10 border border-marble-blue/30">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-[10px] text-white/45 uppercase tracking-wider font-bold">Selected Slot</div>
+              <div className="font-heading text-base tracking-wide text-gold mt-0.5">
+                {heatmap.days[selected.day]} &middot; {hourWindow(selected.hour)}
+              </div>
+              <p className="text-[11px] text-white/50 mt-1">
+                Day-of-week aggregate across the last 30 days (ET).
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="text-[11px] text-white/40 hover:text-white/70 px-2 py-1 rounded"
+            >
+              Close
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mt-4">
+            <div className="bg-white/[0.04] rounded-lg p-3">
+              <div className="text-[10px] text-white/35 uppercase tracking-wider font-bold">Races</div>
+              <div className="font-heading text-xl text-marble-blue mt-1">{races.toLocaleString()}</div>
+            </div>
+            <div className="bg-white/[0.04] rounded-lg p-3">
+              <div className="text-[10px] text-white/35 uppercase tracking-wider font-bold">Bets</div>
+              <div className="font-heading text-xl text-gold mt-1">{bets.toLocaleString()}</div>
+            </div>
+            <div className="bg-white/[0.04] rounded-lg p-3">
+              <div className="text-[10px] text-white/35 uppercase tracking-wider font-bold">Total Events</div>
+              <div className="font-heading text-xl text-marble-green mt-1">{total.toLocaleString()}</div>
+            </div>
+          </div>
+          {total === 0 && (
+            <p className="text-[11px] text-white/40 mt-3">
+              No activity recorded in this slot over the last 30 days.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -249,77 +394,8 @@ export default function OverviewPage() {
       </div>
 
       {/* -- System Activity Heatmap -- */}
-      <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="font-heading text-base tracking-wide">System Activity &mdash; Last 30 Days</div>
-            <p className="text-[11px] text-white/35 mt-0.5">
-              {data.heatmap.totalEvents.toLocaleString()} events &middot; {data.heatmap.totalRaces.toLocaleString()} races &middot; {data.heatmap.totalBets.toLocaleString()} bets
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-[10px] text-white/30 uppercase tracking-wider font-bold">Peak Time</p>
-              <p className="text-sm font-semibold text-gold">{data.heatmap.peakTime}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] text-white/30 uppercase tracking-wider font-bold">Most Active</p>
-              <p className="text-sm font-semibold text-marble-green">{data.heatmap.mostActiveDay}</p>
-            </div>
-          </div>
-        </div>
+      <ActivityHeatmap heatmap={data.heatmap} />
 
-        {/* Heatmap grid */}
-        <div className="space-y-1">
-          {/* Hour labels */}
-          <div className="flex items-center gap-[3px] ml-10">
-            {Array.from({ length: 24 }, (_, h) => (
-              <div key={h} className="flex-1 text-center">
-                {h % 3 === 0 && <span className="text-[9px] text-white/25">{h === 0 ? '12a' : h < 12 ? `${h}a` : h === 12 ? '12p' : `${h - 12}p`}</span>}
-              </div>
-            ))}
-          </div>
-          {/* Day rows */}
-          {data.heatmap.days.map((day, di) => (
-            <div key={day} className="flex items-center gap-[3px]">
-              <span className="text-[10px] text-white/30 w-9 text-right pr-1.5 flex-shrink-0 font-semibold">{day}</span>
-              {(data.heatmap.grid[di] ?? []).map((level, hi) => (
-                <div
-                  key={hi}
-                  className={`flex-1 aspect-square rounded-[3px] transition-colors ${
-                    level === 0 ? 'bg-white/[0.04]' :
-                    level === 1 ? 'bg-marble-blue/[0.15]' :
-                    level === 2 ? 'bg-marble-blue/[0.30]' :
-                    level === 3 ? 'bg-marble-blue/[0.50]' :
-                    level === 4 ? 'bg-marble-blue/[0.75]' :
-                    'bg-marble-blue'
-                  }`}
-                  title={`${day} ${h12(hi)}: level ${level}`}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {/* Legend */}
-        <div className="flex items-center gap-1.5 mt-3">
-          <span className="text-[10px] text-white/25 mr-1">Less</span>
-          {[0, 1, 2, 3, 4, 5].map((l) => (
-            <div
-              key={l}
-              className={`w-3.5 h-3.5 rounded-[3px] ${
-                l === 0 ? 'bg-white/[0.04]' :
-                l === 1 ? 'bg-marble-blue/[0.15]' :
-                l === 2 ? 'bg-marble-blue/[0.30]' :
-                l === 3 ? 'bg-marble-blue/[0.50]' :
-                l === 4 ? 'bg-marble-blue/[0.75]' :
-                'bg-marble-blue'
-              }`}
-            />
-          ))}
-          <span className="text-[10px] text-white/25 ml-1">More</span>
-        </div>
-      </div>
 
       {/* -- User Growth (Last 6 Months) -- */}
       {(() => {
@@ -413,17 +489,12 @@ export default function OverviewPage() {
                   dot={{ r: 3, fill: '#a4c639', stroke: '#a4c639' }}
                   activeDot={{ r: 5 }}
                 />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="newUsers"
-                  name="Combined"
-                  stroke="#ffc220"
-                  strokeWidth={2.5}
-                  strokeDasharray="5 3"
-                  dot={{ r: 4, fill: '#ffc220', stroke: '#ffc220' }}
-                  activeDot={{ r: 6 }}
-                />
+                {/* "Combined" line removed — was redundant with iOS+Android
+                 * stacked visually, and confused the read because it lived
+                 * on the monthly-new axis (left) while looking similar in
+                 * shape to "Total Users" on the cumulative axis (right).
+                 * Per-platform breakdown + cumulative Total is the cleaner
+                 * read. */}
                 <Line
                   yAxisId="right"
                   type="monotone"

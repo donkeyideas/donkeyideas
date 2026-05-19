@@ -490,16 +490,20 @@ export async function GET(_request: NextRequest) {
         weekStart,
       ),
       // purchaseRepeatRate: payers with 2+ NON-SANDBOX completed purchases.
-      // The previous raw SQL filtered only on `status = 'completed'` and
-      // ignored excludePurchaseTest, so two TestFlight sandbox buys made the
-      // same player look like a repeat payer. Using groupBy + the sandbox
-      // filter keeps the numerator consistent with `payerIds` (denominator).
+      // Returns ALL groups then filters client-side for >= 2 rows. The
+      // initial Wave-2 fix used Prisma's `having` clause, but the syntax
+      // `having: { id: { _count: { gte: 2 } } }` was wrong for our Prisma
+      // version and the whole /api/analytics route 500'd. Client-side
+      // filter is slightly more bytes over the wire but always correct
+      // and easy to read.
       prisma.gamePurchase.groupBy({
         by: ['playerId'],
         where: { status: 'completed', ...excludePurchaseTest },
         _count: { id: true },
-        having: { id: { _count: { gte: 2 } } },
-      }).then((rows) => [{ count: BigInt(rows.length) }]),
+      }).then((rows) => {
+        const repeat = rows.filter((r) => r._count.id >= 2).length;
+        return [{ count: BigInt(repeat) }];
+      }),
       // total payers ever — sandbox-aware (matches Overview / Users)
       Promise.resolve(sandbox.payerIds.size),
       // engagementVelocity: races this week

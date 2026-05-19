@@ -348,20 +348,27 @@ export async function GET(_request: NextRequest) {
     ]);
 
     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const heatGrid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+    /* Per-cell breakdown: races + bets counted separately so the click-
+     * details panel on the dashboard can show "5 races · 3 bets · 8 total"
+     * for that day/hour bucket, not just an opaque heat level. */
+    const heatRacesGrid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+    const heatBetsGrid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
 
     for (const r of heatRaces) {
       const d = new Date(r.racedAt);
-      const dow = getETDayMon0(d);
-      heatGrid[dow][getETHour(d)]++;
+      heatRacesGrid[getETDayMon0(d)][getETHour(d)]++;
     }
     for (const b of heatBets) {
       const d = new Date(b.placedAt);
-      const dow = getETDayMon0(d);
-      heatGrid[dow][getETHour(d)]++;
+      heatBetsGrid[getETDayMon0(d)][getETHour(d)]++;
     }
 
-    // Scale to 0-5
+    // Totals grid for the existing "level" computation + peak/most-active math.
+    const heatGrid: number[][] = heatRacesGrid.map((row, di) =>
+      row.map((races, hi) => races + heatBetsGrid[di][hi]),
+    );
+
+    // Scale to 0-5 for the color buckets the UI already renders.
     const maxHeat = Math.max(1, ...heatGrid.flat());
     const scaledGrid = heatGrid.map((row) => row.map((v) => Math.min(5, Math.round((v / maxHeat) * 5))));
 
@@ -384,16 +391,16 @@ export async function GET(_request: NextRequest) {
     const fmtHour = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
     const totalActivity = heatRaces.length + heatBets.length;
 
-    // Peak-time window wraps past midnight. Previously the end was clamped
-    // to `Math.min(23, peakHour + 2)`, which produced a degenerate "11 PM -
-    // 11 PM" string when peak hour was 22 or 23, and silently lost the
-    // late-night chunk of the window. Modulo 24 wrap shows "11 PM - 1 AM"
-    // correctly.
+    // Peak-time window wraps past midnight via modulo so "11 PM - 11 PM"
+    // (clamp bug) becomes "11 PM - 1 AM" (correct wrap).
     const peakEndHour = (peakHour + 2) % 24;
 
     const heatmap = {
       days: dayNames,
       grid: scaledGrid,
+      racesGrid: heatRacesGrid,
+      betsGrid: heatBetsGrid,
+      totalsGrid: heatGrid,
       peakTime: `${fmtHour(peakHour)}-${fmtHour(peakEndHour)}`,
       mostActiveDay: dayNames[mostActiveDayIdx],
       totalEvents: totalActivity,
