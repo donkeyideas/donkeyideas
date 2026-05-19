@@ -46,6 +46,12 @@ export interface SandboxAwareReport {
 }
 
 const APPLE_PROD_TXN_REGEX = /^\d{13,}$/;
+/* Real Google Play orderIds look like `GPA.XXXX-XXXX-XXXX-XXXXX`. Sandbox
+ * / test purchases on Play don't have an orderId at all (the IAP-verify
+ * path leaves storeTransactionId NULL when the test receipt yields no
+ * orderId). So for Android: NULL storeTransactionId OR a value that
+ * doesn't look like a GPA order = sandbox. */
+const GOOGLE_PROD_TXN_REGEX = /^GPA\.[A-Z0-9-]+$/i;
 
 // In-process cache. Sandbox status doesn't change minute-to-minute, and this
 // helper gets hammered (overview, players list, financials, segments, etc.
@@ -80,17 +86,36 @@ export async function getSandboxAwareReport(): Promise<SandboxAwareReport> {
 
   for (const p of allPurchases) {
     const isStatusSandbox = p.status === 'sandbox';
-    const isLegacyIosSandbox =
-      p.platform === 'ios' &&
-      (!p.storeTransactionId || !APPLE_PROD_TXN_REGEX.test(p.storeTransactionId));
 
-    if (isLegacyIosSandbox && !isStatusSandbox) {
+    /* Legacy sandbox detection. Real production purchases ALWAYS have a
+     * non-null storeTransactionId after store-side verification (iOS
+     * verifyReceipt or Google Play orderId). Sandbox / test receipts
+     * either lack one entirely OR carry a short non-prod placeholder.
+     * Catch the platform-specific cases plus a NULL fallback. */
+    const sid = p.storeTransactionId;
+    const isLegacyIosSandbox =
+      p.platform === 'ios' && (!sid || !APPLE_PROD_TXN_REGEX.test(sid));
+    /* Google Play sandbox: orderId is NULL for test purchases. Real
+     * production purchases have a `GPA.XXXX-...` orderId. Before this
+     * extension only iOS legacy rows were filtered, so an Android test
+     * refund of $9.99 showed up on the Financials page as a real refund. */
+    const isLegacyAndroidSandbox =
+      p.platform === 'android' && (!sid || !GOOGLE_PROD_TXN_REGEX.test(sid));
+    /* Belt-and-suspenders: any row of unknown/empty platform with a null
+     * storeTransactionId is also sandbox (no path to a real receipt). */
+    const isUnknownPlatformSandbox =
+      p.platform !== 'ios' && p.platform !== 'android' && !sid;
+
+    const isLegacySandbox =
+      isLegacyIosSandbox || isLegacyAndroidSandbox || isUnknownPlatformSandbox;
+
+    if (isLegacySandbox && !isStatusSandbox) {
       legacySandboxIds.push(p.id);
     }
 
     // Only "completed" non-sandbox rows count toward paying status + spend.
     // Refunded rows don't count (player got their money back).
-    if (p.status === 'completed' && !isStatusSandbox && !isLegacyIosSandbox) {
+    if (p.status === 'completed' && !isStatusSandbox && !isLegacySandbox) {
       payerIds.add(p.playerId);
       const prev = spendByPlayer.get(p.playerId) ?? 0;
       spendByPlayer.set(p.playerId, prev + Number(p.priceUsd));
