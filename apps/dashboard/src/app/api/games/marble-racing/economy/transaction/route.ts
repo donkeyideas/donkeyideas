@@ -434,17 +434,24 @@ async function seasonStarterBonus(
 // got auto-adjusted and by how much.
 // ─────────────────────────────────────────────────────────────────────────
 const RECONCILE_MAX_DELTA = 50_000;
-/* v3 bump: v2 silently no-op'd on every install because the client read
- * its local coin balance BEFORE Zustand persist hydration finished —
- * it saw the default 1000 instead of the persisted balance. Server saw
- * "1000 < real_balance" → no gap → returned success → client marked v2
- * as done. v3 ships alongside a client-side hydration-wait fix so the
- * comparison uses the real local balance. The version bump is the only
- * way to unlock the per-player natural-key lock for accounts that need
- * the v2 backfill to actually run.
+/* v4 bump: v3 ALSO silently no-op'd on a subset of installs. The client-
+ * side hydration wait helped but didn't fully fix the race — Zustand's
+ * hasHydrated() can return true before the deep state has merged on
+ * slow devices, so the read still picked up the default 1000. Client
+ * v4 reads coins straight from AsyncStorage, bypassing Zustand
+ * hydration entirely, AND only marks the AsyncStorage DONE flag when
+ * the server actually credited something (so misreads retry next
+ * launch instead of locking).
+ *
+ * Server-side: just the version bump. The natural-key lock
+ * (`balance_reconcile:{playerId}:v4`) is now a fresh slot per player,
+ * so accounts that got truly-falsely DONE-marked at v3 client-side
+ * (where no server transaction was ever recorded because rawDelta <= 0)
+ * can now run a fresh pass.
+ *
  * Always bump BOTH this constant and the matching one in
  * lib/balanceReconcile.ts on the client. */
-const RECONCILE_VERSION = 'v3';
+const RECONCILE_VERSION = 'v4';
 
 async function reconcileClientBalance(
   playerId: string,
