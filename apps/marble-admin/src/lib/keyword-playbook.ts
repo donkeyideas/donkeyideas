@@ -35,8 +35,8 @@ export const APP_IDS = {
  * so the ASO page + decks reflect what's live.
  */
 export const CURRENT_BUILDS = {
-  ios: { version: '1.0.5', build: '57' },
-  android: { version: '1.0.5', build: '29' },
+  ios: { version: '1.0.6', build: '63' },
+  android: { version: '1.0.6', build: '37' },
 } as const;
 
 /** App display names per store (live store APIs sometimes lag; these
