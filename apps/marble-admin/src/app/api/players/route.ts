@@ -17,8 +17,13 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const pageRaw = parseInt(searchParams.get('page') || '1');
+    const page = Number.isFinite(pageRaw) && pageRaw >= 1 ? pageRaw : 1;
+    const limitRaw = parseInt(searchParams.get('limit') || '20');
+    const limit = Math.max(
+      1,
+      Math.min(200, Number.isFinite(limitRaw) ? limitRaw : 20),
+    );
     const search = searchParams.get('search') || '';
     const filter = searchParams.get('filter') || 'all';
     const sort = searchParams.get('sort') || 'lastActiveAt';

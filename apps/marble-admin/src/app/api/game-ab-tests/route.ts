@@ -26,6 +26,16 @@ function pickVariant(variants: Variant[]): string {
   return variants[variants.length - 1].id;
 }
 
+function hashToPercent(playerId: string, testId: string): number {
+  let h = 0;
+  for (let i = 0; i < playerId.length + testId.length; i++) {
+    const c = i < playerId.length ? playerId.charCodeAt(i) : testId.charCodeAt(i - playerId.length);
+    h = ((h << 5) - h) + c;
+    h |= 0;
+  }
+  return Math.abs(h) % 100;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const playerId = request.nextUrl.searchParams.get('playerId');
@@ -56,6 +66,9 @@ export async function GET(request: NextRequest) {
           variant: existing.variant,
         });
       } else {
+        // Skip enrollment for players outside the rollout traffic percent.
+        if (hashToPercent(playerId, test.id) >= test.trafficPct) continue;
+
         // Assign player to a variant based on weights
         const variants = test.variants as unknown as Variant[];
         const chosenVariant = pickVariant(variants);

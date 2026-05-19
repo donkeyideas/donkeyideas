@@ -285,7 +285,10 @@ export default function LiveOpsPage() {
 
   const isPromoLive = (p: Promo) => {
     const now = new Date();
-    return new Date(p.startDate) <= now && now <= new Date(p.endDate);
+    if (new Date(p.startDate) > now) return false;
+    // Evergreen promos have no endDate — live as long as startDate has passed.
+    if (!p.endDate) return true;
+    return now <= new Date(p.endDate);
   };
 
   const typeBadgeVariant = (type: string): 'info' | 'warning' | 'success' | 'error' | 'neutral' => {

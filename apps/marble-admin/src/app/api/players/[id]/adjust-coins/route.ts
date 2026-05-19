@@ -29,6 +29,20 @@ export async function POST(
       );
     }
 
+    if (!Number.isFinite(amount) || !Number.isInteger(amount) || Math.abs(amount) > 1_000_000) {
+      return NextResponse.json(
+        { error: { message: 'amount must be a finite integer with |amount| <= 1,000,000' } },
+        { status: 400 },
+      );
+    }
+
+    if (Math.abs(amount) > 100_000 && (!note || typeof note !== 'string' || !note.trim())) {
+      return NextResponse.json(
+        { error: { message: 'A note is required for adjustments greater than 100,000 coins' } },
+        { status: 400 },
+      );
+    }
+
     const player = await prisma.gamePlayer.findUnique({ where: { id } });
     if (!player) {
       return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });

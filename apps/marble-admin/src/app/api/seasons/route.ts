@@ -133,7 +133,7 @@ export async function GET() {
       _avg: { passLevel: true },
     });
     const avgLevel = Number(avgPassLevel._avg.passLevel ?? 0);
-    const completionPct = Math.round((avgLevel / 30) * 100);
+    const completionPct = Math.min(100, Math.round((avgLevel / 30) * 100));
 
     const passKpis = [
       {

@@ -44,9 +44,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, type, multiplier, config, startDate, endDate } = body;
 
-    if (!name || !type || !startDate || !endDate) {
+    if (!name || !type || !startDate) {
       return NextResponse.json(
-        { error: { message: 'name, type, startDate, and endDate are required' } },
+        { error: { message: 'name, type, and startDate are required' } },
         { status: 400 },
       );
     }
@@ -58,7 +58,8 @@ export async function POST(request: NextRequest) {
         multiplier: multiplier || 1.0,
         config: config || null,
         startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        // endDate is optional — evergreen promos (no end) are valid.
+        endDate: endDate ? new Date(endDate) : null,
         createdBy: user.id,
       },
     });
@@ -110,7 +111,7 @@ export async function PUT(request: NextRequest) {
     if (fields.config !== undefined) updateData.config = fields.config;
     if (fields.active !== undefined) updateData.active = fields.active;
     if (fields.startDate !== undefined) updateData.startDate = new Date(fields.startDate);
-    if (fields.endDate !== undefined) updateData.endDate = new Date(fields.endDate);
+    if (fields.endDate !== undefined) updateData.endDate = fields.endDate ? new Date(fields.endDate) : null;
 
     const promo = await prisma.gamePromo.update({
       where: { id },

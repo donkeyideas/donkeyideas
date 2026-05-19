@@ -219,26 +219,31 @@ export async function GET() {
         }
       }
 
-      // Race time distribution & doomsday
-      const timeMs = Number(race.winnerTime ?? 0);
-      const timeSec = timeMs / 1000;
+      // Race time distribution & doomsday. Skip rows where winnerTime is
+      // null or 0 — those are incomplete/legacy records and shouldn't be
+      // counted as "safe finishes" (which would inflate the safe bucket
+      // and make the engine look healthier than it is).
+      if (race.winnerTime) {
+        const timeMs = Number(race.winnerTime);
+        const timeSec = timeMs / 1000;
 
-      for (let i = 0; i < timeBuckets.length - 1; i++) {
-        if (timeSec >= timeBuckets[i] && timeSec < timeBuckets[i + 1]) {
-          timeBucketCounts[i]++;
-          break;
+        for (let i = 0; i < timeBuckets.length - 1; i++) {
+          if (timeSec >= timeBuckets[i] && timeSec < timeBuckets[i + 1]) {
+            timeBucketCounts[i]++;
+            break;
+          }
         }
+
+        if (timeSec < 30) safeCount++;
+        else if (timeSec < 45) normalCount++;
+        else doomsdayCount++;
+
+        // Per-course doomsday
+        const cid = race.courseId;
+        if (!courseDoomsdayMap[cid]) courseDoomsdayMap[cid] = { total: 0, doomsday: 0 };
+        courseDoomsdayMap[cid].total++;
+        if (timeSec >= 45) courseDoomsdayMap[cid].doomsday++;
       }
-
-      if (timeSec < 30) safeCount++;
-      else if (timeSec < 45) normalCount++;
-      else doomsdayCount++;
-
-      // Per-course doomsday
-      const cid = race.courseId;
-      if (!courseDoomsdayMap[cid]) courseDoomsdayMap[cid] = { total: 0, doomsday: 0 };
-      courseDoomsdayMap[cid].total++;
-      if (timeSec >= 45) courseDoomsdayMap[cid].doomsday++;
     }
 
     const marbleDynamics = ALL_MARBLES.map((id) => {

@@ -102,7 +102,7 @@ export async function GET() {
       where: { key: 'app_store_fee_rate' },
     });
     const parsedFeeRate = Number(feeRateConfig?.value);
-    const feeRate = Number.isFinite(parsedFeeRate) && parsedFeeRate >= 0 && parsedFeeRate < 1
+    const feeRate = Number.isFinite(parsedFeeRate) && parsedFeeRate >= 0 && parsedFeeRate <= 0.5
       ? parsedFeeRate
       : 0.15;
     const REFERENCE_FEE_RATE = 0.30;

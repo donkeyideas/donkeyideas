@@ -114,9 +114,27 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Handle status transition side effects
-    const updateData: any = { ...fields };
+    // Explicit field whitelist — mirrors the pattern in announcements/route.ts
+    // PUT so that callers can't inject arbitrary columns (e.g. createdBy,
+    // createdAt, id) via spread. The schema field for the variant payload is
+    // `variants` (JSON), not variantA/variantB — both halves live in one
+    // JSON column.
+    const updateData: any = {};
+    if (fields.name !== undefined) updateData.name = fields.name;
+    if (fields.description !== undefined) updateData.description = fields.description;
+    if (fields.variants !== undefined) updateData.variants = fields.variants;
+    if (fields.targetMetric !== undefined) updateData.targetMetric = fields.targetMetric;
+    if (fields.trafficPct !== undefined) updateData.trafficPct = fields.trafficPct;
+    if (fields.status !== undefined) updateData.status = fields.status;
+    if (fields.startDate !== undefined) {
+      updateData.startDate = fields.startDate ? new Date(fields.startDate) : null;
+    }
+    if (fields.endDate !== undefined) {
+      updateData.endDate = fields.endDate ? new Date(fields.endDate) : null;
+    }
+    if (fields.results !== undefined) updateData.results = fields.results;
 
+    // Handle status transition side effects
     if (fields.status === 'running' && existing.status !== 'running') {
       if (!existing.startDate && !fields.startDate) {
         updateData.startDate = new Date();

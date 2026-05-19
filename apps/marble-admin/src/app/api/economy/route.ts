@@ -43,7 +43,13 @@ export async function GET(_request: NextRequest) {
         where: { type: 'bet', amount: { lt: 0 }, createdAt: { gte: todayStart } },
       }),
       prisma.gamePlayer.count({ where: { coins: { lt: 100 } } }),
-      prisma.gameConfig.findMany({ orderBy: { group: 'asc' } }),
+      // Restrict to groups the Economy page actually renders. Without this
+      // filter, large groups like 'track-bg' (one row per background) leak
+      // into the response payload and bloat the UI for no reason.
+      prisma.gameConfig.findMany({
+        where: { group: { in: ['rewards', 'betting', 'limits', 'features'] } },
+        orderBy: { group: 'asc' },
+      }),
     ]);
 
     // Balance distribution tiers

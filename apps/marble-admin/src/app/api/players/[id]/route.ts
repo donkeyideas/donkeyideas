@@ -4,6 +4,36 @@ import { getUserByToken } from '@/lib/auth';
 import { getSandboxAwareReport } from '@/lib/sandboxFilter';
 import { cookies } from 'next/headers';
 
+const ET_HOUR_FMT = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York',
+  hour: 'numeric',
+  hour12: false,
+});
+const ET_WEEKDAY_FMT = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York',
+  weekday: 'short',
+});
+const ET_WEEKDAY_INDEX: Record<string, number> = {
+  // Monday=0 .. Sunday=6
+  Mon: 0,
+  Tue: 1,
+  Wed: 2,
+  Thu: 3,
+  Fri: 4,
+  Sat: 5,
+  Sun: 6,
+};
+function getETHour(date: Date): number {
+  const raw = ET_HOUR_FMT.format(date);
+  // "24" can be returned for midnight in some locales; normalize.
+  const h = parseInt(raw, 10);
+  return Number.isFinite(h) ? h % 24 : 0;
+}
+function getETDayMon0(date: Date): number {
+  const weekday = ET_WEEKDAY_FMT.format(date);
+  return ET_WEEKDAY_INDEX[weekday] ?? 0;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -94,6 +124,7 @@ export async function GET(
       prisma.gamePurchase.findMany({
         where: { playerId: id },
         orderBy: { purchasedAt: 'desc' },
+        take: 50,
       }),
       prisma.playerSeasonProgress.findMany({
         where: { playerId: id },
@@ -221,17 +252,17 @@ export async function GET(
     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const heatGrid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
 
-    // Count activity from bets and races
+    // Count activity from bets and races (bucket by ET, not server local time)
     for (const bet of recentBets) {
       const d = new Date(bet.placedAt);
-      const dow = (d.getDay() + 6) % 7; // Monday=0
-      const hr = d.getHours();
+      const dow = getETDayMon0(d);
+      const hr = getETHour(d);
       heatGrid[dow][hr]++;
     }
     for (const race of recentRaces) {
       const d = new Date(race.racedAt);
-      const dow = (d.getDay() + 6) % 7;
-      const hr = d.getHours();
+      const dow = getETDayMon0(d);
+      const hr = getETHour(d);
       heatGrid[dow][hr]++;
     }
 
@@ -255,7 +286,7 @@ export async function GET(
       }
     }
     const mostActiveDayIdx = dayTotals.indexOf(Math.max(...dayTotals));
-    const peakEndHour = Math.min(23, peakHour + 2);
+    const peakEndHour = (peakHour + 2) % 24;
     const fmtHour = (h: number) => {
       const ampm = h >= 12 ? 'PM' : 'AM';
       const h12 = h % 12 || 12;

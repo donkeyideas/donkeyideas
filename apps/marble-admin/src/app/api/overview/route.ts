@@ -4,6 +4,33 @@ import { getUserByToken } from '@/lib/auth';
 import { getSandboxAwareReport } from '@/lib/sandboxFilter';
 import { cookies } from 'next/headers';
 
+const ET_HOUR_FMT = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York',
+  hour: 'numeric',
+  hour12: false,
+});
+const ET_WEEKDAY_FMT = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York',
+  weekday: 'short',
+});
+const ET_WEEKDAY_INDEX: Record<string, number> = {
+  Mon: 0,
+  Tue: 1,
+  Wed: 2,
+  Thu: 3,
+  Fri: 4,
+  Sat: 5,
+  Sun: 6,
+};
+function getETHour(date: Date): number {
+  const h = parseInt(ET_HOUR_FMT.format(date), 10);
+  return Number.isFinite(h) ? h % 24 : 0;
+}
+function getETDayMon0(date: Date): number {
+  const weekday = ET_WEEKDAY_FMT.format(date);
+  return ET_WEEKDAY_INDEX[weekday] ?? 0;
+}
+
 export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -175,11 +202,14 @@ export async function GET(_request: NextRequest) {
     }
 
     // ── Revenue by product (donut chart) ──
+    // Take top 7 products; everything else is bucketed into "Other" so the
+    // donut doesn't blow up with dozens of slivers when the catalogue grows.
     const productGroups = await prisma.gamePurchase.groupBy({
       by: ['productName'],
       _sum: { priceUsd: true },
       where: { status: 'completed', ...excludePurchaseTest },
       orderBy: { _sum: { priceUsd: 'desc' } },
+      take: 7,
     });
     const donutColors = ['#ffc220', '#6ec1ff', '#c39bd3', '#2ecc71', '#e74c3c', '#f39c12', '#1abc9c', '#e67e22'];
     const revenueByProduct = productGroups.map((g, idx) => ({
@@ -187,6 +217,24 @@ export async function GET(_request: NextRequest) {
       value: Number(g._sum.priceUsd ?? 0),
       color: donutColors[idx % donutColors.length],
     }));
+    // Sum everything beyond the top 7 into an "Other" slice.
+    const topProductNames = productGroups.map((g) => g.productName);
+    const otherRevenueAgg = await prisma.gamePurchase.aggregate({
+      _sum: { priceUsd: true },
+      where: {
+        status: 'completed',
+        ...excludePurchaseTest,
+        productName: { notIn: topProductNames.length > 0 ? topProductNames : ['__none__'] },
+      },
+    });
+    const otherValue = Number(otherRevenueAgg._sum.priceUsd ?? 0);
+    if (otherValue > 0) {
+      revenueByProduct.push({
+        name: 'Other',
+        value: otherValue,
+        color: donutColors[revenueByProduct.length % donutColors.length],
+      });
+    }
 
     // ── Derived values ──
     const revTotal = Number(revenueAll._sum.priceUsd ?? 0);
@@ -304,13 +352,13 @@ export async function GET(_request: NextRequest) {
 
     for (const r of heatRaces) {
       const d = new Date(r.racedAt);
-      const dow = (d.getDay() + 6) % 7; // Monday=0
-      heatGrid[dow][d.getHours()]++;
+      const dow = getETDayMon0(d);
+      heatGrid[dow][getETHour(d)]++;
     }
     for (const b of heatBets) {
       const d = new Date(b.placedAt);
-      const dow = (d.getDay() + 6) % 7;
-      heatGrid[dow][d.getHours()]++;
+      const dow = getETDayMon0(d);
+      heatGrid[dow][getETHour(d)]++;
     }
 
     // Scale to 0-5

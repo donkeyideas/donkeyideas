@@ -39,7 +39,7 @@ export async function GET() {
         }),
         prisma.gameCoinTransaction.aggregate({
           _sum: { amount: true },
-          where: { amount: { lt: 0 }, createdAt: { gte: todayStart } },
+          where: { amount: { lt: 0 }, type: 'bet', createdAt: { gte: todayStart } },
         }),
         prisma.gamePlayer.count({ where: { coins: { lt: 100 } } }),
         prisma.gameConfig.findMany(),

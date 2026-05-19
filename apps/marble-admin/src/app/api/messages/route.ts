@@ -69,6 +69,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (coinsAttached !== undefined && coinsAttached !== null) {
+      if (
+        typeof coinsAttached !== 'number' ||
+        !Number.isInteger(coinsAttached) ||
+        coinsAttached < 0 ||
+        coinsAttached > 1_000_000
+      ) {
+        return NextResponse.json(
+          { error: { message: 'coinsAttached must be an integer between 0 and 1,000,000' } },
+          { status: 400 },
+        );
+      }
+    }
+
     const player = await prisma.gamePlayer.findUnique({ where: { id: playerId } });
     if (!player) {
       return NextResponse.json(

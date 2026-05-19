@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, body: announcementBody, type, priority, startDate, endDate, targetSegment } = body;
+    const { title, body: announcementBody, type, priority, startDate, endDate, targetSegment, active } = body;
 
     if (!title || !announcementBody) {
       return NextResponse.json(
@@ -55,14 +55,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const parsedStart = startDate ? new Date(startDate) : new Date();
+    if (Number.isNaN(parsedStart.getTime())) {
+      return NextResponse.json(
+        { error: { message: 'startDate is not a valid date' } },
+        { status: 400 },
+      );
+    }
+    let parsedEnd: Date | null = null;
+    if (endDate !== undefined && endDate !== null && endDate !== '') {
+      parsedEnd = new Date(endDate);
+      if (Number.isNaN(parsedEnd.getTime())) {
+        return NextResponse.json(
+          { error: { message: 'endDate is not a valid date' } },
+          { status: 400 },
+        );
+      }
+      if (parsedEnd < parsedStart) {
+        return NextResponse.json(
+          { error: { message: 'endDate must be on or after startDate' } },
+          { status: 400 },
+        );
+      }
+    }
+
     const announcement = await prisma.gameAnnouncement.create({
       data: {
         title,
         body: announcementBody,
         type: type || 'info',
         priority: priority || 0,
-        startDate: startDate ? new Date(startDate) : new Date(),
-        endDate: endDate ? new Date(endDate) : null,
+        startDate: parsedStart,
+        endDate: parsedEnd,
         targetSegment: targetSegment || null,
         createdBy: user.id,
       },
@@ -70,10 +94,15 @@ export async function POST(request: NextRequest) {
 
     // Fire push to every registered device in the background. We don't await
     // here so the operator's create request returns promptly; the dispatch
-    // can take several seconds for large player bases.
-    dispatchAnnouncement(announcement.id).catch((err) => {
-      console.error(`Auto-dispatch failed for announcement ${announcement.id}:`, err);
-    });
+    // can take several seconds for large player bases. Only dispatch when
+    // the announcement is actually live (active + startDate already passed),
+    // so scheduled future announcements don't pre-notify everyone.
+    const now = new Date();
+    if (active === true && parsedStart <= now) {
+      dispatchAnnouncement(announcement.id).catch((err) => {
+        console.error(`Auto-dispatch failed for announcement ${announcement.id}:`, err);
+      });
+    }
 
     return NextResponse.json({ announcement }, { status: 201 });
   } catch (error: any) {

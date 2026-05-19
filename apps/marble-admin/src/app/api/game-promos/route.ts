@@ -13,7 +13,7 @@ export async function GET() {
       where: {
         active: true,
         startDate: { lte: now },
-        endDate: { gte: now },
+        OR: [{ endDate: null }, { endDate: { gte: now } }],
       },
       select: {
         id: true,

@@ -47,7 +47,19 @@ export interface SandboxAwareReport {
 
 const APPLE_PROD_TXN_REGEX = /^\d{13,}$/;
 
+// In-process cache. Sandbox status doesn't change minute-to-minute, and this
+// helper gets hammered (overview, players list, financials, segments, etc.
+// each request a sandbox report). Caching for ~60s drops the per-request
+// "scan every purchase row" cost while still picking up new purchases within
+// a minute. Vercel cold-starts give us a fresh cache automatically.
+let cached: SandboxAwareReport | null = null;
+let cachedAt = 0;
+const CACHE_MS = 60_000;
+
 export async function getSandboxAwareReport(): Promise<SandboxAwareReport> {
+  if (cached && Date.now() - cachedAt < CACHE_MS) {
+    return cached;
+  }
   // Pull every purchase once so we can derive both the legacy-sandbox
   // exclusion list AND the per-player non-sandbox spend in a single query.
   const allPurchases = await prisma.gamePurchase.findMany({
@@ -85,7 +97,7 @@ export async function getSandboxAwareReport(): Promise<SandboxAwareReport> {
     }
   }
 
-  return {
+  const report: SandboxAwareReport = {
     excludeFilter: {
       AND: [
         { status: { not: 'sandbox' as const } },
@@ -97,6 +109,11 @@ export async function getSandboxAwareReport(): Promise<SandboxAwareReport> {
     payerIds,
     spendByPlayer,
   };
+
+  cached = report;
+  cachedAt = Date.now();
+
+  return report;
 }
 
 /**

@@ -50,7 +50,22 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'messageIds required' }, { status: 400 });
     }
 
-    // Security: only mark messages belonging to this player
+    // Security: verify all requested messages actually belong to this player.
+    // No admin session token is available on this public endpoint, so we
+    // defensively confirm ownership before mutating.
+    const owned = await prisma.gameMessage.findMany({
+      where: { id: { in: messageIds } },
+      select: { id: true, playerId: true },
+    });
+
+    const mismatched = owned.find((m) => m.playerId !== playerId);
+    if (mismatched) {
+      return NextResponse.json(
+        { error: 'One or more messages do not belong to the supplied player' },
+        { status: 403 },
+      );
+    }
+
     await prisma.gameMessage.updateMany({
       where: {
         id: { in: messageIds },

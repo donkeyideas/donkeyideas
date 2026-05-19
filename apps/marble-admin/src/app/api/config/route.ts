@@ -125,6 +125,28 @@ export async function GET(_request: NextRequest) {
   }
 }
 
+const CONFIG_VALIDATORS: Record<string, (v: string) => boolean> = {
+  house_edge: v => { const n = parseFloat(v); return Number.isFinite(n) && n >= 0 && n <= 0.5; },
+  max_daily_purchases: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100; },
+  max_daily_coins: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 10_000_000; },
+  xp_per_level: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 100 && n <= 100_000; },
+  bet_amount_1: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 100_000; },
+  bet_amount_2: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 100_000; },
+  bet_amount_3: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 100_000; },
+  bet_amount_4: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 100_000; },
+  daily_reward_1: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
+  daily_reward_2: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
+  daily_reward_3: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
+  daily_reward_4: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
+  daily_reward_5: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
+  daily_reward_6: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
+  daily_reward_7: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
+  tournament_daily_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 1_000_000; },
+  tournament_weekly_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 1_000_000; },
+  tournament_champ_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 10_000_000; },
+  app_store_fee_rate: v => { const n = parseFloat(v); return Number.isFinite(n) && n >= 0 && n <= 0.5; },
+};
+
 export async function PUT(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -147,10 +169,19 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const stringValue = String(value);
+    const validator = CONFIG_VALIDATORS[key];
+    if (validator && !validator(stringValue)) {
+      return NextResponse.json(
+        { error: { message: `Invalid value for config key "${key}"` } },
+        { status: 400 },
+      );
+    }
+
     const config = await prisma.gameConfig.update({
       where: { key },
       data: {
-        value: String(value),
+        value: stringValue,
         updatedBy: admin.id,
       },
     });
