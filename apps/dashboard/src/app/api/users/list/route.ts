@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserByToken } from '@/lib/auth';
+import { getUserByToken, getTokenFromRequest } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { prisma } from '@donkey-ideas/database';
 import { fetchProjectUsers, fetchAllUsers, getProjectConfigs } from '@/lib/external-users';
 
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
-  const token = cookieStore.get('auth-token')?.value;
+  const token = getTokenFromRequest(request, cookieStore.get('auth-token')?.value);
 
   if (!token) {
     return NextResponse.json({ error: { message: 'Not authenticated' } }, { status: 401 });

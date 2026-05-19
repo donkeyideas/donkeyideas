@@ -1,29 +1,55 @@
+export type ThemeKey = 'light' | 'dark';
+
 export interface Theme {
   name: string;
-  key: 'minimal' | 'glass' | 'bloomberg' | 'aurora';
+  key: ThemeKey;
   colors: {
-    bg: string;
-    surface: string;
-    surfaceAlt: string;
-    text1: string;
-    text2: string;
-    text3: string;
-    accent: string;
-    accentSoft: string;
+    // Backgrounds
+    bg: string;            // page bg
+    bgAlt: string;         // slightly darker variant (line color zone)
+    surface: string;       // card bg
+    surfaceAlt: string;    // softer surface
+
+    // Text
+    ink: string;           // primary text
+    inkSoft: string;       // secondary
+    muted: string;         // tertiary / labels
+
+    // Lines
+    line: string;
     border: string;
-    borderStrong: string;
+
+    // Accents
+    sage: string;          // positive / green pill
+    terracotta: string;    // primary accent, charts
+    plum: string;
+    gold: string;
+    rose: string;
+
+    // Semantic
     positive: string;
     negative: string;
     warning: string;
+    accent: string;
+    accentSoft: string;
+
+    // Chart palette (same as accents above for variety)
     chart1: string;
     chart2: string;
     chart3: string;
     chart4: string;
+    chart5: string;
+
+    // App-shell colors used by drawer / header
+    text1: string;
+    text2: string;
+    text3: string;
     menuBg: string;
     headerBg: string;
     fabBg: string;
     fabText: string;
     overlay: string;
+    borderStrong: string;
     statusBar: 'dark-content' | 'light-content';
   };
   radius: number;
@@ -32,140 +58,114 @@ export interface Theme {
   fontMono: string;
 }
 
-export const minimalTheme: Theme = {
+// LIGHT (cream) — matches the HTML mockup exactly
+export const lightTheme: Theme = {
   name: 'Light',
-  key: 'minimal',
+  key: 'light',
   colors: {
-    bg: '#f8f9fb',
+    bg: '#f5f0e8',
+    bgAlt: '#ebe3d5',
     surface: '#ffffff',
-    surfaceAlt: '#f3f4f6',
-    text1: '#111827',
-    text2: '#6b7280',
-    text3: '#d1d5db',
-    accent: '#3b82f6',
-    accentSoft: 'rgba(59,130,246,0.08)',
-    border: '#eef0f2',
-    borderStrong: '#e5e7eb',
-    positive: '#059669',
-    negative: '#dc2626',
-    warning: '#d97706',
-    chart1: '#3b82f6',
-    chart2: '#8b5cf6',
-    chart3: '#06b6d4',
-    chart4: '#d1d5db',
-    menuBg: '#ffffff',
-    headerBg: 'rgba(248,249,251,0.92)',
-    fabBg: '#3b82f6',
-    fabText: '#ffffff',
-    overlay: 'rgba(0,0,0,0.3)',
+    surfaceAlt: '#faf6ee',
+
+    ink: '#1f1d1a',
+    inkSoft: '#4a463f',
+    muted: '#8b8478',
+
+    line: '#e0d6c4',
+    border: '#e0d6c4',
+
+    sage: '#7a8a5f',
+    terracotta: '#c97b54',
+    plum: '#6b4f6e',
+    gold: '#c8a96a',
+    rose: '#d49aa0',
+
+    positive: '#7a8a5f',
+    negative: '#c97b54',
+    warning: '#c8a96a',
+    accent: '#c97b54',
+    accentSoft: 'rgba(201,123,84,0.12)',
+
+    chart1: '#c97b54',
+    chart2: '#6b4f6e',
+    chart3: '#c8a96a',
+    chart4: '#d49aa0',
+    chart5: '#7a8a5f',
+
+    text1: '#1f1d1a',
+    text2: '#8b8478',
+    text3: '#c4b9a3',
+    menuBg: '#faf6ee',
+    headerBg: 'rgba(245,240,232,0.92)',
+    fabBg: '#1f1d1a',
+    fabText: '#f5f0e8',
+    overlay: 'rgba(31,29,26,0.4)',
+    borderStrong: '#c4b9a3',
     statusBar: 'dark-content',
   },
-  radius: 14,
-  fontHead: 'System',
-  fontBody: 'System',
+  radius: 20,
+  fontHead: 'InstrumentSerif_400Regular_Italic',
+  fontBody: 'Geist_400Regular',
   fontMono: 'monospace',
 };
 
-export const glassTheme: Theme = {
-  name: 'Normal',
-  key: 'glass',
-  colors: {
-    bg: '#0a0a0a',
-    surface: 'rgba(255,255,255,0.08)',
-    surfaceAlt: 'rgba(255,255,255,0.04)',
-    text1: '#ffffff',
-    text2: 'rgba(255,255,255,0.55)',
-    text3: 'rgba(255,255,255,0.2)',
-    accent: '#3b82f6',
-    accentSoft: 'rgba(59,130,246,0.12)',
-    border: 'rgba(255,255,255,0.1)',
-    borderStrong: 'rgba(255,255,255,0.18)',
-    positive: '#4ade80',
-    negative: '#f87171',
-    warning: '#fbbf24',
-    chart1: '#3b82f6',
-    chart2: '#fbbf24',
-    chart3: '#a78bfa',
-    chart4: '#fb7185',
-    menuBg: 'rgba(10,10,10,0.95)',
-    headerBg: 'rgba(10,10,10,0.92)',
-    fabBg: '#3b82f6',
-    fabText: '#ffffff',
-    overlay: 'rgba(0,0,0,0.5)',
-    statusBar: 'light-content',
-  },
-  radius: 14,
-  fontHead: 'System',
-  fontBody: 'System',
-  fontMono: 'monospace',
-};
-
-export const bloombergTheme: Theme = {
+// DARK — same design language inverted to dark ink
+export const darkTheme: Theme = {
   name: 'Dark',
-  key: 'bloomberg',
+  key: 'dark',
   colors: {
-    bg: '#000000',
-    surface: '#0c0c0c',
-    surfaceAlt: '#080808',
-    text1: '#ff9900',
-    text2: '#5a5a5a',
-    text3: '#2a2a2a',
-    accent: '#ff9900',
-    accentSoft: 'rgba(255,153,0,0.06)',
-    border: '#1a1a1a',
-    borderStrong: '#252525',
-    positive: '#00ff00',
-    negative: '#ff3333',
-    warning: '#ff9900',
-    chart1: '#ff9900',
-    chart2: '#00ff00',
-    chart3: '#ff6600',
-    chart4: '#ff3333',
-    menuBg: '#080808',
-    headerBg: 'rgba(0,0,0,0.95)',
-    fabBg: '#ff9900',
-    fabText: '#000000',
-    overlay: 'rgba(0,0,0,0.6)',
-    statusBar: 'light-content',
-  },
-  radius: 2,
-  fontHead: 'JetBrainsMono',
-  fontBody: 'JetBrainsMono',
-  fontMono: 'JetBrainsMono',
-};
+    bg: '#1a1714',
+    bgAlt: '#22201c',
+    surface: '#2a2622',
+    surfaceAlt: '#332f2a',
 
-export const auroraTheme: Theme = {
-  name: 'Aurora',
-  key: 'aurora',
-  colors: {
-    bg: '#0f0520',
-    surface: 'rgba(255,255,255,0.08)',
-    surfaceAlt: 'rgba(255,255,255,0.04)',
-    text1: '#ffffff',
-    text2: 'rgba(255,255,255,0.6)',
-    text3: 'rgba(255,255,255,0.2)',
-    accent: '#c084fc',
-    accentSoft: 'rgba(192,132,252,0.12)',
-    border: 'rgba(255,255,255,0.1)',
-    borderStrong: 'rgba(255,255,255,0.18)',
-    positive: '#4ade80',
-    negative: '#f87171',
-    warning: '#fbbf24',
-    chart1: '#c084fc',
-    chart2: '#f472b6',
-    chart3: '#4ade80',
-    chart4: '#fbbf24',
-    menuBg: 'rgba(15,5,32,0.96)',
-    headerBg: 'rgba(15,5,32,0.92)',
-    fabBg: '#c084fc',
-    fabText: '#ffffff',
-    overlay: 'rgba(0,0,0,0.5)',
+    ink: '#f5f0e8',
+    inkSoft: '#d4cdbb',
+    muted: '#8b8478',
+
+    line: '#3a3530',
+    border: '#3a3530',
+
+    sage: '#9aaa7f',
+    terracotta: '#e09a73',
+    plum: '#9077a3',
+    gold: '#dbc28a',
+    rose: '#e5b3b8',
+
+    positive: '#9aaa7f',
+    negative: '#e09a73',
+    warning: '#dbc28a',
+    accent: '#e09a73',
+    accentSoft: 'rgba(224,154,115,0.16)',
+
+    chart1: '#e09a73',
+    chart2: '#9077a3',
+    chart3: '#dbc28a',
+    chart4: '#e5b3b8',
+    chart5: '#9aaa7f',
+
+    text1: '#f5f0e8',
+    text2: '#8b8478',
+    text3: '#5a534b',
+    menuBg: '#22201c',
+    headerBg: 'rgba(26,23,20,0.92)',
+    fabBg: '#f5f0e8',
+    fabText: '#1f1d1a',
+    overlay: 'rgba(0,0,0,0.6)',
+    borderStrong: '#4a443e',
     statusBar: 'light-content',
   },
   radius: 20,
-  fontHead: 'System',
-  fontBody: 'System',
+  fontHead: 'InstrumentSerif_400Regular_Italic',
+  fontBody: 'Geist_400Regular',
   fontMono: 'monospace',
 };
 
-export const themes = { minimal: minimalTheme, glass: glassTheme, bloomberg: bloombergTheme, aurora: auroraTheme };
+export const themes: Record<ThemeKey, Theme> = {
+  light: lightTheme,
+  dark: darkTheme,
+};
+
+// Legacy alias so existing imports keep working
+export const auroraTheme = lightTheme;

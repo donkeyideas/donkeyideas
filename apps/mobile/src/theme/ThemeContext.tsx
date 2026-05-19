@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Theme, themes, auroraTheme } from './themes';
-
-type ThemeKey = 'minimal' | 'glass' | 'bloomberg' | 'aurora';
+import { Theme, ThemeKey, themes, lightTheme } from './themes';
 
 interface ThemeContextType {
   theme: Theme;
@@ -11,18 +9,18 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: auroraTheme,
-  themeKey: 'aurora',
+  theme: lightTheme,
+  themeKey: 'light',
   setThemeKey: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [themeKey, setThemeKeyState] = useState<ThemeKey>('aurora');
+  const [themeKey, setThemeKeyState] = useState<ThemeKey>('light');
 
   useEffect(() => {
     AsyncStorage.getItem('di-theme').then((saved) => {
-      if (saved && (saved === 'minimal' || saved === 'glass' || saved === 'bloomberg' || saved === 'aurora')) {
-        setThemeKeyState(saved as ThemeKey);
+      if (saved === 'light' || saved === 'dark') {
+        setThemeKeyState(saved);
       }
     });
   }, []);

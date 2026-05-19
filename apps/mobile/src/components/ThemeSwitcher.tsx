@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
+import { ThemeKey } from '../theme/themes';
 
-const themeOptions: Array<{ key: 'minimal' | 'glass' | 'bloomberg' | 'aurora'; label: string }> = [
-  { key: 'aurora', label: 'Aurora' },
-  { key: 'glass', label: 'Normal' },
-  { key: 'minimal', label: 'Light' },
-  { key: 'bloomberg', label: 'Dark' },
+const themeOptions: Array<{ key: ThemeKey; label: string }> = [
+  { key: 'light', label: 'Light' },
+  { key: 'dark', label: 'Dark' },
 ];
 
 export function ThemeSwitcher() {
@@ -15,7 +14,7 @@ export function ThemeSwitcher() {
 
   return (
     <View style={[styles.container, { borderBottomColor: c.border }]}>
-      <Text style={[styles.label, { color: c.text2 }]}>APPEARANCE</Text>
+      <Text style={[styles.label, { color: c.muted }]}>APPEARANCE</Text>
       <View style={styles.row}>
         {themeOptions.map((opt) => {
           const isActive = themeKey === opt.key;
@@ -23,14 +22,14 @@ export function ThemeSwitcher() {
             <TouchableOpacity
               key={opt.key}
               style={[styles.btn, {
-                backgroundColor: isActive ? c.accentSoft : c.surfaceAlt,
-                borderColor: isActive ? c.accent : c.border,
-                borderRadius: theme.radius,
+                backgroundColor: isActive ? c.ink : c.surfaceAlt,
+                borderColor: isActive ? c.ink : c.border,
+                borderRadius: 999,
               }]}
               onPress={() => setThemeKey(opt.key)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.btnText, { color: isActive ? c.accent : c.text2 }]}>{opt.label}</Text>
+              <Text style={[styles.btnText, { color: isActive ? c.bg : c.muted }]}>{opt.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -41,8 +40,8 @@ export function ThemeSwitcher() {
 
 const styles = StyleSheet.create({
   container: { padding: 16, paddingTop: 12, borderBottomWidth: 1 },
-  label: { fontSize: 10, fontWeight: '600', letterSpacing: 1, marginBottom: 10 },
-  row: { flexDirection: 'row', gap: 6 },
-  btn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderWidth: 1.5 },
-  btnText: { fontSize: 11, fontWeight: '600' },
+  label: { fontSize: 10, fontWeight: '500', letterSpacing: 1.5, marginBottom: 10 },
+  row: { flexDirection: 'row', gap: 8 },
+  btn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderWidth: 1 },
+  btnText: { fontSize: 12, fontWeight: '600' },
 });

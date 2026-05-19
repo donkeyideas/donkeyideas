@@ -1,5 +1,16 @@
 import { api } from './client';
 
+export interface AnalyticsCompany {
+  id: string;
+  name: string;
+  logo?: string | null;
+  users: number;
+  sessions: number;
+  pageviews: number;
+  bounceRate: number;
+  share: number;
+}
+
 export interface AnalyticsData {
   connected: boolean;
   data?: {
@@ -15,6 +26,7 @@ export interface AnalyticsData {
     trafficSources: Array<{ source: string; sessions: number; percentage: number }>;
     topPages: Array<{ page: string; title: string; pageviews: number }>;
     devices: Array<{ device: string; sessions: number; percentage: number }>;
+    companyBreakdown: AnalyticsCompany[];
   };
 }
 
@@ -36,6 +48,7 @@ export async function getConsolidatedAnalytics(dateRange = '30d'): Promise<Analy
       trafficSources: agg.trafficSources || [],
       topPages: [],
       devices: [],
+      companyBreakdown: agg.companyBreakdown || [],
     },
   };
 }

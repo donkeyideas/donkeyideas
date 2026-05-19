@@ -122,6 +122,16 @@ export async function loginUser(data: z.infer<typeof loginSchema> & { totpCode?:
 }
 
 export async function getUserByToken(token: string) {
+  // Widget/mobile admin token bypass: if the bearer matches WIDGET_API_TOKEN,
+  // authenticate as the owner (info@donkeyideas.com). Used by the mobile admin
+  // app, which has no login screen and ships with this token baked in.
+  const widgetToken = process.env.WIDGET_API_TOKEN;
+  if (widgetToken && token === widgetToken) {
+    const ownerEmail = process.env.WIDGET_OWNER_EMAIL || 'info@donkeyideas.com';
+    const owner = await prisma.user.findFirst({ where: { email: ownerEmail } });
+    if (owner) return owner;
+  }
+
   const session = await prisma.session.findUnique({
     where: { token },
     include: { user: true },

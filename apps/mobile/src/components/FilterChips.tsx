@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
 interface FilterChipsProps {
@@ -13,35 +13,31 @@ export function FilterChips({ options, selected, onSelect }: FilterChipsProps) {
   const c = theme.colors;
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-    >
+    <View style={styles.container}>
       {options.map((option) => {
         const isActive = selected === option;
         return (
           <TouchableOpacity
             key={option}
             style={[styles.chip, {
-              backgroundColor: isActive ? c.accent : c.surfaceAlt,
-              borderRadius: theme.radius,
+              backgroundColor: isActive ? c.ink : 'transparent',
+              borderColor: isActive ? c.ink : c.border,
             }]}
             onPress={() => onSelect(option)}
             activeOpacity={0.7}
           >
             <Text style={[styles.chipText, {
-              color: isActive ? '#ffffff' : c.text2,
+              color: isActive ? c.bg : c.muted,
             }]}>{option}</Text>
           </TouchableOpacity>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 8, paddingHorizontal: 16, marginBottom: 14 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8 },
-  chipText: { fontSize: 12, fontWeight: '600' },
+  container: { flexDirection: 'row', gap: 8 },
+  chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
+  chipText: { fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
 });
