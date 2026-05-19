@@ -613,7 +613,7 @@ export default function UserDetailPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/[0.08]">
-                  {['Course', 'Marble', 'Bet', 'Result', 'Payout', 'When'].map((h: string) => (
+                  {['Course', 'Mode', 'Marble', 'Place', 'Bet', 'Result', 'Payout', 'When'].map((h: string) => (
                     <th key={h} className="text-left px-4 py-2.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
                       {h}
                     </th>
@@ -622,28 +622,84 @@ export default function UserDetailPage() {
               </thead>
               <tbody>
                 {pagedRaces.length > 0 ? pagedRaces.map((r: any, i: number) => {
-                  const isWin = r.won === true;
                   const payout = Number(r.payout ?? 0);
                   const betAmt = Number(r.betAmount ?? 0);
                   const courseName = r.courseId ? r.courseId.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : '---';
+                  const placement = Number(r.playerPlacement ?? 0);
+                  const mode: string = r.gameMode ?? 'unknown';
+
+                  /* Mode badge styling — gives ops a quick read on what kind
+                   * of race produced this row. Bet races have meaningful
+                   * win/loss; others are placement-only. */
+                  const modeStyles: Record<string, { label: string; cls: string }> = {
+                    bet:                   { label: 'BET',         cls: 'bg-gold/15 text-gold border-gold/30' },
+                    quick_race:            { label: 'QUICK',       cls: 'bg-white/10 text-white/50 border-white/15' },
+                    season:                { label: 'SEASON',      cls: 'bg-marble-blue/15 text-marble-blue border-marble-blue/30' },
+                    playoff:               { label: 'PLAYOFF',     cls: 'bg-marble-blue/25 text-marble-blue border-marble-blue/40' },
+                    national_race:         { label: 'NATIONAL',    cls: 'bg-[#c39bd3]/15 text-[#c39bd3] border-[#c39bd3]/30' },
+                    tournament:            { label: 'TOURNEY',     cls: 'bg-marble-green/15 text-marble-green border-marble-green/30' },
+                    multiplayer_tournament:{ label: 'MP TOURNEY',  cls: 'bg-marble-green/25 text-marble-green border-marble-green/40' },
+                    unknown:               { label: '—',           cls: 'bg-white/[0.05] text-white/30 border-white/10' },
+                  };
+                  const modeBadge = modeStyles[mode] ?? modeStyles.unknown;
+
+                  /* Result + payout semantics depend on mode:
+                   *   bet            — WIN if r.won, else LOSS; payout = winnings or -betAmount
+                   *   tournament     — WIN if 1st (champion); payout column shows the
+                   *                    raceRecord.payout the mobile recorded for this
+                   *                    round (survival or placement bonus). LOSS only
+                   *                    when player marble was eliminated this round.
+                   *   quick/season/national/playoff — show placement, no WIN/LOSS frame
+                   * The previous code forced every non-bet race to "LOSS / -0",
+                   * which painted tournament champions as 10 straight losses. */
+                  let resultEl: React.ReactNode;
+                  let payoutEl: React.ReactNode;
+                  if (mode === 'bet') {
+                    const isWin = r.won === true;
+                    resultEl = <span className={`text-[10px] font-bold uppercase ${isWin ? 'text-marble-green' : 'text-marble-red'}`}>{isWin ? 'WIN' : 'LOSS'}</span>;
+                    payoutEl = <span className={`text-xs font-semibold ${isWin ? 'text-marble-green' : 'text-marble-red'}`}>{isWin ? `+${fmtNum(payout)}` : `-${fmtNum(betAmt)}`}</span>;
+                  } else if (mode === 'tournament' || mode === 'multiplayer_tournament') {
+                    const isChamp = placement === 1;
+                    const eliminated = r.modeContext?.eliminated === true || r.won === false && placement === 0;
+                    resultEl = isChamp
+                      ? <span className="text-[10px] font-bold uppercase text-gold">CHAMP</span>
+                      : eliminated
+                        ? <span className="text-[10px] font-bold uppercase text-marble-red">OUT</span>
+                        : <span className="text-[10px] font-bold uppercase text-white/50">ADV</span>;
+                    payoutEl = payout > 0
+                      ? <span className="text-xs font-semibold text-marble-green">+{fmtNum(payout)}</span>
+                      : <span className="text-xs text-white/30">—</span>;
+                  } else {
+                    resultEl = placement > 0
+                      ? <span className="text-[10px] font-bold uppercase text-white/70">{placement === 1 ? '1ST' : placement === 2 ? '2ND' : placement === 3 ? '3RD' : `${placement}TH`}</span>
+                      : <span className="text-[10px] text-white/30">—</span>;
+                    payoutEl = payout > 0
+                      ? <span className="text-xs font-semibold text-marble-green">+{fmtNum(payout)}</span>
+                      : <span className="text-xs text-white/30">—</span>;
+                  }
+
+                  const placeEl = placement > 0
+                    ? <span className="text-xs text-white/60">{placement === 1 ? '1st' : placement === 2 ? '2nd' : placement === 3 ? '3rd' : `${placement}th`}</span>
+                    : <span className="text-xs text-white/25">—</span>;
+
                   return (
                     <tr key={i} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
                       <td className="px-4 py-2.5 text-xs text-white/60">{courseName}</td>
                       <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-1.5">
-                          <MarbleDot name={r.playerPickId ?? 'dash'} size={16} />
-                          <span className="text-xs text-white/60 capitalize">{r.playerPickId ?? '---'}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-white/50">{fmtNum(betAmt)}</td>
-                      <td className="px-4 py-2.5">
-                        <span className={`text-[10px] font-bold uppercase ${isWin ? 'text-marble-green' : 'text-marble-red'}`}>
-                          {isWin ? 'WIN' : 'LOSS'}
+                        <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${modeBadge.cls}`}>
+                          {modeBadge.label}
                         </span>
                       </td>
-                      <td className={`px-4 py-2.5 text-xs font-semibold ${isWin ? 'text-marble-green' : 'text-marble-red'}`}>
-                        {isWin ? `+${fmtNum(payout)}` : `-${fmtNum(betAmt)}`}
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-1.5">
+                          {r.playerPickId ? <MarbleDot name={r.playerPickId} size={16} /> : <div className="w-4 h-4 rounded-full bg-white/[0.05]" />}
+                          <span className="text-xs text-white/60 capitalize">{r.playerPickId ?? '—'}</span>
+                        </div>
                       </td>
+                      <td className="px-4 py-2.5">{placeEl}</td>
+                      <td className="px-4 py-2.5 text-xs text-white/50">{betAmt > 0 ? fmtNum(betAmt) : <span className="text-white/25">—</span>}</td>
+                      <td className="px-4 py-2.5">{resultEl}</td>
+                      <td className="px-4 py-2.5">{payoutEl}</td>
                       <td className="px-4 py-2.5 text-[10px] text-white/30">{r.racedAt ? timeAgo(r.racedAt) : '---'}</td>
                     </tr>
                   );

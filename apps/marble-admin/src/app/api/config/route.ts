@@ -34,9 +34,15 @@ const SEED_CONFIGS: { key: string; value: string; label: string; group: string }
   { key: 'daily_reward_6', value: '500', label: 'Daily Reward (Day 6)', group: 'rewards' },
   { key: 'daily_reward_7', value: '750', label: 'Daily Reward (Day 7)', group: 'rewards' },
   { key: 'xp_per_level', value: '1000', label: 'XP Per Level', group: 'rewards' },
-  { key: 'tournament_daily_prize', value: '4600', label: 'Daily Blitz Prize', group: 'rewards' },
-  { key: 'tournament_weekly_prize', value: '23000', label: 'Weekly Cup Prize', group: 'rewards' },
-  { key: 'tournament_champ_prize', value: '46000', label: 'Champion Prize', group: 'rewards' },
+  { key: 'tournament_daily_prize', value: '4600', label: 'Daily Blitz · 1st Prize', group: 'rewards' },
+  { key: 'tournament_daily_second_prize', value: '1200', label: 'Daily Blitz · 2nd Prize', group: 'rewards' },
+  { key: 'tournament_daily_third_prize', value: '600', label: 'Daily Blitz · 3rd Prize', group: 'rewards' },
+  { key: 'tournament_weekly_prize', value: '23000', label: 'Weekly Cup · 1st Prize', group: 'rewards' },
+  { key: 'tournament_weekly_second_prize', value: '6000', label: 'Weekly Cup · 2nd Prize', group: 'rewards' },
+  { key: 'tournament_weekly_third_prize', value: '3000', label: 'Weekly Cup · 3rd Prize', group: 'rewards' },
+  { key: 'tournament_champion_prize', value: '46000', label: 'Champion Invitational · 1st Prize', group: 'rewards' },
+  { key: 'tournament_champion_second_prize', value: '12000', label: 'Champion Invitational · 2nd Prize', group: 'rewards' },
+  { key: 'tournament_champion_third_prize', value: '6000', label: 'Champion Invitational · 3rd Prize', group: 'rewards' },
   { key: 'bet_amount_1', value: '25', label: 'Bet Tier 1', group: 'betting' },
   { key: 'bet_amount_2', value: '100', label: 'Bet Tier 2', group: 'betting' },
   { key: 'bet_amount_3', value: '250', label: 'Bet Tier 3', group: 'betting' },
@@ -143,9 +149,33 @@ const CONFIG_VALIDATORS: Record<string, (v: string) => boolean> = {
   daily_reward_7: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
   tournament_daily_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 1_000_000; },
   tournament_weekly_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 1_000_000; },
-  tournament_champ_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 10_000_000; },
+  tournament_champion_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 10_000_000; },
+  tournament_daily_second_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
+  tournament_daily_third_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
+  tournament_weekly_second_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
+  tournament_weekly_third_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
+  tournament_champion_second_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 10_000_000; },
+  tournament_champion_third_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 10_000_000; },
+  tournament_daily_entry: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
+  tournament_weekly_entry: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
+  tournament_champion_entry: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
   app_store_fee_rate: v => { const n = parseFloat(v); return Number.isFinite(n) && n >= 0 && n <= 0.5; },
 };
+
+/* Numeric keys must be stored as bare numeric strings ("4600"), not
+ * formatted display strings ("4,600 coins"). The mobile client reads
+ * with parseFloat which truncates at the first non-digit, so "4,600
+ * coins" → 4 silently broke tournament payouts in production. Any key
+ * with a validator is treated as numeric. */
+function isNumericKey(key: string): boolean {
+  return key in CONFIG_VALIDATORS;
+}
+
+function normalizeNumericValue(raw: unknown): string {
+  if (typeof raw === 'number') return String(raw);
+  const s = String(raw ?? '').replace(/,/g, '').replace(/[^\d.\-eE]/g, '').trim();
+  return s;
+}
 
 export async function PUT(request: NextRequest) {
   try {
@@ -169,7 +199,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const stringValue = String(value);
+    /* Coerce numeric keys to canonical form before validating. Admins
+     * occasionally paste "4,600 coins" into the editable cell; without
+     * this the row would store the formatted string and the mobile
+     * parseFloat would truncate it to 4 (the original tournament prize
+     * bug). For non-numeric keys (toggles, strings) we pass through. */
+    const stringValue = isNumericKey(key)
+      ? normalizeNumericValue(value)
+      : String(value);
     const validator = CONFIG_VALIDATORS[key];
     if (validator && !validator(stringValue)) {
       return NextResponse.json(
