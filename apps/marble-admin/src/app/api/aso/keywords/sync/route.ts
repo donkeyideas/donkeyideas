@@ -16,19 +16,20 @@ import { checkKeywordRankingAndroid, checkKeywordRankingIOS } from '@/lib/keywor
 /*  POST /api/aso/keywords/sync                                        */
 /*                                                                     */
 /*  Walks the seed keyword list and queries both stores for the live  */
-/*  rank of the Marble Race Bet Game. Sequential with delay between   */
-/*  calls so we don't trigger Google Play / iTunes rate limits.       */
+/*  rank of the Marble Race Bet Game. Each keyword's Android + iOS    */
+/*  pair runs sequentially with delays (per-store pacing), but a small */
+/*  pool of keyword workers runs in parallel so total wall-time stays  */
+/*  well under the Vercel function timeout.                            */
 /*                                                                     */
 /*  Writes the full enriched + ranked result set to GameConfig under  */
 /*  CACHE_KEY so the GET route + deck generator can read without re-  */
 /*  hitting the stores.                                                */
 /*                                                                     */
-/*  Runtime: ~30 keywords × (300ms Android + 400ms iOS) ≈ 21 seconds. */
-/*  Acceptable for an admin-triggered sync; we don't autoschedule it. */
+/*  Runtime: 30 kw / 3 concurrency × ~3s per kw ≈ 30s typical.         */
 /* ------------------------------------------------------------------ */
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // Vercel function timeout — well under
+export const maxDuration = 300; // Vercel Pro max — safety margin over typical ~30s
 
 export async function POST() {
   try {
@@ -47,35 +48,39 @@ export async function POST() {
       kei: computeKEI(e),
     }));
 
-    /* Sequential probe — Android then iOS for each keyword.
-     * The delays sit BETWEEN store hits to keep us under the public-API
-     * rate limit. Each keyword therefore takes ~700ms total. */
     const ANDROID_DELAY_MS = 300;
     const IOS_DELAY_MS = 400;
+    const CONCURRENCY = 3;
 
-    const entries: KeywordPlaybookEntry[] = [];
     const syncedAt = new Date().toISOString();
+    const entries: KeywordPlaybookEntry[] = new Array(enriched.length);
 
-    for (const e of enriched) {
-      const android = await checkKeywordRankingAndroid(e.keyword, APP_IDS.android);
-      if (ANDROID_DELAY_MS > 0) await new Promise((r) => setTimeout(r, ANDROID_DELAY_MS));
-      const ios = await checkKeywordRankingIOS(e.keyword, APP_IDS.ios);
-      if (IOS_DELAY_MS > 0) await new Promise((r) => setTimeout(r, IOS_DELAY_MS));
-
-      entries.push({
-        keyword: e.keyword,
-        volume: e.volume,
-        difficulty: e.difficulty,
-        cpc: e.cpc,
-        intent: e.intent,
-        kei: e.kei,
-        androidRank: android.position,
-        iosRank: ios.position,
-        androidTopCompetitor: android.topCompetitor,
-        iosTopCompetitor: ios.topCompetitor,
-        lastSyncedAt: syncedAt,
-      });
-    }
+    let cursor = 0;
+    const worker = async () => {
+      while (true) {
+        const i = cursor++;
+        if (i >= enriched.length) return;
+        const e = enriched[i];
+        const android = await checkKeywordRankingAndroid(e.keyword, APP_IDS.android);
+        if (ANDROID_DELAY_MS > 0) await new Promise((r) => setTimeout(r, ANDROID_DELAY_MS));
+        const ios = await checkKeywordRankingIOS(e.keyword, APP_IDS.ios);
+        if (IOS_DELAY_MS > 0) await new Promise((r) => setTimeout(r, IOS_DELAY_MS));
+        entries[i] = {
+          keyword: e.keyword,
+          volume: e.volume,
+          difficulty: e.difficulty,
+          cpc: e.cpc,
+          intent: e.intent,
+          kei: e.kei,
+          androidRank: android.position,
+          iosRank: ios.position,
+          androidTopCompetitor: android.topCompetitor,
+          iosTopCompetitor: ios.topCompetitor,
+          lastSyncedAt: syncedAt,
+        };
+      }
+    };
+    await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
     const payload: PlaybookCachePayload = {
       entries,
