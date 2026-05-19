@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { SortableHeader, useSort } from '@/components/ui/SortableHeader';
+import { KeywordIntelligence } from '@/components/aso/KeywordIntelligence';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -717,6 +718,9 @@ export default function ASOPage() {
           </div>
         </div>
       )}
+
+      {/* Keyword Intelligence — curated playbook with live rank checks */}
+      <KeywordIntelligence />
     </div>
   );
 }

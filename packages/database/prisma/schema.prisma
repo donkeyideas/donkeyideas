@@ -1348,6 +1348,43 @@ model GameAnnouncement {
   @@map("game_announcements")
 }
 
+/// Generated pitch / business deck snapshots.
+///
+/// Each row is one self-contained HTML deck rendered from a point-in-time
+/// snapshot of platform data (total users, revenue, retention, etc.). The
+/// `shareToken` is the public-facing slug for unauthenticated viewing —
+/// admins copy the link from the Decks page in the dashboard and send it
+/// to investors / press / partners. The HTML is fully self-contained
+/// (inline styles, no external images required for the layout itself), so
+/// it renders correctly even after data drifts; the slide content is
+/// frozen at generation time.
+///
+/// Old generations stay in the table so the operator can roll back to a
+/// previous version of the deck if a fresh regenerate produces something
+/// weird. We don't auto-prune yet.
+model GeneratedDeck {
+  id           String   @id @default(cuid())
+  /// 'pitch' or 'business'. Pitch is marketing-flavored (one-page,
+  /// hero + traction); business is investor-flavored (KPI-heavy).
+  type         String
+  /// Public, unguessable slug used in the share link. Keep this stable
+  /// per row so any link the admin has already shared stays valid.
+  shareToken   String   @unique @default(cuid())
+  title        String
+  /// Self-contained HTML. Big string — DB column is TEXT.
+  html         String
+  /// JSON snapshot of the numbers used to build the deck. Useful for
+  /// debugging "why does this deck show 148 users when we have 150 now"
+  /// without having to re-run the source queries.
+  dataSnapshot Json
+  /// Admin user.id that triggered the generate.
+  generatedBy  String?
+  generatedAt  DateTime @default(now())
+
+  @@index([type, generatedAt(sort: Desc)])
+  @@map("generated_decks")
+}
+
 // Per-device push delivery result for each announcement send.
 //
 // One row per (announcement, player) push attempt. Records which platform was

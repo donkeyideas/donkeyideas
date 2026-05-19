@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
   { name: 'KPIs', href: '/kpis', icon: '◉' },
   { name: 'Physics', href: '/physics', icon: '⊕' },
   { name: 'ASO', href: '/aso', icon: '◎' },
+  { name: 'Decks', href: '/decks', icon: '◨' },
   { name: 'Support', href: '/support', icon: '►', badgeKey: 'support' },
 ];
 

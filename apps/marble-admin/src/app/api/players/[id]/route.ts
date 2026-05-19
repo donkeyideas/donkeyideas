@@ -84,6 +84,12 @@ export async function GET(
         lastActiveAt: true,
         createdAt: true,
         updatedAt: true,
+        /* We DON'T return the raw pushToken in the response (it's a
+         * secret-ish credential that could be misused if leaked). The
+         * client just needs to know "can this player be pushed?" so
+         * we derive a boolean below. The actual token stays server-side
+         * where /api/players/[id]/push uses it. */
+        pushToken: true,
       },
     });
     if (!player) {
@@ -250,21 +256,25 @@ export async function GET(
 
     // ---- Compute Heatmap (7x24 grid) ----
     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const heatGrid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+    /* Per-cell breakdowns so the click-details modal can show exact
+     * counts ("3 races · 1 bet") instead of just the abstract color
+     * level. racesGrid + betsGrid sum into heatGrid (the totals grid
+     * used for level scaling + peak/most-active calculations). */
+    const heatRacesGrid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+    const heatBetsGrid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
 
-    // Count activity from bets and races (bucket by ET, not server local time)
-    for (const bet of recentBets) {
-      const d = new Date(bet.placedAt);
-      const dow = getETDayMon0(d);
-      const hr = getETHour(d);
-      heatGrid[dow][hr]++;
-    }
     for (const race of recentRaces) {
       const d = new Date(race.racedAt);
-      const dow = getETDayMon0(d);
-      const hr = getETHour(d);
-      heatGrid[dow][hr]++;
+      heatRacesGrid[getETDayMon0(d)][getETHour(d)]++;
     }
+    for (const bet of recentBets) {
+      const d = new Date(bet.placedAt);
+      heatBetsGrid[getETDayMon0(d)][getETHour(d)]++;
+    }
+
+    const heatGrid: number[][] = heatRacesGrid.map((row, di) =>
+      row.map((races, hi) => races + heatBetsGrid[di][hi]),
+    );
 
     // Scale to 0-4
     const maxHeat = Math.max(1, ...heatGrid.flat());
@@ -296,6 +306,9 @@ export async function GET(
     const heatmap = {
       days: dayNames,
       grid: scaledGrid,
+      racesGrid: heatRacesGrid,
+      betsGrid: heatBetsGrid,
+      totalsGrid: heatGrid,
       peakTime: `${fmtHour(peakHour)}-${fmtHour(peakEndHour)}`,
       mostActiveDay: dayNames[mostActiveDayIdx],
     };
@@ -359,12 +372,17 @@ export async function GET(
     // ---- Admin Notes (no model yet) ----
     const adminNotes: any[] = [];
 
+    /* Destructure pushToken out so the raw value never reaches the
+     * response body. The client only needs the boolean derived from
+     * its presence. */
+    const { pushToken, ...playerPublic } = player;
     return NextResponse.json({
       player: {
-        ...player,
+        ...playerPublic,
         // Use sandbox-aware non-sandbox spend so the modal matches what
         // Financials counts as revenue for this player.
         totalSpent: totalSpentNum,
+        hasPushToken: !!pushToken,
       },
       betting: {
         totalBets,

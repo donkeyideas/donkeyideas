@@ -1,54 +1,34 @@
 /**
- * Push notification dispatch via Expo Push API.
+ * Push notification dispatch via Firebase Cloud Messaging (FCM).
  *
- * The mobile app is pure-Expo (no @react-native-firebase native modules), so
- * we route through Expo's push service. Expo forwards each notification to
- * FCM (Android) or APNs (iOS) and returns per-message receipts. From the
- * operator's perspective in Live Ops, results are reported per platform.
+ * Replaces the prior Expo Push API path. The mobile client registers
+ * NATIVE FCM/APNs tokens via Notifications.getDevicePushTokenAsync;
+ * Firebase Admin SDK sends straight to those tokens. No Expo proxy.
+ *
+ * Why the change: Expo Push (https://exp.host/--/api/v2/push/send)
+ * routes through Expo's servers, adds latency, and was observed to drop
+ * deliveries on Android when the app was in the killed state. Firebase
+ * Admin's `sendEachForMulticast` is what argufight + basktball use; it
+ * delivers reliably to killed/background apps and returns per-token
+ * error reasons we can act on.
  *
  * Flow:
- *   1. dispatchAnnouncement() fetches every player with a registered push
- *      token, builds chunked Expo Push messages, POSTs them in batches of
- *      100, then writes one GameAnnouncementDelivery row per (player, attempt)
- *      with the returned ticket id and an initial status of 'sent' or 'failed'.
- *   2. checkReceipts() can be called minutes later to upgrade 'sent' rows to
- *      'delivered' or 'failed' based on Expo's receipts endpoint. Not wired
- *      into a cron yet — operator can run /api/announcements/[id]/receipts
- *      manually until a scheduler is added.
- *
- * Tokens we store may be either Expo push tokens (ExponentPushToken[...]) or
- * raw FCM/APNs tokens. We route ExponentPushToken... through Expo; any other
- * shape is treated as Expo-compatible too (Expo accepts FCM tokens directly
- * when the project's FCM/APNs creds are configured in EAS).
+ *   1. dispatchAnnouncement() fetches every active player with a
+ *      registered push token, builds FCM messages, sends in batches
+ *      of 500 (FCM's documented multicast limit), then writes one
+ *      GameAnnouncementDelivery row per (player, attempt) with the
+ *      provider message id and an initial status of 'sent' or 'failed'.
+ *   2. checkReceipts() is now a no-op shim that just exists so the
+ *      existing /api/announcements/[id]/receipts route doesn't 404 —
+ *      FCM doesn't have a polling-style receipts endpoint the way Expo
+ *      does, so per-token delivery success is reported synchronously
+ *      from `sendEachForMulticast` (already captured at dispatch time).
  */
 
 import { prisma } from '@donkey-ideas/database';
+import { getFirebaseMessaging } from './firebase-admin';
 
-const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
-const EXPO_RECEIPTS_URL = 'https://exp.host/--/api/v2/push/getReceipts';
-const BATCH_SIZE = 100;
-
-interface ExpoPushMessage {
-  to: string;
-  title: string;
-  body: string;
-  data?: Record<string, unknown>;
-  sound?: 'default' | null;
-  priority?: 'default' | 'normal' | 'high';
-  channelId?: string;
-}
-
-interface ExpoPushTicket {
-  status: 'ok' | 'error';
-  id?: string;
-  message?: string;
-  details?: { error?: string };
-}
-
-interface ExpoPushResponse {
-  data?: ExpoPushTicket[];
-  errors?: { code: string; message: string }[];
-}
+const BATCH_SIZE = 500; // FCM multicast hard limit
 
 export interface DispatchSummary {
   announcementId: string;
@@ -59,9 +39,8 @@ export interface DispatchSummary {
 }
 
 /**
- * Dispatch an announcement to every player with a registered push token.
- * Returns the per-platform send counts. Receipts (delivered vs. failed) get
- * upgraded later via checkReceipts().
+ * Dispatch an announcement to every active player with a registered push
+ * token via FCM. Returns per-platform send counts.
  */
 export async function dispatchAnnouncement(announcementId: string): Promise<DispatchSummary> {
   const announcement = await prisma.gameAnnouncement.findUnique({
@@ -69,6 +48,13 @@ export async function dispatchAnnouncement(announcementId: string): Promise<Disp
   });
   if (!announcement) {
     throw new Error(`Announcement ${announcementId} not found`);
+  }
+
+  const messaging = getFirebaseMessaging();
+  if (!messaging) {
+    throw new Error(
+      'Firebase Admin not configured — set FIREBASE_SERVICE_ACCOUNT_JSON to enable push',
+    );
   }
 
   const players = await prisma.gamePlayer.findMany({
@@ -91,30 +77,20 @@ export async function dispatchAnnouncement(announcementId: string): Promise<Disp
     return summary;
   }
 
-  // Build messages + parallel lookup so we can map tickets back to players
-  type Pending = { playerId: string; platform: string; token: string };
+  /* Build a parallel index so sendEachForMulticast's response[i] maps
+   * back to players[i] for delivery-row writing + per-platform tally. */
+  type Pending = { playerId: string; platform: 'ios' | 'android'; token: string };
   const pending: Pending[] = [];
-  const messages: ExpoPushMessage[] = [];
   for (const p of players) {
     if (!p.pushToken) {
       summary.skipped++;
       continue;
     }
-    const platform = (p.pushTokenPlatform === 'ios' || p.pushTokenPlatform === 'android')
-      ? p.pushTokenPlatform
-      : 'android'; // default unknown to android; Expo doesn't care for routing
+    const platform: 'ios' | 'android' =
+      p.pushTokenPlatform === 'ios' ? 'ios' : 'android';
     pending.push({ playerId: p.id, platform, token: p.pushToken });
-    messages.push({
-      to: p.pushToken,
-      title: announcement.title,
-      body: announcement.body,
-      sound: 'default',
-      priority: announcement.type === 'maintenance' ? 'high' : 'default',
-      data: { announcementId: announcement.id, type: announcement.type },
-    });
   }
 
-  // POST in chunks of 100 (Expo's documented batch limit)
   const deliveryRows: Array<{
     announcementId: string;
     playerId: string;
@@ -127,87 +103,81 @@ export async function dispatchAnnouncement(announcementId: string): Promise<Disp
     providerMessageId?: string;
   }> = [];
 
-  for (let i = 0; i < messages.length; i += BATCH_SIZE) {
-    const chunk = messages.slice(i, i + BATCH_SIZE);
-    const chunkPending = pending.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < pending.length; i += BATCH_SIZE) {
+    const batch = pending.slice(i, i + BATCH_SIZE);
 
-    let tickets: ExpoPushTicket[] = [];
     try {
-      const res = await fetch(EXPO_PUSH_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'Accept-Encoding': 'gzip, deflate',
+      const response = await messaging.sendEachForMulticast({
+        tokens: batch.map((p) => p.token),
+        notification: {
+          title: announcement.title,
+          body: announcement.body,
         },
-        body: JSON.stringify(chunk),
+        data: {
+          announcementId: announcement.id,
+          type: announcement.type ?? 'general',
+        },
+        android: {
+          priority: announcement.type === 'maintenance' ? 'high' : 'normal',
+          notification: {
+            channelId: 'default',
+            sound: 'default',
+          },
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: 'default',
+            },
+          },
+        },
       });
-      const json = (await res.json()) as ExpoPushResponse;
-      tickets = json.data ?? [];
-      if (!res.ok || json.errors) {
-        // Whole batch failed — mark every message in this chunk as failed.
-        const msg = json.errors?.[0]?.message ?? `HTTP ${res.status}`;
-        for (const p of chunkPending) {
+
+      response.responses.forEach((resp, idx) => {
+        const p = batch[idx];
+        if (resp.success && resp.messageId) {
           deliveryRows.push({
             announcementId,
             playerId: p.playerId,
             platform: p.platform,
-            provider: 'expo',
+            provider: 'fcm',
+            token: p.token,
+            status: 'sent',
+            providerMessageId: resp.messageId,
+          });
+          if (p.platform === 'ios') summary.ios.sent++;
+          else summary.android.sent++;
+        } else {
+          const code = resp.error?.code ?? 'unknown';
+          deliveryRows.push({
+            announcementId,
+            playerId: p.playerId,
+            platform: p.platform,
+            provider: 'fcm',
             token: p.token,
             status: 'failed',
-            errorCode: 'batch_error',
-            errorMessage: msg,
+            errorCode: code,
+            errorMessage: resp.error?.message ?? 'no response',
           });
           if (p.platform === 'ios') summary.ios.failed++;
           else summary.android.failed++;
         }
-        continue;
-      }
+      });
     } catch (err: any) {
-      // Network error — mark whole chunk as failed
-      for (const p of chunkPending) {
+      /* Whole batch threw — typically only for auth/network errors at
+       * the FCM HTTP layer. Mark every message in the batch as failed
+       * so the operator sees what happened. */
+      const msg = err?.message ?? 'fcm send threw';
+      for (const p of batch) {
         deliveryRows.push({
           announcementId,
           playerId: p.playerId,
           platform: p.platform,
-          provider: 'expo',
+          provider: 'fcm',
           token: p.token,
           status: 'failed',
-          errorCode: 'network_error',
-          errorMessage: err?.message ?? 'fetch failed',
-        });
-        if (p.platform === 'ios') summary.ios.failed++;
-        else summary.android.failed++;
-      }
-      continue;
-    }
-
-    // Map tickets back to players by index — Expo guarantees order
-    for (let j = 0; j < chunkPending.length; j++) {
-      const p = chunkPending[j];
-      const t = tickets[j];
-      if (t && t.status === 'ok' && t.id) {
-        deliveryRows.push({
-          announcementId,
-          playerId: p.playerId,
-          platform: p.platform,
-          provider: 'expo',
-          token: p.token,
-          status: 'sent',
-          providerMessageId: t.id,
-        });
-        if (p.platform === 'ios') summary.ios.sent++;
-        else summary.android.sent++;
-      } else {
-        deliveryRows.push({
-          announcementId,
-          playerId: p.playerId,
-          platform: p.platform,
-          provider: 'expo',
-          token: p.token,
-          status: 'failed',
-          errorCode: t?.details?.error ?? 'unknown',
-          errorMessage: t?.message ?? 'no ticket returned',
+          errorCode: 'batch_error',
+          errorMessage: msg,
         });
         if (p.platform === 'ios') summary.ios.failed++;
         else summary.android.failed++;
@@ -215,7 +185,6 @@ export async function dispatchAnnouncement(announcementId: string): Promise<Disp
     }
   }
 
-  // Bulk insert delivery rows
   if (deliveryRows.length > 0) {
     await prisma.gameAnnouncementDelivery.createMany({
       data: deliveryRows,
@@ -223,67 +192,42 @@ export async function dispatchAnnouncement(announcementId: string): Promise<Disp
     });
   }
 
+  /* Prune tokens that FCM marked as definitively invalid so future
+   * dispatches don't re-send to dead devices. messaging/registration-token-
+   * not-registered means the app was uninstalled or the token was
+   * regenerated; messaging/invalid-registration-token means malformed. */
+  const invalidPlayerIds = deliveryRows
+    .filter(
+      (row) =>
+        row.status === 'failed' &&
+        (row.errorCode === 'messaging/registration-token-not-registered' ||
+          row.errorCode === 'messaging/invalid-registration-token' ||
+          row.errorCode === 'messaging/invalid-argument'),
+    )
+    .map((row) => row.playerId);
+  if (invalidPlayerIds.length > 0) {
+    await prisma.gamePlayer.updateMany({
+      where: { id: { in: invalidPlayerIds } },
+      data: { pushToken: null, pushTokenPlatform: null, pushTokenUpdatedAt: null },
+    });
+  }
+
   return summary;
 }
 
 /**
- * Poll Expo's receipts endpoint for any 'sent' rows that haven't been
- * resolved yet. Receipts are typically available 5–15 minutes after send.
- * Caller passes an announcementId to scope the check.
+ * Legacy shim. Expo Push had a separate `getReceipts` endpoint that we
+ * polled minutes later to upgrade 'sent' → 'delivered' / 'failed'. FCM
+ * doesn't expose receipt polling — every per-token success/failure is
+ * returned synchronously from sendEachForMulticast and already written
+ * to GameAnnouncementDelivery at dispatch time. So this is a no-op kept
+ * for API compatibility with the existing
+ * /api/announcements/[id]/receipts route.
  */
-export async function checkReceipts(announcementId: string): Promise<{ checked: number; delivered: number; failed: number }> {
-  const sentRows = await prisma.gameAnnouncementDelivery.findMany({
-    where: {
-      announcementId,
-      status: 'sent',
-      providerMessageId: { not: null },
-    },
-    select: { id: true, providerMessageId: true, platform: true },
-  });
-
-  let delivered = 0;
-  let failed = 0;
-
-  for (let i = 0; i < sentRows.length; i += BATCH_SIZE) {
-    const chunk = sentRows.slice(i, i + BATCH_SIZE);
-    const ids = chunk.map((r) => r.providerMessageId!).filter(Boolean);
-    if (ids.length === 0) continue;
-
-    try {
-      const res = await fetch(EXPO_RECEIPTS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids }),
-      });
-      const json = await res.json();
-      const receipts: Record<string, { status: 'ok' | 'error'; message?: string; details?: { error?: string } }> = json.data ?? {};
-
-      const updates = chunk.map((row) => {
-        const r = receipts[row.providerMessageId!];
-        if (!r) return null;
-        if (r.status === 'ok') {
-          delivered++;
-          return prisma.gameAnnouncementDelivery.update({
-            where: { id: row.id },
-            data: { status: 'delivered', deliveredAt: new Date() },
-          });
-        }
-        failed++;
-        return prisma.gameAnnouncementDelivery.update({
-          where: { id: row.id },
-          data: {
-            status: 'failed',
-            errorCode: r.details?.error ?? 'receipt_error',
-            errorMessage: r.message ?? 'receipt reported error',
-          },
-        });
-      }).filter(Boolean) as Promise<unknown>[];
-
-      await Promise.all(updates);
-    } catch {
-      // Skip this batch — operator can re-poll
-    }
-  }
-
-  return { checked: sentRows.length, delivered, failed };
+export async function checkReceipts(_announcementId: string): Promise<{
+  checked: number;
+  delivered: number;
+  failed: number;
+}> {
+  return { checked: 0, delivered: 0, failed: 0 };
 }

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import * as XLSX from 'xlsx';
 import api from '@/lib/api-client';
 
 /* ================================================================== */
@@ -142,6 +143,7 @@ const heatClass = (level: number) => {
 export default function UserDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
   const [noteText, setNoteText] = useState('');
   const [showAdjustCoins, setShowAdjustCoins] = useState(false);
   const [adjustAmount, setAdjustAmount] = useState('');
@@ -149,8 +151,12 @@ export default function UserDetailPage() {
   const [showBanConfirm, setShowBanConfirm] = useState(false);
   const [banReason, setBanReason] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showPushConfirm, setShowPushConfirm] = useState(false);
+  const [pushTitle, setPushTitle] = useState('');
+  const [pushBody, setPushBody] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [racePage, setRacePage] = useState(1);
+  const [selectedHeatCell, setSelectedHeatCell] = useState<{ day: number; hour: number } | null>(null);
   const RACE_PER_PAGE = 10;
   const queryClient = useQueryClient();
 
@@ -252,24 +258,117 @@ export default function UserDetailPage() {
   }
 
   function handleExportGDPR() {
-    const exportData = { player, betting, kpis, heatmap, coinHistory, raceStats, marblePreferences: marblePrefsRaw, purchases: purchasesList, recentBets, recentRaces, seasonProgress: seasonProgressList };
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `player-${player.playerName}-${id}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    /* GDPR data export — produces a multi-sheet .xlsx with one sheet per
+     * category (Profile, Betting Stats, Coin History, Race History,
+     * Purchases, Marble Preferences, Season Progress). Excel is more
+     * useful for ops + support review than the prior single JSON blob;
+     * GDPR's "structured, machine-readable" requirement is satisfied by
+     * either, but reviewers / legal / support staff can actually open
+     * an xlsx and read it without a JSON viewer.
+     *
+     * One sheet per logical entity so wide tables (race history, coin
+     * history) get their own columns instead of being collapsed into
+     * one giant nested object. */
+    const wb = XLSX.utils.book_new();
+
+    /* Helper: convert any value to something Excel can hold. Dates ->
+     * ISO strings, objects -> JSON. Prevents [object Object] cells. */
+    const safe = (v: unknown): string | number | boolean | Date | null => {
+      if (v === null || v === undefined) return null;
+      if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return v;
+      if (v instanceof Date) return v;
+      // Date-shaped strings come through as strings already; this catches
+      // arrays/objects.
+      try {
+        return JSON.stringify(v);
+      } catch {
+        return String(v);
+      }
+    };
+
+    /* Flatten a single object into an Excel sheet (key|value rows). Used
+     * for the Profile sheet where there's only one record. */
+    const objectToSheet = (obj: Record<string, unknown>) => {
+      const rows = Object.entries(obj).map(([k, v]) => ({ Field: k, Value: safe(v) }));
+      return XLSX.utils.json_to_sheet(rows);
+    };
+
+    /* Flatten an array of objects into a normal table sheet. */
+    const arrayToSheet = (arr: Record<string, unknown>[]) => {
+      if (arr.length === 0) {
+        return XLSX.utils.json_to_sheet([{ Note: 'No data' }]);
+      }
+      const cleaned = arr.map((row) => {
+        const out: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(row)) out[k] = safe(v);
+        return out;
+      });
+      return XLSX.utils.json_to_sheet(cleaned);
+    };
+
+    XLSX.utils.book_append_sheet(wb, objectToSheet({
+      ...player,
+      exportedAt: new Date().toISOString(),
+      exportType: 'GDPR data access request',
+    }), 'Profile');
+
+    XLSX.utils.book_append_sheet(wb, objectToSheet((betting ?? {}) as Record<string, unknown>), 'Betting Stats');
+    /* kpis and raceStats arrive as arrays of {label, value} pairs from the
+     * detail API. Map them into a flat object before flattening into a
+     * key/value sheet so each KPI row gets its own Field|Value entry. */
+    const kpisAsObj: Record<string, unknown> = Array.isArray(kpis)
+      ? Object.fromEntries(kpis.map((k: any) => [k?.label ?? '?', k?.value]))
+      : ((kpis ?? {}) as Record<string, unknown>);
+    const raceStatsAsObj: Record<string, unknown> = Array.isArray(raceStats)
+      ? Object.fromEntries(raceStats.map((r: any) => [r?.label ?? '?', r?.value]))
+      : ((raceStats ?? {}) as Record<string, unknown>);
+    XLSX.utils.book_append_sheet(wb, objectToSheet(kpisAsObj), 'KPIs');
+    XLSX.utils.book_append_sheet(wb, objectToSheet(raceStatsAsObj), 'Race Stats');
+    XLSX.utils.book_append_sheet(wb, arrayToSheet(coinHistory?.bars ? coinHistory.bars.map((b: number, i: number) => ({ index: i, balance: b })) : []), 'Coin History');
+    XLSX.utils.book_append_sheet(wb, arrayToSheet(recentBets ?? []), 'Recent Bets');
+    XLSX.utils.book_append_sheet(wb, arrayToSheet(recentRaces ?? []), 'Recent Races');
+    XLSX.utils.book_append_sheet(wb, arrayToSheet(purchasesList ?? []), 'Purchases');
+    XLSX.utils.book_append_sheet(wb, arrayToSheet(marblePrefsRaw ?? []), 'Marble Preferences');
+    XLSX.utils.book_append_sheet(wb, arrayToSheet(seasonProgressList ?? []), 'Season Progress');
+
+    const safeName = (player.playerName || 'player').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 30);
+    const ts = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `gdpr-export-${safeName}-${id}-${ts}.xlsx`);
   }
 
   async function handleDelete() {
+    /* Actually deletes the player + cascades through every related table
+     * (bets, coins, races, purchases, sessions, etc.). Previously this
+     * handler called /ban by mistake — the modal said "Delete Forever"
+     * but the action was a ban that flipped status without removing
+     * data. Now hits the new /delete endpoint. Irreversible. */
     setActionLoading(true);
     try {
-      await api.post(`/players/${id}/ban`, { reason: 'Account deleted by admin' });
-      queryClient.invalidateQueries({ queryKey: ['player', id] });
+      await api.post(`/players/${id}/delete`);
       setShowDeleteConfirm(false);
+      // Player no longer exists — bounce back to the users list rather
+      // than re-render a detail page for a deleted row.
+      router.push('/users');
     } catch (e: any) {
-      alert(e.response?.data?.error?.message || 'Failed');
+      alert(e.response?.data?.error?.message || 'Failed to delete player');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handlePush() {
+    /* One-off push to this player only. Server validates the title/body
+     * length and that the player has a registered push token. Failures
+     * surface via the alert so the admin sees why nothing landed. */
+    if (!pushTitle.trim() || !pushBody.trim()) return;
+    setActionLoading(true);
+    try {
+      await api.post(`/players/${id}/push`, { title: pushTitle.trim(), body: pushBody.trim() });
+      setShowPushConfirm(false);
+      setPushTitle('');
+      setPushBody('');
+    } catch (e: any) {
+      alert(e.response?.data?.error?.message || 'Failed to send push');
     } finally {
       setActionLoading(false);
     }
@@ -667,6 +766,7 @@ export default function UserDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Activity Heatmap */}
         <SectionCard title="Activity Heatmap">
+          <p className="text-[10px] text-white/30 mb-2">Click any cell for an hour-by-hour breakdown.</p>
           {/* 7-day x 24-hour grid */}
           <div className="space-y-1 mb-4">
             {/* Hour labels */}
@@ -680,12 +780,26 @@ export default function UserDetailPage() {
             {(heatmap.days ?? []).map((day: any, di: number) => (
               <div key={day} className="flex items-center gap-0.5">
                 <span className="text-[9px] text-white/25 w-7 text-right pr-1 flex-shrink-0">{day}</span>
-                {((heatmap.grid ?? [])[di] ?? []).map((level: any, hi: number) => (
-                  <div
-                    key={hi}
-                    className={`flex-1 aspect-square rounded-[2px] ${heatClass(level)}`}
-                  />
-                ))}
+                {((heatmap.grid ?? [])[di] ?? []).map((level: any, hi: number) => {
+                  const isSelected = selectedHeatCell?.day === di && selectedHeatCell?.hour === hi;
+                  const races = heatmap.racesGrid?.[di]?.[hi] ?? 0;
+                  const bets = heatmap.betsGrid?.[di]?.[hi] ?? 0;
+                  const total = races + bets;
+                  return (
+                    <button
+                      key={hi}
+                      type="button"
+                      onClick={() => setSelectedHeatCell(isSelected ? null : { day: di, hour: hi })}
+                      className={`flex-1 aspect-square rounded-[2px] transition-all cursor-pointer ${heatClass(level)} ${
+                        isSelected
+                          ? 'ring-2 ring-gold ring-offset-1 ring-offset-[#0a1a3a] scale-125 z-10 relative'
+                          : 'hover:ring-1 hover:ring-white/30'
+                      }`}
+                      title={`${day} ${hi}:00 — ${total} event${total === 1 ? '' : 's'}`}
+                      aria-label={`${day} ${hi}:00, ${total} events`}
+                    />
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -833,20 +947,33 @@ export default function UserDetailPage() {
             <button onClick={() => setShowAdjustCoins(true)} className="w-full py-3 rounded-xl text-sm font-bold bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25 transition-colors">
               Adjust Coins
             </button>
-            <button className="w-full py-3 rounded-xl text-sm font-bold bg-marble-blue/15 text-marble-blue border border-marble-blue/30 hover:bg-marble-blue/25 transition-colors">
+            <button
+              onClick={() => {
+                if (!player.hasPushToken) {
+                  alert('This player has no registered push token. They need to launch the app at least once with notifications enabled.');
+                  return;
+                }
+                setShowPushConfirm(true);
+              }}
+              className="w-full py-3 rounded-xl text-sm font-bold bg-marble-blue/15 text-marble-blue border border-marble-blue/30 hover:bg-marble-blue/25 transition-colors"
+            >
               Send Push Notification
             </button>
-            <button className="w-full py-3 rounded-xl text-sm font-bold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors">
-              Reset Password
-            </button>
+            {/* "Reset Password" removed — the game uses device-ID auth, no
+             * passwords exist to reset. If we ever add a password-based
+             * sign-in path it returns here. */}
             <button onClick={handleExportGDPR} className="w-full py-3 rounded-xl text-sm font-bold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors">
               Export User Data (GDPR)
             </button>
-            <button onClick={() => { player.status === 'banned' ? handleUnban() : setShowBanConfirm(true); }} className="w-full py-3 rounded-xl text-sm font-bold text-gold border-2 border-gold/30 hover:bg-gold/10 transition-colors">
-              {player.status === 'banned' ? 'Unban Account' : 'Suspend Account'}
-            </button>
-            <button onClick={() => setShowBanConfirm(true)} className="w-full py-3 rounded-xl text-sm font-bold bg-marble-red/10 text-marble-red border border-marble-red/30 hover:bg-marble-red/20 transition-colors">
-              {player.status === 'banned' ? 'Already Banned' : 'Ban Account'}
+            {/* Single Ban/Unban button. The duplicate "Suspend Account" was
+             * removed — both buttons opened the same modal and called the
+             * same handler, so it was visual clutter that confused operators
+             * into thinking they were two different actions. */}
+            <button
+              onClick={() => { player.status === 'banned' ? handleUnban() : setShowBanConfirm(true); }}
+              className="w-full py-3 rounded-xl text-sm font-bold bg-marble-red/10 text-marble-red border border-marble-red/30 hover:bg-marble-red/20 transition-colors"
+            >
+              {player.status === 'banned' ? 'Unban Account' : 'Ban Account'}
             </button>
             <button onClick={() => setShowDeleteConfirm(true)} className="w-full py-3 rounded-xl text-sm font-bold bg-marble-red/5 text-marble-red/50 border border-marble-red/15 hover:bg-marble-red/10 hover:text-marble-red/70 transition-colors">
               Delete Account
@@ -897,7 +1024,12 @@ export default function UserDetailPage() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
           <div className="bg-[#0d1b3e] border-2 border-marble-red/20 rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
             <h3 className="font-heading text-lg text-marble-red mb-2">Delete {player.playerName}?</h3>
-            <p className="text-xs text-white/40 mb-4">This action cannot be undone. The player&apos;s account will be permanently banned and marked for deletion.</p>
+            <p className="text-xs text-white/60 mb-2">
+              <strong className="text-marble-red">This permanently deletes the player record</strong> and cascades through every related table: bet history, coin transactions, race history, purchases, season progress, support tickets, push subscriptions, and active sessions.
+            </p>
+            <p className="text-xs text-white/40 mb-4">
+              Cannot be undone. For temporary action use Ban instead — that preserves the row.
+            </p>
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/50 hover:bg-white/5 border border-white/10 transition-colors">Cancel</button>
               <button onClick={handleDelete} disabled={actionLoading} className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-marble-red text-white hover:bg-marble-red/80 transition-colors disabled:opacity-50">
@@ -907,6 +1039,104 @@ export default function UserDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Send Push Notification Modal */}
+      {showPushConfirm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setShowPushConfirm(false)}>
+          <div className="bg-[#0d1b3e] border-2 border-marble-blue/20 rounded-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="font-heading text-lg text-marble-blue mb-2">Send Push to {player.playerName}</h3>
+            <p className="text-xs text-white/40 mb-4">
+              Delivered to the player&apos;s device via Expo Push (Apple APNs / Google FCM). Failures will surface as an alert.
+            </p>
+            <input
+              type="text"
+              value={pushTitle}
+              onChange={e => setPushTitle(e.target.value)}
+              placeholder="Title (max 100 chars)"
+              maxLength={100}
+              className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-marble-blue/40 mb-3"
+            />
+            <textarea
+              value={pushBody}
+              onChange={e => setPushBody(e.target.value)}
+              placeholder="Body (max 500 chars)"
+              maxLength={500}
+              rows={3}
+              className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-marble-blue/40 mb-4 resize-none"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setShowPushConfirm(false)} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/50 hover:bg-white/5 border border-white/10 transition-colors">Cancel</button>
+              <button
+                onClick={handlePush}
+                disabled={actionLoading || !pushTitle.trim() || !pushBody.trim()}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-marble-blue text-white hover:bg-marble-blue/80 transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? 'Sending...' : 'Send'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Activity Heatmap Cell Detail Modal */}
+      {selectedHeatCell && (() => {
+        const dayName = (heatmap.days ?? [])[selectedHeatCell.day] ?? '?';
+        const hour = selectedHeatCell.hour;
+        const races = heatmap.racesGrid?.[selectedHeatCell.day]?.[selectedHeatCell.hour] ?? 0;
+        const bets = heatmap.betsGrid?.[selectedHeatCell.day]?.[selectedHeatCell.hour] ?? 0;
+        const total = races + bets;
+        const next = (hour + 1) % 24;
+        const fmt = (h: number) => `${h % 12 || 12} ${h >= 12 ? 'PM' : 'AM'}`;
+        return (
+          <div
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedHeatCell(null)}
+          >
+            <div
+              className="bg-[#0d1b3e] border-2 border-gold/30 rounded-2xl p-6 w-full max-w-md"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <div className="text-[10px] text-white/40 uppercase tracking-wider font-bold">Activity Slot</div>
+                  <h3 className="font-heading text-lg text-gold mt-1">{dayName} · {fmt(hour)} – {fmt(next)}</h3>
+                  <p className="text-[11px] text-white/40 mt-1">
+                    Aggregated from {player.playerName || 'this player'}&apos;s last 30 days (Eastern Time).
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedHeatCell(null)}
+                  className="text-[11px] text-white/40 hover:text-white/70 px-2 py-1 rounded"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                <div className="bg-white/[0.04] rounded-lg p-3">
+                  <div className="text-[10px] text-white/35 uppercase tracking-wider font-bold">Races</div>
+                  <div className="font-heading text-2xl text-marble-blue mt-1">{races}</div>
+                </div>
+                <div className="bg-white/[0.04] rounded-lg p-3">
+                  <div className="text-[10px] text-white/35 uppercase tracking-wider font-bold">Bets</div>
+                  <div className="font-heading text-2xl text-gold mt-1">{bets}</div>
+                </div>
+                <div className="bg-white/[0.04] rounded-lg p-3">
+                  <div className="text-[10px] text-white/35 uppercase tracking-wider font-bold">Total</div>
+                  <div className="font-heading text-2xl text-marble-green mt-1">{total}</div>
+                </div>
+              </div>
+
+              {total === 0 && (
+                <p className="text-[11px] text-white/40 mt-3 italic">
+                  No activity recorded in this hour over the last 30 days.
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
