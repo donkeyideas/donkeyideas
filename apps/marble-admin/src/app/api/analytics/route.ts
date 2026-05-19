@@ -167,23 +167,29 @@ export async function GET(_request: NextRequest) {
     };
 
     // --- Bet Distribution ---
-    // Buckets cover the full range — previously 25-500 only, which dropped
-    // sub-25 micro-bets (custom-track free entries, demo bets) and 500+ heavy
-    // bets entirely. The percentages still added to 100 but the chart visually
-    // implied "nobody bets less than 25 or more than 500" which was false.
-    const betRanges = [
+    // Buckets cover the full range. The "500+" bucket has no upper bound
+    // because `betAmount` is INT4 in Postgres (max 2.1B), so passing
+    // Number.MAX_SAFE_INTEGER (9 quadrillion) as `lte` overflows and the
+    // whole query throws "Unable to fit integer value into INT4" — taking
+    // the entire /api/analytics route down with it. Open-ended `gte`
+    // captures the same rows without an overflow risk.
+    const betRanges: Array<{ label: string; min: number; max?: number }> = [
       { label: '<25', min: 0, max: 24 },
       { label: '25-50', min: 25, max: 50 },
       { label: '51-100', min: 51, max: 100 },
       { label: '101-250', min: 101, max: 250 },
       { label: '251-500', min: 251, max: 500 },
-      { label: '500+', min: 501, max: Number.MAX_SAFE_INTEGER },
+      { label: '500+', min: 501 },
     ];
 
     const betDistributionResults = await Promise.all(
-      betRanges.map((range: any) =>
+      betRanges.map((range) =>
         prisma.betRecord.count({
-          where: { betAmount: { gte: range.min, lte: range.max } },
+          where: {
+            betAmount: range.max !== undefined
+              ? { gte: range.min, lte: range.max }
+              : { gte: range.min },
+          },
         }),
       ),
     );
