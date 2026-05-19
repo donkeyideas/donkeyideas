@@ -595,9 +595,23 @@ export async function GET(_request: NextRequest) {
       engagementVelocity,
     });
   } catch (error: any) {
-    console.error('Admin analytics error:', error);
+    /* Verbose error surface so 500s don't have to be debugged from Vercel
+     * logs alone — the response body now includes the real Prisma/SQL
+     * error message + a short stack hint. Safe to expose in admin-only
+     * routes that require requireAdmin / auth-token; do NOT copy this
+     * pattern to anything player-facing. */
+    const detail = error?.message || String(error);
+    const code = error?.code; // Prisma error code if present (P2002, P2025, etc.)
+    const stackHint = (error?.stack ?? '').split('\n').slice(0, 3).join(' | ');
+    console.error('Admin analytics error:', { detail, code, stack: error?.stack });
     return NextResponse.json(
-      { error: { message: error.message || 'Failed to fetch analytics' } },
+      {
+        error: {
+          message: detail,
+          code,
+          stackHint,
+        },
+      },
       { status: 500 },
     );
   }
