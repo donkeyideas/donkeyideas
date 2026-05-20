@@ -35,6 +35,15 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
+/* Matcher excludes:
+ *   - Next.js internals (_next/static, _next/image)
+ *   - favicon.ico
+ *   - any static asset by extension (png, jpg, svg, etc.) so files in
+ *     /public are served without auth. Without this, /logo-small.png on
+ *     the login page 307'd to /login (the user has no auth cookie yet),
+ *     which broke the Next.js Image optimizer fetch with a 400 and
+ *     rendered as the broken-image icon.
+ */
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|otf)$).*)'],
 };

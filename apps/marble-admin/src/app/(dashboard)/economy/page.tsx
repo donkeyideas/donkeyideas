@@ -192,63 +192,198 @@ export default function EconomyPage() {
     { label: 'Users with <100 coins', value: `${fmt(econ.lowBalancePlayers)}`, color: 'text-marble-red' },
   ];
 
+  /* ------------------------------------------------------------------ */
+  /*  Category sections — keeps the page scannable now that 60+ keys     */
+  /*  are admin-editable. Each section lists explicit keys in display    */
+  /*  order. Unlisted keys land in "Other / Legacy" at the bottom so    */
+  /*  nothing silently disappears.                                       */
+  /* ------------------------------------------------------------------ */
+  type SectionDef = { title: string; hint?: string; keys: string[] };
+  const SECTIONS: SectionDef[] = [
+    {
+      title: 'Tournament · Daily Blitz',
+      hint: 'Single-player 8-marble elimination. Survival = pays player after surviving that round.',
+      keys: [
+        'tournament_daily_entry',
+        'tournament_daily_prize',
+        'tournament_daily_second_prize',
+        'tournament_daily_third_prize',
+        'tournament_daily_round4_payout',
+        'tournament_daily_round5_payout',
+        'tournament_daily_round6_payout',
+      ],
+    },
+    {
+      title: 'Tournament · Weekly Cup',
+      keys: [
+        'tournament_weekly_entry',
+        'tournament_weekly_prize',
+        'tournament_weekly_second_prize',
+        'tournament_weekly_third_prize',
+        'tournament_weekly_round4_payout',
+        'tournament_weekly_round5_payout',
+        'tournament_weekly_round6_payout',
+      ],
+    },
+    {
+      title: 'Tournament · Champion Invitational',
+      keys: [
+        'tournament_champion_entry',
+        'tournament_champion_prize',
+        'tournament_champion_second_prize',
+        'tournament_champion_third_prize',
+        'tournament_champion_round4_payout',
+        'tournament_champion_round5_payout',
+        'tournament_champion_round6_payout',
+      ],
+    },
+    {
+      title: 'Multiplayer Tournaments',
+      hint: 'Real-player 8-player lobbies. Rake + ratios apply to all tiers.',
+      keys: [
+        'mp_blitz_entry', 'mp_blitz_pool',
+        'mp_cup_entry', 'mp_cup_pool',
+        'mp_invitational_entry', 'mp_invitational_pool',
+        'mp_rake',
+        'mp_first_ratio', 'mp_second_ratio', 'mp_third_ratio',
+      ],
+    },
+    {
+      title: 'National Races',
+      hint: '1st pays entry × multiplier. 2nd/3rd ratios apply to all 4 events.',
+      keys: [
+        'national_grand_prix_entry', 'national_grand_prix_mult',
+        'national_marble_mile_entry', 'national_marble_mile_mult',
+        'national_speed_demon_entry', 'national_speed_demon_mult',
+        'national_chaos_cup_entry', 'national_chaos_cup_mult',
+        'national_second_ratio', 'national_third_ratio',
+      ],
+    },
+    {
+      title: 'Season + Playoffs',
+      hint: 'Franchise mode placement bonuses + bettor consolation + season starter formula.',
+      keys: [
+        'playoff_champion_prize',
+        'playoff_runnerup_prize',
+        'playoff_top3_prize',
+        'playoff_qualified_prize',
+        'season_complete_bettor_prize',
+        'season_starter_base',
+        'season_starter_increment',
+        'season_starter_cap',
+      ],
+    },
+    {
+      title: 'Daily Login Rewards',
+      hint: '7-day streak. Resets to Day 1 if a day is missed.',
+      keys: [
+        'daily_reward_1', 'daily_reward_2', 'daily_reward_3',
+        'daily_reward_4', 'daily_reward_5', 'daily_reward_6', 'daily_reward_7',
+      ],
+    },
+    {
+      title: 'Challenges',
+      keys: [
+        'challenge_daily_win', 'challenge_daily_top3',
+        'challenge_daily_streak2', 'challenge_daily_wins3',
+        'challenge_weekly_races5', 'challenge_weekly_marbles3',
+        'challenge_weekly_races10', 'challenge_weekly_marbles5',
+      ],
+    },
+    {
+      title: 'Season Pass Milestones',
+      hint: 'Coin grants at fixed pass levels. NOTE: no claim flow is wired in the app yet — display only.',
+      keys: [
+        'pass_level2_coins', 'pass_level5_coins',
+        'pass_level10_coins', 'pass_level15_coins', 'pass_level20_coins',
+      ],
+    },
+    {
+      title: 'Coin Store (IAP)',
+      hint: 'Pack coin grants + promo multipliers. Dollar price is set in App Store / Play Console and can\'t be changed live.',
+      keys: [
+        'store_starter_coins',
+        'store_popular_coins', 'store_popular_promo',
+        'store_big_coins', 'store_big_promo',
+        'store_whale_coins', 'store_whale_promo',
+      ],
+    },
+    {
+      title: 'Betting',
+      keys: [
+        'bet_amount_1', 'bet_amount_2', 'bet_amount_3', 'bet_amount_4',
+        'bet_house_edge',
+      ],
+    },
+    {
+      title: 'Global Caps',
+      keys: ['max_daily_purchases', 'max_daily_coins', 'xp_per_level'],
+    },
+  ];
+
+  /* Combined map of every editable row keyed by config key, so a single
+   * lookup serves both the explicit sections AND the catch-all. */
+  const allByKey: Record<string, any> = {};
+  for (const r of rewards) allByKey[r.key] = { ...r, _src: 'rewards' };
+  for (const b of betting) allByKey[b.key] = { ...b, _src: 'betting' };
+
+  /* Anything not claimed by a section goes here. Surfaces orphans so we
+   * can clean them up (or fold them into a section in a follow-up). */
+  const claimedKeys = new Set(SECTIONS.flatMap((s) => s.keys));
+  const orphanRows = Object.values(allByKey).filter((r: any) => !claimedKeys.has(r.key));
+
+  const suffixForKey = (k: string): string | undefined => {
+    if (k.endsWith('_ratio') || k.endsWith('_rake') || k.endsWith('_promo') || k === 'house_edge' || k === 'bet_house_edge') return '× (0–1)';
+    if (k.endsWith('_mult')) return '×';
+    if (k === 'xp_per_level' || k.startsWith('pass_xp_') || k.startsWith('xp_')) return 'XP';
+    if (k.startsWith('max_daily_purchases')) return 'packs/day';
+    return 'coins';
+  };
+
+  const renderRow = (key: string) => {
+    const r = allByKey[key];
+    if (!r) {
+      // Key listed in SECTIONS but missing in DB — surface so the gap is visible
+      return (
+        <div key={key} className="flex items-center justify-between py-2.5 border-b border-white/[0.06] last:border-b-0">
+          <span className="text-[12px] text-white/35">{key.replace(/_/g, ' ')}</span>
+          <span className="text-[11px] text-marble-red/70">missing</span>
+        </div>
+      );
+    }
+    return (
+      <div key={r.key} className="flex items-center justify-between py-2.5 border-b border-white/[0.06] last:border-b-0">
+        <span className="text-[13px] text-white/75">{r.label}</span>
+        <EditableValue
+          configKey={r.key}
+          value={r.value}
+          recommendation={recommendations[r.key]}
+          suffix={suffixForKey(r.key)}
+          onSave={handleSave}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="grid grid-cols-[3fr_2fr] gap-5">
       {/* ============================================================ */}
-      {/*  LEFT COLUMN                                                  */}
+      {/*  LEFT COLUMN — categorized payout sections                    */}
       {/* ============================================================ */}
       <div className="space-y-4">
-        {/* ---- Coin Reward Configuration ---- */}
-        <Card title="Coin Reward Configuration">
-          <p className="text-[10px] text-white/30 mb-3">Click any value to edit. Changes apply to the game in real-time.</p>
-          {rewards.length > 0 ? (
-            rewards.map((r: any) => (
-              <div key={r.key} className="py-3.5 border-b border-white/[0.06] last:border-b-0">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-[13px]">{r.label}</span>
-                  <EditableValue
-                    configKey={r.key}
-                    value={r.value}
-                    recommendation={recommendations[r.key]}
-                    suffix={r.key.includes('xp') || r.key.includes('level') ? 'XP' : 'coins'}
-                    onSave={handleSave}
-                  />
-                </div>
-                <div className="w-full h-1.5 bg-white/10 rounded-full relative">
-                  <div
-                    className="h-full bg-gradient-to-r from-gold to-[#ff9a1a] rounded-full relative"
-                    style={{ width: `${r.pct}%` }}
-                  >
-                    <div className="absolute -right-2 -top-[5px] w-4 h-4 bg-gold border-[3px] border-[#0a3a96] rounded-full" />
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-sm text-white/30 text-center py-4">No reward config data</div>
-          )}
-        </Card>
+        <p className="text-[11px] text-white/40 -mb-1">
+          Click any value to edit. Changes deploy to the game on the next
+          remote-config refresh (within 60 s for active sessions).
+        </p>
 
-        {/* ---- Betting & Purchase Limits ---- */}
-        <Card title="Betting & Purchase Limits">
-          <p className="text-[10px] text-white/30 mb-3">Click values to adjust. Recommendations based on player activity.</p>
-          {betting.length > 0 ? (
-            betting.map((b: any) => (
-              <div key={b.key} className="flex items-center justify-between py-3.5 border-b border-white/[0.06] last:border-b-0">
-                <span className="text-[13px] text-white/50">{b.label}</span>
-                <EditableValue
-                  configKey={b.key}
-                  value={b.value}
-                  recommendation={recommendations[b.key]}
-                  suffix={b.key.includes('edge') ? '(×100=%)' : ''}
-                  onSave={handleSave}
-                />
-              </div>
-            ))
-          ) : (
-            <div className="text-sm text-white/30 text-center py-4">No betting config data</div>
-          )}
-        </Card>
+        {SECTIONS.map((sec) => (
+          <Card key={sec.title} title={sec.title}>
+            {sec.hint && (
+              <p className="text-[10px] text-white/35 -mt-1 mb-3 leading-snug">{sec.hint}</p>
+            )}
+            {sec.keys.map(renderRow)}
+          </Card>
+        ))}
 
         {/* ---- Feature Toggles ---- */}
         <Card title="Feature Toggles">
@@ -271,6 +406,16 @@ export default function EconomyPage() {
             <div className="text-sm text-white/30 text-center py-4">No feature toggle data</div>
           )}
         </Card>
+
+        {/* ---- Legacy / orphan keys ---- */}
+        {orphanRows.length > 0 && (
+          <Card title="Other / Legacy">
+            <p className="text-[10px] text-white/35 mb-3">
+              Keys not yet grouped into a section above. Mostly legacy duplicates from earlier seeds — safe to edit but consider migrating to the canonical key.
+            </p>
+            {orphanRows.map((r: any) => renderRow(r.key))}
+          </Card>
+        )}
       </div>
 
       {/* ============================================================ */}
