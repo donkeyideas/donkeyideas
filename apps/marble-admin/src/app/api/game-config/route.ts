@@ -17,6 +17,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const DEFAULTS: Record<string, number> = {
+  // Pass XP grants
+  pass_xp_bet_race: 250, pass_xp_quick_race: 125, pass_xp_win_bonus: 500,
   // Bet tiers + daily streak
   bet_amount_1: 25, bet_amount_2: 100, bet_amount_3: 250, bet_amount_4: 500,
   daily_reward_1: 200, daily_reward_2: 250, daily_reward_3: 300,
@@ -49,7 +51,7 @@ const DEFAULTS: Record<string, number> = {
   mp_blitz_entry: 100, mp_blitz_pool: 5000,
   mp_cup_entry: 500, mp_cup_pool: 25000,
   mp_invitational_entry: 1000, mp_invitational_pool: 50000,
-  mp_rake: 0.20, mp_first_ratio: 0.60, mp_second_ratio: 0.20, mp_third_ratio: 0.10,
+  mp_rake: 0.20, mp_first_ratio: 0.60, mp_second_ratio: 0.20, mp_third_ratio: 0.10, mp_fourth_ratio: 0.05,
   // Challenges
   challenge_daily_win: 300, challenge_daily_top3: 200,
   challenge_daily_streak2: 400, challenge_daily_wins3: 500,
@@ -187,6 +189,7 @@ export async function GET() {
           first:  map.mp_first_ratio,
           second: map.mp_second_ratio,
           third:  map.mp_third_ratio,
+          fourth: map.mp_fourth_ratio,
         },
       },
       challenges: {
@@ -217,6 +220,11 @@ export async function GET() {
         whale:   { coins: map.store_whale_coins,   promo: map.store_whale_promo },
       },
       betHouseEdge: map.bet_house_edge,
+      passXp: {
+        betRace: map.pass_xp_bet_race,
+        quickRace: map.pass_xp_quick_race,
+        winBonus: map.pass_xp_win_bonus,
+      },
       xpPerLevel: map.xp_per_level,
       trackBgImages,
     });
@@ -253,7 +261,7 @@ export async function GET() {
         cup:          { entry: DEFAULTS.mp_cup_entry,          pool: DEFAULTS.mp_cup_pool },
         invitational: { entry: DEFAULTS.mp_invitational_entry, pool: DEFAULTS.mp_invitational_pool },
         rake: DEFAULTS.mp_rake,
-        placementRatios: { first: DEFAULTS.mp_first_ratio, second: DEFAULTS.mp_second_ratio, third: DEFAULTS.mp_third_ratio },
+        placementRatios: { first: DEFAULTS.mp_first_ratio, second: DEFAULTS.mp_second_ratio, third: DEFAULTS.mp_third_ratio, fourth: DEFAULTS.mp_fourth_ratio },
       },
       challenges: {
         daily: { win: DEFAULTS.challenge_daily_win, top3: DEFAULTS.challenge_daily_top3, streak2: DEFAULTS.challenge_daily_streak2, wins3: DEFAULTS.challenge_daily_wins3 },
@@ -267,6 +275,7 @@ export async function GET() {
         whale:   { coins: DEFAULTS.store_whale_coins,   promo: DEFAULTS.store_whale_promo },
       },
       betHouseEdge: DEFAULTS.bet_house_edge,
+      passXp: { betRace: DEFAULTS.pass_xp_bet_race, quickRace: DEFAULTS.pass_xp_quick_race, winBonus: DEFAULTS.pass_xp_win_bonus },
       xpPerLevel: DEFAULTS.xp_per_level,
       trackBgImages: {},
     });

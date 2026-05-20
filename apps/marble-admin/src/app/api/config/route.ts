@@ -186,15 +186,18 @@ const CONFIG_VALIDATORS: Record<string, (v: string) => boolean> = {
   mp_blitz_entry: coin, mp_blitz_pool: coin,
   mp_cup_entry: coin, mp_cup_pool: coin,
   mp_invitational_entry: coin, mp_invitational_pool: coin,
-  mp_rake: ratio, mp_first_ratio: ratio, mp_second_ratio: ratio, mp_third_ratio: ratio,
+  mp_rake: ratio, mp_first_ratio: ratio, mp_second_ratio: ratio, mp_third_ratio: ratio, mp_fourth_ratio: ratio,
   // Challenges
   challenge_daily_win: coin, challenge_daily_top3: coin,
   challenge_daily_streak2: coin, challenge_daily_wins3: coin,
   challenge_weekly_races5: coin, challenge_weekly_marbles3: coin,
   challenge_weekly_races10: coin, challenge_weekly_marbles5: coin,
-  // Season Pass milestone coins
+  // Season Pass milestone coins + XP grants
   pass_level2_coins: coin, pass_level5_coins: coin,
   pass_level10_coins: coin, pass_level15_coins: coin, pass_level20_coins: coin,
+  pass_xp_bet_race: intRange(0, 100_000),
+  pass_xp_quick_race: intRange(0, 100_000),
+  pass_xp_win_bonus: intRange(0, 100_000),
   // Store coin packs (price is fixed in App Store / Play Store; only the
   // coin grant and promo multiplier live here)
   store_starter_coins: coin,
