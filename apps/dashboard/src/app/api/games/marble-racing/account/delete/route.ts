@@ -29,15 +29,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: { message: 'Invalid session' } }, { status: 401 });
     }
 
-    /* Single delete cascades through every related table via FK rules.
-     * If any future model adds a GamePlayer relation WITHOUT cascade,
-     * this will throw a P2003 foreign-key error — at which point we'll
-     * need to either add the cascade or delete the orphans here first. */
-    await prisma.gamePlayer.delete({
-      where: { id: player.id },
+    /* Hard delete inside a transaction. Most child tables cascade via
+     * `onDelete: Cascade` in schema.prisma but a few have `playerId`
+     * without a FK relation (GameABTestAssignment, GameApiLog). Wipe
+     * those explicitly so deletion is GDPR-clean, not just FK-clean. */
+    await prisma.$transaction(async (tx) => {
+      await tx.gameABTestAssignment.deleteMany({ where: { playerId: player.id } });
+      await tx.gameApiLog.updateMany({
+        where: { playerId: player.id },
+        data: { playerId: null },
+      });
+      await tx.gamePlayer.delete({ where: { id: player.id } });
     });
 
-    console.log(`[account/delete] playerId=${player.id} deviceId=${player.deviceId} purged`);
+    /* Verify the row is actually gone before claiming success — the
+     * previous bare delete was the reason the mobile client kept
+     * rehydrating "deleted" accounts on next launch. */
+    const stillExists = await prisma.gamePlayer.findUnique({
+      where: { id: player.id },
+      select: { id: true },
+    });
+    if (stillExists) {
+      console.error(`[account/delete] post-delete check FAILED — player ${player.id} still in DB`);
+      return NextResponse.json(
+        { error: { message: 'Account deletion appeared to succeed but the player record still exists.' } },
+        { status: 500 },
+      );
+    }
+
+    console.log(`[account/delete] playerId=${player.id} deviceId=${player.deviceId} purged verified=true`);
 
     return NextResponse.json({
       success: true,

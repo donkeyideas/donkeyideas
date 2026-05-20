@@ -46,19 +46,48 @@ export async function POST(
       return NextResponse.json({ error: { message: 'Player not found' } }, { status: 404 });
     }
 
-    /* Single cascade delete. The schema marks every GamePlayer-related
-     * model with `onDelete: Cascade`, so this fan-out happens at the
-     * Postgres FK level — no need to enumerate child tables. If a future
-     * model adds a relation without cascade, this will throw P2003 and
-     * we'll see it in admin logs immediately. */
-    await prisma.gamePlayer.delete({
-      where: { id },
+    /* Hard delete inside a transaction. Most child tables cascade via
+     * `onDelete: Cascade` in schema.prisma — but a few have `playerId`
+     * WITHOUT a foreign-key relation (GameABTestAssignment, GameApiLog),
+     * so cascade alone leaves orphans. Explicitly nuke those first, then
+     * the parent delete fans out the FK-related rows. Transaction means
+     * a partial failure rolls back — no half-deleted players. */
+    await prisma.$transaction(async (tx) => {
+      // Best-effort cleanup of un-cascaded orphan tables.
+      // deleteMany swallows "no such record" without throwing.
+      await tx.gameABTestAssignment.deleteMany({ where: { playerId: id } });
+      // GameApiLog playerId is nullable; null it out rather than delete
+      // the log row (logs are append-only audit data).
+      await tx.gameApiLog.updateMany({
+        where: { playerId: id },
+        data: { playerId: null },
+      });
+      // Now the parent. FK cascades handle the rest (bet records, coin
+      // transactions, race records, purchases, season progress, support
+      // tickets, announcement deliveries, sessions, etc.).
+      await tx.gamePlayer.delete({ where: { id } });
     });
+
+    /* Verify the player is actually gone. If something silently swallowed
+     * the delete (unlikely with the throwing transaction above, but
+     * defense in depth), surface a 500 so the admin UI doesn't claim
+     * success while the row is still there. */
+    const stillExists = await prisma.gamePlayer.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (stillExists) {
+      console.error(`[admin/delete] post-delete check FAILED — player ${id} still in DB`);
+      return NextResponse.json(
+        { error: { message: 'Delete appeared to succeed but player still exists. Check logs.' } },
+        { status: 500 },
+      );
+    }
 
     console.log(
       `[admin/delete] playerId=${player.id} deviceId=${player.deviceId} ` +
       `name=${player.playerName} purgedBy=${admin.id} coins=${player.coins} ` +
-      `totalSpent=${player.totalSpent}`,
+      `totalSpent=${player.totalSpent} verified=true`,
     );
 
     return NextResponse.json({

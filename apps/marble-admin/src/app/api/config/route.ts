@@ -131,35 +131,76 @@ export async function GET(_request: NextRequest) {
   }
 }
 
+/* Validators per key. Helpers below keep this declarative — every key
+ * falls into one of two buckets: integer coin/count, or 0..1 ratio. The
+ * old long literal validator list was 40+ lines of copy-paste; this is
+ * easier to add to. */
+const intRange = (min: number, max: number) => (v: string) => {
+  const n = parseInt(v);
+  return Number.isFinite(n) && n >= min && n <= max;
+};
+const floatRange = (min: number, max: number) => (v: string) => {
+  const n = parseFloat(v);
+  return Number.isFinite(n) && n >= min && n <= max;
+};
+const coin = intRange(0, 10_000_000);
+const ratio = floatRange(0, 1);
+const positiveMult = floatRange(0, 100); // for things like grand-prix 5×
+
 const CONFIG_VALIDATORS: Record<string, (v: string) => boolean> = {
-  house_edge: v => { const n = parseFloat(v); return Number.isFinite(n) && n >= 0 && n <= 0.5; },
-  max_daily_purchases: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100; },
-  max_daily_coins: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 10_000_000; },
-  xp_per_level: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 100 && n <= 100_000; },
-  bet_amount_1: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 100_000; },
-  bet_amount_2: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 100_000; },
-  bet_amount_3: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 100_000; },
-  bet_amount_4: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 100_000; },
-  daily_reward_1: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
-  daily_reward_2: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
-  daily_reward_3: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
-  daily_reward_4: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
-  daily_reward_5: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
-  daily_reward_6: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
-  daily_reward_7: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 100_000; },
-  tournament_daily_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 1_000_000; },
-  tournament_weekly_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 1_000_000; },
-  tournament_champion_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n > 0 && n <= 10_000_000; },
-  tournament_daily_second_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
-  tournament_daily_third_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
-  tournament_weekly_second_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
-  tournament_weekly_third_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
-  tournament_champion_second_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 10_000_000; },
-  tournament_champion_third_prize: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 10_000_000; },
-  tournament_daily_entry: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
-  tournament_weekly_entry: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
-  tournament_champion_entry: v => { const n = parseInt(v); return Number.isFinite(n) && n >= 0 && n <= 1_000_000; },
-  app_store_fee_rate: v => { const n = parseFloat(v); return Number.isFinite(n) && n >= 0 && n <= 0.5; },
+  // Caps & global
+  house_edge: ratio,
+  bet_house_edge: ratio,
+  app_store_fee_rate: ratio,
+  max_daily_purchases: intRange(0, 100),
+  max_daily_coins: coin,
+  xp_per_level: intRange(100, 100_000),
+  // Bet tiers
+  bet_amount_1: intRange(1, 100_000), bet_amount_2: intRange(1, 100_000),
+  bet_amount_3: intRange(1, 100_000), bet_amount_4: intRange(1, 100_000),
+  // Daily streak
+  daily_reward_1: coin, daily_reward_2: coin, daily_reward_3: coin, daily_reward_4: coin,
+  daily_reward_5: coin, daily_reward_6: coin, daily_reward_7: coin,
+  // Tournaments — 1st/2nd/3rd
+  tournament_daily_prize: coin, tournament_weekly_prize: coin, tournament_champion_prize: coin,
+  tournament_daily_second_prize: coin, tournament_daily_third_prize: coin,
+  tournament_weekly_second_prize: coin, tournament_weekly_third_prize: coin,
+  tournament_champion_second_prize: coin, tournament_champion_third_prize: coin,
+  tournament_daily_entry: coin, tournament_weekly_entry: coin, tournament_champion_entry: coin,
+  // Tournament round survivals
+  tournament_daily_round4_payout: coin, tournament_daily_round5_payout: coin, tournament_daily_round6_payout: coin,
+  tournament_weekly_round4_payout: coin, tournament_weekly_round5_payout: coin, tournament_weekly_round6_payout: coin,
+  tournament_champion_round4_payout: coin, tournament_champion_round5_payout: coin, tournament_champion_round6_payout: coin,
+  // Season + playoffs
+  playoff_champion_prize: coin, playoff_runnerup_prize: coin,
+  playoff_top3_prize: coin, playoff_qualified_prize: coin,
+  season_complete_bettor_prize: coin,
+  season_starter_base: coin, season_starter_increment: coin, season_starter_cap: coin,
+  // National races
+  national_grand_prix_entry: coin, national_grand_prix_mult: positiveMult,
+  national_marble_mile_entry: coin, national_marble_mile_mult: positiveMult,
+  national_speed_demon_entry: coin, national_speed_demon_mult: positiveMult,
+  national_chaos_cup_entry: coin, national_chaos_cup_mult: positiveMult,
+  national_second_ratio: ratio, national_third_ratio: ratio,
+  // Multiplayer
+  mp_blitz_entry: coin, mp_blitz_pool: coin,
+  mp_cup_entry: coin, mp_cup_pool: coin,
+  mp_invitational_entry: coin, mp_invitational_pool: coin,
+  mp_rake: ratio, mp_first_ratio: ratio, mp_second_ratio: ratio, mp_third_ratio: ratio,
+  // Challenges
+  challenge_daily_win: coin, challenge_daily_top3: coin,
+  challenge_daily_streak2: coin, challenge_daily_wins3: coin,
+  challenge_weekly_races5: coin, challenge_weekly_marbles3: coin,
+  challenge_weekly_races10: coin, challenge_weekly_marbles5: coin,
+  // Season Pass milestone coins
+  pass_level2_coins: coin, pass_level5_coins: coin,
+  pass_level10_coins: coin, pass_level15_coins: coin, pass_level20_coins: coin,
+  // Store coin packs (price is fixed in App Store / Play Store; only the
+  // coin grant and promo multiplier live here)
+  store_starter_coins: coin,
+  store_popular_coins: coin, store_popular_promo: floatRange(0, 5),
+  store_big_coins: coin, store_big_promo: floatRange(0, 5),
+  store_whale_coins: coin, store_whale_promo: floatRange(0, 5),
 };
 
 /* Numeric keys must be stored as bare numeric strings ("4600"), not
