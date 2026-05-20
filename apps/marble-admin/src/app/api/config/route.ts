@@ -34,15 +34,19 @@ const SEED_CONFIGS: { key: string; value: string; label: string; group: string }
   { key: 'daily_reward_6', value: '500', label: 'Daily Reward (Day 6)', group: 'rewards' },
   { key: 'daily_reward_7', value: '750', label: 'Daily Reward (Day 7)', group: 'rewards' },
   { key: 'xp_per_level', value: '1000', label: 'XP Per Level', group: 'rewards' },
-  { key: 'tournament_daily_prize', value: '4600', label: 'Daily Blitz · 1st Prize', group: 'rewards' },
-  { key: 'tournament_daily_second_prize', value: '1200', label: 'Daily Blitz · 2nd Prize', group: 'rewards' },
-  { key: 'tournament_daily_third_prize', value: '600', label: 'Daily Blitz · 3rd Prize', group: 'rewards' },
-  { key: 'tournament_weekly_prize', value: '23000', label: 'Weekly Cup · 1st Prize', group: 'rewards' },
-  { key: 'tournament_weekly_second_prize', value: '6000', label: 'Weekly Cup · 2nd Prize', group: 'rewards' },
-  { key: 'tournament_weekly_third_prize', value: '3000', label: 'Weekly Cup · 3rd Prize', group: 'rewards' },
-  { key: 'tournament_champion_prize', value: '46000', label: 'Champion Invitational · 1st Prize', group: 'rewards' },
-  { key: 'tournament_champion_second_prize', value: '12000', label: 'Champion Invitational · 2nd Prize', group: 'rewards' },
-  { key: 'tournament_champion_third_prize', value: '6000', label: 'Champion Invitational · 3rd Prize', group: 'rewards' },
+  /* Tournament tiers are labelled Bronze/Silver/Gold Cup to match the
+   * in-game names. The config KEYS keep their daily/weekly/champion
+   * stems — those are wired into the mobile remote-config reader and
+   * must not change. Labels are display-only. */
+  { key: 'tournament_daily_prize', value: '4600', label: 'Bronze Cup · 1st Prize', group: 'rewards' },
+  { key: 'tournament_daily_second_prize', value: '1200', label: 'Bronze Cup · 2nd Prize', group: 'rewards' },
+  { key: 'tournament_daily_third_prize', value: '600', label: 'Bronze Cup · 3rd Prize', group: 'rewards' },
+  { key: 'tournament_weekly_prize', value: '23000', label: 'Silver Cup · 1st Prize', group: 'rewards' },
+  { key: 'tournament_weekly_second_prize', value: '6000', label: 'Silver Cup · 2nd Prize', group: 'rewards' },
+  { key: 'tournament_weekly_third_prize', value: '3000', label: 'Silver Cup · 3rd Prize', group: 'rewards' },
+  { key: 'tournament_champion_prize', value: '46000', label: 'Gold Cup · 1st Prize', group: 'rewards' },
+  { key: 'tournament_champion_second_prize', value: '12000', label: 'Gold Cup · 2nd Prize', group: 'rewards' },
+  { key: 'tournament_champion_third_prize', value: '6000', label: 'Gold Cup · 3rd Prize', group: 'rewards' },
   { key: 'bet_amount_1', value: '25', label: 'Bet Tier 1', group: 'betting' },
   { key: 'bet_amount_2', value: '100', label: 'Bet Tier 2', group: 'betting' },
   { key: 'bet_amount_3', value: '250', label: 'Bet Tier 3', group: 'betting' },

@@ -201,8 +201,8 @@ export default function EconomyPage() {
   type SectionDef = { title: string; hint?: string; keys: string[] };
   const SECTIONS: SectionDef[] = [
     {
-      title: 'Tournament · Daily Blitz',
-      hint: 'Single-player 8-marble elimination. Survival = pays player after surviving that round.',
+      title: 'Tournament · Bronze Cup',
+      hint: 'Single-player 8-marble elimination (low-stakes tier, id "daily-blitz"). Survival = pays player after surviving that round.',
       keys: [
         'tournament_daily_entry',
         'tournament_daily_prize',
@@ -214,7 +214,8 @@ export default function EconomyPage() {
       ],
     },
     {
-      title: 'Tournament · Weekly Cup',
+      title: 'Tournament · Silver Cup',
+      hint: 'Mid-stakes tier (id "weekly-cup").',
       keys: [
         'tournament_weekly_entry',
         'tournament_weekly_prize',
@@ -226,7 +227,8 @@ export default function EconomyPage() {
       ],
     },
     {
-      title: 'Tournament · Champion Invitational',
+      title: 'Tournament · Gold Cup',
+      hint: 'Top-stakes tier, Level 10+ (id "champion-invitational").',
       keys: [
         'tournament_champion_entry',
         'tournament_champion_prize',

@@ -25,12 +25,15 @@ const configs = [
   { key: 'payout_1st', value: 'Full odds × bet', label: '1st Place Payout', group: 'betting' },
   { key: 'payout_2nd', value: '50% of bet', label: '2nd Place Payout', group: 'betting' },
   { key: 'payout_3rd', value: '25% of bet', label: '3rd Place Payout', group: 'betting' },
-  { key: 'tournament_daily_entry', value: '100 coins', label: 'Daily Blitz Entry', group: 'betting' },
-  { key: 'tournament_daily_prize', value: '4,600 coins', label: 'Daily Blitz Prize', group: 'betting' },
-  { key: 'tournament_weekly_entry', value: '500 coins', label: 'Weekly Cup Entry', group: 'betting' },
-  { key: 'tournament_weekly_prize', value: '23,000 coins', label: 'Weekly Cup Prize', group: 'betting' },
-  { key: 'tournament_champion_entry', value: '1,000 coins', label: 'Champion Invitational Entry', group: 'betting' },
-  { key: 'tournament_champion_prize', value: '46,000 coins', label: 'Champion Invitational Prize', group: 'betting' },
+  /* Bare numeric values — NOT "4,600 coins". The mobile client parses
+   * with parseFloat; a formatted string parses to 4, which is the bug
+   * that paid 4-coin champion prizes. Labels use Bronze/Silver/Gold Cup. */
+  { key: 'tournament_daily_entry', value: '100', label: 'Bronze Cup Entry', group: 'betting' },
+  { key: 'tournament_daily_prize', value: '4600', label: 'Bronze Cup Prize', group: 'betting' },
+  { key: 'tournament_weekly_entry', value: '500', label: 'Silver Cup Entry', group: 'betting' },
+  { key: 'tournament_weekly_prize', value: '23000', label: 'Silver Cup Prize', group: 'betting' },
+  { key: 'tournament_champion_entry', value: '1000', label: 'Gold Cup Entry', group: 'betting' },
+  { key: 'tournament_champion_prize', value: '46000', label: 'Gold Cup Prize', group: 'betting' },
   { key: 'national_grand_prix_entry', value: '500 coins', label: 'Grand Prix Entry Fee', group: 'betting' },
   { key: 'national_grand_prix_mult', value: '5×', label: 'Grand Prix Multiplier', group: 'betting' },
 

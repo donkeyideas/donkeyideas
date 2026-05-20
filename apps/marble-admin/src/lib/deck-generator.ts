@@ -96,7 +96,7 @@ const PROBLEM_POINTS = [
 const SOLUTION_POINTS = [
   '<strong>Bet virtual coins</strong> on which of 8 marbles will win the next race. Physics decides the outcome — deterministic, fair, watchable.',
   '<strong>Skill + luck</strong> mix: marbles have published stats (speed, agility, luck). Veteran players analyze; new players guess. Both can win.',
-  '<strong>Always-on tournaments</strong>: Daily Blitz (100 coins entry), Weekly Cup (500), Champion Invitational (1000). Skin in the game without real-money risk.',
+  '<strong>Always-on tournaments</strong>: Bronze Cup (100 coins entry), Silver Cup (500), Gold Cup (1000). Skin in the game without real-money risk.',
   '<strong>Live multiplayer lobbies</strong> for up to 8 humans — race friends in real time, draft your favorite marble, climb the leaderboard.',
   '<strong>Free to play, friction-free monetization</strong>: coins, season pass tiers, ad-free upgrade. No pay-to-win on race outcomes.',
 ];
@@ -758,7 +758,7 @@ export function renderPitchDeck(s: DeckSnapshot): string {
     <div class="three-col">
       <div class="kpi" style="padding:32px 28px"><div class="eyebrow" style="color:#6ec1ff;margin-bottom:12px">Quick Race</div><h3>30-second jump-in</h3><p style="color:rgba(255,255,255,0.7);font-size:14px;margin:0;line-height:1.6">Tap, pick a marble, watch physics decide. No commitment, no money, no learning curve.</p></div>
       <div class="kpi" style="padding:32px 28px"><div class="eyebrow" style="color:#ffc220;margin-bottom:12px">Bet Mode</div><h3>Wager virtual coins</h3><p style="color:rgba(255,255,255,0.7);font-size:14px;margin:0;line-height:1.6">Up to 20x payout on long-shot picks. Marble stats published so skilled play wins more over time.</p></div>
-      <div class="kpi" style="padding:32px 28px"><div class="eyebrow" style="color:#c39bd3;margin-bottom:12px">Tournaments</div><h3>7-round elimination</h3><p style="color:rgba(255,255,255,0.7);font-size:14px;margin:0;line-height:1.6">Daily Blitz, Weekly Cup, Champion Invitational. 8 marbles enter; one champion takes the prize pool.</p></div>
+      <div class="kpi" style="padding:32px 28px"><div class="eyebrow" style="color:#c39bd3;margin-bottom:12px">Tournaments</div><h3>7-round elimination</h3><p style="color:rgba(255,255,255,0.7);font-size:14px;margin:0;line-height:1.6">Bronze Cup, Silver Cup, Gold Cup. 8 marbles enter; one champion takes the prize pool.</p></div>
     </div>
   </div>
 

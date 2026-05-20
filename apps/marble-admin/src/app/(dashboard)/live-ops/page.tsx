@@ -807,9 +807,10 @@ export default function LiveOpsPage() {
                     onChange={(e) => setTournForm({ ...tournForm, type: e.target.value as Tournament['type'] })}
                     className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-gold/40"
                   >
-                    <option value="daily-blitz">Daily Blitz</option>
-                    <option value="weekly-cup">Weekly Cup</option>
-                    <option value="champion-invitational">Champion Invitational</option>
+                    {/* value = canonical tier id (unchanged); label = in-game name */}
+                    <option value="daily-blitz">Bronze Cup</option>
+                    <option value="weekly-cup">Silver Cup</option>
+                    <option value="champion-invitational">Gold Cup</option>
                     <option value="custom">Custom</option>
                   </select>
                 </div>
