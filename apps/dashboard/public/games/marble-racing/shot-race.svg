@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="1080" viewBox="0 0 540 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13306f"/><stop offset="1" stop-color="#081530"/></linearGradient>
+    <linearGradient id="trk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#28488f"/><stop offset="1" stop-color="#101f44"/></linearGradient>
+    <radialGradient id="r" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ffd9d0"/><stop offset="0.42" stop-color="#e74c3c"/><stop offset="1" stop-color="#6e1810"/></radialGradient>
+    <radialGradient id="g" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ccf5dd"/><stop offset="0.42" stop-color="#2ecc71"/><stop offset="1" stop-color="#0d4a27"/></radialGradient>
+    <radialGradient id="gold" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#fff4c8"/><stop offset="0.42" stop-color="#ffd43b"/><stop offset="1" stop-color="#8a5d00"/></radialGradient>
+    <radialGradient id="p" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#f3d8ff"/><stop offset="0.42" stop-color="#da77f2"/><stop offset="1" stop-color="#5c1f6e"/></radialGradient>
+    <radialGradient id="b" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#d8efff"/><stop offset="0.42" stop-color="#4dabf7"/><stop offset="1" stop-color="#123f66"/></radialGradient>
+  </defs>
+  <rect width="540" height="1080" fill="url(#bg)"/>
+  <!-- top HUD -->
+  <rect x="0" y="0" width="540" height="120" fill="#0a1a3a"/>
+  <text x="40" y="74" font-family="Arial Black, sans-serif" font-size="40" font-weight="900" fill="#fff">LAP 2</text>
+  <rect x="330" y="40" width="170" height="48" rx="24" fill="#ffc220"/>
+  <!-- stopwatch icon -->
+  <g transform="translate(356 64)" stroke="#0a1a3a" stroke-width="2.6" fill="none" stroke-linecap="round">
+    <line x1="-4" y1="-15" x2="4" y2="-15"/>
+    <line x1="0" y1="-15" x2="0" y2="-11"/>
+    <circle cx="0" cy="1" r="11" stroke-width="3"/>
+    <line x1="0" y1="1" x2="0" y2="-5"/>
+    <line x1="0" y1="1" x2="5" y2="3"/>
+  </g>
+  <text x="430" y="73" font-family="Arial Black" font-size="26" font-weight="900" fill="#0a1a3a" text-anchor="middle">0:14</text>
+  <!-- track -->
+  <rect x="40" y="150" width="460" height="780" rx="40" fill="url(#trk)"/>
+  <g stroke="#6ec1ff" stroke-width="4" stroke-dasharray="20 24" opacity="0.55">
+    <line x1="155" y1="170" x2="155" y2="910"/><line x1="270" y1="170" x2="270" y2="910"/><line x1="385" y1="170" x2="385" y2="910"/>
+  </g>
+  <!-- pegs -->
+  <g fill="#16306b"><circle cx="120" cy="360" r="14"/><circle cx="330" cy="300" r="14"/><circle cx="420" cy="480" r="14"/><circle cx="190" cy="560" r="14"/><circle cx="300" cy="680" r="14"/></g>
+  <!-- marbles racing down -->
+  <circle cx="150" cy="320" r="38" fill="url(#r)"/><ellipse cx="137" cy="304" rx="13" ry="9" fill="#fff" opacity="0.9"/>
+  <circle cx="270" cy="430" r="34" fill="url(#g)"/><ellipse cx="259" cy="416" rx="11" ry="8" fill="#fff" opacity="0.9"/>
+  <circle cx="380" cy="380" r="40" fill="url(#gold)"/><ellipse cx="366" cy="362" rx="14" ry="10" fill="#fff" opacity="0.95"/>
+  <circle cx="210" cy="640" r="32" fill="url(#p)"/><ellipse cx="200" cy="627" rx="10" ry="7" fill="#fff" opacity="0.9"/>
+  <circle cx="340" cy="560" r="36" fill="url(#b)"/><ellipse cx="328" cy="545" rx="12" ry="9" fill="#fff" opacity="0.9"/>
+  <!-- motion trails -->
+  <g opacity="0.35"><circle cx="380" cy="320" r="30" fill="url(#gold)"/><circle cx="150" cy="270" r="28" fill="url(#r)"/></g>
+  <!-- finish line -->
+  <g>
+    <rect x="40" y="880" width="460" height="20" fill="#fff"/>
+    <g fill="#0a1a3a"><rect x="40" y="880" width="40" height="20"/><rect x="120" y="880" width="40" height="20"/><rect x="200" y="880" width="40" height="20"/><rect x="280" y="880" width="40" height="20"/><rect x="360" y="880" width="40" height="20"/><rect x="440" y="880" width="40" height="20"/></g>
+  </g>
+  <!-- bottom your-pick bar -->
+  <rect x="40" y="958" width="460" height="86" rx="24" fill="#0f244f" stroke="#ffc220" stroke-width="3"/>
+  <circle cx="92" cy="1001" r="28" fill="url(#gold)"/>
+  <text x="140" y="993" font-family="Arial Black" font-size="24" font-weight="900" fill="#fff">YOUR PICK: LUCKY</text>
+  <text x="140" y="1024" font-family="Arial" font-size="20" fill="#6ec1ff">Currently 1st place</text>
+</svg>

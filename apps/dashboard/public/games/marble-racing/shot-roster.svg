@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="1080" viewBox="0 0 540 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13306f"/><stop offset="1" stop-color="#081530"/></linearGradient>
+    <radialGradient id="r" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ffd9d0"/><stop offset="0.42" stop-color="#e74c3c"/><stop offset="1" stop-color="#6e1810"/></radialGradient>
+    <radialGradient id="b" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#d8efff"/><stop offset="0.42" stop-color="#4dabf7"/><stop offset="1" stop-color="#123f66"/></radialGradient>
+    <radialGradient id="g" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ccf5dd"/><stop offset="0.42" stop-color="#2ecc71"/><stop offset="1" stop-color="#0d4a27"/></radialGradient>
+    <radialGradient id="gold" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#fff4c8"/><stop offset="0.42" stop-color="#ffd43b"/><stop offset="1" stop-color="#8a5d00"/></radialGradient>
+    <radialGradient id="ice" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#e6f4ff"/><stop offset="0.42" stop-color="#74c0fc"/><stop offset="1" stop-color="#234d73"/></radialGradient>
+    <radialGradient id="p" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#f3d8ff"/><stop offset="0.42" stop-color="#da77f2"/><stop offset="1" stop-color="#5c1f6e"/></radialGradient>
+    <radialGradient id="gy" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#e9ecef"/><stop offset="0.42" stop-color="#868e96"/><stop offset="1" stop-color="#343a40"/></radialGradient>
+    <radialGradient id="tl" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#d3f6fb"/><stop offset="0.42" stop-color="#22b8cf"/><stop offset="1" stop-color="#0b4a55"/></radialGradient>
+  </defs>
+  <rect width="540" height="1080" fill="url(#bg)"/>
+  <rect x="0" y="0" width="540" height="110" fill="#0a1a3a"/>
+  <text x="270" y="70" font-family="Arial Black, sans-serif" font-size="38" font-weight="900" fill="#fff" text-anchor="middle">THE ROSTER</text>
+  <!-- 4x2 grid of marble tiles -->
+  <g font-family="Arial Black, sans-serif">
+    <!-- row coords -->
+    <g transform="translate(34,150)">
+      <rect width="230" height="200" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.1)"/>
+      <circle cx="115" cy="78" r="46" fill="url(#r)"/><ellipse cx="99" cy="60" rx="15" ry="10" fill="#fff" opacity="0.9"/>
+      <text x="115" y="150" font-size="26" font-weight="900" fill="#fff" text-anchor="middle">DASH</text>
+      <text x="115" y="178" font-family="Arial" font-size="18" fill="#6ec1ff" text-anchor="middle">Reckless</text>
+    </g>
+    <g transform="translate(276,150)">
+      <rect width="230" height="200" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.1)"/>
+      <circle cx="115" cy="78" r="46" fill="url(#b)"/><ellipse cx="99" cy="60" rx="15" ry="10" fill="#fff" opacity="0.9"/>
+      <text x="115" y="150" font-size="26" font-weight="900" fill="#fff" text-anchor="middle">SPIKE</text>
+      <text x="115" y="178" font-family="Arial" font-size="18" fill="#6ec1ff" text-anchor="middle">Aggressive</text>
+    </g>
+    <g transform="translate(34,372)">
+      <rect width="230" height="200" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.1)"/>
+      <circle cx="115" cy="78" r="46" fill="url(#g)"/><ellipse cx="99" cy="60" rx="15" ry="10" fill="#fff" opacity="0.9"/>
+      <text x="115" y="150" font-size="26" font-weight="900" fill="#fff" text-anchor="middle">ROCKY</text>
+      <text x="115" y="178" font-family="Arial" font-size="18" fill="#6ec1ff" text-anchor="middle">Steady</text>
+    </g>
+    <g transform="translate(276,372)">
+      <rect width="230" height="200" rx="22" fill="#0f244f" stroke="#ffc220" stroke-width="2"/>
+      <circle cx="115" cy="78" r="46" fill="url(#gold)"/><ellipse cx="99" cy="60" rx="15" ry="10" fill="#fff" opacity="0.95"/>
+      <text x="115" y="150" font-size="26" font-weight="900" fill="#fff" text-anchor="middle">LUCKY</text>
+      <text x="115" y="178" font-family="Arial" font-size="18" fill="#6ec1ff" text-anchor="middle">Chaotic</text>
+    </g>
+    <g transform="translate(34,594)">
+      <rect width="230" height="200" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.1)"/>
+      <circle cx="115" cy="78" r="46" fill="url(#ice)"/><ellipse cx="99" cy="60" rx="15" ry="10" fill="#fff" opacity="0.9"/>
+      <text x="115" y="150" font-size="26" font-weight="900" fill="#fff" text-anchor="middle">FROSTY</text>
+      <text x="115" y="178" font-family="Arial" font-size="18" fill="#6ec1ff" text-anchor="middle">Calm</text>
+    </g>
+    <g transform="translate(276,594)">
+      <rect width="230" height="200" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.1)"/>
+      <circle cx="115" cy="78" r="46" fill="url(#p)"/><ellipse cx="99" cy="60" rx="15" ry="10" fill="#fff" opacity="0.9"/>
+      <text x="115" y="150" font-size="26" font-weight="900" fill="#fff" text-anchor="middle">NOVA</text>
+      <text x="115" y="178" font-family="Arial" font-size="18" fill="#6ec1ff" text-anchor="middle">Flashy</text>
+    </g>
+    <g transform="translate(34,816)">
+      <rect width="230" height="200" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.1)"/>
+      <circle cx="115" cy="78" r="46" fill="url(#gy)"/><ellipse cx="99" cy="60" rx="15" ry="10" fill="#fff" opacity="0.9"/>
+      <text x="115" y="150" font-size="26" font-weight="900" fill="#fff" text-anchor="middle">SHADOW</text>
+      <text x="115" y="178" font-family="Arial" font-size="18" fill="#6ec1ff" text-anchor="middle">Mysterious</text>
+    </g>
+    <g transform="translate(276,816)">
+      <rect width="230" height="200" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.1)"/>
+      <circle cx="115" cy="78" r="46" fill="url(#tl)"/><ellipse cx="99" cy="60" rx="15" ry="10" fill="#fff" opacity="0.9"/>
+      <text x="115" y="150" font-size="26" font-weight="900" fill="#fff" text-anchor="middle">AQUA</text>
+      <text x="115" y="178" font-family="Arial" font-size="18" fill="#6ec1ff" text-anchor="middle">Slippery</text>
+    </g>
+  </g>
+</svg>

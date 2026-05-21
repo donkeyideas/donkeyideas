@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="1080" viewBox="0 0 540 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13306f"/><stop offset="1" stop-color="#081530"/></linearGradient>
+    <radialGradient id="gold" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#fff4c8"/><stop offset="0.42" stop-color="#ffd43b"/><stop offset="1" stop-color="#8a5d00"/></radialGradient>
+    <radialGradient id="r" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ffd9d0"/><stop offset="0.42" stop-color="#e74c3c"/><stop offset="1" stop-color="#6e1810"/></radialGradient>
+    <radialGradient id="g" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ccf5dd"/><stop offset="0.42" stop-color="#2ecc71"/><stop offset="1" stop-color="#0d4a27"/></radialGradient>
+    <radialGradient id="b" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#d8efff"/><stop offset="0.42" stop-color="#4dabf7"/><stop offset="1" stop-color="#123f66"/></radialGradient>
+    <radialGradient id="p" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#f3d8ff"/><stop offset="0.42" stop-color="#da77f2"/><stop offset="1" stop-color="#5c1f6e"/></radialGradient>
+    <radialGradient id="ice" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#e6f4ff"/><stop offset="0.42" stop-color="#74c0fc"/><stop offset="1" stop-color="#234d73"/></radialGradient>
+    <radialGradient id="gy" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#e9ecef"/><stop offset="0.42" stop-color="#868e96"/><stop offset="1" stop-color="#343a40"/></radialGradient>
+    <radialGradient id="tl" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#d3f6fb"/><stop offset="0.42" stop-color="#22b8cf"/><stop offset="1" stop-color="#0b4a55"/></radialGradient>
+  </defs>
+  <rect width="540" height="1080" fill="url(#bg)"/>
+
+  <!-- header -->
+  <rect x="0" y="0" width="540" height="150" fill="#0a1a3a"/>
+  <!-- trophy icon -->
+  <g transform="translate(166 60)">
+    <path d="M-20 -22 H20 V-6 A20 20 0 0 1 -20 -6 Z" fill="url(#gold)" stroke="#8a5d00" stroke-width="2.5"/>
+    <path d="M-20 -18 H-30 A8 8 0 0 0 -22 -2" fill="none" stroke="#8a5d00" stroke-width="3"/>
+    <path d="M20 -18 H30 A8 8 0 0 1 22 -2" fill="none" stroke="#8a5d00" stroke-width="3"/>
+    <rect x="-5" y="-2" width="10" height="14" fill="#8a5d00"/>
+    <rect x="-16" y="12" width="32" height="8" rx="3" fill="url(#gold)" stroke="#8a5d00" stroke-width="2.5"/>
+  </g>
+  <text x="206" y="68" font-family="Arial Black, sans-serif" font-size="34" font-weight="900" fill="#ffc220">GOLD CUP</text>
+  <text x="270" y="112" font-family="Arial" font-size="20" fill="#6ec1ff" text-anchor="middle">King of the Hill &#183; Round 3 of 7</text>
+
+  <!-- round progress dots -->
+  <g transform="translate(0 134)">
+    <circle cx="156" cy="0" r="7" fill="#ffc220"/>
+    <circle cx="194" cy="0" r="7" fill="#ffc220"/>
+    <circle cx="232" cy="0" r="7" fill="#ffc220"/>
+    <circle cx="270" cy="0" r="7" fill="none" stroke="#2b4f9c" stroke-width="3"/>
+    <circle cx="308" cy="0" r="7" fill="none" stroke="#2b4f9c" stroke-width="3"/>
+    <circle cx="346" cy="0" r="7" fill="none" stroke="#2b4f9c" stroke-width="3"/>
+    <circle cx="384" cy="0" r="7" fill="none" stroke="#2b4f9c" stroke-width="3"/>
+  </g>
+
+  <!-- instruction banner -->
+  <rect x="34" y="172" width="472" height="56" rx="16" fill="#0f244f" stroke="#e74c3c" stroke-width="2"/>
+  <text x="270" y="207" font-family="Arial Black, sans-serif" font-size="20" font-weight="900" fill="#ff8a7e" text-anchor="middle">Last place eliminated each round</text>
+
+  <!-- 8 marble rows: still racing on top, eliminated below -->
+  <g font-family="Arial Black, sans-serif">
+    <!-- STILL IN (5 marbles) -->
+    <!-- LUCKY -->
+    <g transform="translate(34,250)">
+      <rect width="472" height="74" rx="18" fill="#0f244f" stroke="#ffc220" stroke-width="3"/>
+      <circle cx="46" cy="37" r="26" fill="url(#gold)"/><ellipse cx="36" cy="26" rx="9" ry="6" fill="#fff" opacity="0.9"/>
+      <text x="88" y="46" font-size="24" font-weight="900" fill="#fff">LUCKY</text>
+      <text x="446" y="46" font-size="18" font-weight="900" fill="#2ecc71" text-anchor="end">RACING</text>
+    </g>
+    <!-- DASH -->
+    <g transform="translate(34,334)">
+      <rect width="472" height="74" rx="18" fill="#0f244f" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+      <circle cx="46" cy="37" r="26" fill="url(#r)"/><ellipse cx="36" cy="26" rx="9" ry="6" fill="#fff" opacity="0.9"/>
+      <text x="88" y="46" font-size="24" font-weight="900" fill="#fff">DASH</text>
+      <text x="446" y="46" font-size="18" font-weight="900" fill="#2ecc71" text-anchor="end">RACING</text>
+    </g>
+    <!-- AQUA -->
+    <g transform="translate(34,418)">
+      <rect width="472" height="74" rx="18" fill="#0f244f" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+      <circle cx="46" cy="37" r="26" fill="url(#tl)"/><ellipse cx="36" cy="26" rx="9" ry="6" fill="#fff" opacity="0.9"/>
+      <text x="88" y="46" font-size="24" font-weight="900" fill="#fff">AQUA</text>
+      <text x="446" y="46" font-size="18" font-weight="900" fill="#2ecc71" text-anchor="end">RACING</text>
+    </g>
+    <!-- NOVA -->
+    <g transform="translate(34,502)">
+      <rect width="472" height="74" rx="18" fill="#0f244f" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+      <circle cx="46" cy="37" r="26" fill="url(#p)"/><ellipse cx="36" cy="26" rx="9" ry="6" fill="#fff" opacity="0.9"/>
+      <text x="88" y="46" font-size="24" font-weight="900" fill="#fff">NOVA</text>
+      <text x="446" y="46" font-size="18" font-weight="900" fill="#2ecc71" text-anchor="end">RACING</text>
+    </g>
+    <!-- ROCKY -->
+    <g transform="translate(34,586)">
+      <rect width="472" height="74" rx="18" fill="#0f244f" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+      <circle cx="46" cy="37" r="26" fill="url(#g)"/><ellipse cx="36" cy="26" rx="9" ry="6" fill="#fff" opacity="0.9"/>
+      <text x="88" y="46" font-size="24" font-weight="900" fill="#fff">ROCKY</text>
+      <text x="446" y="46" font-size="18" font-weight="900" fill="#2ecc71" text-anchor="end">RACING</text>
+    </g>
+
+    <!-- divider -->
+    <line x1="34" y1="688" x2="506" y2="688" stroke="#2b4f9c" stroke-width="2" stroke-dasharray="8 8"/>
+    <text x="270" y="676" font-family="Arial" font-size="16" fill="#9fb3d6" text-anchor="middle">ELIMINATED</text>
+
+    <!-- KNOCKED OUT (3 marbles) - dimmed + crossed out -->
+    <!-- SPIKE -->
+    <g transform="translate(34,706)" opacity="0.4">
+      <rect width="472" height="62" rx="16" fill="#0f244f" stroke="rgba(231,76,60,0.5)" stroke-width="2"/>
+      <circle cx="42" cy="31" r="22" fill="url(#b)"/>
+      <text x="80" y="40" font-size="22" font-weight="900" fill="#fff">SPIKE</text>
+      <line x1="74" y1="31" x2="200" y2="31" stroke="#e74c3c" stroke-width="3"/>
+      <text x="446" y="39" font-size="16" font-weight="900" fill="#e74c3c" text-anchor="end">OUT &#183; R2</text>
+    </g>
+    <!-- FROSTY -->
+    <g transform="translate(34,778)" opacity="0.4">
+      <rect width="472" height="62" rx="16" fill="#0f244f" stroke="rgba(231,76,60,0.5)" stroke-width="2"/>
+      <circle cx="42" cy="31" r="22" fill="url(#ice)"/>
+      <text x="80" y="40" font-size="22" font-weight="900" fill="#fff">FROSTY</text>
+      <line x1="74" y1="31" x2="214" y2="31" stroke="#e74c3c" stroke-width="3"/>
+      <text x="446" y="39" font-size="16" font-weight="900" fill="#e74c3c" text-anchor="end">OUT &#183; R1</text>
+    </g>
+    <!-- SHADOW -->
+    <g transform="translate(34,850)" opacity="0.4">
+      <rect width="472" height="62" rx="16" fill="#0f244f" stroke="rgba(231,76,60,0.5)" stroke-width="2"/>
+      <circle cx="42" cy="31" r="22" fill="url(#gy)"/>
+      <text x="80" y="40" font-size="22" font-weight="900" fill="#fff">SHADOW</text>
+      <line x1="74" y1="31" x2="226" y2="31" stroke="#e74c3c" stroke-width="3"/>
+      <text x="446" y="39" font-size="16" font-weight="900" fill="#e74c3c" text-anchor="end">OUT &#183; R3</text>
+    </g>
+  </g>
+
+  <!-- prize pool -->
+  <rect x="34" y="934" width="472" height="112" rx="24" fill="#0f244f" stroke="#ffc220" stroke-width="3"/>
+  <circle cx="98" cy="990" r="36" fill="url(#gold)"/>
+  <text x="98" y="1003" font-family="Arial Black" font-size="36" font-weight="900" fill="#8a5d00" text-anchor="middle">$</text>
+  <text x="156" y="980" font-family="Arial" font-size="20" fill="#6ec1ff">PRIZE POOL</text>
+  <text x="156" y="1020" font-family="Arial Black" font-size="36" font-weight="900" fill="#ffc220">120,000</text>
+</svg>

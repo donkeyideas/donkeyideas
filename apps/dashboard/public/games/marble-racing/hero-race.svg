@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="760" viewBox="0 0 900 760">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#13306f"/>
+      <stop offset="1" stop-color="#081530"/>
+    </linearGradient>
+    <linearGradient id="track" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#26468f"/>
+      <stop offset="1" stop-color="#101f44"/>
+    </linearGradient>
+    <radialGradient id="spot" cx="0.5" cy="0.18" r="0.7">
+      <stop offset="0" stop-color="#6ec1ff" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#6ec1ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gRed" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ffd9d0"/><stop offset="0.42" stop-color="#e74c3c"/><stop offset="1" stop-color="#6e1810"/></radialGradient>
+    <radialGradient id="gBlue" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#d8efff"/><stop offset="0.42" stop-color="#4dabf7"/><stop offset="1" stop-color="#123f66"/></radialGradient>
+    <radialGradient id="gGreen" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ccf5dd"/><stop offset="0.42" stop-color="#2ecc71"/><stop offset="1" stop-color="#0d4a27"/></radialGradient>
+    <radialGradient id="gGold" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#fff4c8"/><stop offset="0.42" stop-color="#ffd43b"/><stop offset="1" stop-color="#8a5d00"/></radialGradient>
+    <radialGradient id="gPurple" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#f3d8ff"/><stop offset="0.42" stop-color="#da77f2"/><stop offset="1" stop-color="#5c1f6e"/></radialGradient>
+  </defs>
+  <rect width="900" height="760" fill="url(#sky)"/>
+  <rect width="900" height="760" fill="url(#spot)"/>
+  <!-- crowd glow dots -->
+  <g fill="#6ec1ff" opacity="0.25">
+    <circle cx="80" cy="60" r="4"/><circle cx="160" cy="44" r="3"/><circle cx="250" cy="70" r="4"/>
+    <circle cx="640" cy="50" r="3"/><circle cx="730" cy="66" r="4"/><circle cx="820" cy="48" r="3"/>
+  </g>
+  <!-- curved track -->
+  <path d="M-40 250 C 220 160 360 380 560 320 C 760 260 880 440 940 360 L 940 760 L -40 760 Z" fill="url(#track)"/>
+  <path d="M-40 250 C 220 160 360 380 560 320 C 760 260 880 440 940 360" fill="none" stroke="#ffc220" stroke-width="6" opacity="0.85"/>
+  <path d="M-40 250 C 220 160 360 380 560 320 C 760 260 880 440 940 360" fill="none" stroke="#6ec1ff" stroke-width="3" stroke-dasharray="22 26" opacity="0.7"/>
+  <!-- lower track wall -->
+  <path d="M-40 470 C 220 380 360 600 560 540 C 760 480 880 660 940 580" fill="none" stroke="#16306b" stroke-width="10"/>
+  <!-- speed lines -->
+  <g stroke="#ffffff" stroke-width="5" stroke-linecap="round" opacity="0.32">
+    <line x1="120" y1="300" x2="250" y2="284"/>
+    <line x1="380" y1="392" x2="500" y2="372"/>
+    <line x1="640" y1="320" x2="780" y2="300"/>
+  </g>
+  <!-- racing marbles with motion trails -->
+  <g opacity="0.4"><circle cx="120" cy="246" r="40" fill="url(#gRed)"/></g>
+  <circle cx="190" cy="232" r="46" fill="url(#gRed)"/>
+  <ellipse cx="174" cy="212" rx="16" ry="11" fill="#fff" opacity="0.9"/>
+
+  <g opacity="0.4"><circle cx="300" cy="328" r="36" fill="url(#gGreen)"/></g>
+  <circle cx="362" cy="320" r="42" fill="url(#gGreen)"/>
+  <ellipse cx="348" cy="302" rx="14" ry="10" fill="#fff" opacity="0.9"/>
+
+  <g opacity="0.4"><circle cx="470" cy="350" r="44" fill="url(#gGold)"/></g>
+  <circle cx="540" cy="338" r="54" fill="url(#gGold)"/>
+  <ellipse cx="522" cy="314" rx="18" ry="12" fill="#fff" opacity="0.95"/>
+
+  <g opacity="0.4"><circle cx="640" cy="304" r="34" fill="url(#gPurple)"/></g>
+  <circle cx="700" cy="296" r="40" fill="url(#gPurple)"/>
+  <ellipse cx="687" cy="280" rx="13" ry="9" fill="#fff" opacity="0.9"/>
+
+  <circle cx="812" cy="372" r="48" fill="url(#gBlue)"/>
+  <ellipse cx="795" cy="350" rx="16" ry="11" fill="#fff" opacity="0.9"/>
+
+  <!-- checkered finish flag -->
+  <g transform="translate(842 150)">
+    <rect x="-6" y="0" width="6" height="220" fill="#cfe0ff"/>
+    <g>
+      <rect x="0" y="6" width="22" height="22" fill="#fff"/><rect x="22" y="6" width="22" height="22" fill="#0a1a3a"/><rect x="44" y="6" width="22" height="22" fill="#fff"/>
+      <rect x="0" y="28" width="22" height="22" fill="#0a1a3a"/><rect x="22" y="28" width="22" height="22" fill="#fff"/><rect x="44" y="28" width="22" height="22" fill="#0a1a3a"/>
+      <rect x="0" y="50" width="22" height="22" fill="#fff"/><rect x="22" y="50" width="22" height="22" fill="#0a1a3a"/><rect x="44" y="50" width="22" height="22" fill="#fff"/>
+    </g>
+  </g>
+  <!-- floating coins -->
+  <g>
+    <circle cx="250" cy="120" r="20" fill="url(#gGold)"/><text x="250" y="128" font-family="Arial Black" font-size="22" font-weight="900" fill="#8a5d00" text-anchor="middle">$</text>
+    <circle cx="430" cy="86" r="15" fill="url(#gGold)"/><text x="430" y="92" font-family="Arial Black" font-size="16" font-weight="900" fill="#8a5d00" text-anchor="middle">$</text>
+    <circle cx="600" cy="138" r="18" fill="url(#gGold)"/><text x="600" y="145" font-family="Arial Black" font-size="19" font-weight="900" fill="#8a5d00" text-anchor="middle">$</text>
+  </g>
+</svg>

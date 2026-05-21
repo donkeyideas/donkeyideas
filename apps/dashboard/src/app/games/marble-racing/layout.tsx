@@ -1,15 +1,43 @@
 import type { Metadata } from 'next';
+import { Lilita_One, Fredoka } from 'next/font/google';
 import Link from 'next/link';
+import './marble-racing.css';
+import MarbleRacingNav from './nav';
+import MarbleRacingReveal from './reveal';
+
+const lilitaOne = Lilita_One({
+  subsets: ['latin'],
+  weight: '400',
+  display: 'swap',
+  variable: '--font-lilita-one',
+});
+
+const fredoka = Fredoka({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-fredoka',
+});
 
 export const metadata: Metadata = {
   title: {
-    default: 'Donkey Marble Racing',
+    default: 'Donkey Marble Racing — Pick your marble. Place your bet. Let physics decide.',
     template: '%s | Donkey Marble Racing',
   },
-  description: 'A thrilling marble racing and betting game with virtual coins. Race marbles, place bets, and climb the season standings.',
+  description:
+    'Donkey Marble Racing — a physics-driven marble racing & virtual-coin betting game. 8 glossy marbles, real Matter.js physics, live odds, tournaments & seasons. Download free.',
+  alternates: {
+    canonical: 'https://www.donkeyideas.com/games/marble-racing',
+  },
+  icons: {
+    icon: '/games/marble-racing/app-icon.png',
+    shortcut: '/games/marble-racing/app-icon.png',
+    apple: '/games/marble-racing/app-icon.png',
+  },
   openGraph: {
     siteName: 'Donkey Marble Racing',
     type: 'website',
+    url: 'https://www.donkeyideas.com/games/marble-racing',
   },
 };
 
@@ -19,80 +47,82 @@ export default function MarbleRacingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#0a1a3a] text-white" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* Top Nav */}
-      <header className="border-b border-white/10 bg-[#0d2350]/90 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/games/marble-racing" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#ffd84d] to-[#ffc220] shadow-[0_3px_0_rgba(0,0,0,0.25),inset_0_-3px_5px_rgba(0,0,0,0.2)] relative flex-shrink-0">
-              <div className="absolute top-[6px] left-[7px] w-[13px] h-[9px] bg-white/45 rounded-full -rotate-[20deg]" />
-            </div>
-            <span className="font-bold text-lg tracking-wide">
-              DONKEY <span className="text-[#ffc220]">MARBLE</span> RACING
-            </span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm text-white/50 font-medium">
-            <Link href="/games/marble-racing/privacy" className="hover:text-white/80 transition-colors">Privacy</Link>
-            <Link href="/games/marble-racing/terms" className="hover:text-white/80 transition-colors">Terms</Link>
-            <Link href="/games/marble-racing/support" className="hover:text-white/80 transition-colors">Support</Link>
-            <Link href="/games/marble-racing/responsible-gaming" className="hover:text-white/80 transition-colors">Responsible Gaming</Link>
-          </nav>
-        </div>
-      </header>
+    <div className={`mr-root ${lilitaOne.variable} ${fredoka.variable}`}>
+      {/* ================= NAV ================= */}
+      <MarbleRacingNav />
 
-      {/* Page Content */}
-      <main>{children}</main>
+      <main id="top">{children}</main>
 
-      {/* Footer */}
-      <footer className="border-t border-white/8 bg-[#081833] mt-20">
-        <div className="max-w-5xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
-            {/* Brand */}
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ffd84d] to-[#ffc220] shadow-[0_2px_0_rgba(0,0,0,0.25)] relative">
-                  <div className="absolute top-[5px] left-[6px] w-[11px] h-[8px] bg-white/45 rounded-full -rotate-[20deg]" />
-                </div>
-                <span className="font-bold text-sm tracking-wide">
-                  DONKEY <span className="text-[#ffc220]">MARBLE</span>
+      {/* ================= FOOTER ================= */}
+      <footer>
+        <div className="wrap">
+          <div className="foot-top">
+            <div className="foot-brand">
+              <Link className="brand" href="/games/marble-racing#top">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="app-icon" src="/games/marble-racing/app-icon.png" alt="Donkey Marble Racing app icon" />
+                <span className="wordmark">
+                  Donkey<br />Marble <em>Racing</em>
                 </span>
-              </div>
-              <p className="text-white/40 text-sm leading-relaxed">
-                A virtual marble racing game with simulated betting using virtual coins only. No real money is wagered or won.
+              </Link>
+              <p>
+                A 2D physics marble racing game by Donkey Ideas LLC. On the App Store as &quot;Marble Race: Physics
+                Bet&quot; and Google Play as &quot;Marble Race Bet Game.&quot;
               </p>
             </div>
-
-            {/* Legal Links */}
-            <div>
-              <h3 className="font-bold text-sm text-white/60 uppercase tracking-wider mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm text-white/40">
-                <li><Link href="/games/marble-racing/privacy" className="hover:text-white/70 transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/games/marble-racing/terms" className="hover:text-white/70 transition-colors">Terms of Service</Link></li>
-                <li><Link href="/games/marble-racing/responsible-gaming" className="hover:text-white/70 transition-colors">Responsible Gaming</Link></li>
-                <li><Link href="/games/marble-racing/delete-account" className="hover:text-white/70 transition-colors">Delete Account</Link></li>
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div>
-              <h3 className="font-bold text-sm text-white/60 uppercase tracking-wider mb-4">Support</h3>
-              <ul className="space-y-2 text-sm text-white/40">
-                <li><Link href="/games/marble-racing/support" className="hover:text-white/70 transition-colors">Contact Support</Link></li>
-                <li><a href="mailto:support@donkeyideas.com" className="hover:text-white/70 transition-colors">support@donkeyideas.com</a></li>
-              </ul>
+            <div className="foot-cols">
+              <div className="foot-col">
+                <h4>Game</h4>
+                <a href="/games/marble-racing#marbles">Meet the Marbles</a>
+                <a href="/games/marble-racing#features">Features</a>
+                <a href="/games/marble-racing#gallery">Screenshots</a>
+                <a href="/games/marble-racing#how">How it works</a>
+              </div>
+              <div className="foot-col">
+                <h4>Legal &amp; Support</h4>
+                <Link href="/games/marble-racing/support">Support</Link>
+                <Link href="/games/marble-racing/privacy">Privacy Policy</Link>
+                <Link href="/games/marble-racing/terms">Terms of Use</Link>
+                <Link href="/games/marble-racing/responsible-gaming">Responsible Gaming</Link>
+                <Link href="/games/marble-racing/delete-account">Delete Account</Link>
+              </div>
+              <div className="foot-col">
+                <h4>Studio</h4>
+                <a href="https://donkeyideas.com" target="_blank" rel="noopener">
+                  donkeyideas.com
+                </a>
+                <a
+                  href="https://apps.apple.com/us/app/donkey-marble-racing/id6769627792"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  App Store
+                </a>
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.donkeymarble.racing"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Google Play
+                </a>
+              </div>
             </div>
           </div>
-
-          <div className="border-t border-white/6 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-white/30 text-xs">
-              &copy; {new Date().getFullYear()} Donkey Ideas LLC. All rights reserved.
-            </p>
-            <p className="text-white/20 text-xs">
-              Virtual coins only. Not real-money gambling. Ages 17+.
-            </p>
+          <div className="disclaimer">
+            <span className="badge">Please Note</span>
+            <span>
+              Ages 17+ · Virtual coins only · No real-money gambling. Coins have no cash value and cannot be cashed
+              out.
+            </span>
+          </div>
+          <div className="foot-bottom">
+            <span>&copy; {new Date().getFullYear()} Donkey Ideas LLC. All rights reserved.</span>
+            <span>Made for marble-race fans everywhere.</span>
           </div>
         </div>
       </footer>
+
+      <MarbleRacingReveal />
     </div>
   );
 }

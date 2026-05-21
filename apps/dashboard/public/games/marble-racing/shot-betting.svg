@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="1080" viewBox="0 0 540 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13306f"/><stop offset="1" stop-color="#081530"/></linearGradient>
+    <radialGradient id="gold" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#fff4c8"/><stop offset="0.42" stop-color="#ffd43b"/><stop offset="1" stop-color="#8a5d00"/></radialGradient>
+    <radialGradient id="r" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ffd9d0"/><stop offset="0.42" stop-color="#e74c3c"/><stop offset="1" stop-color="#6e1810"/></radialGradient>
+    <radialGradient id="g" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#ccf5dd"/><stop offset="0.42" stop-color="#2ecc71"/><stop offset="1" stop-color="#0d4a27"/></radialGradient>
+    <radialGradient id="b" cx="0.34" cy="0.28" r="0.9"><stop offset="0" stop-color="#d8efff"/><stop offset="0.42" stop-color="#4dabf7"/><stop offset="1" stop-color="#123f66"/></radialGradient>
+  </defs>
+  <rect width="540" height="1080" fill="url(#bg)"/>
+  <rect x="0" y="0" width="540" height="118" fill="#0a1a3a"/>
+  <text x="40" y="74" font-family="Arial Black, sans-serif" font-size="36" font-weight="900" fill="#fff">PLACE YOUR BET</text>
+  <rect x="360" y="36" width="148" height="50" rx="25" fill="#0f244f" stroke="#ffc220" stroke-width="2"/>
+  <circle cx="392" cy="61" r="17" fill="url(#gold)"/>
+  <text x="450" y="70" font-family="Arial Black" font-size="22" font-weight="900" fill="#ffc220" text-anchor="middle">8,420</text>
+  <!-- bet rows -->
+  <g font-family="Arial Black, sans-serif">
+    <!-- row template -->
+    <g transform="translate(0,150)">
+      <rect x="34" y="0" width="472" height="118" rx="22" fill="#0f244f" stroke="#ffc220" stroke-width="3"/>
+      <circle cx="92" cy="59" r="34" fill="url(#r)"/><ellipse cx="80" cy="44" rx="11" ry="8" fill="#fff" opacity="0.9"/>
+      <text x="142" y="52" font-size="28" font-weight="900" fill="#fff">DASH</text>
+      <text x="142" y="84" font-family="Arial" font-size="20" fill="#6ec1ff">Reckless</text>
+      <rect x="372" y="32" width="110" height="54" rx="14" fill="#ffc220"/>
+      <text x="427" y="68" font-size="26" font-weight="900" fill="#0a1a3a" text-anchor="middle">3.2x</text>
+    </g>
+    <g transform="translate(0,288)">
+      <rect x="34" y="0" width="472" height="118" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+      <circle cx="92" cy="59" r="34" fill="url(#g)"/><ellipse cx="80" cy="44" rx="11" ry="8" fill="#fff" opacity="0.9"/>
+      <text x="142" y="52" font-size="28" font-weight="900" fill="#fff">ROCKY</text>
+      <text x="142" y="84" font-family="Arial" font-size="20" fill="#6ec1ff">Steady</text>
+      <rect x="372" y="32" width="110" height="54" rx="14" fill="#16306b"/>
+      <text x="427" y="68" font-size="26" font-weight="900" fill="#6ec1ff" text-anchor="middle">2.1x</text>
+    </g>
+    <g transform="translate(0,426)">
+      <rect x="34" y="0" width="472" height="118" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+      <circle cx="92" cy="59" r="34" fill="url(#b)"/><ellipse cx="80" cy="44" rx="11" ry="8" fill="#fff" opacity="0.9"/>
+      <text x="142" y="52" font-size="28" font-weight="900" fill="#fff">SPIKE</text>
+      <text x="142" y="84" font-family="Arial" font-size="20" fill="#6ec1ff">Aggressive</text>
+      <rect x="372" y="32" width="110" height="54" rx="14" fill="#16306b"/>
+      <text x="427" y="68" font-size="26" font-weight="900" fill="#6ec1ff" text-anchor="middle">4.7x</text>
+    </g>
+    <g transform="translate(0,564)">
+      <rect x="34" y="0" width="472" height="118" rx="22" fill="#0f244f" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+      <circle cx="92" cy="59" r="34" fill="url(#gold)"/><ellipse cx="80" cy="44" rx="11" ry="8" fill="#fff" opacity="0.9"/>
+      <text x="142" y="52" font-size="28" font-weight="900" fill="#fff">LUCKY</text>
+      <text x="142" y="84" font-family="Arial" font-size="20" fill="#6ec1ff">Chaotic — long shot!</text>
+      <rect x="372" y="32" width="110" height="54" rx="14" fill="#e74c3c"/>
+      <text x="427" y="68" font-size="26" font-weight="900" fill="#fff" text-anchor="middle">9.5x</text>
+    </g>
+  </g>
+  <!-- bet amount -->
+  <text x="40" y="752" font-family="Arial Black" font-size="24" font-weight="900" fill="#fff">BET AMOUNT</text>
+  <rect x="34" y="772" width="472" height="80" rx="20" fill="#0f244f"/>
+  <text x="270" y="824" font-family="Arial Black" font-size="40" font-weight="900" fill="#ffc220" text-anchor="middle">500</text>
+  <g font-family="Arial Black">
+    <rect x="34" y="872" width="148" height="64" rx="16" fill="#16306b"/><text x="108" y="913" font-size="24" font-weight="900" fill="#6ec1ff" text-anchor="middle">+100</text>
+    <rect x="196" y="872" width="148" height="64" rx="16" fill="#16306b"/><text x="270" y="913" font-size="24" font-weight="900" fill="#6ec1ff" text-anchor="middle">+500</text>
+    <rect x="358" y="872" width="148" height="64" rx="16" fill="#16306b"/><text x="432" y="913" font-size="24" font-weight="900" fill="#6ec1ff" text-anchor="middle">MAX</text>
+  </g>
+  <!-- confirm -->
+  <rect x="34" y="958" width="472" height="86" rx="24" fill="#ffc220"/>
+  <text x="270" y="1012" font-family="Arial Black" font-size="30" font-weight="900" fill="#0a1a3a" text-anchor="middle">LOCK IN BET → 1,600</text>
+</svg>
