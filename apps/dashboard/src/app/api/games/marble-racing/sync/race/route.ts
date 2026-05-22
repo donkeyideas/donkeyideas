@@ -8,14 +8,39 @@ import { getGamePlayerByToken, extractGameToken } from '@/lib/game-auth';
  * Pre-refactor behavior trusted the client's `currentCoins` value and would
  * overwrite the player's balance with whatever the client claimed. This
  * route now treats the client's race outcome as informational (race history,
- * stats) but computes coin movement server-side:
+ * stats) but computes coin movement server-side.
  *
- *   new_balance = old_balance - betAmount + payout
+ * Coin-flow contract (gameMode-aware)
+ * ──────────────────────────────────
+ * Different game modes pre-debit/credit the player through dedicated
+ * economy/transaction actions BEFORE /sync/race ever runs. To avoid
+ * double-counting, this route now applies coin deltas per mode:
  *
- * Hard caps:
- *   - betAmount must be 0-10000 (positive integer)
- *   - payout must be 0..(betAmount * MAX_MULTIPLIER); MAX_MULTIPLIER = 20
- *   - player must have sufficient balance for the bet
+ *   - quick_race            : netChange = 0  (no betting in UI; forced zero)
+ *   - bet                   : netChange = 0  (place_bet debited, settle_bet
+ *                                             credited — both already done)
+ *   - season                : netChange = +claimedPayout
+ *   - national_race         : netChange = +claimedPayout
+ *   - playoff               : netChange = +claimedPayout
+ *   - tournament            : netChange = +claimedPayout
+ *   - multiplayer_tournament: netChange = +claimedPayout
+ *
+ * For the +claimedPayout modes the client has already paid the entry/bet
+ * via place_bet / *_entry actions, so subtracting betAmount again here
+ * would deduct it twice (the original visible bug: a 100-coin bet placing
+ * 3rd for a 125 payout netted -75 instead of +25). We therefore only
+ * credit the payout in this route and let betAmount remain as a stat
+ * field on the RaceRecord/BetRecord rows.
+ *
+ * Hard caps still enforced server-side:
+ *   - betAmount must be 0..MAX_BET_AMOUNT (10000) for record integrity
+ *   - payout must be 0..(betAmount * MAX_BET_PAYOUT_MULTIPLIER), 20x cap
+ *
+ * The pre-route "player.coins < betAmount" balance check was REMOVED:
+ * after this fix no mode debits inside this route (quick_race is forced
+ * to 0, every other mode's debit already happened in place_bet/*_entry),
+ * so the check would erroneously reject players who could afford the
+ * round but have already been debited for it.
  *
  * Phase 4 (next session) replaces this with server-side Matter.js physics
  * so the server doesn't trust the client's claimed winner either. For now
@@ -143,12 +168,15 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    if (betAmount > 0 && player.coins < betAmount) {
-      return NextResponse.json(
-        { error: { message: `Insufficient balance for bet: ${player.coins} < ${betAmount}` } },
-        { status: 402 },
-      );
-    }
+    // NOTE: the previous "player.coins < betAmount" pre-check was removed.
+    // After the gameMode-aware coin-flow fix below, NO mode debits a bet
+    // inside this route — quick_race is forced to 0, and every other mode
+    // (bet/season/national_race/playoff/tournament/multiplayer_tournament)
+    // already debited via place_bet or a dedicated *_entry action in
+    // economy/transaction/route.ts. Re-checking betAmount against the
+    // current (post-debit) balance here would falsely reject players who
+    // genuinely could afford the round. Insufficient-balance enforcement
+    // now lives exclusively in the place_bet/*_entry handlers.
 
     // Idempotency — if the same race-result idempotencyKey was already
     // recorded, return the cached balance. Optional field; falls back to
@@ -163,7 +191,36 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const netChange = claimedPayout - betAmount;
+    // gameMode-aware coin delta. See the docstring at the top of this file
+    // for the full per-mode contract. In short:
+    //   - quick_race: 0 (no betting; already forced via isQuickRace above)
+    //   - bet: 0 — place_bet debited, settle_bet credited the full payout
+    //   - season / national_race / playoff / tournament / multiplayer_tournament:
+    //       +claimedPayout (the entry was already debited via place_bet or
+    //       a *_entry action; this route only credits the winnings).
+    // The pre-fix formula `claimedPayout - betAmount` was double-counting
+    // the bet for every mode where the client had pre-debited it.
+    let netChange: number;
+    switch (gameMode) {
+      case 'quick_race':
+      case 'bet':
+        netChange = 0;
+        break;
+      case 'season':
+      case 'national_race':
+      case 'playoff':
+      case 'tournament':
+      case 'multiplayer_tournament':
+        netChange = claimedPayout;
+        break;
+      default:
+        // Unreachable: VALID_GAME_MODES guard above rejects anything else.
+        // Default to no change rather than guess, so a future mode added to
+        // the enum without updating this switch fails closed (no coin
+        // movement) instead of silently double-counting.
+        netChange = 0;
+        break;
+    }
 
     // Atomic: write race + bet + coin transaction + player update.
     //
