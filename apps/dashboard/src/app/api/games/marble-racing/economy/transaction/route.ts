@@ -43,7 +43,8 @@ type Action =
   | 'mp_payout'
   | 'custom_track_entry'
   | 'season_starter_bonus'
-  | 'client_balance_reconciliation';
+  | 'client_balance_reconciliation'
+  | 'reward_ad';
 
 interface TransactionRequest {
   action: Action;
@@ -151,6 +152,8 @@ export async function POST(request: NextRequest) {
         return seasonStarterBonus(player.id, idempotencyKey, payload);
       case 'client_balance_reconciliation':
         return reconcileClientBalance(player.id, idempotencyKey, payload);
+      case 'reward_ad':
+        return rewardAd(player.id, idempotencyKey, payload);
 
       default:
         return NextResponse.json(
@@ -1205,6 +1208,120 @@ async function settleBet(
       createdAt: result.createdAt.toISOString(),
     },
     result: { payout: roundedPayout },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// reward_ad — player watched a rewarded video ad and earns coins. The grant
+// is server-authoritative: the client supplies only a per-ad nonce
+// (idempotencyKey) so the SAME ad impression can't double-credit, AND the
+// server enforces a daily cap of 5 rewarded ads per UTC calendar day. The
+// reward amount is hard-coded server-side — never taken from the payload.
+//
+// Race-safety: the daily-count re-check happens INSIDE the $transaction so
+// two concurrent claims hitting the 5th slot can't both pass the cap check.
+// ─────────────────────────────────────────────────────────────────────────
+const REWARD_AD_COINS = 100;
+const REWARD_AD_DAILY_CAP = 5;
+
+async function rewardAd(
+  playerId: string,
+  idempotencyKey: string,
+  _payload: Record<string, unknown>,
+): Promise<NextResponse> {
+  // Pre-tx cap check — fast-path rejection so we don't even open a tx for
+  // an obviously over-cap claim. Authoritative re-check happens inside the
+  // tx below to close the concurrent-claim race.
+  const utcNow = new Date();
+  const utcDayStart = new Date(
+    Date.UTC(utcNow.getUTCFullYear(), utcNow.getUTCMonth(), utcNow.getUTCDate()),
+  );
+  const utcDayEnd = new Date(utcDayStart);
+  utcDayEnd.setUTCDate(utcDayEnd.getUTCDate() + 1);
+
+  const preCount = await prisma.gameCoinTransaction.count({
+    where: {
+      playerId,
+      type: 'reward_ad',
+      createdAt: { gte: utcDayStart, lt: utcDayEnd },
+    },
+  });
+  if (preCount >= REWARD_AD_DAILY_CAP) {
+    return NextResponse.json(
+      { error: { message: `Daily ad-watch cap (${REWARD_AD_DAILY_CAP}) reached. Try again tomorrow.` } },
+      { status: 429 },
+    );
+  }
+
+  type RewardAdTxResult =
+    | { kind: 'error'; status: number; message: string }
+    | { kind: 'ok'; txRow: { id: string; type: string; amount: number; createdAt: Date; balance: number }; count: number };
+
+  const result: RewardAdTxResult = await prisma.$transaction(async (tx) => {
+    // Race-safe re-check: a concurrent claim could have landed between the
+    // pre-tx count and now, so verify again inside the tx before crediting.
+    const count = await tx.gameCoinTransaction.count({
+      where: {
+        playerId,
+        type: 'reward_ad',
+        createdAt: { gte: utcDayStart, lt: utcDayEnd },
+      },
+    });
+    if (count >= REWARD_AD_DAILY_CAP) {
+      return {
+        kind: 'error',
+        status: 429,
+        message: `Daily ad-watch cap (${REWARD_AD_DAILY_CAP}) reached. Try again tomorrow.`,
+      };
+    }
+
+    const player = await tx.gamePlayer.findUnique({
+      where: { id: playerId },
+      select: { coins: true },
+    });
+    if (!player) {
+      return { kind: 'error', status: 404, message: 'Player not found' };
+    }
+
+    const updated = await tx.gamePlayer.update({
+      where: { id: playerId },
+      data: { coins: { increment: REWARD_AD_COINS }, lastActiveAt: new Date() },
+      select: { coins: true },
+    });
+    const txRow = await tx.gameCoinTransaction.create({
+      data: {
+        playerId,
+        type: 'reward_ad',
+        amount: REWARD_AD_COINS,
+        balance: updated.coins,
+        description: `Rewarded ad — ${REWARD_AD_COINS} coins`,
+        idempotencyKey,
+      },
+      select: { id: true, type: true, amount: true, createdAt: true, balance: true },
+    });
+    return { kind: 'ok', txRow, count: count + 1 };
+  });
+
+  if (result.kind === 'error') {
+    return NextResponse.json(
+      { error: { message: result.message } },
+      { status: result.status },
+    );
+  }
+
+  const { txRow, count } = result;
+  console.log(`[economy] reward_ad player=${playerId} amount=${REWARD_AD_COINS} dailyCount=${count}/${REWARD_AD_DAILY_CAP} newBalance=${txRow.balance}`);
+
+  return NextResponse.json({
+    success: true,
+    balance: txRow.balance,
+    transaction: {
+      id: txRow.id,
+      type: txRow.type,
+      amount: txRow.amount,
+      createdAt: txRow.createdAt.toISOString(),
+    },
+    result: { amount: REWARD_AD_COINS, dailyCount: count, dailyCap: REWARD_AD_DAILY_CAP },
   });
 }
 
