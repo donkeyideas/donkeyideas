@@ -30,4 +30,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Retry transient network failures up to 2 extra times. On iOS the networking
+// stack isn't always ready the instant the app cold-starts, which surfaces as
+// a "Network Error" (no response). A short backoff almost always fixes it.
+api.interceptors.response.use(undefined, async (error) => {
+  const config: any = error?.config;
+  const isNetworkError = !error?.response; // no HTTP response at all
+  if (!config || !isNetworkError) {
+    return Promise.reject(error);
+  }
+  config.__retryCount = config.__retryCount || 0;
+  if (config.__retryCount >= 2) {
+    return Promise.reject(error);
+  }
+  config.__retryCount += 1;
+  await new Promise((r) => setTimeout(r, 800 * config.__retryCount));
+  return api(config);
+});
+
 export { api, API_BASE_URL, ADMIN_TOKEN };

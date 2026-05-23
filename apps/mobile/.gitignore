@@ -1,10 +1,15 @@
 node_modules/
 .expo/
 dist/
+dist-test/
+android/
+ios/
 *.jks
 *.p8
 *.p12
 *.key
+*.keystore
+*.keystore.b64
 *.mobileprovision
 *.orig.*
 web-build/

@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: '500' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 8 },
-  value: { fontSize: 52, lineHeight: 52, letterSpacing: -1 },
+  value: { fontSize: 52, lineHeight: 78, letterSpacing: -1 },
   deltaPill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, marginBottom: 6 },
   deltaText: { color: '#fff', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
   subline: { fontSize: 15, fontStyle: 'italic', marginTop: 4 },

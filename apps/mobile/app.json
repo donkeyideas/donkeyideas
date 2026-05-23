@@ -15,11 +15,19 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0a0a0a"
+        "backgroundColor": "#ffffff"
       },
       "package": "com.donkeyideas.mobile",
       "navigationBarColor": "#0a0a0a",
       "navigationBarStyle": "light"
+    },
+    "ios": {
+      "bundleIdentifier": "com.donkeyideas.mobile",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "jsEngine": "hermes",
     "plugins": [
@@ -31,11 +39,11 @@
       "router": {
         "root": "./app"
       },
+      "adminApiToken": "wgt_033cd90a55ad7098ac486b4c6df849a3306d3c4cb38f2e13",
       "eas": {
-        "projectId": "e26ba53b-0f6e-482d-9bfb-bc8866489862"
-      },
-      "adminApiToken": "wgt_033cd90a55ad7098ac486b4c6df849a3306d3c4cb38f2e13"
+        "projectId": "a611558a-1ab4-45ab-8049-ce2034b1f0f0"
+      }
     },
-    "owner": "donkeyideas"
+    "owner": "beltranalain"
   }
 }

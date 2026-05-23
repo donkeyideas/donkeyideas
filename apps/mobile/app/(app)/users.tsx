@@ -45,23 +45,30 @@ export default function UsersScreen() {
   const [activeFilter, setActiveFilter] = useState<string>('all');
 
   const fetchData = useCallback(async () => {
-    try {
-      setErrorMsg(null);
-      const [overview, list] = await Promise.all([
-        getUserOverview('30d'),
-        getUsersList({ limit: 25, project: activeFilter === 'all' ? undefined : activeFilter, search: search || undefined }),
-      ]);
-      setData(overview);
-      setUsersList(list.users || []);
-      setTotalUsers(list.total || 0);
-    } catch (e: any) {
-      const status = e?.response?.status;
-      const body = e?.response?.data ? JSON.stringify(e.response.data).slice(0, 200) : '';
-      setErrorMsg(`${status ? `HTTP ${status} — ` : ''}${e?.message || 'Unknown error'}${body ? `\n${body}` : ''}`);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+    setErrorMsg(null);
+    const [overviewRes, listRes] = await Promise.allSettled([
+      getUserOverview('30d'),
+      getUsersList({ limit: 25, project: activeFilter === 'all' ? undefined : activeFilter, search: search || undefined }),
+    ]);
+
+    if (overviewRes.status === 'fulfilled') {
+      setData(overviewRes.value);
     }
+    if (listRes.status === 'fulfilled') {
+      setUsersList(listRes.value.users || []);
+      setTotalUsers(listRes.value.total || 0);
+    }
+
+    // Only surface an error if BOTH calls failed (partial data still renders).
+    if (overviewRes.status === 'rejected' && listRes.status === 'rejected') {
+      const e: any = overviewRes.reason;
+      const status = e?.response?.status;
+      const body = e?.response?.data ? JSON.stringify(e.response.data).slice(0, 160) : '';
+      setErrorMsg(`${status ? `HTTP ${status} — ` : ''}${e?.message || 'Unknown error'}${body ? `\n${body}` : ''}`);
+    }
+
+    setLoading(false);
+    setRefreshing(false);
   }, [activeFilter, search]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -227,14 +234,14 @@ const styles = StyleSheet.create({
   },
   heroLabel: { fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: '500' },
   heroRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 8 },
-  heroValue: { fontSize: 52, lineHeight: 52, letterSpacing: -1 },
+  heroValue: { fontSize: 52, lineHeight: 78, letterSpacing: -1 },
   heroPill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, marginBottom: 6 },
   heroPillText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   heroSub: { fontSize: 15, fontStyle: 'italic', marginTop: 4 },
 
   miniRow: { flexDirection: 'row', gap: 16, marginTop: 18, paddingTop: 16, borderTopWidth: 1 },
   mini: { flex: 1 },
-  miniNum: { fontSize: 24, lineHeight: 26, letterSpacing: -0.5 },
+  miniNum: { fontSize: 24, lineHeight: 36, letterSpacing: -0.5 },
   miniLbl: { fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', marginTop: 4 },
 
   search: {
@@ -248,7 +255,7 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 11, fontWeight: '500', letterSpacing: 0.3 },
 
   sectionTitle: { paddingHorizontal: 24, paddingTop: 18, paddingBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  sectionTitleText: { fontSize: 22, lineHeight: 24, letterSpacing: -0.3 },
+  sectionTitleText: { fontSize: 22, lineHeight: 33, letterSpacing: -0.3 },
   sectionMeta: { fontSize: 11 },
 
   list: { paddingHorizontal: 16 },

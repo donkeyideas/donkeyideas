@@ -35,6 +35,6 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   label: { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', fontWeight: '500' },
-  value: { fontSize: 30, lineHeight: 32, letterSpacing: -0.5, marginTop: 6 },
+  value: { fontSize: 30, lineHeight: 45, letterSpacing: -0.5, marginTop: 4 },
   trend: { fontSize: 10, fontWeight: '500', marginTop: 4 },
 });

@@ -2,8 +2,8 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Svg, { Circle, Path, Rect, Line } from 'react-native-svg';
 import { useRouter, usePathname } from 'expo-router';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
+import { themes } from '../theme/themes';
 
 const ICON_SIZE = 20;
 
@@ -33,61 +33,78 @@ function GridIcon({ color }: { color: string }) {
     </Svg>
   );
 }
-function MenuIcon({ color }: { color: string }) {
+function SunIcon({ color }: { color: string }) {
   return (
     <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
-      <Line x1="3" y1="6" x2="21" y2="6" />
-      <Line x1="3" y1="12" x2="21" y2="12" />
-      <Line x1="3" y1="18" x2="21" y2="18" />
+      <Circle cx="12" cy="12" r="4" />
+      <Line x1="12" y1="2" x2="12" y2="5" />
+      <Line x1="12" y1="19" x2="12" y2="22" />
+      <Line x1="2" y1="12" x2="5" y2="12" />
+      <Line x1="19" y1="12" x2="22" y2="12" />
+      <Line x1="4.9" y1="4.9" x2="7" y2="7" />
+      <Line x1="17" y1="17" x2="19.1" y2="19.1" />
+      <Line x1="4.9" y1="19.1" x2="7" y2="17" />
+      <Line x1="17" y1="7" x2="19.1" y2="4.9" />
+    </Svg>
+  );
+}
+function MoonIcon({ color }: { color: string }) {
+  return (
+    <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8}>
+      <Path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" />
     </Svg>
   );
 }
 
-// Tab bar uses literal dark/cream colors so it looks identical in light and
-// dark mode (the bar is always dark with light icons, like the mockup).
-const BAR_BG = '#1f1d1a';
-const ACTIVE_BG = '#f5f0e8';
-const ACTIVE_ICON = '#1f1d1a';
-const INACTIVE_ICON = 'rgba(245,240,232,0.55)';
-
 export function BottomTabBar() {
+  const { theme, themeKey, setThemeKey } = useTheme();
+  const c = theme.colors;
   const router = useRouter();
   const pathname = usePathname();
-  const navigation = useNavigation();
 
   const isUsers = pathname.endsWith('/users');
   const isAnalytics = pathname.endsWith('/analytics');
   const isApps = pathname.endsWith('/appstore');
+  const isDark = themeKey === 'dark';
+
+  // Inverted bar: render the toolbar in the OPPOSITE theme so the floating
+  // nav always contrasts with the screen behind it.
+  const inv = themes[isDark ? 'light' : 'dark'].colors;
+  const barBg = inv.bg;
+  const barBorder = inv.border;
+  const inactiveIcon = inv.muted;
+  const activeBg = inv.ink;
+  const activeIcon = inv.bg;
 
   return (
-    <View style={[styles.bar, { backgroundColor: BAR_BG }]} pointerEvents="box-none">
+    <View style={[styles.bar, { backgroundColor: barBg, borderColor: barBorder }]} pointerEvents="box-none">
       <TouchableOpacity
-        style={[styles.tab, isUsers && { backgroundColor: ACTIVE_BG }]}
+        style={[styles.tab, isUsers && { backgroundColor: activeBg }]}
         onPress={() => router.replace('/users')}
         activeOpacity={0.7}
       >
-        <UsersIcon color={isUsers ? ACTIVE_ICON : INACTIVE_ICON} />
+        <UsersIcon color={isUsers ? activeIcon : inactiveIcon} />
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.tab, isAnalytics && { backgroundColor: ACTIVE_BG }]}
+        style={[styles.tab, isAnalytics && { backgroundColor: activeBg }]}
         onPress={() => router.replace('/analytics')}
         activeOpacity={0.7}
       >
-        <ChartIcon color={isAnalytics ? ACTIVE_ICON : INACTIVE_ICON} />
+        <ChartIcon color={isAnalytics ? activeIcon : inactiveIcon} />
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.tab, isApps && { backgroundColor: ACTIVE_BG }]}
+        style={[styles.tab, isApps && { backgroundColor: activeBg }]}
         onPress={() => router.replace('/appstore')}
         activeOpacity={0.7}
       >
-        <GridIcon color={isApps ? ACTIVE_ICON : INACTIVE_ICON} />
+        <GridIcon color={isApps ? activeIcon : inactiveIcon} />
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.tab}
-        onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        onPress={() => setThemeKey(isDark ? 'light' : 'dark')}
         activeOpacity={0.7}
       >
-        <MenuIcon color={INACTIVE_ICON} />
+        {isDark ? <SunIcon color={inactiveIcon} /> : <MoonIcon color={inactiveIcon} />}
       </TouchableOpacity>
     </View>
   );
@@ -105,9 +122,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
     shadowColor: '#000',
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.18,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
     elevation: 10,

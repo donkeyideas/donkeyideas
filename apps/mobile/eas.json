@@ -8,6 +8,9 @@
       "android": {
         "buildType": "apk"
       },
+      "ios": {
+        "simulator": false
+      },
       "distribution": "internal",
       "env": {
         "EXPO_NO_DOTENV": "1",
@@ -16,9 +19,18 @@
       },
       "node": "20.18.0"
     },
+    "preview-simulator": {
+      "extends": "preview",
+      "ios": {
+        "simulator": true
+      }
+    },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "ios": {
+        "autoIncrement": true
       },
       "env": {
         "EXPO_NO_DOTENV": "1",

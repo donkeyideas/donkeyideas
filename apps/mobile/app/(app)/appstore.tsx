@@ -6,6 +6,7 @@ import { Greeting } from '../../src/components/Greeting';
 import { LogoAvatar } from '../../src/components/LogoAvatar';
 import { SectionTitle } from '../../src/components/SectionTitle';
 import { BottomTabBar } from '../../src/components/BottomTabBar';
+import { PlatformBadge } from '../../src/components/PlatformBadge';
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -131,7 +132,7 @@ export default function AppStoreScreen() {
                   <View style={styles.nameRow}>
                     <Text style={[styles.appName, { color: c.ink }]} numberOfLines={1}>{app.name}</Text>
                     <View style={[styles.platTag, { backgroundColor: c.bgAlt }]}>
-                      <Text style={[styles.platTagText, { color: c.muted }]}>{app.platform}</Text>
+                      <PlatformBadge platform={app.platform} size={13} appleColor={c.ink} />
                     </View>
                   </View>
                   <Text style={[styles.appSub, { color: c.muted, fontFamily: theme.fontHead }]}>{formatNumber(app.activeDevices || 0)} active devices</Text>
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
   heroLabel: { fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: '500', marginBottom: 8 },
   funnelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingVertical: 4 },
   funnelLabel: { fontSize: 14, fontStyle: 'italic' },
-  funnelVal: { fontSize: 26, lineHeight: 26, letterSpacing: -0.5 },
+  funnelVal: { fontSize: 26, lineHeight: 39, letterSpacing: -0.5 },
   funnelBar: { height: 5, borderRadius: 3, marginVertical: 6, overflow: 'hidden' },
   funnelBarFill: { height: '100%', borderRadius: 3 },
   funnelArrow: { textAlign: 'center', fontSize: 12, fontStyle: 'italic' },
@@ -239,11 +240,10 @@ const styles = StyleSheet.create({
   appTop: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   appName: { fontSize: 14, fontWeight: '600', letterSpacing: -0.2, flexShrink: 1 },
-  platTag: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
-  platTagText: { fontSize: 9, fontWeight: '500', letterSpacing: 0.4 },
+  platTag: { padding: 4, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   appSub: { fontSize: 11, fontStyle: 'italic', marginTop: 2 },
   appRight: { alignItems: 'flex-end' },
-  installNum: { fontSize: 24, lineHeight: 24, letterSpacing: -0.5 },
+  installNum: { fontSize: 24, lineHeight: 36, letterSpacing: -0.5 },
   installDelta: { fontSize: 10, fontWeight: '500', marginTop: 2 },
 
   statsRow: { flexDirection: 'row', marginTop: 12, paddingTop: 12, borderTopWidth: 1 },

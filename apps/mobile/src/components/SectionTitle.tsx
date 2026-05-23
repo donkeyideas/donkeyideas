@@ -24,6 +24,6 @@ export function SectionTitle({ title, emphasis, trailing }: SectionTitleProps) {
 
 const styles = StyleSheet.create({
   row: { paddingHorizontal: 24, paddingTop: 22, paddingBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  title: { fontSize: 22, lineHeight: 24, letterSpacing: -0.3 },
+  title: { fontSize: 22, lineHeight: 33, letterSpacing: -0.3 },
   trailing: { fontSize: 11, letterSpacing: 0.5 },
 });

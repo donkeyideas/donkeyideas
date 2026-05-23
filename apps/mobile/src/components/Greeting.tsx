@@ -34,7 +34,7 @@ export function Greeting({ title, subline }: GreetingProps) {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingBottom: 8 },
   subline: { fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', fontWeight: '500' },
-  title: { fontSize: 26, lineHeight: 30, fontStyle: 'italic', letterSpacing: -0.3 },
+  title: { fontSize: 26, lineHeight: 39, fontStyle: 'italic', letterSpacing: -0.3 },
   avatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 18, fontStyle: 'italic' },
+  avatarText: { fontSize: 18, lineHeight: 27, fontStyle: 'italic' },
 });
