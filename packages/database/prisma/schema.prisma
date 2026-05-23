@@ -1434,6 +1434,23 @@ model GamePromo {
 }
 
 // Direct in-app messages to specific players
+model AdMobDailyMetric {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  platform    String // 'ios' | 'android'
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  earningsUsd Decimal  @default(0) @db.Decimal(10, 4)
+  ecpmUsd     Decimal  @default(0) @db.Decimal(10, 4)
+  matchRate   Float? // % requests that returned an ad
+  showRate    Float? // % returned ads actually shown
+  syncedAt    DateTime @default(now())
+
+  @@unique([date, platform])
+  @@index([date])
+  @@map("game_admob_daily_metrics")
+}
+
 model GameMessage {
   id            String    @id @default(cuid())
   playerId      String

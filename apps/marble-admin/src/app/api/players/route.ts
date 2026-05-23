@@ -100,8 +100,8 @@ export async function GET(request: NextRequest) {
     // a bet-win-rate, both called "winRate" — they showed different numbers
     // for the same user.) One groupBy per filtered page is fine.
     const playerIds = players.map((p) => p.id);
-    const [betTotalsByPlayer, betWinsByPlayer] = playerIds.length === 0
-      ? [[], []]
+    const [betTotalsByPlayer, betWinsByPlayer, adsByPlayer] = playerIds.length === 0
+      ? [[], [], []]
       : await Promise.all([
           prisma.betRecord.groupBy({
             by: ['playerId'],
@@ -113,9 +113,18 @@ export async function GET(request: NextRequest) {
             where: { playerId: { in: playerIds }, won: true },
             _count: { id: true },
           }),
+          // Rewarded-ad watch count per player on this page. Surfaced as
+          // the "ADS" column so admins can spot heavy ad watchers at a
+          // glance without opening each profile.
+          prisma.gameCoinTransaction.groupBy({
+            by: ['playerId'],
+            where: { playerId: { in: playerIds }, type: 'reward_ad' },
+            _count: { id: true },
+          }),
         ]);
     const totalBetMap = new Map(betTotalsByPlayer.map((r) => [r.playerId, r._count.id]));
     const wonBetMap = new Map(betWinsByPlayer.map((r) => [r.playerId, r._count.id]));
+    const adsWatchedMap = new Map(adsByPlayer.map((r) => [r.playerId, r._count.id]));
 
     return NextResponse.json({
       // Use the sandbox-aware per-player non-sandbox spend, not the raw
@@ -138,6 +147,7 @@ export async function GET(request: NextRequest) {
           betWinRate: tBets > 0 ? Math.round((wBets / tBets) * 100) : 0,
           totalBets: tBets,
           totalBetWins: wBets,
+          adsWatched: adsWatchedMap.get(p.id) ?? 0,
           // Deprecated alias — kept so any pre-existing reader that hasn't
           // migrated yet doesn't break. Points at the canonical bet-based
           // value (what the detail page returns). Remove once all callers

@@ -103,6 +103,9 @@ export async function GET(
     // detail response with a 500 and the modal would show "Failed to load
     // player data." We swallow + log instead so the rest of the page still
     // renders.
+    const todayStartForAds = new Date();
+    todayStartForAds.setHours(0, 0, 0, 0);
+
     const [
       recentRaces,
       recentBets,
@@ -111,6 +114,8 @@ export async function GET(
       seasonProgress,
       betStats,
       marbleBets,
+      adsLifetimeAgg,
+      adsTodayAgg,
     ] = await Promise.all([
       prisma.raceRecord.findMany({
         where: { playerId: id },
@@ -148,6 +153,20 @@ export async function GET(
         where: { playerId: id },
         _count: { id: true },
         _sum: { betAmount: true, payout: true },
+      }),
+      // Rewarded-ad activity: every ad watched is logged as a coin
+      // transaction with type='reward_ad'. Count + sum gives this user's
+      // lifetime ad engagement. We don't have per-user AdMob revenue
+      // (their API is impression-aggregate), so the UI estimates revenue
+      // share from MTD pool × (user impressions / total impressions).
+      prisma.gameCoinTransaction.aggregate({
+        where: { playerId: id, type: 'reward_ad' },
+        _count: { id: true },
+        _sum: { amount: true },
+      }),
+      prisma.gameCoinTransaction.aggregate({
+        where: { playerId: id, type: 'reward_ad', createdAt: { gte: todayStartForAds } },
+        _count: { id: true },
       }),
     ]);
 
@@ -369,6 +388,45 @@ export async function GET(
       { label: 'Net P/L', value: `${totalWon - totalWagered >= 0 ? '+' : ''}${Math.round(totalWon - totalWagered)}` },
     ];
 
+    // ---- Estimated ad-revenue contribution ----
+    // AdMob doesn't expose per-user revenue (it's impression-aggregated),
+    // so we estimate this user's share of the month-to-date pool by their
+    // share of impressions. Falls back to 0 when nothing has synced yet.
+    const adsLifetime = adsLifetimeAgg._count.id;
+    const adsToday = adsTodayAgg._count.id;
+    const adCoinsEarned = Number(adsLifetimeAgg._sum.amount ?? 0);
+    let estAdRevenueUsd = 0;
+    if (adsLifetime > 0) {
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      const [totalAdsMtd, mtdAdMob] = await Promise.all([
+        prisma.gameCoinTransaction.count({
+          where: { type: 'reward_ad', createdAt: { gte: monthStart } },
+        }),
+        prisma.adMobDailyMetric.aggregate({
+          where: { date: { gte: monthStart } },
+          _sum: { earningsUsd: true, impressions: true },
+        }),
+      ]);
+      const userAdsMtd = await prisma.gameCoinTransaction.count({
+        where: { playerId: id, type: 'reward_ad', createdAt: { gte: monthStart } },
+      });
+      const totalRev = Number(mtdAdMob._sum.earningsUsd ?? 0);
+      // Use impression count as the share basis when available (most
+      // accurate), otherwise fall back to logged ad-watch count.
+      const totalImp = Number(mtdAdMob._sum.impressions ?? 0);
+      const sharePool = totalImp > 0 ? totalImp : totalAdsMtd;
+      const userShare = totalImp > 0 ? userAdsMtd : userAdsMtd; // same numerator either way
+      if (totalRev > 0 && sharePool > 0) {
+        estAdRevenueUsd = (userShare / sharePool) * totalRev;
+      }
+    }
+    const ads = {
+      lifetime: adsLifetime,
+      today: adsToday,
+      coinsEarned: adCoinsEarned,
+      estRevenueUsd: estAdRevenueUsd,
+    };
+
     // ---- Admin Notes (no model yet) ----
     const adminNotes: any[] = [];
 
@@ -396,6 +454,7 @@ export async function GET(
         biggestWin: betStats._max.payout ?? 0,
       },
       kpis,
+      ads,
       heatmap,
       coinHistory,
       raceStats,

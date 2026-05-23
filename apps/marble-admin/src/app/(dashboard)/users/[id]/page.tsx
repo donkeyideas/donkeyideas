@@ -172,6 +172,7 @@ export default function UserDetailPage() {
   const heatmap = data?.heatmap ?? { days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], grid: Array.from({ length: 7 }, () => Array(24).fill(0)), peakTime: 'N/A', mostActiveDay: 'N/A' };
   const coinHistory = data?.coinHistory ?? { bars: [], high: 0, low: 0, current: 0, totalIn: 0, totalOut: 0 };
   const raceStats: any[] = data?.raceStats ?? [];
+  const ads = data?.ads ?? { lifetime: 0, today: 0, coinsEarned: 0, estRevenueUsd: 0 };
   const adminNotes: any[] = data?.adminNotes ?? [];
 
   // Marble preferences from API
@@ -542,6 +543,18 @@ export default function UserDetailPage() {
             <StatRow label="Total Spent" value={`$${purchaseTotal.toFixed(2)}`} />
             <StatRow label="Avg Purchase" value={`$${avgPurchase.toFixed(2)}`} />
             <StatRow label="Last Purchase" value={lastPurchase} />
+          </div>
+
+          {/* Rewarded ad engagement — separate from IAP spend.
+            * AdMob doesn't expose per-user revenue, so estRevenueUsd is an
+            * MTD impression-share estimate (this user's ad watches divided
+            * by the platform's total impressions × pool revenue). */}
+          <div className="border-t border-white/[0.06] mt-3 pt-3 space-y-0.5">
+            <p className="text-[10px] text-white/30 uppercase font-bold tracking-wider mb-1">Rewarded Ads</p>
+            <StatRow label="Ads Watched (Lifetime)" value={fmtNum(ads.lifetime)} />
+            <StatRow label="Ads Watched (Today)" value={fmtNum(ads.today)} />
+            <StatRow label="Coins from Ads" value={fmtNum(ads.coinsEarned)} highlight="gold" />
+            <StatRow label="Est. Ad Revenue (MTD)" value={`$${Number(ads.estRevenueUsd ?? 0).toFixed(4)}`} highlight="green" />
           </div>
         </SectionCard>
       </div>

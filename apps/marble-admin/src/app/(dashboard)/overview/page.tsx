@@ -290,6 +290,10 @@ export default function OverviewPage() {
     queryKey: ['overview'],
     queryFn: () => api.get('/overview').then((res) => res.data),
   });
+  const { data: admob } = useQuery<{ configured: boolean; yesterday: { revenueUsd: number; impressions: number }; monthToDate: { revenueUsd: number } }>({
+    queryKey: ['admob-metrics'],
+    queryFn: () => api.get('/admob/metrics').then((res) => res.data),
+  });
   const [revenueView, setRevenueView] = useState<'gross' | 'net'>('gross');
 
   const revenueChartData = useMemo(() => {
@@ -342,6 +346,12 @@ export default function OverviewPage() {
           >
             {revTrend.text} vs yesterday
           </div>
+          {admob?.configured && (
+            <div className="text-[10px] text-white/40 mt-1.5 leading-tight">
+              + ${admob.yesterday.revenueUsd.toFixed(2)} ad rev yesterday
+              <span className="text-white/25"> · MTD ${admob.monthToDate.revenueUsd.toFixed(0)}</span>
+            </div>
+          )}
         </div>
 
         {/* Total Users */}

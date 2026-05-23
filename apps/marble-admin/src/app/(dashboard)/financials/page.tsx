@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api-client';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
@@ -32,6 +32,21 @@ interface FeeTier {
   keep30: number;
   keep15: number;
   savings: number;
+}
+
+interface AdMobMetrics {
+  configured: boolean;
+  yesterday: {
+    date: string;
+    revenueUsd: number;
+    impressions: number;
+    ios: { revenueUsd: number; impressions: number; ecpmUsd: number };
+    android: { revenueUsd: number; impressions: number; ecpmUsd: number };
+  };
+  monthToDate: { revenueUsd: number; impressions: number; clicks: number };
+  lifetime: { revenueUsd: number; impressions: number; clicks: number };
+  daily: Array<{ date: string; earningsUsd: number; impressions: number; ios: number; android: number }>;
+  lastSyncedAt: string | null;
 }
 
 interface FinancialsData {
@@ -87,9 +102,20 @@ type FeeTierSortKey = 'annualRevenue' | 'at30pct' | 'at15pct' | 'keep30' | 'keep
 /* ------------------------------------------------------------------ */
 
 export default function FinancialsPage() {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery<FinancialsData>({
     queryKey: ['financials'],
     queryFn: () => api.get('/financials').then((res: any) => res.data),
+  });
+
+  const { data: admob } = useQuery<AdMobMetrics>({
+    queryKey: ['admob-metrics'],
+    queryFn: () => api.get('/admob/metrics').then((res: any) => res.data),
+  });
+
+  const syncAdmob = useMutation({
+    mutationFn: () => api.post('/admob/sync?days=35'),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admob-metrics'] }),
   });
 
   const { sortKey: pricingSortKey, sortDir: pricingSortDir, handleSort: handlePricingSort, sortItems: sortPricingItems } = useSort<PricingSortKey>();
@@ -183,6 +209,137 @@ export default function FinancialsPage() {
             {refundCount} refund requests
           </div>
         </div>
+      </div>
+
+      {/* ── AdMob Ad Revenue ── */}
+      <div className="bg-white/5 border-2 border-white/[0.08] rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="font-heading text-base tracking-wide">Ad Revenue — AdMob</div>
+            <div className="text-[11px] text-white/35 mt-0.5">
+              Rewarded video ads. AdMob data lags ~24h so yesterday is the latest final number.
+              {admob?.lastSyncedAt && (
+                <span> · Last synced {timeAgo(admob.lastSyncedAt)}</span>
+              )}
+            </div>
+          </div>
+          {admob?.configured && (
+            <button
+              type="button"
+              onClick={() => syncAdmob.mutate()}
+              disabled={syncAdmob.isPending}
+              className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-marble-blue/15 text-marble-blue hover:bg-marble-blue/25 transition-colors disabled:opacity-50"
+            >
+              {syncAdmob.isPending ? 'Syncing…' : 'Sync now'}
+            </button>
+          )}
+        </div>
+
+        {!admob?.configured ? (
+          <div className="text-sm text-white/50 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+            <div className="font-semibold text-white/70 mb-1">AdMob API not configured</div>
+            <div className="text-[12px]">
+              Set <code className="text-marble-blue">ADMOB_SERVICE_ACCOUNT_JSON</code> and{' '}
+              <code className="text-marble-blue">ADMOB_PUBLISHER_ID</code> in Vercel env vars,
+              then invite the service account email to AdMob (Settings → Access &amp; authorization → Read access).
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Yesterday Revenue */}
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+                <div className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">
+                  Yesterday ({admob.yesterday.date.slice(5)})
+                </div>
+                <div className="font-heading text-[24px] text-gold mt-1">
+                  {formatCurrency(admob.yesterday.revenueUsd)}
+                </div>
+                <div className="text-[11px] text-white/40 mt-1">
+                  {admob.yesterday.impressions.toLocaleString()} impressions
+                </div>
+              </div>
+
+              {/* MTD Revenue */}
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+                <div className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">
+                  Month-to-Date
+                </div>
+                <div className="font-heading text-[24px] text-marble-green mt-1">
+                  {formatCurrency(admob.monthToDate.revenueUsd)}
+                </div>
+                <div className="text-[11px] text-white/40 mt-1">
+                  {admob.monthToDate.impressions.toLocaleString()} impressions
+                </div>
+              </div>
+
+              {/* Lifetime */}
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+                <div className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">
+                  Lifetime
+                </div>
+                <div className="font-heading text-[24px] text-marble-blue mt-1">
+                  {formatCurrency(admob.lifetime.revenueUsd)}
+                </div>
+                <div className="text-[11px] text-white/40 mt-1">
+                  {admob.lifetime.impressions.toLocaleString()} impressions
+                </div>
+              </div>
+
+              {/* Yesterday split iOS vs Android */}
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+                <div className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">
+                  Yesterday by Platform
+                </div>
+                <div className="flex justify-between text-[12px] mt-1.5">
+                  <span className="text-white/50">iOS</span>
+                  <span className="text-marble-blue font-semibold">{formatCurrency(admob.yesterday.ios.revenueUsd)}</span>
+                </div>
+                <div className="text-[10px] text-white/30 text-right">
+                  eCPM ${admob.yesterday.ios.ecpmUsd.toFixed(2)}
+                </div>
+                <div className="flex justify-between text-[12px] mt-1">
+                  <span className="text-white/50">Android</span>
+                  <span className="text-marble-green font-semibold">{formatCurrency(admob.yesterday.android.revenueUsd)}</span>
+                </div>
+                <div className="text-[10px] text-white/30 text-right">
+                  eCPM ${admob.yesterday.android.ecpmUsd.toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            {/* Daily series chart (last 30 days, simple bar viz) */}
+            {admob.daily.length > 0 && (
+              <div className="mt-4 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+                <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">
+                  Last 30 Days — Daily Revenue
+                </div>
+                {(() => {
+                  const maxRev = Math.max(...admob.daily.map((d) => d.earningsUsd), 0.01);
+                  return (
+                    <div className="flex items-end gap-1 h-[80px]">
+                      {admob.daily.map((d) => {
+                        const pct = Math.round((d.earningsUsd / maxRev) * 100);
+                        return (
+                          <div
+                            key={d.date}
+                            title={`${d.date}: $${d.earningsUsd.toFixed(2)} · ${d.impressions.toLocaleString()} imp`}
+                            className="flex-1 bg-gradient-to-b from-gold to-gold/40 rounded-t"
+                            style={{ height: `${Math.max(pct, 1)}%` }}
+                          />
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+                <div className="flex justify-between text-[10px] text-white/30 mt-1">
+                  <span>{admob.daily[0]?.date.slice(5)}</span>
+                  <span>{admob.daily[admob.daily.length - 1]?.date.slice(5)}</span>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* ── Pricing Matrix Table ── */}

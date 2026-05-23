@@ -155,10 +155,16 @@ export default function EconomyPage() {
 
   const rewards = config.rewards ?? [];
   const betting = config.betting ?? [];
-  const features = (config.features ?? []).map((f: any) => ({
-    ...f,
-    value: toggleOverrides[f.key] !== undefined ? toggleOverrides[f.key] : f.value,
-  }));
+  const features = (config.features ?? [])
+    .map((f: any) => ({
+      ...f,
+      value: toggleOverrides[f.key] !== undefined ? toggleOverrides[f.key] : f.value,
+    }))
+    .sort((a: any, b: any) => {
+      if (a.key === 'feature_rewarded_ads') return -1;
+      if (b.key === 'feature_rewarded_ads') return 1;
+      return 0;
+    });
 
   const distribution = econ.distribution ?? [];
   const maxCount = distribution.length > 0 ? Math.max(...distribution.map((d: any) => d.count)) : 1;
@@ -387,28 +393,6 @@ export default function EconomyPage() {
           </Card>
         ))}
 
-        {/* ---- Feature Toggles ---- */}
-        <Card title="Feature Toggles">
-          {features.length > 0 ? (
-            features.map((f: any) => (
-              <div key={f.key} className="flex items-center justify-between py-3.5 border-b border-white/[0.06] last:border-b-0">
-                <div>
-                  <div className={`font-medium text-[13px] ${f.danger ? 'text-marble-red' : ''}`}>{f.label}</div>
-                  <div className="text-[11px] text-white/35 mt-0.5">{f.desc}</div>
-                </div>
-                <div
-                  className={`w-11 h-6 rounded-xl relative cursor-pointer transition-colors ${f.value ? 'bg-marble-green' : 'bg-white/15'}`}
-                  onClick={() => handleToggle(f.key, f.value)}
-                >
-                  <div className={`absolute top-[3px] left-[3px] w-[18px] h-[18px] bg-white rounded-full transition-transform shadow-sm ${f.value ? 'translate-x-5' : ''}`} />
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-sm text-white/30 text-center py-4">No feature toggle data</div>
-          )}
-        </Card>
-
         {/* ---- Legacy / orphan keys ---- */}
         {orphanRows.length > 0 && (
           <Card title="Other / Legacy">
@@ -492,6 +476,28 @@ export default function EconomyPage() {
             </div>
           </div>
           <p className="text-[11px] text-white/35 text-center mt-3">User count by coin balance tier</p>
+        </Card>
+
+        {/* ---- Feature Toggles ---- */}
+        <Card title="Feature Toggles">
+          {features.length > 0 ? (
+            features.map((f: any) => (
+              <div key={f.key} className="flex items-center justify-between py-3.5 border-b border-white/[0.06] last:border-b-0">
+                <div>
+                  <div className={`font-medium text-[13px] ${f.danger ? 'text-marble-red' : ''}`}>{f.label}</div>
+                  <div className="text-[11px] text-white/35 mt-0.5">{f.desc}</div>
+                </div>
+                <div
+                  className={`w-11 h-6 rounded-xl relative cursor-pointer transition-colors ${f.value ? 'bg-marble-green' : 'bg-white/15'}`}
+                  onClick={() => handleToggle(f.key, f.value)}
+                >
+                  <div className={`absolute top-[3px] left-[3px] w-[18px] h-[18px] bg-white rounded-full transition-transform shadow-sm ${f.value ? 'translate-x-5' : ''}`} />
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-sm text-white/30 text-center py-4">No feature toggle data</div>
+          )}
         </Card>
       </div>
     </div>
