@@ -20,6 +20,7 @@ const featureDescs: Record<string, string> = {
   feature_leaderboards: 'Global marble/player rankings',
   feature_quick_race: 'No-bet practice races',
   feature_sprite_rendering: 'Use Kenney sprite assets vs fallback shapes',
+  feature_rewarded_ads: 'Watch-ad-for-coins card on the Lobby (AdMob rewarded)',
 };
 
 /* ------------------------------------------------------------------ */
@@ -54,6 +55,10 @@ const SEED_CONFIGS: { key: string; value: string; label: string; group: string }
   { key: 'house_edge', value: '0.10', label: 'House Edge', group: 'betting' },
   { key: 'max_daily_purchases', value: '3', label: 'Max Daily Purchases', group: 'limits' },
   { key: 'max_daily_coins', value: '25000', label: 'Max Daily Coins', group: 'limits' },
+  /* Feature flag for the rewarded-ad "Watch ad for coins" card on the
+   * Lobby. Seeded false so the SDK ships dark; flip to true in admin to
+   * enable for users. */
+  { key: 'feature_rewarded_ads', value: 'false', label: 'Watch-ad-for-coins (Rewarded Ads)', group: 'features' },
 ];
 
 export async function GET(_request: NextRequest) {

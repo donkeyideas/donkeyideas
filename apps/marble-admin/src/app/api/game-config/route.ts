@@ -84,8 +84,12 @@ function parseNumeric(raw: string): number | null {
 export async function GET() {
   try {
     const configs = await prisma.gameConfig.findMany({
-      where: { group: { in: ['rewards', 'betting', 'limits', 'track-bg'] } },
+      where: { group: { in: ['rewards', 'betting', 'limits', 'track-bg', 'features'] } },
     });
+
+    // Feature flags (group: 'features') — boolean toggles surfaced to the
+    // mobile client. Stored as the string 'true'/'false' in gameConfig.
+    const featureFlags: Record<string, boolean> = {};
 
     // Build numeric config map with defaults (numeric groups)
     const map: Record<string, number> = { ...DEFAULTS };
@@ -102,6 +106,8 @@ export async function GET() {
       if (c.group === 'track-bg') {
         const courseId = c.key.startsWith(BG_PREFIX) ? c.key.slice(BG_PREFIX.length) : c.key;
         trackBgImages[courseId] = c.value;
+      } else if (c.group === 'features') {
+        featureFlags[c.key] = c.value === 'true' || c.value === '1';
       } else {
         const parsed = parseNumeric(c.value);
         if (parsed !== null) {
@@ -227,6 +233,9 @@ export async function GET() {
       },
       xpPerLevel: map.xp_per_level,
       trackBgImages,
+      // Feature flags — boolean toggles. Mobile checks these via helpers
+      // like isRewardedAdsEnabled() in lib/remoteConfig.ts.
+      feature_rewarded_ads: featureFlags.feature_rewarded_ads ?? false,
     });
   } catch (error: any) {
     // On error, return DEFAULTS so the game always works. Mobile's
