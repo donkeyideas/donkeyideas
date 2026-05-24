@@ -38,6 +38,7 @@ const FILTERS = [
   { label: 'Flagged', value: 'flagged' },
   { label: 'iOS', value: 'ios' },
   { label: 'Android', value: 'android' },
+  { label: 'Watching Ads', value: 'watching_ads' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -407,7 +408,7 @@ function PlayerSummaryModal({
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
-type SortKey = 'playerName' | 'status' | 'platform' | 'coins' | 'totalRaces' | 'totalSpent' | 'passTier' | 'createdAt' | 'lastActiveAt';
+type SortKey = 'playerName' | 'status' | 'platform' | 'coins' | 'totalRaces' | 'totalSpent' | 'passTier' | 'createdAt' | 'lastActiveAt' | 'adsWatched';
 
 export default function UsersPage() {
   const router = useRouter();
@@ -598,7 +599,7 @@ export default function UsersPage() {
                 <SortableHeader label="Coins" sortKey="coins" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Races" sortKey="totalRaces" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Total Spent" sortKey="totalSpent" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-                <th className="text-left px-4 py-3 text-[10px] font-bold text-white/40 uppercase tracking-wider">Ads</th>
+                <SortableHeader label="Ads" sortKey="adsWatched" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Season Pass" sortKey="passTier" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Joined" sortKey="createdAt" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Last Active" sortKey="lastActiveAt" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
