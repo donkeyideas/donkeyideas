@@ -187,7 +187,7 @@
     "themeColor": "#2ecc71"
   },
   {
-    "id": "gen-1028",
+    "id": "gen-1006",
     "name": "Crystal Falls",
     "theme": "volcano",
     "description": "Ball pits and cradles weave through ramps",
@@ -209,7 +209,7 @@
     "themeColor": "#3498db"
   },
   {
-    "id": "gen-1725",
+    "id": "gen-1192",
     "name": "Mystic Gorge",
     "theme": "cyber",
     "description": "Pendulums and trampolines on a fast course",
@@ -242,7 +242,7 @@
     "themeColor": "#e74c3c"
   },
   {
-    "id": "gen-1081",
+    "id": "gen-1143",
     "name": "Frozen Drop",
     "theme": "frozen",
     "description": "Cradles and trampolines across winding ramps",
@@ -286,29 +286,29 @@
     "themeColor": "#e74c3c"
   },
   {
-    "id": "gen-1006",
-    "name": "Crystal Falls",
-    "theme": "volcano",
-    "description": "Wide open descent — pure speed matters",
+    "id": "gen-1165",
+    "name": "Storm Rapids",
+    "theme": "night",
+    "description": "Long ramp chains build momentum",
     "gradient": [
-      "#6a1a00",
-      "#e74c3c"
+      "#050520",
+      "#101040"
     ],
-    "themeColor": "#e74c3c"
+    "themeColor": "#4a4a8a"
   },
   {
-    "id": "gen-1013",
-    "name": "Iron Run",
-    "theme": "frozen",
-    "description": "Winding path through scattered bumpers",
+    "id": "gen-1175",
+    "name": "Golden Chute",
+    "theme": "candy",
+    "description": "Chaotic peg fields slow the pack",
     "gradient": [
-      "#1a3a5a",
-      "#5a8aba"
+      "#cc1080",
+      "#ff69b4"
     ],
-    "themeColor": "#3498db"
+    "themeColor": "#ff69b4"
   },
   {
-    "id": "gen-1109",
+    "id": "gen-1177",
     "name": "Silver Plunge",
     "theme": "ocean",
     "description": "Obstacle-heavy test of endurance",
@@ -319,7 +319,7 @@
     "themeColor": "#0077b6"
   },
   {
-    "id": "gen-1130",
+    "id": "gen-1178",
     "name": "Dark Drift",
     "theme": "volcanic",
     "description": "Speed zones reward aggressive play",
@@ -330,7 +330,7 @@
     "themeColor": "#cc0000"
   },
   {
-    "id": "gen-1139",
+    "id": "gen-1187",
     "name": "Crimson Slope",
     "theme": "neon",
     "description": "Steep drops with tight funnels",
@@ -341,18 +341,7 @@
     "themeColor": "#00ff87"
   },
   {
-    "id": "gen-1143",
-    "name": "Emerald Ridge",
-    "theme": "snow",
-    "description": "Open course with strategic bumpers",
-    "gradient": [
-      "#b0c8e0",
-      "#e0f0ff"
-    ],
-    "themeColor": "#b0d0f0"
-  },
-  {
-    "id": "gen-1165",
+    "id": "gen-1204",
     "name": "Cobalt Trail",
     "theme": "meadow",
     "description": "Dense obstacles test every marble stat",
@@ -363,7 +352,7 @@
     "themeColor": "#2ecc71"
   },
   {
-    "id": "gen-1172",
+    "id": "gen-1214",
     "name": "Amber Cascade",
     "theme": "volcano",
     "description": "Quick descent favors the bold",
@@ -374,7 +363,7 @@
     "themeColor": "#e74c3c"
   },
   {
-    "id": "gen-1175",
+    "id": "gen-1219",
     "name": "Phantom Ravine",
     "theme": "frozen",
     "description": "Scattered hazards across wide ramps",
@@ -385,7 +374,7 @@
     "themeColor": "#3498db"
   },
   {
-    "id": "gen-1177",
+    "id": "gen-1280",
     "name": "Savage Summit",
     "theme": "cyber",
     "description": "Momentum-building run with sharp turns",
@@ -396,7 +385,7 @@
     "themeColor": "#9b59b6"
   },
   {
-    "id": "gen-1178",
+    "id": "gen-1299",
     "name": "Wild Hollow",
     "theme": "beach",
     "description": "Peg-heavy course with surprise gaps",
@@ -407,7 +396,7 @@
     "themeColor": "#f0c040"
   },
   {
-    "id": "gen-1187",
+    "id": "gen-1300",
     "name": "Ancient Abyss",
     "theme": "forest",
     "description": "Balance of speed and obstacle control",
@@ -418,7 +407,7 @@
     "themeColor": "#1a8a1a"
   },
   {
-    "id": "gen-1192",
+    "id": "gen-1368",
     "name": "Rusted Canyon",
     "theme": "desert",
     "description": "Tight ramps with dense peg zones",
@@ -429,7 +418,7 @@
     "themeColor": "#d4a840"
   },
   {
-    "id": "gen-1203",
+    "id": "gen-1403",
     "name": "Molten Falls",
     "theme": "sunset",
     "description": "Wide open descent — pure speed matters",
@@ -440,7 +429,7 @@
     "themeColor": "#ff6b35"
   },
   {
-    "id": "gen-1204",
+    "id": "gen-1410",
     "name": "Spectral Run",
     "theme": "night",
     "description": "Winding path through scattered bumpers",
@@ -451,7 +440,7 @@
     "themeColor": "#4a4a8a"
   },
   {
-    "id": "gen-1214",
+    "id": "gen-1426",
     "name": "Lunar Gorge",
     "theme": "candy",
     "description": "Narrow gaps test precision and bounce",
@@ -462,7 +451,7 @@
     "themeColor": "#ff69b4"
   },
   {
-    "id": "gen-1219",
+    "id": "gen-1428",
     "name": "Solar Pass",
     "theme": "ocean",
     "description": "Multi-obstacle gauntlet run",
@@ -473,7 +462,7 @@
     "themeColor": "#0077b6"
   },
   {
-    "id": "gen-1240",
+    "id": "gen-1432",
     "name": "Thunder Valley",
     "theme": "volcanic",
     "description": "Fast drop with minimal obstacles",
@@ -484,7 +473,7 @@
     "themeColor": "#cc0000"
   },
   {
-    "id": "gen-1241",
+    "id": "gen-1466",
     "name": "Crystal Drop",
     "theme": "neon",
     "description": "Tricky turns and hidden bumpers",
@@ -495,7 +484,7 @@
     "themeColor": "#00ff87"
   },
   {
-    "id": "gen-1250",
+    "id": "gen-1494",
     "name": "Iron Descent",
     "theme": "snow",
     "description": "Bouncy terrain keeps it unpredictable",
@@ -506,7 +495,7 @@
     "themeColor": "#b0d0f0"
   },
   {
-    "id": "gen-1262",
+    "id": "gen-1510",
     "name": "Mystic Rapids",
     "theme": "meadow",
     "description": "Long ramp chains build momentum",
@@ -517,7 +506,7 @@
     "themeColor": "#2ecc71"
   },
   {
-    "id": "gen-1280",
+    "id": "gen-1520",
     "name": "Blazing Chute",
     "theme": "volcano",
     "description": "Chaotic peg fields slow the pack",
@@ -528,7 +517,7 @@
     "themeColor": "#e74c3c"
   },
   {
-    "id": "gen-1299",
+    "id": "gen-1561",
     "name": "Shadow Plunge",
     "theme": "frozen",
     "description": "Obstacle-heavy test of endurance",
@@ -539,7 +528,7 @@
     "themeColor": "#3498db"
   },
   {
-    "id": "gen-1300",
+    "id": "gen-1564",
     "name": "Frozen Drift",
     "theme": "cyber",
     "description": "Speed zones reward aggressive play",
@@ -550,7 +539,7 @@
     "themeColor": "#9b59b6"
   },
   {
-    "id": "gen-1322",
+    "id": "gen-1579",
     "name": "Neon Slope",
     "theme": "beach",
     "description": "Steep drops with tight funnels",
@@ -561,7 +550,7 @@
     "themeColor": "#f0c040"
   },
   {
-    "id": "gen-1325",
+    "id": "gen-1580",
     "name": "Storm Ridge",
     "theme": "forest",
     "description": "Open course with strategic bumpers",
@@ -572,7 +561,7 @@
     "themeColor": "#1a8a1a"
   },
   {
-    "id": "gen-1337",
+    "id": "gen-1581",
     "name": "Golden Trail",
     "theme": "desert",
     "description": "Dense obstacles test every marble stat",
@@ -583,7 +572,7 @@
     "themeColor": "#d4a840"
   },
   {
-    "id": "gen-1351",
+    "id": "gen-1592",
     "name": "Silver Cascade",
     "theme": "sunset",
     "description": "Quick descent favors the bold",
@@ -594,7 +583,7 @@
     "themeColor": "#ff6b35"
   },
   {
-    "id": "gen-1353",
+    "id": "gen-1598",
     "name": "Dark Ravine",
     "theme": "night",
     "description": "Scattered hazards across wide ramps",
@@ -605,7 +594,7 @@
     "themeColor": "#4a4a8a"
   },
   {
-    "id": "gen-1365",
+    "id": "gen-1620",
     "name": "Crimson Summit",
     "theme": "candy",
     "description": "Momentum-building run with sharp turns",
@@ -616,7 +605,7 @@
     "themeColor": "#ff69b4"
   },
   {
-    "id": "gen-1368",
+    "id": "gen-1638",
     "name": "Emerald Hollow",
     "theme": "ocean",
     "description": "Peg-heavy course with surprise gaps",
@@ -627,7 +616,7 @@
     "themeColor": "#0077b6"
   },
   {
-    "id": "gen-1387",
+    "id": "gen-1646",
     "name": "Cobalt Abyss",
     "theme": "volcanic",
     "description": "Balance of speed and obstacle control",
@@ -638,7 +627,7 @@
     "themeColor": "#cc0000"
   },
   {
-    "id": "gen-1390",
+    "id": "gen-1670",
     "name": "Amber Canyon",
     "theme": "neon",
     "description": "Tight ramps with dense peg zones",
@@ -649,7 +638,7 @@
     "themeColor": "#00ff87"
   },
   {
-    "id": "gen-1403",
+    "id": "gen-1691",
     "name": "Phantom Falls",
     "theme": "snow",
     "description": "Wide open descent — pure speed matters",
@@ -660,7 +649,7 @@
     "themeColor": "#b0d0f0"
   },
   {
-    "id": "gen-1410",
+    "id": "gen-1693",
     "name": "Savage Run",
     "theme": "meadow",
     "description": "Winding path through scattered bumpers",
@@ -671,7 +660,7 @@
     "themeColor": "#2ecc71"
   },
   {
-    "id": "gen-1411",
+    "id": "gen-1840",
     "name": "Wild Gorge",
     "theme": "volcano",
     "description": "Narrow gaps test precision and bounce",
@@ -682,7 +671,7 @@
     "themeColor": "#e74c3c"
   },
   {
-    "id": "gen-1425",
+    "id": "gen-1895",
     "name": "Ancient Pass",
     "theme": "frozen",
     "description": "Multi-obstacle gauntlet run",
@@ -693,18 +682,7 @@
     "themeColor": "#3498db"
   },
   {
-    "id": "gen-1426",
-    "name": "Rusted Valley",
-    "theme": "cyber",
-    "description": "Fast drop with minimal obstacles",
-    "gradient": [
-      "#2a0a4a",
-      "#9b59b6"
-    ],
-    "themeColor": "#9b59b6"
-  },
-  {
-    "id": "gen-1428",
+    "id": "gen-2100",
     "name": "Molten Drop",
     "theme": "beach",
     "description": "Tricky turns and hidden bumpers",
@@ -715,7 +693,7 @@
     "themeColor": "#f0c040"
   },
   {
-    "id": "gen-1432",
+    "id": "gen-2101",
     "name": "Spectral Descent",
     "theme": "forest",
     "description": "Bouncy terrain keeps it unpredictable",
@@ -726,7 +704,7 @@
     "themeColor": "#1a8a1a"
   },
   {
-    "id": "gen-1433",
+    "id": "gen-2102",
     "name": "Lunar Rapids",
     "theme": "desert",
     "description": "Long ramp chains build momentum",
@@ -737,7 +715,7 @@
     "themeColor": "#d4a840"
   },
   {
-    "id": "gen-1435",
+    "id": "gen-2108",
     "name": "Solar Chute",
     "theme": "sunset",
     "description": "Chaotic peg fields slow the pack",
@@ -748,7 +726,7 @@
     "themeColor": "#ff6b35"
   },
   {
-    "id": "gen-1466",
+    "id": "gen-2109",
     "name": "Thunder Plunge",
     "theme": "night",
     "description": "Obstacle-heavy test of endurance",
@@ -759,7 +737,7 @@
     "themeColor": "#4a4a8a"
   },
   {
-    "id": "gen-1479",
+    "id": "gen-2110",
     "name": "Crystal Drift",
     "theme": "candy",
     "description": "Speed zones reward aggressive play",
@@ -770,7 +748,7 @@
     "themeColor": "#ff69b4"
   },
   {
-    "id": "gen-1488",
+    "id": "gen-2112",
     "name": "Iron Slope",
     "theme": "ocean",
     "description": "Steep drops with tight funnels",
@@ -781,7 +759,7 @@
     "themeColor": "#0077b6"
   },
   {
-    "id": "gen-1489",
+    "id": "gen-2115",
     "name": "Mystic Ridge",
     "theme": "volcanic",
     "description": "Open course with strategic bumpers",
@@ -792,7 +770,7 @@
     "themeColor": "#cc0000"
   },
   {
-    "id": "gen-1494",
+    "id": "gen-2118",
     "name": "Blazing Trail",
     "theme": "neon",
     "description": "Dense obstacles test every marble stat",
@@ -803,923 +781,21 @@
     "themeColor": "#00ff87"
   },
   {
-    "id": "gen-1510",
+    "id": "gen-2123",
     "name": "Shadow Cascade",
     "theme": "snow",
     "description": "Quick descent favors the bold",
     "gradient": [
       "#b0c8e0",
       "#e0f0ff"
-    ],
-    "themeColor": "#b0d0f0"
-  },
-  {
-    "id": "gen-1520",
-    "name": "Frozen Ravine",
-    "theme": "meadow",
-    "description": "Scattered hazards across wide ramps",
-    "gradient": [
-      "#3a7a3a",
-      "#5aaa5a"
-    ],
-    "themeColor": "#2ecc71"
-  },
-  {
-    "id": "gen-1523",
-    "name": "Neon Summit",
-    "theme": "volcano",
-    "description": "Momentum-building run with sharp turns",
-    "gradient": [
-      "#5a1a0a",
-      "#c44000"
-    ],
-    "themeColor": "#e74c3c"
-  },
-  {
-    "id": "gen-1548",
-    "name": "Storm Hollow",
-    "theme": "frozen",
-    "description": "Peg-heavy course with surprise gaps",
-    "gradient": [
-      "#0a3a6a",
-      "#3498db"
-    ],
-    "themeColor": "#3498db"
-  },
-  {
-    "id": "gen-1561",
-    "name": "Golden Abyss",
-    "theme": "cyber",
-    "description": "Balance of speed and obstacle control",
-    "gradient": [
-      "#0a0a2a",
-      "#5a2a8a"
-    ],
-    "themeColor": "#9b59b6"
-  },
-  {
-    "id": "gen-1564",
-    "name": "Silver Canyon",
-    "theme": "beach",
-    "description": "Tight ramps with dense peg zones",
-    "gradient": [
-      "#4a90d9",
-      "#c2b280"
-    ],
-    "themeColor": "#f0c040"
-  },
-  {
-    "id": "gen-1579",
-    "name": "Dark Falls",
-    "theme": "forest",
-    "description": "Wide open descent — pure speed matters",
-    "gradient": [
-      "#0a4a0a",
-      "#3a6a3a"
-    ],
-    "themeColor": "#1a8a1a"
-  },
-  {
-    "id": "gen-1580",
-    "name": "Crimson Run",
-    "theme": "desert",
-    "description": "Winding path through scattered bumpers",
-    "gradient": [
-      "#907020",
-      "#c09030"
-    ],
-    "themeColor": "#d4a840"
-  },
-  {
-    "id": "gen-1581",
-    "name": "Emerald Gorge",
-    "theme": "sunset",
-    "description": "Narrow gaps test precision and bounce",
-    "gradient": [
-      "#cc4420",
-      "#8a2060"
-    ],
-    "themeColor": "#ff6b35"
-  },
-  {
-    "id": "gen-1592",
-    "name": "Cobalt Pass",
-    "theme": "night",
-    "description": "Multi-obstacle gauntlet run",
-    "gradient": [
-      "#0a0a3a",
-      "#2a2a5a"
-    ],
-    "themeColor": "#4a4a8a"
-  },
-  {
-    "id": "gen-1598",
-    "name": "Amber Valley",
-    "theme": "candy",
-    "description": "Fast drop with minimal obstacles",
-    "gradient": [
-      "#bb0070",
-      "#ff59a4"
-    ],
-    "themeColor": "#ff69b4"
-  },
-  {
-    "id": "gen-1618",
-    "name": "Phantom Drop",
-    "theme": "ocean",
-    "description": "Tricky turns and hidden bumpers",
-    "gradient": [
-      "#001a4a",
-      "#0077b6"
-    ],
-    "themeColor": "#0077b6"
-  },
-  {
-    "id": "gen-1620",
-    "name": "Savage Descent",
-    "theme": "volcanic",
-    "description": "Bouncy terrain keeps it unpredictable",
-    "gradient": [
-      "#4a0000",
-      "#9b1010"
-    ],
-    "themeColor": "#cc0000"
-  },
-  {
-    "id": "gen-1638",
-    "name": "Wild Rapids",
-    "theme": "neon",
-    "description": "Long ramp chains build momentum",
-    "gradient": [
-      "#0a1a0a",
-      "#00bb55"
-    ],
-    "themeColor": "#00ff87"
-  },
-  {
-    "id": "gen-1646",
-    "name": "Ancient Chute",
-    "theme": "snow",
-    "description": "Chaotic peg fields slow the pack",
-    "gradient": [
-      "#a0b8d0",
-      "#d0e0f0"
-    ],
-    "themeColor": "#b0d0f0"
-  },
-  {
-    "id": "gen-1657",
-    "name": "Rusted Plunge",
-    "theme": "meadow",
-    "description": "Obstacle-heavy test of endurance",
-    "gradient": [
-      "#2d6b2d",
-      "#4a9a4a"
-    ],
-    "themeColor": "#2ecc71"
-  },
-  {
-    "id": "gen-1667",
-    "name": "Molten Drift",
-    "theme": "volcano",
-    "description": "Speed zones reward aggressive play",
-    "gradient": [
-      "#3a0a0a",
-      "#aa2020"
-    ],
-    "themeColor": "#e74c3c"
-  },
-  {
-    "id": "gen-1670",
-    "name": "Spectral Slope",
-    "theme": "frozen",
-    "description": "Steep drops with tight funnels",
-    "gradient": [
-      "#0a2a4a",
-      "#4a9aca"
-    ],
-    "themeColor": "#3498db"
-  },
-  {
-    "id": "gen-1691",
-    "name": "Lunar Ridge",
-    "theme": "cyber",
-    "description": "Open course with strategic bumpers",
-    "gradient": [
-      "#1a0a3a",
-      "#8a2aca"
-    ],
-    "themeColor": "#9b59b6"
-  },
-  {
-    "id": "gen-1693",
-    "name": "Solar Trail",
-    "theme": "beach",
-    "description": "Dense obstacles test every marble stat",
-    "gradient": [
-      "#3a80c0",
-      "#b0a070"
-    ],
-    "themeColor": "#f0c040"
-  },
-  {
-    "id": "gen-1694",
-    "name": "Thunder Cascade",
-    "theme": "forest",
-    "description": "Quick descent favors the bold",
-    "gradient": [
-      "#0a3a0a",
-      "#2d5a2d"
-    ],
-    "themeColor": "#1a8a1a"
-  },
-  {
-    "id": "gen-1750",
-    "name": "Iron Summit",
-    "theme": "sunset",
-    "description": "Momentum-building run with sharp turns",
-    "gradient": [
-      "#bb3310",
-      "#7a1050"
-    ],
-    "themeColor": "#ff6b35"
-  },
-  {
-    "id": "gen-1840",
-    "name": "Mystic Hollow",
-    "theme": "night",
-    "description": "Peg-heavy course with surprise gaps",
-    "gradient": [
-      "#0a0a2a",
-      "#1a1a4a"
-    ],
-    "themeColor": "#4a4a8a"
-  },
-  {
-    "id": "gen-1895",
-    "name": "Blazing Abyss",
-    "theme": "candy",
-    "description": "Balance of speed and obstacle control",
-    "gradient": [
-      "#dd2090",
-      "#ff79c4"
-    ],
-    "themeColor": "#ff69b4"
-  },
-  {
-    "id": "gen-1940",
-    "name": "Shadow Canyon",
-    "theme": "ocean",
-    "description": "Tight ramps with dense peg zones",
-    "gradient": [
-      "#000a3a",
-      "#0067a6"
-    ],
-    "themeColor": "#0077b6"
-  },
-  {
-    "id": "gen-2005",
-    "name": "Neon Run",
-    "theme": "neon",
-    "description": "Winding path through scattered bumpers",
-    "gradient": [
-      "#0a3a2a",
-      "#00dd77"
-    ],
-    "themeColor": "#00ff87"
-  },
-  {
-    "id": "gen-2010",
-    "name": "Storm Gorge",
-    "theme": "snow",
-    "description": "Narrow gaps test precision and bounce",
-    "gradient": [
-      "#90a8c0",
-      "#c0d0e0"
-    ],
-    "themeColor": "#b0d0f0"
-  },
-  {
-    "id": "gen-2100",
-    "name": "Golden Pass",
-    "theme": "meadow",
-    "description": "Multi-obstacle gauntlet run",
-    "gradient": [
-      "#1a4a1a",
-      "#3a8a3a"
-    ],
-    "themeColor": "#2ecc71"
-  },
-  {
-    "id": "gen-2101",
-    "name": "Silver Valley",
-    "theme": "volcano",
-    "description": "Fast drop with minimal obstacles",
-    "gradient": [
-      "#6a1a00",
-      "#e74c3c"
-    ],
-    "themeColor": "#e74c3c"
-  },
-  {
-    "id": "gen-2102",
-    "name": "Dark Drop",
-    "theme": "frozen",
-    "description": "Tricky turns and hidden bumpers",
-    "gradient": [
-      "#1a3a5a",
-      "#5a8aba"
-    ],
-    "themeColor": "#3498db"
-  },
-  {
-    "id": "gen-2103",
-    "name": "Crimson Descent",
-    "theme": "cyber",
-    "description": "Bouncy terrain keeps it unpredictable",
-    "gradient": [
-      "#2a0a4a",
-      "#9b59b6"
-    ],
-    "themeColor": "#9b59b6"
-  },
-  {
-    "id": "gen-2104",
-    "name": "Emerald Rapids",
-    "theme": "beach",
-    "description": "Long ramp chains build momentum",
-    "gradient": [
-      "#5aa0e0",
-      "#d0c090"
-    ],
-    "themeColor": "#f0c040"
-  },
-  {
-    "id": "gen-2105",
-    "name": "Cobalt Chute",
-    "theme": "forest",
-    "description": "Chaotic peg fields slow the pack",
-    "gradient": [
-      "#0a2a0a",
-      "#1a4a1a"
-    ],
-    "themeColor": "#1a8a1a"
-  },
-  {
-    "id": "gen-2106",
-    "name": "Amber Plunge",
-    "theme": "desert",
-    "description": "Obstacle-heavy test of endurance",
-    "gradient": [
-      "#a08030",
-      "#d4a840"
-    ],
-    "themeColor": "#d4a840"
-  },
-  {
-    "id": "gen-2107",
-    "name": "Phantom Drift",
-    "theme": "sunset",
-    "description": "Speed zones reward aggressive play",
-    "gradient": [
-      "#dd5530",
-      "#9a3070"
-    ],
-    "themeColor": "#ff6b35"
-  },
-  {
-    "id": "gen-2108",
-    "name": "Savage Slope",
-    "theme": "night",
-    "description": "Steep drops with tight funnels",
-    "gradient": [
-      "#050520",
-      "#101040"
-    ],
-    "themeColor": "#4a4a8a"
-  },
-  {
-    "id": "gen-2109",
-    "name": "Wild Ridge",
-    "theme": "candy",
-    "description": "Open course with strategic bumpers",
-    "gradient": [
-      "#cc1080",
-      "#ff69b4"
-    ],
-    "themeColor": "#ff69b4"
-  },
-  {
-    "id": "gen-2110",
-    "name": "Ancient Trail",
-    "theme": "ocean",
-    "description": "Dense obstacles test every marble stat",
-    "gradient": [
-      "#002a5a",
-      "#0087c6"
-    ],
-    "themeColor": "#0077b6"
-  },
-  {
-    "id": "gen-2111",
-    "name": "Rusted Cascade",
-    "theme": "volcanic",
-    "description": "Quick descent favors the bold",
-    "gradient": [
-      "#2a0000",
-      "#7b0000"
-    ],
-    "themeColor": "#cc0000"
-  },
-  {
-    "id": "gen-2112",
-    "name": "Molten Ravine",
-    "theme": "neon",
-    "description": "Scattered hazards across wide ramps",
-    "gradient": [
-      "#0a2a1a",
-      "#00cc66"
-    ],
-    "themeColor": "#00ff87"
-  },
-  {
-    "id": "gen-2113",
-    "name": "Spectral Summit",
-    "theme": "snow",
-    "description": "Momentum-building run with sharp turns",
-    "gradient": [
-      "#b0c8e0",
-      "#e0f0ff"
-    ],
-    "themeColor": "#b0d0f0"
-  },
-  {
-    "id": "gen-2114",
-    "name": "Lunar Hollow",
-    "theme": "meadow",
-    "description": "Peg-heavy course with surprise gaps",
-    "gradient": [
-      "#3a7a3a",
-      "#5aaa5a"
-    ],
-    "themeColor": "#2ecc71"
-  },
-  {
-    "id": "gen-2115",
-    "name": "Solar Abyss",
-    "theme": "volcano",
-    "description": "Balance of speed and obstacle control",
-    "gradient": [
-      "#5a1a0a",
-      "#c44000"
-    ],
-    "themeColor": "#e74c3c"
-  },
-  {
-    "id": "gen-2116",
-    "name": "Thunder Canyon",
-    "theme": "frozen",
-    "description": "Tight ramps with dense peg zones",
-    "gradient": [
-      "#0a3a6a",
-      "#3498db"
-    ],
-    "themeColor": "#3498db"
-  },
-  {
-    "id": "gen-2117",
-    "name": "Crystal Falls",
-    "theme": "cyber",
-    "description": "Wide open descent — pure speed matters",
-    "gradient": [
-      "#0a0a2a",
-      "#5a2a8a"
-    ],
-    "themeColor": "#9b59b6"
-  },
-  {
-    "id": "gen-2118",
-    "name": "Iron Run",
-    "theme": "beach",
-    "description": "Winding path through scattered bumpers",
-    "gradient": [
-      "#4a90d9",
-      "#c2b280"
-    ],
-    "themeColor": "#f0c040"
-  },
-  {
-    "id": "gen-2119",
-    "name": "Mystic Gorge",
-    "theme": "forest",
-    "description": "Narrow gaps test precision and bounce",
-    "gradient": [
-      "#0a4a0a",
-      "#3a6a3a"
-    ],
-    "themeColor": "#1a8a1a"
-  },
-  {
-    "id": "gen-2120",
-    "name": "Blazing Pass",
-    "theme": "desert",
-    "description": "Multi-obstacle gauntlet run",
-    "gradient": [
-      "#907020",
-      "#c09030"
-    ],
-    "themeColor": "#d4a840"
-  },
-  {
-    "id": "gen-2121",
-    "name": "Shadow Valley",
-    "theme": "sunset",
-    "description": "Fast drop with minimal obstacles",
-    "gradient": [
-      "#cc4420",
-      "#8a2060"
-    ],
-    "themeColor": "#ff6b35"
-  },
-  {
-    "id": "gen-2122",
-    "name": "Frozen Drop",
-    "theme": "night",
-    "description": "Tricky turns and hidden bumpers",
-    "gradient": [
-      "#0a0a3a",
-      "#2a2a5a"
-    ],
-    "themeColor": "#4a4a8a"
-  },
-  {
-    "id": "gen-2123",
-    "name": "Neon Descent",
-    "theme": "candy",
-    "description": "Bouncy terrain keeps it unpredictable",
-    "gradient": [
-      "#bb0070",
-      "#ff59a4"
-    ],
-    "themeColor": "#ff69b4"
-  },
-  {
-    "id": "gen-2124",
-    "name": "Storm Rapids",
-    "theme": "ocean",
-    "description": "Long ramp chains build momentum",
-    "gradient": [
-      "#001a4a",
-      "#0077b6"
-    ],
-    "themeColor": "#0077b6"
-  },
-  {
-    "id": "gen-2125",
-    "name": "Golden Chute",
-    "theme": "volcanic",
-    "description": "Chaotic peg fields slow the pack",
-    "gradient": [
-      "#4a0000",
-      "#9b1010"
-    ],
-    "themeColor": "#cc0000"
-  },
-  {
-    "id": "gen-2126",
-    "name": "Silver Plunge",
-    "theme": "neon",
-    "description": "Obstacle-heavy test of endurance",
-    "gradient": [
-      "#0a1a0a",
-      "#00bb55"
-    ],
-    "themeColor": "#00ff87"
-  },
-  {
-    "id": "gen-2127",
-    "name": "Dark Drift",
-    "theme": "snow",
-    "description": "Speed zones reward aggressive play",
-    "gradient": [
-      "#a0b8d0",
-      "#d0e0f0"
     ],
     "themeColor": "#b0d0f0"
   },
   {
     "id": "gen-2128",
-    "name": "Crimson Slope",
+    "name": "Frozen Ravine",
     "theme": "meadow",
-    "description": "Steep drops with tight funnels",
-    "gradient": [
-      "#2d6b2d",
-      "#4a9a4a"
-    ],
-    "themeColor": "#2ecc71"
-  },
-  {
-    "id": "gen-2129",
-    "name": "Emerald Ridge",
-    "theme": "volcano",
-    "description": "Open course with strategic bumpers",
-    "gradient": [
-      "#3a0a0a",
-      "#aa2020"
-    ],
-    "themeColor": "#e74c3c"
-  },
-  {
-    "id": "gen-2130",
-    "name": "Cobalt Trail",
-    "theme": "frozen",
-    "description": "Dense obstacles test every marble stat",
-    "gradient": [
-      "#0a2a4a",
-      "#4a9aca"
-    ],
-    "themeColor": "#3498db"
-  },
-  {
-    "id": "gen-2131",
-    "name": "Amber Cascade",
-    "theme": "cyber",
-    "description": "Quick descent favors the bold",
-    "gradient": [
-      "#1a0a3a",
-      "#8a2aca"
-    ],
-    "themeColor": "#9b59b6"
-  },
-  {
-    "id": "gen-2133",
-    "name": "Phantom Ravine",
-    "theme": "beach",
     "description": "Scattered hazards across wide ramps",
-    "gradient": [
-      "#3a80c0",
-      "#b0a070"
-    ],
-    "themeColor": "#f0c040"
-  },
-  {
-    "id": "gen-2134",
-    "name": "Savage Summit",
-    "theme": "forest",
-    "description": "Momentum-building run with sharp turns",
-    "gradient": [
-      "#0a3a0a",
-      "#2d5a2d"
-    ],
-    "themeColor": "#1a8a1a"
-  },
-  {
-    "id": "gen-2135",
-    "name": "Wild Hollow",
-    "theme": "desert",
-    "description": "Peg-heavy course with surprise gaps",
-    "gradient": [
-      "#b09040",
-      "#e0b850"
-    ],
-    "themeColor": "#d4a840"
-  },
-  {
-    "id": "gen-2136",
-    "name": "Ancient Abyss",
-    "theme": "sunset",
-    "description": "Balance of speed and obstacle control",
-    "gradient": [
-      "#bb3310",
-      "#7a1050"
-    ],
-    "themeColor": "#ff6b35"
-  },
-  {
-    "id": "gen-2138",
-    "name": "Rusted Canyon",
-    "theme": "night",
-    "description": "Tight ramps with dense peg zones",
-    "gradient": [
-      "#0a0a2a",
-      "#1a1a4a"
-    ],
-    "themeColor": "#4a4a8a"
-  },
-  {
-    "id": "gen-2141",
-    "name": "Molten Falls",
-    "theme": "candy",
-    "description": "Wide open descent — pure speed matters",
-    "gradient": [
-      "#dd2090",
-      "#ff79c4"
-    ],
-    "themeColor": "#ff69b4"
-  },
-  {
-    "id": "gen-2142",
-    "name": "Spectral Run",
-    "theme": "ocean",
-    "description": "Winding path through scattered bumpers",
-    "gradient": [
-      "#000a3a",
-      "#0067a6"
-    ],
-    "themeColor": "#0077b6"
-  },
-  {
-    "id": "gen-2144",
-    "name": "Lunar Gorge",
-    "theme": "volcanic",
-    "description": "Narrow gaps test precision and bounce",
-    "gradient": [
-      "#3a0000",
-      "#8b0000"
-    ],
-    "themeColor": "#cc0000"
-  },
-  {
-    "id": "gen-2145",
-    "name": "Solar Pass",
-    "theme": "neon",
-    "description": "Multi-obstacle gauntlet run",
-    "gradient": [
-      "#0a3a2a",
-      "#00dd77"
-    ],
-    "themeColor": "#00ff87"
-  },
-  {
-    "id": "gen-2146",
-    "name": "Thunder Valley",
-    "theme": "snow",
-    "description": "Fast drop with minimal obstacles",
-    "gradient": [
-      "#90a8c0",
-      "#c0d0e0"
-    ],
-    "themeColor": "#b0d0f0"
-  },
-  {
-    "id": "gen-2147",
-    "name": "Crystal Drop",
-    "theme": "meadow",
-    "description": "Tricky turns and hidden bumpers",
-    "gradient": [
-      "#1a4a1a",
-      "#3a8a3a"
-    ],
-    "themeColor": "#2ecc71"
-  },
-  {
-    "id": "gen-2148",
-    "name": "Iron Descent",
-    "theme": "volcano",
-    "description": "Bouncy terrain keeps it unpredictable",
-    "gradient": [
-      "#6a1a00",
-      "#e74c3c"
-    ],
-    "themeColor": "#e74c3c"
-  },
-  {
-    "id": "gen-2149",
-    "name": "Mystic Rapids",
-    "theme": "frozen",
-    "description": "Long ramp chains build momentum",
-    "gradient": [
-      "#1a3a5a",
-      "#5a8aba"
-    ],
-    "themeColor": "#3498db"
-  },
-  {
-    "id": "gen-2151",
-    "name": "Blazing Chute",
-    "theme": "cyber",
-    "description": "Chaotic peg fields slow the pack",
-    "gradient": [
-      "#2a0a4a",
-      "#9b59b6"
-    ],
-    "themeColor": "#9b59b6"
-  },
-  {
-    "id": "gen-2152",
-    "name": "Shadow Plunge",
-    "theme": "beach",
-    "description": "Obstacle-heavy test of endurance",
-    "gradient": [
-      "#5aa0e0",
-      "#d0c090"
-    ],
-    "themeColor": "#f0c040"
-  },
-  {
-    "id": "gen-2153",
-    "name": "Frozen Drift",
-    "theme": "forest",
-    "description": "Speed zones reward aggressive play",
-    "gradient": [
-      "#0a2a0a",
-      "#1a4a1a"
-    ],
-    "themeColor": "#1a8a1a"
-  },
-  {
-    "id": "gen-2154",
-    "name": "Neon Slope",
-    "theme": "desert",
-    "description": "Steep drops with tight funnels",
-    "gradient": [
-      "#a08030",
-      "#d4a840"
-    ],
-    "themeColor": "#d4a840"
-  },
-  {
-    "id": "gen-2155",
-    "name": "Storm Ridge",
-    "theme": "sunset",
-    "description": "Open course with strategic bumpers",
-    "gradient": [
-      "#dd5530",
-      "#9a3070"
-    ],
-    "themeColor": "#ff6b35"
-  },
-  {
-    "id": "gen-2156",
-    "name": "Golden Trail",
-    "theme": "night",
-    "description": "Dense obstacles test every marble stat",
-    "gradient": [
-      "#050520",
-      "#101040"
-    ],
-    "themeColor": "#4a4a8a"
-  },
-  {
-    "id": "gen-2157",
-    "name": "Silver Cascade",
-    "theme": "candy",
-    "description": "Quick descent favors the bold",
-    "gradient": [
-      "#cc1080",
-      "#ff69b4"
-    ],
-    "themeColor": "#ff69b4"
-  },
-  {
-    "id": "gen-2159",
-    "name": "Dark Ravine",
-    "theme": "ocean",
-    "description": "Scattered hazards across wide ramps",
-    "gradient": [
-      "#002a5a",
-      "#0087c6"
-    ],
-    "themeColor": "#0077b6"
-  },
-  {
-    "id": "gen-2160",
-    "name": "Crimson Summit",
-    "theme": "volcanic",
-    "description": "Momentum-building run with sharp turns",
-    "gradient": [
-      "#2a0000",
-      "#7b0000"
-    ],
-    "themeColor": "#cc0000"
-  },
-  {
-    "id": "gen-2161",
-    "name": "Emerald Hollow",
-    "theme": "neon",
-    "description": "Peg-heavy course with surprise gaps",
-    "gradient": [
-      "#0a2a1a",
-      "#00cc66"
-    ],
-    "themeColor": "#00ff87"
-  },
-  {
-    "id": "gen-2162",
-    "name": "Cobalt Abyss",
-    "theme": "snow",
-    "description": "Balance of speed and obstacle control",
-    "gradient": [
-      "#b0c8e0",
-      "#e0f0ff"
-    ],
-    "themeColor": "#b0d0f0"
-  },
-  {
-    "id": "gen-2163",
-    "name": "Amber Canyon",
-    "theme": "meadow",
-    "description": "Tight ramps with dense peg zones",
     "gradient": [
       "#3a7a3a",
       "#5aaa5a"
@@ -1727,10 +803,10 @@
     "themeColor": "#2ecc71"
   },
   {
-    "id": "gen-2164",
-    "name": "Phantom Falls",
+    "id": "gen-2129",
+    "name": "Neon Summit",
     "theme": "volcano",
-    "description": "Wide open descent — pure speed matters",
+    "description": "Momentum-building run with sharp turns",
     "gradient": [
       "#5a1a0a",
       "#c44000"
@@ -1738,10 +814,10 @@
     "themeColor": "#e74c3c"
   },
   {
-    "id": "gen-2165",
-    "name": "Savage Run",
+    "id": "gen-2131",
+    "name": "Storm Hollow",
     "theme": "frozen",
-    "description": "Winding path through scattered bumpers",
+    "description": "Peg-heavy course with surprise gaps",
     "gradient": [
       "#0a3a6a",
       "#3498db"
@@ -1749,10 +825,10 @@
     "themeColor": "#3498db"
   },
   {
-    "id": "gen-2166",
-    "name": "Wild Gorge",
+    "id": "gen-2135",
+    "name": "Golden Abyss",
     "theme": "cyber",
-    "description": "Narrow gaps test precision and bounce",
+    "description": "Balance of speed and obstacle control",
     "gradient": [
       "#0a0a2a",
       "#5a2a8a"
@@ -1760,10 +836,10 @@
     "themeColor": "#9b59b6"
   },
   {
-    "id": "gen-2167",
-    "name": "Ancient Pass",
+    "id": "gen-2136",
+    "name": "Silver Canyon",
     "theme": "beach",
-    "description": "Multi-obstacle gauntlet run",
+    "description": "Tight ramps with dense peg zones",
     "gradient": [
       "#4a90d9",
       "#c2b280"
@@ -1771,10 +847,10 @@
     "themeColor": "#f0c040"
   },
   {
-    "id": "gen-2168",
-    "name": "Rusted Valley",
+    "id": "gen-2142",
+    "name": "Dark Falls",
     "theme": "forest",
-    "description": "Fast drop with minimal obstacles",
+    "description": "Wide open descent — pure speed matters",
     "gradient": [
       "#0a4a0a",
       "#3a6a3a"
@@ -1782,10 +858,10 @@
     "themeColor": "#1a8a1a"
   },
   {
-    "id": "gen-2169",
-    "name": "Molten Drop",
+    "id": "gen-2145",
+    "name": "Crimson Run",
     "theme": "desert",
-    "description": "Tricky turns and hidden bumpers",
+    "description": "Winding path through scattered bumpers",
     "gradient": [
       "#907020",
       "#c09030"
@@ -1793,10 +869,10 @@
     "themeColor": "#d4a840"
   },
   {
-    "id": "gen-2171",
-    "name": "Spectral Descent",
+    "id": "gen-2146",
+    "name": "Emerald Gorge",
     "theme": "sunset",
-    "description": "Bouncy terrain keeps it unpredictable",
+    "description": "Narrow gaps test precision and bounce",
     "gradient": [
       "#cc4420",
       "#8a2060"
@@ -1804,10 +880,10 @@
     "themeColor": "#ff6b35"
   },
   {
-    "id": "gen-2172",
-    "name": "Lunar Rapids",
+    "id": "gen-2148",
+    "name": "Cobalt Pass",
     "theme": "night",
-    "description": "Long ramp chains build momentum",
+    "description": "Multi-obstacle gauntlet run",
     "gradient": [
       "#0a0a3a",
       "#2a2a5a"
@@ -1815,10 +891,10 @@
     "themeColor": "#4a4a8a"
   },
   {
-    "id": "gen-2173",
-    "name": "Solar Chute",
+    "id": "gen-2153",
+    "name": "Amber Valley",
     "theme": "candy",
-    "description": "Chaotic peg fields slow the pack",
+    "description": "Fast drop with minimal obstacles",
     "gradient": [
       "#bb0070",
       "#ff59a4"
@@ -1826,10 +902,10 @@
     "themeColor": "#ff69b4"
   },
   {
-    "id": "gen-2174",
-    "name": "Thunder Plunge",
+    "id": "gen-2156",
+    "name": "Phantom Drop",
     "theme": "ocean",
-    "description": "Obstacle-heavy test of endurance",
+    "description": "Tricky turns and hidden bumpers",
     "gradient": [
       "#001a4a",
       "#0077b6"
@@ -1837,10 +913,10 @@
     "themeColor": "#0077b6"
   },
   {
-    "id": "gen-2175",
-    "name": "Crystal Drift",
+    "id": "gen-2159",
+    "name": "Savage Descent",
     "theme": "volcanic",
-    "description": "Speed zones reward aggressive play",
+    "description": "Bouncy terrain keeps it unpredictable",
     "gradient": [
       "#4a0000",
       "#9b1010"
@@ -1848,10 +924,10 @@
     "themeColor": "#cc0000"
   },
   {
-    "id": "gen-2176",
-    "name": "Iron Slope",
+    "id": "gen-2164",
+    "name": "Wild Rapids",
     "theme": "neon",
-    "description": "Steep drops with tight funnels",
+    "description": "Long ramp chains build momentum",
     "gradient": [
       "#0a1a0a",
       "#00bb55"
@@ -1859,10 +935,10 @@
     "themeColor": "#00ff87"
   },
   {
-    "id": "gen-2177",
-    "name": "Mystic Ridge",
+    "id": "gen-2169",
+    "name": "Ancient Chute",
     "theme": "snow",
-    "description": "Open course with strategic bumpers",
+    "description": "Chaotic peg fields slow the pack",
     "gradient": [
       "#a0b8d0",
       "#d0e0f0"
@@ -1870,10 +946,10 @@
     "themeColor": "#b0d0f0"
   },
   {
-    "id": "gen-2178",
-    "name": "Blazing Trail",
+    "id": "gen-2173",
+    "name": "Rusted Plunge",
     "theme": "meadow",
-    "description": "Dense obstacles test every marble stat",
+    "description": "Obstacle-heavy test of endurance",
     "gradient": [
       "#2d6b2d",
       "#4a9a4a"
@@ -1881,10 +957,10 @@
     "themeColor": "#2ecc71"
   },
   {
-    "id": "gen-2179",
-    "name": "Shadow Cascade",
+    "id": "gen-2174",
+    "name": "Molten Drift",
     "theme": "volcano",
-    "description": "Quick descent favors the bold",
+    "description": "Speed zones reward aggressive play",
     "gradient": [
       "#3a0a0a",
       "#aa2020"
@@ -1892,10 +968,10 @@
     "themeColor": "#e74c3c"
   },
   {
-    "id": "gen-2180",
-    "name": "Frozen Ravine",
+    "id": "gen-2175",
+    "name": "Spectral Slope",
     "theme": "frozen",
-    "description": "Scattered hazards across wide ramps",
+    "description": "Steep drops with tight funnels",
     "gradient": [
       "#0a2a4a",
       "#4a9aca"
@@ -1903,10 +979,10 @@
     "themeColor": "#3498db"
   },
   {
-    "id": "gen-2181",
-    "name": "Neon Summit",
+    "id": "gen-2176",
+    "name": "Lunar Ridge",
     "theme": "cyber",
-    "description": "Momentum-building run with sharp turns",
+    "description": "Open course with strategic bumpers",
     "gradient": [
       "#1a0a3a",
       "#8a2aca"
@@ -1914,10 +990,10 @@
     "themeColor": "#9b59b6"
   },
   {
-    "id": "gen-2182",
-    "name": "Storm Hollow",
+    "id": "gen-2177",
+    "name": "Solar Trail",
     "theme": "beach",
-    "description": "Peg-heavy course with surprise gaps",
+    "description": "Dense obstacles test every marble stat",
     "gradient": [
       "#3a80c0",
       "#b0a070"
@@ -1925,10 +1001,10 @@
     "themeColor": "#f0c040"
   },
   {
-    "id": "gen-2183",
-    "name": "Golden Abyss",
+    "id": "gen-2178",
+    "name": "Thunder Cascade",
     "theme": "forest",
-    "description": "Balance of speed and obstacle control",
+    "description": "Quick descent favors the bold",
     "gradient": [
       "#0a3a0a",
       "#2d5a2d"
@@ -1936,10 +1012,10 @@
     "themeColor": "#1a8a1a"
   },
   {
-    "id": "gen-2184",
-    "name": "Silver Canyon",
+    "id": "gen-2182",
+    "name": "Crystal Ravine",
     "theme": "desert",
-    "description": "Tight ramps with dense peg zones",
+    "description": "Scattered hazards across wide ramps",
     "gradient": [
       "#b09040",
       "#e0b850"
@@ -1947,10 +1023,10 @@
     "themeColor": "#d4a840"
   },
   {
-    "id": "gen-2186",
-    "name": "Dark Falls",
+    "id": "gen-2184",
+    "name": "Iron Summit",
     "theme": "sunset",
-    "description": "Wide open descent — pure speed matters",
+    "description": "Momentum-building run with sharp turns",
     "gradient": [
       "#bb3310",
       "#7a1050"
@@ -1958,10 +1034,10 @@
     "themeColor": "#ff6b35"
   },
   {
-    "id": "gen-2187",
-    "name": "Crimson Run",
+    "id": "gen-2190",
+    "name": "Mystic Hollow",
     "theme": "night",
-    "description": "Winding path through scattered bumpers",
+    "description": "Peg-heavy course with surprise gaps",
     "gradient": [
       "#0a0a2a",
       "#1a1a4a"
@@ -1969,10 +1045,10 @@
     "themeColor": "#4a4a8a"
   },
   {
-    "id": "gen-2188",
-    "name": "Emerald Gorge",
+    "id": "gen-2195",
+    "name": "Blazing Abyss",
     "theme": "candy",
-    "description": "Narrow gaps test precision and bounce",
+    "description": "Balance of speed and obstacle control",
     "gradient": [
       "#dd2090",
       "#ff79c4"
@@ -1980,10 +1056,10 @@
     "themeColor": "#ff69b4"
   },
   {
-    "id": "gen-2189",
-    "name": "Cobalt Pass",
+    "id": "gen-2198",
+    "name": "Shadow Canyon",
     "theme": "ocean",
-    "description": "Multi-obstacle gauntlet run",
+    "description": "Tight ramps with dense peg zones",
     "gradient": [
       "#000a3a",
       "#0067a6"
@@ -1991,10 +1067,10 @@
     "themeColor": "#0077b6"
   },
   {
-    "id": "gen-2190",
-    "name": "Amber Valley",
+    "id": "gen-2199",
+    "name": "Frozen Falls",
     "theme": "volcanic",
-    "description": "Fast drop with minimal obstacles",
+    "description": "Wide open descent — pure speed matters",
     "gradient": [
       "#3a0000",
       "#8b0000"
@@ -2002,10 +1078,10 @@
     "themeColor": "#cc0000"
   },
   {
-    "id": "gen-2191",
-    "name": "Phantom Drop",
+    "id": "gen-2201",
+    "name": "Neon Run",
     "theme": "neon",
-    "description": "Tricky turns and hidden bumpers",
+    "description": "Winding path through scattered bumpers",
     "gradient": [
       "#0a3a2a",
       "#00dd77"
@@ -2013,10 +1089,10 @@
     "themeColor": "#00ff87"
   },
   {
-    "id": "gen-2192",
-    "name": "Savage Descent",
+    "id": "gen-2203",
+    "name": "Storm Gorge",
     "theme": "snow",
-    "description": "Bouncy terrain keeps it unpredictable",
+    "description": "Narrow gaps test precision and bounce",
     "gradient": [
       "#90a8c0",
       "#c0d0e0"
@@ -2024,10 +1100,10 @@
     "themeColor": "#b0d0f0"
   },
   {
-    "id": "gen-2193",
-    "name": "Wild Rapids",
+    "id": "gen-2204",
+    "name": "Golden Pass",
     "theme": "meadow",
-    "description": "Long ramp chains build momentum",
+    "description": "Multi-obstacle gauntlet run",
     "gradient": [
       "#1a4a1a",
       "#3a8a3a"
@@ -2035,10 +1111,10 @@
     "themeColor": "#2ecc71"
   },
   {
-    "id": "gen-2194",
-    "name": "Ancient Chute",
+    "id": "gen-2205",
+    "name": "Silver Valley",
     "theme": "volcano",
-    "description": "Chaotic peg fields slow the pack",
+    "description": "Fast drop with minimal obstacles",
     "gradient": [
       "#6a1a00",
       "#e74c3c"
@@ -2046,10 +1122,10 @@
     "themeColor": "#e74c3c"
   },
   {
-    "id": "gen-2195",
-    "name": "Rusted Plunge",
+    "id": "gen-2207",
+    "name": "Dark Drop",
     "theme": "frozen",
-    "description": "Obstacle-heavy test of endurance",
+    "description": "Tricky turns and hidden bumpers",
     "gradient": [
       "#1a3a5a",
       "#5a8aba"
@@ -2057,10 +1133,10 @@
     "themeColor": "#3498db"
   },
   {
-    "id": "gen-2196",
-    "name": "Molten Drift",
+    "id": "gen-2208",
+    "name": "Crimson Descent",
     "theme": "cyber",
-    "description": "Speed zones reward aggressive play",
+    "description": "Bouncy terrain keeps it unpredictable",
     "gradient": [
       "#2a0a4a",
       "#9b59b6"
@@ -2068,10 +1144,10 @@
     "themeColor": "#9b59b6"
   },
   {
-    "id": "gen-2197",
-    "name": "Spectral Slope",
+    "id": "gen-2210",
+    "name": "Emerald Rapids",
     "theme": "beach",
-    "description": "Steep drops with tight funnels",
+    "description": "Long ramp chains build momentum",
     "gradient": [
       "#5aa0e0",
       "#d0c090"
@@ -2079,10 +1155,10 @@
     "themeColor": "#f0c040"
   },
   {
-    "id": "gen-2198",
-    "name": "Lunar Ridge",
+    "id": "gen-2211",
+    "name": "Cobalt Chute",
     "theme": "forest",
-    "description": "Open course with strategic bumpers",
+    "description": "Chaotic peg fields slow the pack",
     "gradient": [
       "#0a2a0a",
       "#1a4a1a"
@@ -2090,10 +1166,10 @@
     "themeColor": "#1a8a1a"
   },
   {
-    "id": "gen-2199",
-    "name": "Solar Trail",
+    "id": "gen-2215",
+    "name": "Amber Plunge",
     "theme": "desert",
-    "description": "Dense obstacles test every marble stat",
+    "description": "Obstacle-heavy test of endurance",
     "gradient": [
       "#a08030",
       "#d4a840"
@@ -2101,213 +1177,15 @@
     "themeColor": "#d4a840"
   },
   {
-    "id": "gen-2200",
-    "name": "Thunder Cascade",
+    "id": "gen-2218",
+    "name": "Phantom Drift",
     "theme": "sunset",
-    "description": "Quick descent favors the bold",
+    "description": "Speed zones reward aggressive play",
     "gradient": [
       "#dd5530",
       "#9a3070"
     ],
     "themeColor": "#ff6b35"
-  },
-  {
-    "id": "gen-2201",
-    "name": "Crystal Ravine",
-    "theme": "night",
-    "description": "Scattered hazards across wide ramps",
-    "gradient": [
-      "#050520",
-      "#101040"
-    ],
-    "themeColor": "#4a4a8a"
-  },
-  {
-    "id": "gen-2202",
-    "name": "Iron Summit",
-    "theme": "candy",
-    "description": "Momentum-building run with sharp turns",
-    "gradient": [
-      "#cc1080",
-      "#ff69b4"
-    ],
-    "themeColor": "#ff69b4"
-  },
-  {
-    "id": "gen-2203",
-    "name": "Mystic Hollow",
-    "theme": "ocean",
-    "description": "Peg-heavy course with surprise gaps",
-    "gradient": [
-      "#002a5a",
-      "#0087c6"
-    ],
-    "themeColor": "#0077b6"
-  },
-  {
-    "id": "gen-2204",
-    "name": "Blazing Abyss",
-    "theme": "volcanic",
-    "description": "Balance of speed and obstacle control",
-    "gradient": [
-      "#2a0000",
-      "#7b0000"
-    ],
-    "themeColor": "#cc0000"
-  },
-  {
-    "id": "gen-2205",
-    "name": "Shadow Canyon",
-    "theme": "neon",
-    "description": "Tight ramps with dense peg zones",
-    "gradient": [
-      "#0a2a1a",
-      "#00cc66"
-    ],
-    "themeColor": "#00ff87"
-  },
-  {
-    "id": "gen-2206",
-    "name": "Frozen Falls",
-    "theme": "snow",
-    "description": "Wide open descent — pure speed matters",
-    "gradient": [
-      "#b0c8e0",
-      "#e0f0ff"
-    ],
-    "themeColor": "#b0d0f0"
-  },
-  {
-    "id": "gen-2207",
-    "name": "Neon Run",
-    "theme": "meadow",
-    "description": "Winding path through scattered bumpers",
-    "gradient": [
-      "#3a7a3a",
-      "#5aaa5a"
-    ],
-    "themeColor": "#2ecc71"
-  },
-  {
-    "id": "gen-2208",
-    "name": "Storm Gorge",
-    "theme": "volcano",
-    "description": "Narrow gaps test precision and bounce",
-    "gradient": [
-      "#5a1a0a",
-      "#c44000"
-    ],
-    "themeColor": "#e74c3c"
-  },
-  {
-    "id": "gen-2209",
-    "name": "Golden Pass",
-    "theme": "frozen",
-    "description": "Multi-obstacle gauntlet run",
-    "gradient": [
-      "#0a3a6a",
-      "#3498db"
-    ],
-    "themeColor": "#3498db"
-  },
-  {
-    "id": "gen-2210",
-    "name": "Silver Valley",
-    "theme": "cyber",
-    "description": "Fast drop with minimal obstacles",
-    "gradient": [
-      "#0a0a2a",
-      "#5a2a8a"
-    ],
-    "themeColor": "#9b59b6"
-  },
-  {
-    "id": "gen-2211",
-    "name": "Dark Drop",
-    "theme": "beach",
-    "description": "Tricky turns and hidden bumpers",
-    "gradient": [
-      "#4a90d9",
-      "#c2b280"
-    ],
-    "themeColor": "#f0c040"
-  },
-  {
-    "id": "gen-2212",
-    "name": "Crimson Descent",
-    "theme": "forest",
-    "description": "Bouncy terrain keeps it unpredictable",
-    "gradient": [
-      "#0a4a0a",
-      "#3a6a3a"
-    ],
-    "themeColor": "#1a8a1a"
-  },
-  {
-    "id": "gen-2213",
-    "name": "Emerald Rapids",
-    "theme": "desert",
-    "description": "Long ramp chains build momentum",
-    "gradient": [
-      "#907020",
-      "#c09030"
-    ],
-    "themeColor": "#d4a840"
-  },
-  {
-    "id": "gen-2214",
-    "name": "Cobalt Chute",
-    "theme": "sunset",
-    "description": "Chaotic peg fields slow the pack",
-    "gradient": [
-      "#cc4420",
-      "#8a2060"
-    ],
-    "themeColor": "#ff6b35"
-  },
-  {
-    "id": "gen-2215",
-    "name": "Amber Plunge",
-    "theme": "night",
-    "description": "Obstacle-heavy test of endurance",
-    "gradient": [
-      "#0a0a3a",
-      "#2a2a5a"
-    ],
-    "themeColor": "#4a4a8a"
-  },
-  {
-    "id": "gen-2216",
-    "name": "Phantom Drift",
-    "theme": "candy",
-    "description": "Speed zones reward aggressive play",
-    "gradient": [
-      "#bb0070",
-      "#ff59a4"
-    ],
-    "themeColor": "#ff69b4"
-  },
-  {
-    "id": "gen-2217",
-    "name": "Savage Slope",
-    "theme": "ocean",
-    "description": "Steep drops with tight funnels",
-    "gradient": [
-      "#001a4a",
-      "#0077b6"
-    ],
-    "themeColor": "#0077b6"
-  },
-  {
-    "id": "gen-2218",
-    "name": "Wild Ridge",
-    "theme": "volcanic",
-    "description": "Open course with strategic bumpers",
-    "gradient": [
-      "#4a0000",
-      "#9b1010"
-    ],
-    "themeColor": "#cc0000"
   },
   {
     "id": "gp-101-meadow",
