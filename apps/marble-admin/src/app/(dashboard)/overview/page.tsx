@@ -44,9 +44,9 @@ interface RevenueChartPoint {
 
 interface UserGrowthPoint {
   month: string;
-  newUsers: number;
-  newUsersIos: number;
-  newUsersAndroid: number;
+  monthlyNewUsers: number;
+  totalUsersIos: number;
+  totalUsersAndroid: number;
   totalUsers: number;
 }
 
@@ -410,9 +410,9 @@ export default function OverviewPage() {
       {/* -- User Growth (Last 6 Months) -- */}
       {(() => {
         const growth = data.userGrowthChart ?? [];
-        const totalNew = growth.reduce((s, p) => s + p.newUsers, 0);
+        const totalNew = growth.reduce((s, p) => s + p.monthlyNewUsers, 0);
         const endTotal = growth.length > 0 ? growth[growth.length - 1].totalUsers : 0;
-        const startTotal = growth.length > 0 ? growth[0].totalUsers - growth[0].newUsers : 0;
+        const startTotal = growth.length > 0 ? growth[0].totalUsers - growth[0].monthlyNewUsers : 0;
         const growthPct = startTotal > 0
           ? Math.round(((endTotal - startTotal) / startTotal) * 100)
           : (endTotal > 0 ? 100 : 0);
@@ -451,15 +451,6 @@ export default function OverviewPage() {
                   tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
                 />
                 <YAxis
-                  yAxisId="left"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
-                  width={40}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
@@ -479,10 +470,16 @@ export default function OverviewPage() {
                   wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', paddingTop: 8 }}
                   iconType="circle"
                 />
+                {/* All three lines plotted on a single cumulative axis so
+                 * iOS + Android visually adds up to Total. Previously the
+                 * chart used a dual y-axis (monthly-new left, cumulative
+                 * right) which made Android-monthly appear to exceed
+                 * Total-cumulative when the scales aligned — confusing
+                 * because the implicit "iOS + Android ≤ Total" mental
+                 * model was violated visually. */}
                 <Line
-                  yAxisId="left"
                   type="monotone"
-                  dataKey="newUsersIos"
+                  dataKey="totalUsersIos"
                   name="iOS"
                   stroke="#6ec1ff"
                   strokeWidth={2}
@@ -490,23 +487,15 @@ export default function OverviewPage() {
                   activeDot={{ r: 5 }}
                 />
                 <Line
-                  yAxisId="left"
                   type="monotone"
-                  dataKey="newUsersAndroid"
+                  dataKey="totalUsersAndroid"
                   name="Android"
                   stroke="#a4c639"
                   strokeWidth={2}
                   dot={{ r: 3, fill: '#a4c639', stroke: '#a4c639' }}
                   activeDot={{ r: 5 }}
                 />
-                {/* "Combined" line removed — was redundant with iOS+Android
-                 * stacked visually, and confused the read because it lived
-                 * on the monthly-new axis (left) while looking similar in
-                 * shape to "Total Users" on the cumulative axis (right).
-                 * Per-platform breakdown + cumulative Total is the cleaner
-                 * read. */}
                 <Line
-                  yAxisId="right"
                   type="monotone"
                   dataKey="totalUsers"
                   name="Total Users"

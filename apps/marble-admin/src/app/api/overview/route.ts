@@ -170,19 +170,31 @@ export async function GET(_request: NextRequest) {
       });
     }
 
-    // ── User growth (last 6 months): per-platform new signups + combined ──
+    // ── User growth (last 6 months): cumulative totals per platform ──
+    // Previously this returned `newUsersIos` / `newUsersAndroid` (monthly
+    // deltas) alongside `totalUsers` (cumulative). The chart plotted both
+    // on a dual y-axis which made Android-monthly visually exceed
+    // Total-cumulative when scales happened to line up — confusing because
+    // the implicit "Android + iOS should ≤ Total" mental model is violated.
+    // Now we return cumulative-per-platform so iOS + Android = Total
+    // visually on a single axis. monthlyNewUsers stays for the "X new
+    // signups · Y total users" caption above the chart.
     const userGrowthChart: {
       month: string;
-      newUsers: number;
-      newUsersIos: number;
-      newUsersAndroid: number;
+      monthlyNewUsers: number;
+      totalUsersIos: number;
+      totalUsersAndroid: number;
       totalUsers: number;
     }[] = [];
     const sixMonthsAgoStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-    const baselineTotal = await prisma.gamePlayer.count({
-      where: { createdAt: { lt: sixMonthsAgoStart } },
-    });
+    const [baselineTotal, baselineIos, baselineAndroid] = await Promise.all([
+      prisma.gamePlayer.count({ where: { createdAt: { lt: sixMonthsAgoStart } } }),
+      prisma.gamePlayer.count({ where: { createdAt: { lt: sixMonthsAgoStart }, platform: 'ios' } }),
+      prisma.gamePlayer.count({ where: { createdAt: { lt: sixMonthsAgoStart }, platform: 'android' } }),
+    ]);
     let runningTotal = baselineTotal;
+    let runningIos = baselineIos;
+    let runningAndroid = baselineAndroid;
     for (let i = 5; i >= 0; i--) {
       const mStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
@@ -192,11 +204,13 @@ export async function GET(_request: NextRequest) {
         prisma.gamePlayer.count({ where: { createdAt: { gte: mStart, lt: mEnd }, platform: 'android' } }),
       ]);
       runningTotal += newUsers;
+      runningIos += newUsersIos;
+      runningAndroid += newUsersAndroid;
       userGrowthChart.push({
         month: monthNames[mStart.getMonth()],
-        newUsers,
-        newUsersIos,
-        newUsersAndroid,
+        monthlyNewUsers: newUsers,
+        totalUsersIos: runningIos,
+        totalUsersAndroid: runningAndroid,
         totalUsers: runningTotal,
       });
     }
