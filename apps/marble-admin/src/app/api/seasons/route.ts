@@ -251,11 +251,11 @@ export async function GET() {
     };
 
     /* Course rotation: top 5 most-played courses in season/playoff modes
-     * for THIS season. Previously hardcoded to 5 decorative entries that
-     * had no relation to actual gameplay. Falls back to an empty list when
-     * no races have been played yet (rather than misleadingly showing the
-     * old hardcoded names). */
-    const topSeasonCourses = await prisma.raceRecord.groupBy({
+     * for THIS season. Falls back to all-time top across any mode when no
+     * season races have been played yet, so the card isn't empty during
+     * the early days of a new season. The meta label distinguishes
+     * "this season" vs "all-time" so admins can tell which they're seeing. */
+    const seasonScopedCourses = await prisma.raceRecord.groupBy({
       by: ['courseId'],
       where: { ...seasonModeFilter, racedAt: { gte: seasonStartDate } },
       _count: { id: true },
@@ -263,12 +263,29 @@ export async function GET() {
       take: 5,
     });
 
+    const allTimeCourses = seasonScopedCourses.length > 0
+      ? []
+      : await prisma.raceRecord.groupBy({
+          by: ['courseId'],
+          _count: { id: true },
+          orderBy: { _count: { id: 'desc' } },
+          take: 5,
+        });
+
+    const coursesScope: 'season' | 'all-time' =
+      seasonScopedCourses.length > 0 ? 'season' : 'all-time';
+    const topSeasonCourses: { courseId: string; _count: { id: number } }[] =
+      seasonScopedCourses.length > 0
+        ? seasonScopedCourses.map((c) => ({ courseId: c.courseId, _count: { id: c._count.id } }))
+        : allTimeCourses.map((c) => ({ courseId: c.courseId, _count: { id: c._count.id } }));
+
     const courses = topSeasonCourses.map((c) => {
       const style = inferTheme(c.courseId);
       const name = prettyCourseName(c.courseId);
+      const scopeLabel = coursesScope === 'season' ? 'this season' : 'all-time';
       return {
         name,
-        meta: `${c._count.id} race${c._count.id === 1 ? '' : 's'} this season`,
+        meta: `${c._count.id} race${c._count.id === 1 ? '' : 's'} ${scopeLabel}`,
         theme: style.theme,
         thumbBg: style.thumbBg,
         letter: courseInitials(name),

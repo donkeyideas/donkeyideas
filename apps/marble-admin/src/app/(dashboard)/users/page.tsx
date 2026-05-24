@@ -36,6 +36,8 @@ const FILTERS = [
   { label: 'Free', value: 'free' },
   { label: 'Banned', value: 'banned' },
   { label: 'Flagged', value: 'flagged' },
+  { label: 'iOS', value: 'ios' },
+  { label: 'Android', value: 'android' },
 ];
 
 /* ------------------------------------------------------------------ */

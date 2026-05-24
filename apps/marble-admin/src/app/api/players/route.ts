@@ -52,10 +52,14 @@ export async function GET(request: NextRequest) {
       where.id = payerIdsArr.length > 0 ? { notIn: payerIdsArr } : undefined;
     } else if (filter === 'banned') where.status = 'banned';
     else if (filter === 'flagged') where.status = 'flagged';
+    else if (filter === 'ios') where.platform = 'ios';
+    else if (filter === 'android') where.platform = 'android';
 
-    // Build orderBy
+    // Build orderBy. `platform` sorts by the device-platform string, which
+    // groups all iOS rows together and all Android rows together — useful
+    // for quickly scanning per-platform user lists.
     const orderBy: any = {};
-    const allowedSortFields = ['createdAt', 'lastActiveAt', 'coins', 'totalRaces', 'totalWins', 'totalSpent', 'playerName'];
+    const allowedSortFields = ['createdAt', 'lastActiveAt', 'coins', 'totalRaces', 'totalWins', 'totalSpent', 'playerName', 'platform'];
     if (allowedSortFields.includes(sort)) {
       orderBy[sort] = dir === 'asc' ? 'asc' : 'desc';
     } else {
