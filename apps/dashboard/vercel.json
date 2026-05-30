@@ -1,0 +1,4 @@
+{
+  "buildCommand": "cd ../.. && npm run build --workspace=@donkey-ideas/financial-engine && cd apps/dashboard && next build",
+  "framework": "nextjs"
+}
