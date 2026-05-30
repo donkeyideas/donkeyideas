@@ -140,8 +140,8 @@ async function fetchSalesReportForDate(
   vendorNumber: string,
   date: string  // YYYY-MM-DD
 ): Promise<string | null> {
-  const dateFormatted = date.replace(/-/g, '');
-  const url = `${ASC_BASE_URL}/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=DAILY&filter[reportDate]=${dateFormatted}&filter[vendorNumber]=${vendorNumber}`;
+  // Apple requires ISO date format (YYYY-MM-DD) for DAILY frequency.
+  const url = `${ASC_BASE_URL}/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=DAILY&filter[reportDate]=${date}&filter[vendorNumber]=${vendorNumber}`;
 
   const response = await fetch(url, {
     headers: {
@@ -211,8 +211,9 @@ function parseSalesReportForApp(
 async function fetchMonthlySalesReport(
   token: string,
   vendorNumber: string,
-  yearMonth: string  // YYYYMM format
+  yearMonth: string  // YYYY-MM format
 ): Promise<string | null> {
+  // Apple requires YYYY-MM for MONTHLY frequency.
   const url = `${ASC_BASE_URL}/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=MONTHLY&filter[reportDate]=${yearMonth}&filter[vendorNumber]=${vendorNumber}`;
 
   const response = await fetch(url, {
@@ -276,17 +277,15 @@ async function fetchSalesData(
   const monthlyPromises: Promise<{ month: string; content: string | null }>[] = [];
   const monthlyStart = new Date(Math.max(reportStart.getTime(), reportEnd.getTime() - 365 * 86400000));
 
-  // Generate list of months to fetch (YYYYMM format)
-  const currentMonth = new Date(reportEnd);
+  // Generate list of months to fetch (YYYY-MM format)
   for (
     let d = new Date(monthlyStart.getFullYear(), monthlyStart.getMonth(), 1);
     d < dailyCutoff;
     d.setMonth(d.getMonth() + 1)
   ) {
-    const ym = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
     const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     monthlyPromises.push(
-      fetchMonthlySalesReport(token, vendorNumber, ym)
+      fetchMonthlySalesReport(token, vendorNumber, monthStr)
         .then(content => ({ month: monthStr, content }))
         .catch(() => ({ month: monthStr, content: null }))
     );
@@ -652,8 +651,10 @@ async function downloadAnalyticsReport(
     const allContents: string[] = [];
     let headerLine = '';
 
-    // Download instances in parallel (limit to 12 to avoid rate limits)
-    const instancesToDownload = instances.slice(-12); // Use most recent 12 instances
+    // Download instances in parallel. The ONGOING COMMERCE report emits one
+    // instance per day, so 30 covers a month of daily data; the SNAPSHOT emits
+    // one instance per month for historical coverage.
+    const instancesToDownload = instances.slice(-30);
     console.log(`[ASC] Downloading ${instancesToDownload.length} instances (of ${instances.length} total)`);
 
     const downloadPromises = instancesToDownload.map(async (instance: any) => {
@@ -730,8 +731,10 @@ async function fetchAnalyticsData(
 
     for (const requestId of requestIds) {
       console.log(`[ASC] Trying request ${requestId}`);
-      // Try APP_USAGE first (Installation and Deletion reports), then COMMERCE (App Downloads)
-      for (const category of ['APP_USAGE', 'COMMERCE']) {
+      // COMMERCE ("App Downloads") is the canonical install-count report with
+      // First-time download / Redownload semantics. APP_USAGE is a fallback
+      // (Install/Delete event log, fewer instances, sparser data).
+      for (const category of ['COMMERCE', 'APP_USAGE']) {
         const csvContent = await downloadAnalyticsReport(requestId, category, token);
         if (csvContent) {
           console.log(`[ASC] Got analytics data from ${category} category (request: ${requestId})`);
@@ -770,6 +773,7 @@ function parseAnalyticsCSV(
   const dateIdx = headers.findIndex((h) => h.toLowerCase() === 'date');
   const countsIdx = headers.findIndex((h) => h.toLowerCase() === 'counts');
   const downloadTypeIdx = headers.findIndex((h) => h.toLowerCase() === 'download type');
+  const eventIdx = headers.findIndex((h) => h.toLowerCase() === 'event');
   const activeIdx = headers.findIndex((h) =>
     h.toLowerCase().includes('active') && h.toLowerCase().includes('device')
   );
@@ -793,10 +797,19 @@ function parseAnalyticsCSV(
 
     if (!date || date < startDate || date > endDate) continue;
 
-    // For COMMERCE reports with Download Type, only count first-time downloads
-    if (downloadTypeIdx >= 0) {
+    // APP_USAGE reports have an Event column (Install / Delete / Reinstall).
+    // Only Install + Reinstall count toward installs; Delete is a deletion.
+    if (eventIdx >= 0) {
+      const event = cols[eventIdx]?.trim().toLowerCase() || '';
+      if (event && !event.includes('install')) continue;
+    }
+
+    // COMMERCE ("App Downloads") reports have a Download Type column
+    // (First-time download / Redownload / Auto-download / Update / Restore).
+    // Count only first-time downloads + redownloads (the user-acquisition signal).
+    if (downloadTypeIdx >= 0 && eventIdx < 0) {
       const dlType = cols[downloadTypeIdx]?.trim().toLowerCase() || '';
-      if (dlType && !dlType.includes('first') && !dlType.includes('download')) continue;
+      if (dlType && !dlType.includes('first-time') && !dlType.includes('redownload')) continue;
     }
 
     const count = parseInt(cols[valueIdx] || '0') || 0;

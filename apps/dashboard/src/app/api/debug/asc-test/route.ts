@@ -79,11 +79,10 @@ export async function GET(request: Request) {
         const testDate = new Date();
         testDate.setDate(testDate.getDate() - daysAgo);
         const dateStr = testDate.toISOString().split('T')[0];
-        const dateFormatted = dateStr.replace(/-/g, '');
 
         try {
           const salesResp = await fetch(
-            `${BASE}/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=DAILY&filter[reportDate]=${dateFormatted}&filter[vendorNumber]=${vendorNumber}`,
+            `${BASE}/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=DAILY&filter[reportDate]=${dateStr}&filter[vendorNumber]=${vendorNumber}`,
             { headers: { Authorization: `Bearer ${token}`, Accept: 'application/a-gzip, application/json' }, cache: 'no-store' }
           );
 
