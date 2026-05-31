@@ -39,7 +39,15 @@ export async function GET(request: Request) {
       .sign(privateKey);
 
     const headers: Record<string, string> = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-    const result: any = { configured: true, keyId, issuerId, vendorNumber: vendorNumber || 'NOT SET', steps: {} };
+    const result: any = {
+      configured: true,
+      // Deploy marker — if this string is present, the iso-date fix is live.
+      codeVersion: 'iso-dates-2026-05-30',
+      keyId,
+      issuerId,
+      vendorNumber: vendorNumber || 'NOT SET',
+      steps: {},
+    };
 
     // Step 1: Look up app (or list all apps if not found)
     const appResp = await fetch(`${BASE}/apps?filter[bundleId]=${encodeURIComponent(bundleId)}&fields[apps]=name,bundleId`, { headers, cache: 'no-store' });
@@ -80,20 +88,22 @@ export async function GET(request: Request) {
         testDate.setDate(testDate.getDate() - daysAgo);
         const dateStr = testDate.toISOString().split('T')[0];
 
+        const reqUrl = `${BASE}/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=DAILY&filter[reportDate]=${dateStr}&filter[vendorNumber]=${vendorNumber}`;
+
         try {
           const salesResp = await fetch(
-            `${BASE}/salesReports?filter[reportType]=SALES&filter[reportSubType]=SUMMARY&filter[frequency]=DAILY&filter[reportDate]=${dateStr}&filter[vendorNumber]=${vendorNumber}`,
+            reqUrl,
             { headers: { Authorization: `Bearer ${token}`, Accept: 'application/a-gzip, application/json' }, cache: 'no-store' }
           );
 
           if (salesResp.status === 404) {
-            result.steps.salesReports[dateStr] = { status: 404, message: 'No data for this date' };
+            result.steps.salesReports[dateStr] = { status: 404, message: 'No data for this date', reqUrl };
             continue;
           }
 
           if (!salesResp.ok) {
             const errorText = await salesResp.text().catch(() => '');
-            result.steps.salesReports[dateStr] = { status: salesResp.status, error: errorText.slice(0, 300) };
+            result.steps.salesReports[dateStr] = { status: salesResp.status, error: errorText.slice(0, 300), reqUrl };
             continue;
           }
 
