@@ -16,9 +16,9 @@ import { OAuth2Client } from 'google-auth-library';
  */
 
 function getOAuthClient(): OAuth2Client {
-  const clientId = process.env.ADMOB_OAUTH_CLIENT_ID;
-  const clientSecret = process.env.ADMOB_OAUTH_CLIENT_SECRET;
-  const refreshToken = process.env.ADMOB_OAUTH_REFRESH_TOKEN;
+  const clientId = process.env.ADMOB_OAUTH_CLIENT_ID?.trim();
+  const clientSecret = process.env.ADMOB_OAUTH_CLIENT_SECRET?.trim();
+  const refreshToken = process.env.ADMOB_OAUTH_REFRESH_TOKEN?.trim();
   if (!clientId) throw new Error('ADMOB_OAUTH_CLIENT_ID env var not set');
   if (!clientSecret) throw new Error('ADMOB_OAUTH_CLIENT_SECRET env var not set');
   if (!refreshToken) throw new Error('ADMOB_OAUTH_REFRESH_TOKEN env var not set');
@@ -28,7 +28,7 @@ function getOAuthClient(): OAuth2Client {
 }
 
 function getPublisherId(): string {
-  const id = process.env.ADMOB_PUBLISHER_ID;
+  const id = process.env.ADMOB_PUBLISHER_ID?.trim();
   if (!id) throw new Error('ADMOB_PUBLISHER_ID env var not set');
   return id;
 }
@@ -97,7 +97,9 @@ export async function fetchAdMobDailyReport(
 
   if (!resp.ok) {
     const txt = await resp.text();
-    throw new Error(`AdMob API ${resp.status}: ${txt.slice(0, 400)}`);
+    const rawPub = process.env.ADMOB_PUBLISHER_ID ?? '';
+    const diag = `pubId="${pubId}" (raw len=${rawPub.length}, sent len=${pubId.length}, hasPrefix=${pubId.startsWith('pub-')})`;
+    throw new Error(`AdMob API ${resp.status}: ${diag}: ${txt.slice(0, 300)}`);
   }
 
   // AdMob returns a JSON array of { header } / { row } / { footer } envelopes.
