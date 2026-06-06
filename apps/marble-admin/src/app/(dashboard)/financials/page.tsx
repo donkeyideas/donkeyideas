@@ -113,9 +113,20 @@ export default function FinancialsPage() {
     queryFn: () => api.get('/admob/metrics').then((res: any) => res.data),
   });
 
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncOk, setSyncOk] = useState<string | null>(null);
   const syncAdmob = useMutation({
     mutationFn: () => api.post('/admob/sync?days=35'),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admob-metrics'] }),
+    onSuccess: (res: any) => {
+      setSyncError(null);
+      const n = res?.data?.rowsUpserted ?? 0;
+      setSyncOk(`Synced ${n} day/platform rows`);
+      queryClient.invalidateQueries({ queryKey: ['admob-metrics'] });
+    },
+    onError: (err: any) => {
+      setSyncOk(null);
+      setSyncError(err?.response?.data?.error?.message || err?.message || 'AdMob sync failed');
+    },
   });
 
   const { sortKey: pricingSortKey, sortDir: pricingSortDir, handleSort: handlePricingSort, sortItems: sortPricingItems } = useSort<PricingSortKey>();
@@ -234,6 +245,17 @@ export default function FinancialsPage() {
             </button>
           )}
         </div>
+
+        {syncError && (
+          <div className="mb-3 text-[12px] bg-marble-red/10 border border-marble-red/30 text-marble-red rounded-lg px-3 py-2">
+            <span className="font-semibold">Sync failed:</span> {syncError}
+          </div>
+        )}
+        {syncOk && (
+          <div className="mb-3 text-[12px] bg-marble-green/10 border border-marble-green/30 text-marble-green rounded-lg px-3 py-2">
+            {syncOk}
+          </div>
+        )}
 
         {!admob?.configured ? (
           <div className="text-sm text-white/50 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">

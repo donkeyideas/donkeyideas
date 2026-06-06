@@ -1,4 +1,7 @@
 {
   "buildCommand": "npx prisma generate --schema=../../packages/database/prisma/schema.prisma && next build",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    { "path": "/api/admob/sync?days=35", "schedule": "0 7 * * *" }
+  ]
 }
