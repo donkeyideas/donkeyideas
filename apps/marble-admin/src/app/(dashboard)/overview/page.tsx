@@ -309,12 +309,12 @@ export default function OverviewPage() {
     );
 
   /* Derived values from API data */
-  const revenueToday = data.revenue.today;
+  const revenueTotal = data.revenue.total;
+  const revenueMonth = data.revenue.month;
   const dau = data.players.activeToday;
   const payingUsers = data.players.paying;
   const newToday = data.players.newToday;
 
-  const revTrend = trendLabel(data.trends.revenue);
   const dauTrend = trendLabel(data.trends.dau);
   const payTrend = trendLabel(data.trends.paying);
 
@@ -328,23 +328,17 @@ export default function OverviewPage() {
     <div className="space-y-6">
       {/* -- KPI Cards -- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Revenue Today */}
+        {/* Revenue Total */}
         <div className="bg-white/5 border-2 border-gold/20 rounded-2xl p-5 relative overflow-hidden">
           <div className="absolute -top-4 -right-4 w-[60px] h-[60px] rounded-full bg-gold opacity-[0.08]" />
           <div className="text-[11px] text-white/45 font-semibold uppercase tracking-wider mb-2">
-            Revenue Today
+            Revenue Total
           </div>
           <div className="font-heading text-[32px] tracking-wide leading-none text-gold">
-            ${revenueToday.toLocaleString()}
+            ${revenueTotal.toLocaleString()}
           </div>
-          <div
-            className={`inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg ${
-              revTrend.positive
-                ? 'bg-marble-green/15 text-marble-green'
-                : 'bg-marble-red/15 text-marble-red'
-            }`}
-          >
-            {revTrend.text} vs yesterday
+          <div className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2 px-2 py-0.5 rounded-lg bg-marble-green/15 text-marble-green">
+            ${revenueMonth.toLocaleString()} this month
           </div>
           {admob?.configured && (
             <div className="text-[10px] text-white/40 mt-1.5 leading-tight">
