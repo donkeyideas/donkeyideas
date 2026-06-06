@@ -26,7 +26,12 @@ export async function GET() {
     const user = await getUserByToken(token);
     if (!user) return NextResponse.json({ error: { message: 'Invalid session' } }, { status: 401 });
 
-    const configured = Boolean(process.env.ADMOB_SERVICE_ACCOUNT_JSON && process.env.ADMOB_PUBLISHER_ID);
+    const configured = Boolean(
+      process.env.ADMOB_OAUTH_CLIENT_ID &&
+      process.env.ADMOB_OAUTH_CLIENT_SECRET &&
+      process.env.ADMOB_OAUTH_REFRESH_TOKEN &&
+      process.env.ADMOB_PUBLISHER_ID,
+    );
 
     const now = new Date();
     const startOfToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));

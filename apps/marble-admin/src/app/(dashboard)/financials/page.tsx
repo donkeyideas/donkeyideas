@@ -261,9 +261,11 @@ export default function FinancialsPage() {
           <div className="text-sm text-white/50 bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
             <div className="font-semibold text-white/70 mb-1">AdMob API not configured</div>
             <div className="text-[12px]">
-              Set <code className="text-marble-blue">ADMOB_SERVICE_ACCOUNT_JSON</code> and{' '}
-              <code className="text-marble-blue">ADMOB_PUBLISHER_ID</code> in Vercel env vars,
-              then invite the service account email to AdMob (Settings → Access &amp; authorization → Read access).
+              Set <code className="text-marble-blue">ADMOB_OAUTH_CLIENT_ID</code>,{' '}
+              <code className="text-marble-blue">ADMOB_OAUTH_CLIENT_SECRET</code>,{' '}
+              <code className="text-marble-blue">ADMOB_OAUTH_REFRESH_TOKEN</code>, and{' '}
+              <code className="text-marble-blue">ADMOB_PUBLISHER_ID</code> in Vercel env vars.
+              Run <code className="text-marble-blue">node scripts/admob-oauth-setup.mjs</code> locally for one-time setup.
             </div>
           </div>
         ) : (

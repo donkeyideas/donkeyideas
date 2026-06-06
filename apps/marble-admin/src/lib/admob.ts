@@ -1,23 +1,30 @@
-import { GoogleAuth } from 'google-auth-library';
+import { OAuth2Client } from 'google-auth-library';
 
 /**
  * AdMob Reporting API client.
  *
- * Auth: Google service account that has been invited to the AdMob account
- * as a user (AdMob → Settings → Access & authorization). The service
- * account JSON is provided via the ADMOB_SERVICE_ACCOUNT_JSON env var.
+ * Auth: OAuth 2.0 user credentials with a stored refresh token.
+ * Service-account auth is NOT supported by the AdMob API — AdMob accounts
+ * are tied to individual user identities, so we use a refresh token obtained
+ * via a one-time consent flow (see scripts/admob-oauth-setup.mjs).
  *
- * Publisher ID (e.g. "pub-6024881476822443") is provided via
- * ADMOB_PUBLISHER_ID — found in AdMob → Settings → Account information.
+ * Required env vars:
+ *   ADMOB_OAUTH_CLIENT_ID      — OAuth Client ID (Web application type)
+ *   ADMOB_OAUTH_CLIENT_SECRET  — corresponding client secret
+ *   ADMOB_OAUTH_REFRESH_TOKEN  — long-lived refresh token from the setup script
+ *   ADMOB_PUBLISHER_ID         — e.g. "pub-6024881476822443"
  */
 
-const SCOPE = 'https://www.googleapis.com/auth/admob.readonly';
-
-function getAuth(): GoogleAuth {
-  const json = process.env.ADMOB_SERVICE_ACCOUNT_JSON;
-  if (!json) throw new Error('ADMOB_SERVICE_ACCOUNT_JSON env var not set');
-  const credentials = JSON.parse(json);
-  return new GoogleAuth({ credentials, scopes: [SCOPE] });
+function getOAuthClient(): OAuth2Client {
+  const clientId = process.env.ADMOB_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.ADMOB_OAUTH_CLIENT_SECRET;
+  const refreshToken = process.env.ADMOB_OAUTH_REFRESH_TOKEN;
+  if (!clientId) throw new Error('ADMOB_OAUTH_CLIENT_ID env var not set');
+  if (!clientSecret) throw new Error('ADMOB_OAUTH_CLIENT_SECRET env var not set');
+  if (!refreshToken) throw new Error('ADMOB_OAUTH_REFRESH_TOKEN env var not set');
+  const client = new OAuth2Client(clientId, clientSecret);
+  client.setCredentials({ refresh_token: refreshToken });
+  return client;
 }
 
 function getPublisherId(): string {
@@ -57,11 +64,11 @@ export async function fetchAdMobDailyReport(
   startDate: Date,
   endDate: Date,
 ): Promise<AdMobDailyRow[]> {
-  const auth = getAuth();
+  const oauth = getOAuthClient();
   const pubId = getPublisherId();
-  const client = await auth.getClient();
-  const token = await client.getAccessToken();
-  if (!token.token) throw new Error('AdMob: failed to obtain access token');
+  const tokenResp = await oauth.getAccessToken();
+  const token = tokenResp.token;
+  if (!token) throw new Error('AdMob: failed to obtain access token (refresh token may be expired/revoked)');
 
   const body = {
     reportSpec: {
@@ -82,7 +89,7 @@ export async function fetchAdMobDailyReport(
   const resp = await fetch(url, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${token.token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
