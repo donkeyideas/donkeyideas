@@ -54,7 +54,13 @@ export async function GET(request: NextRequest) {
     else if (filter === 'flagged') where.status = 'flagged';
     else if (filter === 'ios') where.platform = 'ios';
     else if (filter === 'android') where.platform = 'android';
-    else if (filter === 'watching_ads') {
+    else if (filter === 'real_users') {
+      // Exclude one-touch installs that never played a race. Most "fake"
+      // users in the table are actually dev/test reinstalls that registered
+      // (random name + welcome bonus) but never engaged. Filtering on
+      // totalRaces >= 1 cuts that noise without deleting the rows.
+      where.totalRaces = { gte: 1 };
+    } else if (filter === 'watching_ads') {
       // Players who've watched at least one rewarded ad — pre-fetch the
       // distinct playerIds with a reward_ad transaction and intersect.
       const watchers = await prisma.gameCoinTransaction.findMany({
@@ -129,6 +135,7 @@ export async function GET(request: NextRequest) {
             totalRaces: true, totalWins: true, currentStreak: true,
             passLevel: true, passTier: true, status: true,
             lastActiveAt: true, createdAt: true, bannedAt: true,
+            country: true, region: true, city: true,
           },
         }),
         Promise.resolve(sandbox.payerIds.size),
@@ -154,6 +161,7 @@ export async function GET(request: NextRequest) {
             totalRaces: true, totalWins: true, currentStreak: true,
             passLevel: true, passTier: true, status: true,
             lastActiveAt: true, createdAt: true, bannedAt: true,
+            country: true, region: true, city: true,
           },
         }),
         prisma.gamePlayer.count({ where }),

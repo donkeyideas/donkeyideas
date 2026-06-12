@@ -998,6 +998,13 @@ model GamePlayer {
   appVersion  String?
   deviceModel String?
 
+  // Geo (captured from Vercel edge headers at register/login time, free).
+  // ISO-3166 country code (e.g. "US"), region code (e.g. "CA"), city.
+  // Nullable because pre-existing rows + offline registration won't have them.
+  country     String?
+  region      String?
+  city        String?
+
   // Economy
   coins      Int     @default(1000)
   totalSpent Decimal @default(0) // Real money spent (USD)
@@ -1047,6 +1054,7 @@ model GamePlayer {
   @@index([createdAt])
   @@index([coins])
   @@index([pushToken])
+  @@index([country])
   @@map("game_players")
 }
 

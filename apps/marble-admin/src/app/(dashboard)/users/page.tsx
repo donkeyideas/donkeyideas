@@ -24,6 +24,9 @@ interface Player {
   createdAt: string;
   bannedAt: string | null;
   adsWatched?: number;
+  country?: string | null;
+  region?: string | null;
+  city?: string | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -32,6 +35,7 @@ interface Player {
 
 const FILTERS = [
   { label: 'All Users', value: 'all' },
+  { label: 'Real Users', value: 'real_users' },
   { label: 'Paying', value: 'paying' },
   { label: 'Free', value: 'free' },
   { label: 'Banned', value: 'banned' },
@@ -80,6 +84,35 @@ function StatusBadge({ status }: { status: string }) {
     <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${map[s] ?? map.inactive}`}>
       {status.toUpperCase()}
     </span>
+  );
+}
+
+function flagEmoji(country: string | null | undefined): string {
+  // ISO-3166-1 alpha-2 → regional indicator emoji. Vercel returns the
+  // 2-letter code already uppercased ("US", "GB", "BR" …); the regional
+  // indicator block starts at U+1F1E6 = 'A'.
+  if (!country || country.length !== 2 || !/^[A-Z]{2}$/.test(country)) return '';
+  const A = 0x1f1e6;
+  return String.fromCodePoint(A + country.charCodeAt(0) - 65) +
+         String.fromCodePoint(A + country.charCodeAt(1) - 65);
+}
+
+function LocationCell({ country, region, city }: { country?: string | null; region?: string | null; city?: string | null }) {
+  if (!country && !region && !city) {
+    return <span className="text-[11px] text-white/25">—</span>;
+  }
+  const flag = flagEmoji(country);
+  const primary = city || region || country || '';
+  const secondary = [region, country].filter(Boolean).join(', ');
+  return (
+    <div className="leading-tight">
+      <div className="text-[12px] text-white/75">
+        {flag && <span className="mr-1">{flag}</span>}{primary}
+      </div>
+      {secondary && primary !== secondary && (
+        <div className="text-[10px] text-white/35">{secondary}</div>
+      )}
+    </div>
   );
 }
 
@@ -442,6 +475,25 @@ export default function UsersPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['players'] }),
   });
 
+  /* Dead-user cleanup. Two-step UX: clicking the button hits the dry-run
+   * GET to count + preview rows, then we ask for explicit confirmation
+   * before POSTing with execute=1. Never auto-delete. */
+  const [cleanupPreview, setCleanupPreview] = useState<{
+    wouldDelete: number;
+    sample: Array<{ playerName: string; deviceId: string; isDevTagged: boolean; createdAt: string }>;
+  } | null>(null);
+  const previewCleanup = useMutation({
+    mutationFn: () => api.get('/players/cleanup-dead').then((r) => r.data),
+    onSuccess: (d: any) => setCleanupPreview({ wouldDelete: d.wouldDelete, sample: d.sample }),
+  });
+  const executeCleanup = useMutation({
+    mutationFn: () => api.post('/players/cleanup-dead?execute=1').then((r) => r.data),
+    onSuccess: () => {
+      setCleanupPreview(null);
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+    },
+  });
+
   const handleExportCsv = () => {
     if (players.length === 0) return;
     const cols = ['id', 'playerName', 'platform', 'status', 'coins', 'totalRaces', 'totalSpent', 'passTier', 'createdAt', 'lastActiveAt'] as const;
@@ -532,6 +584,15 @@ export default function UsersPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={() => previewCleanup.mutate()}
+            disabled={previewCleanup.isPending}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-marble-red/80 hover:text-marble-red hover:bg-marble-red/10 border border-marble-red/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Preview which dead/test users would be removed"
+          >
+            {previewCleanup.isPending ? 'Scanning…' : 'Clean Up Dead Users'}
+          </button>
+          <button
+            type="button"
             onClick={handleExportCsv}
             disabled={players.length === 0}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -540,6 +601,58 @@ export default function UsersPage() {
           </button>
         </div>
       </div>
+
+      {/* ============ CLEANUP CONFIRMATION ============ */}
+      {cleanupPreview && (
+        <div className="bg-marble-red/[0.06] border-2 border-marble-red/30 rounded-2xl p-5">
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <div>
+              <div className="font-heading text-base tracking-wide text-marble-red">
+                Confirm Cleanup
+              </div>
+              <div className="text-[12px] text-white/55 mt-1">
+                Will permanently delete <b>{cleanupPreview.wouldDelete}</b> player records
+                that match: zero races, zero spend, never came back after registering,
+                older than 7 days OR dev-tagged. Banned accounts are excluded.
+              </div>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setCleanupPreview(null)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/60 hover:text-white/80 hover:bg-white/5 border border-white/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => executeCleanup.mutate()}
+                disabled={executeCleanup.isPending || cleanupPreview.wouldDelete === 0}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-marble-red text-white hover:bg-marble-red/85 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {executeCleanup.isPending ? 'Deleting…' : `Delete ${cleanupPreview.wouldDelete}`}
+              </button>
+            </div>
+          </div>
+          {cleanupPreview.sample.length > 0 && (
+            <div className="bg-black/30 border border-white/[0.04] rounded-lg p-3 max-h-48 overflow-y-auto">
+              <div className="text-[10px] text-white/35 uppercase tracking-wider mb-2">Sample (first 20)</div>
+              <div className="space-y-1">
+                {cleanupPreview.sample.map((s) => (
+                  <div key={s.deviceId} className="flex items-center gap-2 text-[11px] font-mono">
+                    {s.isDevTagged && (
+                      <span className="px-1.5 py-0 rounded bg-marble-blue/15 text-marble-blue text-[9px] font-bold">DEV</span>
+                    )}
+                    <span className="text-white/70">{s.playerName}</span>
+                    <span className="text-white/30">{s.deviceId.slice(0, 14)}…</span>
+                    <span className="text-white/25 ml-auto">{new Date(s.createdAt).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ============ SEARCH BAR ============ */}
       <div className="relative">
@@ -596,6 +709,7 @@ export default function UsersPage() {
                 <SortableHeader label="User" sortKey="playerName" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Platform" sortKey="platform" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+                <th className="text-left px-4 py-3 text-[10px] font-bold text-white/40 uppercase tracking-wider">Location</th>
                 <SortableHeader label="Coins" sortKey="coins" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Races" sortKey="totalRaces" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Total Spent" sortKey="totalSpent" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
@@ -644,6 +758,11 @@ export default function UsersPage() {
                     {/* Platform */}
                     <td className="px-4 py-3.5 align-middle">
                       <PlatformBadge platform={p.platform || '---'} />
+                    </td>
+
+                    {/* Location */}
+                    <td className="px-4 py-3.5 align-middle">
+                      <LocationCell country={p.country} region={p.region} city={p.city} />
                     </td>
 
                     {/* Coins */}

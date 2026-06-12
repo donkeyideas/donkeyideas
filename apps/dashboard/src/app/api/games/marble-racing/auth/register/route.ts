@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { createGamePlayerSession } from '@/lib/game-auth';
+import { getRequestGeo } from '@/lib/request-geo';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { deviceId, playerName, platform, appVersion, deviceModel } = body;
+    const geo = getRequestGeo(request);
 
     if (!deviceId || !playerName) {
       return NextResponse.json(
@@ -20,11 +22,18 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
-      // Device already registered — issue new session
+      // Device already registered — issue new session.
+      // Backfill geo on each call so historical rows pick up country/region
+      // the first time they hit a Vercel edge after this rolls out.
       const token = await createGamePlayerSession(existing.id, deviceId, platform || 'unknown');
       await prisma.gamePlayer.update({
         where: { id: existing.id },
-        data: { lastActiveAt: new Date() },
+        data: {
+          lastActiveAt: new Date(),
+          ...(existing.country == null && geo.country ? { country: geo.country } : {}),
+          ...(existing.region  == null && geo.region  ? { region:  geo.region  } : {}),
+          ...(existing.city    == null && geo.city    ? { city:    geo.city    } : {}),
+        },
       });
       return NextResponse.json({
         player: {
@@ -67,6 +76,9 @@ export async function POST(request: NextRequest) {
           platform: platform || 'unknown',
           appVersion: appVersion || null,
           deviceModel: deviceModel || null,
+          country: geo.country,
+          region:  geo.region,
+          city:    geo.city,
         },
       });
       await tx.gameCoinTransaction.create({

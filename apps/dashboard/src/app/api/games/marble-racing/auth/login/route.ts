@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@donkey-ideas/database';
 import { createGamePlayerSession } from '@/lib/game-auth';
+import { getRequestGeo } from '@/lib/request-geo';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { deviceId } = body;
+    const geo = getRequestGeo(request);
 
     if (!deviceId) {
       return NextResponse.json(
@@ -42,9 +44,17 @@ export async function POST(request: NextRequest) {
       player.platform,
     );
 
+    // Backfill geo opportunistically — older players that registered before
+    // the geo columns existed will fill in on their first login from a
+    // Vercel edge.
     await prisma.gamePlayer.update({
       where: { id: player.id },
-      data: { lastActiveAt: new Date() },
+      data: {
+        lastActiveAt: new Date(),
+        ...(player.country == null && geo.country ? { country: geo.country } : {}),
+        ...(player.region  == null && geo.region  ? { region:  geo.region  } : {}),
+        ...(player.city    == null && geo.city    ? { city:    geo.city    } : {}),
+      },
     });
 
     return NextResponse.json({
