@@ -15,6 +15,8 @@ interface ScoredProject {
   leverage: number;
   zone: Zone;
   why: string;
+  dataConfidence?: number;
+  insufficientData?: boolean;
 }
 interface QuietlyBroken {
   projectKey: string;
@@ -153,6 +155,24 @@ export default function PortfolioAgentPage() {
         </Card>
       ) : (
         <>
+          {/* provisional banner — honest about how little real data is flowing */}
+          {(() => {
+            const blind = briefing.products.filter((p) => p.insufficientData).length;
+            const live = briefing.beaconsReachable;
+            if (live > 0 && blind === 0) return null;
+            return (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-5 py-4">
+                <div className="font-bold text-amber-300">⚠ Provisional briefing — not decision-grade yet</div>
+                <p className="text-amber-200/80 text-sm mt-1">
+                  {live} of {briefing.beaconsTotal || briefing.products.length} product beacons are live.
+                  {blind > 0 && ` ${blind} products are blind spots the agent can't see at all.`} Scores
+                  here are based on Google&nbsp;Analytics traffic only — they are <b>not</b> a real read of
+                  retention, revenue, or engagement. Deploy each product&apos;s beacon to make this trustworthy.
+                </p>
+              </div>
+            );
+          })()}
+
           {/* KPI row */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Card><CardContent className="p-5">
@@ -224,6 +244,23 @@ export default function PortfolioAgentPage() {
               </div>
             </CardContent></Card>
           </div>
+
+          {/* blind spots — products the agent literally cannot see (no beacon, no GA4) */}
+          {briefing.products.some((p) => p.insufficientData) && (
+            <Card><CardContent className="p-6">
+              <h2 className="text-lg font-bold">Blind Spots — needs instrumentation</h2>
+              <p className="text-white/50 text-sm mb-3">
+                The agent has no real data feed for these. Their low scores mean <b>&ldquo;can&apos;t see it,&rdquo;</b> NOT &ldquo;it&apos;s failing.&rdquo; Don&apos;t act on them until a beacon is deployed.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {briefing.products.filter((p) => p.insufficientData).map((p) => (
+                  <span key={p.projectKey} className="text-sm px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70">
+                    {p.displayName} <span className="text-white/30">· {p.archetype.replace(/-/g, '/')}</span>
+                  </span>
+                ))}
+              </div>
+            </CardContent></Card>
+          )}
 
           {/* ranked table */}
           <Card><CardContent className="p-6">

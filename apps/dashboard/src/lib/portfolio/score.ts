@@ -234,18 +234,10 @@ export function detectQuietlyBroken(scored: ScoredProject[]): QuietlyBroken[] {
         kind: 'no-monetization',
       });
     }
-    if (s.insufficientData) {
-      const hasBeacon = s.metrics.source === 'beacon' || s.metrics.source === 'merged';
-      out.push({
-        projectKey: s.projectKey,
-        displayName: s.displayName,
-        title: `${s.displayName} — invisible to the agent`,
-        detail: hasBeacon
-          ? 'Beacon is up but reporting almost no signal — verify its queries or it\'s genuinely pre-traction.'
-          : 'No beacon and no GA4 signal — the agent is judging blind. Add its beacon before trusting any call here.',
-        kind: 'no-data',
-      });
-    }
+    // NOTE: blind spots (insufficient data) are NOT "quietly broken" — they are a
+    // separate concern surfaced via the blindSpots list, not here. "Quietly broken"
+    // is reserved for REAL, measured problems (funnel errors, dead funnels, no
+    // monetization). A product we can't see is not a product that's broken.
   }
   return out;
 }
