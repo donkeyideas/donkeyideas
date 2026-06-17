@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Portfolio Growth Agent — Donkey Ideas</title>
+<style>
+  :root{
+    --bg:#0a0b0d; --panel:#101114; --panel-2:#0d0e11; --card:#111317;
+    --border:#1e2025; --border-soft:#191b1f;
+    --text:#f4f5f7; --muted:#8b8e96; --muted-2:#62656d;
+    --green:#34d399; --green-dim:#1f7a5a;
+    --red:#f87171; --red-dim:#7a2f2f;
+    --blue:#4d8df6; --indigo:#6366f1;
+    --amber:#eab308; --amber-2:#f5a623;
+    --purple:#a78bfa;
+    --radius:14px;
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;
+    display:flex;min-height:100vh;
+  }
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:248px;flex-shrink:0;background:var(--panel-2);
+    border-right:1px solid var(--border);
+    padding:22px 14px;display:flex;flex-direction:column;gap:4px;
+    height:100vh;position:sticky;top:0;overflow-y:auto;
+  }
+  .brand{font-size:18px;letter-spacing:.06em;padding:4px 10px 18px;font-weight:400}
+  .brand b{font-weight:800}
+  .nav-label{font-size:10.5px;letter-spacing:.12em;color:var(--muted-2);
+    text-transform:uppercase;padding:16px 10px 6px;font-weight:600}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;
+    color:var(--muted);cursor:pointer;font-size:13.5px;transition:.15s}
+  .nav-item:hover{background:#16181c;color:var(--text)}
+  .nav-item.active{background:#1b1e24;color:#fff;font-weight:600;
+    box-shadow:inset 0 0 0 1px #262a31}
+  .nav-item .dot{width:6px;height:6px;border-radius:50%;background:var(--purple);
+    margin-left:auto;box-shadow:0 0 8px var(--purple)}
+  .company-box{margin:14px 4px;padding:12px;border:1px solid var(--border);
+    border-radius:11px;background:#0e0f12}
+  .company-box .lbl{font-size:10px;letter-spacing:.12em;color:var(--muted-2);text-transform:uppercase}
+  .company-box .sel{display:flex;justify-content:space-between;align-items:center;
+    margin-top:8px;font-weight:600;font-size:14px}
+  .company-box .sel span{color:var(--muted)}
+  /* ---------- Main ---------- */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;justify-content:space-between;
+    padding:18px 32px;border-bottom:1px solid var(--border-soft)}
+  .crumb{color:var(--muted);font-size:13px}
+  .crumb b{color:var(--text);font-weight:700}
+  .topbar-right{display:flex;align-items:center;gap:18px}
+  .theme-toggle{display:flex;background:#15171b;border:1px solid var(--border);
+    border-radius:9px;overflow:hidden;font-size:12.5px}
+  .theme-toggle span{padding:6px 14px;color:var(--muted);cursor:pointer}
+  .theme-toggle span.on{background:#23262d;color:#fff}
+  .saved{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12.5px}
+  .saved .g{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  .content{padding:28px 32px 60px;max-width:1500px}
+  /* header */
+  .pagehead{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+  .pagehead h1{font-size:32px;font-weight:800;letter-spacing:-.01em}
+  .pagehead p{color:var(--muted);margin-top:8px;font-size:14.5px;max-width:620px}
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn{padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:600;
+    cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;gap:8px}
+  .btn.ghost{background:#16181c;border-color:var(--border);color:var(--text)}
+  .btn.primary{background:linear-gradient(180deg,#5b8df8,#4d7ff0);color:#fff}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .select{background:#15171b;border:1px solid var(--border);border-radius:10px;
+    padding:9px 14px;color:var(--text);font-size:13px}
+  /* kpi row */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:26px}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px}
+  .kpi .k-lbl{font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+  .kpi .k-val{font-size:34px;font-weight:800;margin-top:12px;letter-spacing:-.02em}
+  .kpi .k-sub{font-size:12.5px;color:var(--muted);margin-top:8px}
+  .k-val.green{color:var(--green)} .k-val.red{color:var(--red)}
+  .k-val.blue{color:var(--blue)} .k-val.amber{color:var(--amber-2)}
+  /* generic card */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+  .card h2{font-size:18px;font-weight:700;margin-bottom:4px}
+  .card .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .row2{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;margin-top:18px}
+  @media(max-width:1100px){.row2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+  /* verdict */
+  .verdict{background:linear-gradient(180deg,#121821,#0f1216);
+    border:1px solid #20303f;border-radius:var(--radius);padding:24px;margin-top:18px}
+  .verdict .tag{display:inline-flex;align-items:center;gap:8px;font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:700}
+  .verdict h2{font-size:21px;margin:12px 0 10px;font-weight:800;line-height:1.3}
+  .verdict h2 em{font-style:normal;color:var(--green)}
+  .verdict h2 .cut{color:var(--red)}
+  .verdict p{color:#c9ccd2;font-size:14px;max-width:900px}
+  .verdict .meta{margin-top:16px;color:var(--muted-2);font-size:12px;display:flex;gap:18px;flex-wrap:wrap}
+  /* grid quadrant */
+  .grid-wrap{position:relative;padding-left:26px;padding-bottom:26px;margin-top:8px}
+  .axis-y{position:absolute;left:-4px;top:0;bottom:26px;display:flex;align-items:center;
+    writing-mode:vertical-rl;transform:rotate(180deg);color:var(--muted-2);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  .axis-x{position:absolute;left:26px;right:0;bottom:0;text-align:center;color:var(--muted-2);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  .quad{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;height:420px}
+  .cell{border:1px dashed #23262d;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+  .cell .ttl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.9}
+  .cell.dd{background:rgba(52,211,153,.06)} .cell.dd .ttl{color:var(--green)}
+  .cell.st{background:rgba(77,141,246,.06)} .cell.st .ttl{color:var(--blue)}
+  .cell.pp{background:rgba(234,179,8,.06)} .cell.pp .ttl{color:var(--amber)}
+  .cell.cut{background:rgba(248,113,113,.06)} .cell.cut .ttl{color:var(--red)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:12px;padding:5px 10px;border-radius:20px;background:#15171b;
+    border:1px solid var(--border);color:#dfe1e6;font-weight:600;white-space:nowrap}
+  .chip.g{border-color:var(--green-dim)} .chip.b{border-color:#27456e}
+  .chip.a{border-color:#6b5410} .chip.r{border-color:var(--red-dim)}
+  /* table */
+  table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13.5px}
+  th{text-align:left;color:var(--muted-2);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    font-weight:600;padding:10px 12px;border-bottom:1px solid var(--border)}
+  td{padding:13px 12px;border-bottom:1px solid var(--border-soft);vertical-align:middle}
+  tr:hover td{background:#0e0f12}
+  .pname{font-weight:700}
+  .arch{font-size:11px;color:var(--muted);text-transform:capitalize}
+  .score{display:flex;align-items:center;gap:8px}
+  .bar{height:6px;border-radius:4px;background:#1c1e23;flex:1;min-width:60px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:4px}
+  .badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+  .badge.dd{background:rgba(52,211,153,.12);color:var(--green)}
+  .badge.st{background:rgba(77,141,246,.12);color:var(--blue)}
+  .badge.pp{background:rgba(234,179,8,.12);color:var(--amber-2)}
+  .badge.cut{background:rgba(248,113,113,.12);color:var(--red)}
+  .why{color:var(--muted);font-size:12.5px;max-width:360px}
+  /* broken list */
+  .broken .item{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--border-soft)}
+  .broken .item:last-child{border-bottom:none}
+  .broken .ic{width:30px;height:30px;border-radius:8px;background:rgba(248,113,113,.12);
+    color:var(--red);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+  .broken .t{font-weight:700;font-size:13.5px}
+  .broken .d{color:var(--muted);font-size:12.5px;margin-top:3px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-size:11.5px;color:var(--muted)}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">DONKEY <b>IDEAS</b></div>
+
+    <div class="nav-label">Donkey Ideas</div>
+    <div class="nav-item">Dashboard</div>
+    <div class="nav-item">Financials</div>
+    <div class="nav-item">Budget &amp; Forecast</div>
+    <div class="nav-item">Analytics</div>
+    <div class="nav-item">App Stores</div>
+    <div class="nav-item active">Portfolio Agent <span class="dot"></span></div>
+    <div class="nav-item">Project Board</div>
+    <div class="nav-item">User Management</div>
+
+    <div class="nav-label">Content &amp; Systems</div>
+    <div class="nav-item">Website Manager</div>
+    <div class="nav-item">Blog Manager</div>
+    <div class="nav-item">SEO &amp; GEO Analytics</div>
+    <div class="nav-item">Social Posts</div>
+
+    <div class="nav-label">Tools</div>
+    <div class="nav-item">AI Assistant</div>
+    <div class="nav-item">API Usage &amp; Costs</div>
+    <div class="nav-item">Settings</div>
+
+    <div class="company-box">
+      <div class="lbl">Active Company</div>
+      <div class="sel">Argu Fight <span>⌄</span></div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb">Home / <b>Portfolio Agent</b></div>
+      <div class="topbar-right">
+        <div class="theme-toggle"><span class="on">Dark</span><span>Light</span><span>Blue</span></div>
+        <div class="saved"><span class="g"></span> Last run 6:00 AM</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- page header -->
+      <div class="pagehead">
+        <div>
+          <h1>Portfolio Growth Agent</h1>
+          <p>Daily allocation briefing across all 12 products — where to point your next hour and dollar, and what's quietly broken. Scored within each product's archetype.</p>
+        </div>
+        <div class="actions">
+          <select class="select"><option>Today · Jun 17</option><option>Yesterday</option><option>7-day view</option></select>
+          <button class="btn ghost">Email me this</button>
+          <button class="btn primary">⟳ Run Briefing Now</button>
+        </div>
+      </div>
+
+      <!-- KPI row -->
+      <div class="kpis">
+        <div class="kpi"><div class="k-lbl">Products Tracked</div><div class="k-val">12</div><div class="k-sub">11 reporting · 1 stub (Marble)</div></div>
+        <div class="kpi"><div class="k-lbl">Double-Down Zone</div><div class="k-val green">2</div><div class="k-sub">ArguFight · OpticRank</div></div>
+        <div class="kpi"><div class="k-lbl">Quietly Broken</div><div class="k-val red">3</div><div class="k-sub">Funnel/error issues — not marketing</div></div>
+        <div class="kpi"><div class="k-lbl">Portfolio MRR</div><div class="k-val blue">$12.8k</div><div class="k-sub">↑ 7.4% vs last 28 days</div></div>
+      </div>
+
+      <!-- VERDICT -->
+      <div class="verdict">
+        <div class="tag">● DeepSeek verdict · the headline call</div>
+        <h2>Point yourself at <em>ArguFight</em> and <em>OpticRank</em>. Park <span class="cut">Donkey Marble Racing &amp; Julyu</span> — they have no signal to act on. CFB Social is fine to ignore until July, then it's your seasonal bet.</h2>
+        <p>ArguFight is the only product growing on organic pull (74% organic, D7 retention 22% and rising) <i>and</i> taking real money — concentrate here. OpticRank is your strongest B2B engine and can dogfood the rest of the portfolio's SEO. go.viral looks alive on revenue but its onboarding is broken, not under-marketed — fix activation before spending a dollar on traffic. Buildwrk, Havana and Kamioi are cash/trust plays: protect them, partner, don't chase self-serve growth. Basktball has users but zero monetization wired — decide this month: turn it on or pause it.</p>
+        <div class="meta"><span>Run #47 · 2026-06-17 06:00 UTC</span><span>1,910 tokens · $0.0004</span><span>model: deepseek-chat</span><span>11/12 beacons reachable</span></div>
+      </div>
+
+      <!-- GRID + BROKEN -->
+      <div class="row2">
+        <div class="card">
+          <h2>Allocation Grid</h2>
+          <div class="sub">Traction (is it real?) × Leverage (would a push move it?) — normalized within archetype.</div>
+          <div class="grid-wrap">
+            <div class="axis-y">Leverage →</div>
+            <div class="quad">
+              <!-- top-left: high leverage, low traction = small tests -->
+              <div class="cell st">
+                <div class="ttl">Small Tests</div>
+                <div class="chips">
+                  <span class="chip b">go.viral</span>
+                  <span class="chip b">Top Viso</span>
+                  <span class="chip b">Jetdale</span>
+                </div>
+              </div>
+              <!-- top-right: high leverage, high traction = double down -->
+              <div class="cell dd">
+                <div class="ttl">★ Double Down</div>
+                <div class="chips">
+                  <span class="chip g">ArguFight</span>
+                  <span class="chip g">OpticRank</span>
+                </div>
+              </div>
+              <!-- bottom-left: low leverage, low traction = cut -->
+              <div class="cell cut">
+                <div class="ttl">Cut · Pause · Sell</div>
+                <div class="chips">
+                  <span class="chip r">Donkey Marble Racing</span>
+                  <span class="chip r">Julyu</span>
+                  <span class="chip r">Basktball</span>
+                </div>
+              </div>
+              <!-- bottom-right: low leverage, high traction = protect/partner -->
+              <div class="cell pp">
+                <div class="ttl">Protect · Partner</div>
+                <div class="chips">
+                  <span class="chip a">Buildwrk</span>
+                  <span class="chip a">Havana</span>
+                  <span class="chip a">Kamioi</span>
+                  <span class="chip a">CFB Social</span>
+                </div>
+              </div>
+            </div>
+            <div class="axis-x">Traction →</div>
+          </div>
+          <div class="legend">
+            <span><i style="background:var(--green)"></i>Double down</span>
+            <span><i style="background:var(--blue)"></i>Small tests</span>
+            <span><i style="background:var(--amber-2)"></i>Protect / partner</span>
+            <span><i style="background:var(--red)"></i>Cut / pause / sell</span>
+          </div>
+        </div>
+
+        <div class="card broken">
+          <h2>Quietly Broken</h2>
+          <div class="sub">Funnel erroring or converting far below the others — a bug, not bad marketing.</div>
+          <div class="item">
+            <div class="ic">!</div>
+            <div><div class="t">go.viral — onboarding</div>
+              <div class="d">signup→activation 11% vs 34% portfolio median. Users sign up and never connect a platform. Empty funnel ≠ broken funnel — this one's broken.</div></div>
+          </div>
+          <div class="item">
+            <div class="ic">!</div>
+            <div><div class="t">Jetdale — project-create endpoint</div>
+              <div class="d">6.2% error rate on the critical activation step (Sentry). Pre-launch, so fix before any waitlist push.</div></div>
+          </div>
+          <div class="item">
+            <div class="ic">$</div>
+            <div><div class="t">Basktball — no monetization</div>
+              <div class="d">1.2k MAU, 0 revenue events. Not broken code — no revenue path is wired at all.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RANKED TABLE -->
+      <div class="card" style="margin-top:18px">
+        <h2>All Products — Ranked</h2>
+        <div class="sub">Sorted by combined traction × leverage. Scores are within-archetype percentiles, not absolute.</div>
+        <table>
+          <thead>
+            <tr><th>Product</th><th>Archetype</th><th style="width:150px">Traction</th><th style="width:150px">Leverage</th><th>Zone</th><th>Why</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="pname">ArguFight<div class="arch">consumer · viral</div></td><td class="arch">Consumer / viral</td>
+              <td><div class="score"><div class="bar"><i style="width:78%;background:var(--green)"></i></div>78</div></td>
+              <td><div class="score"><div class="bar"><i style="width:72%;background:var(--green)"></i></div>72</div></td>
+              <td><span class="badge dd">Double down</span></td>
+              <td class="why">74% organic, D7 retention 22% & rising, real revenue. Your clearest winner.</td>
+            </tr>
+            <tr>
+              <td class="pname">OpticRank<div class="arch">b2b · saas</div></td><td class="arch">B2B SaaS</td>
+              <td><div class="score"><div class="bar"><i style="width:71%;background:var(--green)"></i></div>71</div></td>
+              <td><div class="score"><div class="bar"><i style="width:80%;background:var(--green)"></i></div>80</div></td>
+              <td><span class="badge dd">Double down</span></td>
+              <td class="why">Paying SaaS, rising organic SEO, and can rank the rest of the portfolio. Compounds.</td>
+            </tr>
+            <tr>
+              <td class="pname">Top Viso<div class="arch">b2b · saas</div></td><td class="arch">B2B SaaS</td>
+              <td><div class="score"><div class="bar"><i style="width:52%;background:var(--blue)"></i></div>52</div></td>
+              <td><div class="score"><div class="bar"><i style="width:68%;background:var(--blue)"></i></div>68</div></td>
+              <td><span class="badge st">Small tests</span></td>
+              <td class="why">Shares OpticRank's audience — cross-promote rather than fund separately.</td>
+            </tr>
+            <tr>
+              <td class="pname">go.viral<div class="arch">b2b · saas</div></td><td class="arch">B2B SaaS</td>
+              <td><div class="score"><div class="bar"><i style="width:48%;background:var(--blue)"></i></div>48</div></td>
+              <td><div class="score"><div class="bar"><i style="width:74%;background:var(--blue)"></i></div>74</div></td>
+              <td><span class="badge st">Small tests</span></td>
+              <td class="why">Revenue exists but activation is broken (see left). Fix funnel first, then test one channel.</td>
+            </tr>
+            <tr>
+              <td class="pname">Jetdale<div class="arch">pre-launch</div></td><td class="arch">Pre-launch</td>
+              <td><div class="score"><div class="bar"><i style="width:35%;background:var(--blue)"></i></div>35</div></td>
+              <td><div class="score"><div class="bar"><i style="width:70%;background:var(--blue)"></i></div>70</div></td>
+              <td><span class="badge st">Small tests</span></td>
+              <td class="why">Best-instrumented pre-launch (PostHog). Activation drop to fix before the waitlist push.</td>
+            </tr>
+            <tr>
+              <td class="pname">Buildwrk<div class="arch">regulated · trust</div></td><td class="arch">Regulated / trust</td>
+              <td><div class="score"><div class="bar"><i style="width:64%;background:var(--amber-2)"></i></div>64</div></td>
+              <td><div class="score"><div class="bar"><i style="width:38%;background:var(--amber-2)"></i></div>38</div></td>
+              <td><span class="badge pp">Protect / partner</span></td>
+              <td class="why">Cash-generating, sales-led. Partner with construction associations; don't chase self-serve.</td>
+            </tr>
+            <tr>
+              <td class="pname">Havana Cleaning<div class="arch">marketplace</div></td><td class="arch">Marketplace</td>
+              <td><div class="score"><div class="bar"><i style="width:60%;background:var(--amber-2)"></i></div>60</div></td>
+              <td><div class="score"><div class="bar"><i style="width:30%;background:var(--amber-2)"></i></div>30</div></td>
+              <td><span class="badge pp">Protect / partner</span></td>
+              <td class="why">Local cash machine, low ceiling. Keep it running; don't over-invest attention.</td>
+            </tr>
+            <tr>
+              <td class="pname">Kamioi<div class="arch">regulated · fintech</div></td><td class="arch">Regulated / trust</td>
+              <td><div class="score"><div class="bar"><i style="width:45%;background:var(--amber-2)"></i></div>45</div></td>
+              <td><div class="score"><div class="bar"><i style="width:35%;background:var(--amber-2)"></i></div>35</div></td>
+              <td><span class="badge pp">Protect / partner</span></td>
+              <td class="why">Trust/partnership-gated fintech. Slow burn — milestone-driven, not growth-hackable.</td>
+            </tr>
+            <tr>
+              <td class="pname">CFB Social<div class="arch">consumer · seasonal</div></td><td class="arch">Consumer / viral</td>
+              <td><div class="score"><div class="bar"><i style="width:42%;background:var(--amber-2)"></i></div>42</div></td>
+              <td><div class="score"><div class="bar"><i style="width:45%;background:var(--amber-2)"></i></div>45</div></td>
+              <td><span class="badge pp">Protect / partner</span></td>
+              <td class="why">Seasonal — dormant now. Ignore until July, then it's a real push into football season.</td>
+            </tr>
+            <tr>
+              <td class="pname">Basktball<div class="arch">consumer</div></td><td class="arch">Consumer / viral</td>
+              <td><div class="score"><div class="bar"><i style="width:30%;background:var(--red)"></i></div>30</div></td>
+              <td><div class="score"><div class="bar"><i style="width:28%;background:var(--red)"></i></div>28</div></td>
+              <td><span class="badge cut">Cut · pause</span></td>
+              <td class="why">Traffic but no revenue model and one-and-done sessions. Monetize or pause this month.</td>
+            </tr>
+            <tr>
+              <td class="pname">Julyu<div class="arch">pre-launch</div></td><td class="arch">Pre-launch</td>
+              <td><div class="score"><div class="bar"><i style="width:22%;background:var(--red)"></i></div>22</div></td>
+              <td><div class="score"><div class="bar"><i style="width:33%;background:var(--red)"></i></div>33</div></td>
+              <td><span class="badge cut">Cut · pause</span></td>
+              <td class="why">No traction signal, crowded grocery space. Validate the waitlist or shelve.</td>
+            </tr>
+            <tr>
+              <td class="pname">Donkey Marble Racing<div class="arch">pre-launch</div></td><td class="arch">Pre-launch</td>
+              <td><div class="score"><div class="bar"><i style="width:10%;background:var(--red)"></i></div>10</div></td>
+              <td><div class="score"><div class="bar"><i style="width:20%;background:var(--red)"></i></div>20</div></td>
+              <td><span class="badge cut">Instrument or park</span></td>
+              <td class="why">No backend, no data — invisible to the agent. Instrument it or park it; can't decide blind.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

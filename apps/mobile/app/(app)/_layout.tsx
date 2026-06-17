@@ -54,6 +54,7 @@ export default function AppLayout() {
     >
       <Drawer.Screen name="index" options={{ drawerItemStyle: { display: 'none' }, drawerLabel: () => null, title: '' }} />
       <Drawer.Screen name="users" options={{ title: 'Users', drawerLabel: 'Users' }} />
+      <Drawer.Screen name="portfolio" options={{ title: 'Portfolio Agent', drawerLabel: 'Portfolio Agent' }} />
       <Drawer.Screen name="analytics" options={{ title: 'Analytics', drawerLabel: 'Analytics' }} />
       <Drawer.Screen name="appstore" options={{ title: 'App Store', drawerLabel: 'App Store' }} />
     </Drawer>

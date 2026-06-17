@@ -17,6 +17,7 @@ const donkeyIdeasNavigation = [
       { name: 'Budget & Forecast', href: '/app/budget/consolidated', icon: '' },
       { name: 'Analytics', href: '/app/consolidated-analytics', icon: '' },
       { name: 'App Stores', href: '/app/app-stores', icon: '' },
+      { name: 'Portfolio Agent', href: '/app/portfolio-agent', icon: '' },
       { name: 'Analytics & Reports', href: '/app/analytics', icon: '' },
       { name: 'Project Board', href: '/app/consolidated-projects', icon: '' },
       { name: 'User Management', href: '/app/users', icon: '' },

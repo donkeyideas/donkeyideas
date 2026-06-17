@@ -35,6 +35,7 @@ model User {
   socialPosts       SocialMediaPost[]
   socialCredentials SocialMediaCredential[]
   socialAutomation  SocialMediaAutomation?
+  portfolioBriefings PortfolioBriefing[]
 
   @@map("users")
 }
@@ -80,6 +81,40 @@ model ApiUsage {
   @@index([userId, createdAt])
   @@index([provider, createdAt])
   @@map("api_usage")
+}
+
+// Portfolio Growth Agent — one row per daily allocation briefing run.
+// Portfolio-level (tied to the owner user), not per-company. Stores the full
+// scored result so the dashboard page, mobile tab, and email all read one source.
+model PortfolioBriefing {
+  id     String   @id @default(cuid())
+  userId String
+  date   DateTime @db.Date // the day this briefing is for
+  runAt  DateTime @default(now()) // exact timestamp of the run
+
+  // Full scored output
+  products      Json // [{ projectKey, displayName, archetype, traction, leverage, zone, why, metrics, status }]
+  headline      String  @db.Text // the blunt one-paragraph allocation call
+  narrative     String  @db.Text // the supporting verdict text
+  quietlyBroken Json // [{ projectKey, title, detail, kind }]
+  zoneCounts    Json // { doubleDown, smallTests, protectPartner, cutPauseSell }
+
+  // Run metadata
+  beaconsReachable Int      @default(0)
+  beaconsTotal     Int      @default(0)
+  tokensUsed       Int?
+  cost             Decimal? @default(0)
+  model            String   @default("deepseek-chat")
+  trigger          String   @default("manual") // "manual" | "cron"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date]) // one briefing per owner per day (re-runs upsert)
+  @@index([userId, runAt])
+  @@map("portfolio_briefings")
 }
 
 model Session {
