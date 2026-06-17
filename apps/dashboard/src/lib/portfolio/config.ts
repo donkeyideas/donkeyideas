@@ -19,6 +19,7 @@ export interface ProductConfig {
   archetype: Archetype;
   companyNameMatch: string; // links to Company.name (case-insensitive contains)
   beaconEnvKey: string; // env var holding this product's base URL
+  beaconPath?: string; // override the default '/api/portfolio/stats' (e.g. Supabase Edge Functions)
   enabled: boolean; // false = skip entirely (e.g. truly dormant)
   note?: string;
 }
@@ -112,8 +113,11 @@ export const PRODUCTS: ProductConfig[] = [
     archetype: 'regulated-trust',
     companyNameMatch: 'kamioi',
     beaconEnvKey: 'BEACON_URL_KAMIOI',
+    // Kamioi is a Vite SPA, not Next.js — its beacon is a Supabase Edge Function.
+    // Set BEACON_URL_KAMIOI to the functions base, e.g. https://<ref>.supabase.co
+    beaconPath: '/functions/v1/portfolio-stats',
     enabled: true,
-    note: 'Fintech — beacon targets the kamioi.v.1 Supabase repo',
+    note: 'Fintech — beacon is a Supabase Edge Function in the kamioi.v.1 repo',
   },
   {
     key: 'marble',
@@ -129,7 +133,7 @@ export const PRODUCTS: ProductConfig[] = [
 export function beaconUrlFor(p: ProductConfig): string | null {
   const base = process.env[p.beaconEnvKey];
   if (!base) return null;
-  return `${base.replace(/\/$/, '')}/api/portfolio/stats`;
+  return `${base.replace(/\/$/, '')}${p.beaconPath ?? '/api/portfolio/stats'}`;
 }
 
 export const BEACON_SECRET = () => process.env.PORTFOLIO_BEACON_SECRET || '';

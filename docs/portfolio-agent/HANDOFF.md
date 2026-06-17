@@ -64,27 +64,40 @@ The agent needs the live base URL per product to call its beacon, e.g.
 `BEACON_URL_ARGUFIGHT=https://www.argufight.com`. I know argufight.com and opticrank.com;
 I need the rest. A product with no URL set is still scored from dashboard data alone.
 
-### 4. Deploy the 11 remaining beacons
-Copy ArguFight's `app/api/portfolio/stats/route.ts` into each product, change ONLY the
-queries to that product's schema, keep the response shape identical, and set
-`PORTFOLIO_BEACON_SECRET` (same value) in each product's env. Status:
+### 4. Deploy the beacons (ALL 11 are WRITTEN — they need deploy + env per repo)
 
-| Product | Beacon | Notes |
-|---|---|---|
-| ArguFight | ✅ template built | login-session = active; MRR via central layer |
-| OpticRank | ⬜ to do | Supabase orgs/usage/billing — easy |
-| Top Viso | ⬜ to do | same schema family as OpticRank |
-| go.viral | ⬜ to do | Stripe + RevenueCat + own analytics |
-| Buildwrk | ⬜ to do | derive demos/activations from CRM tables |
-| Havana | ⬜ to do | Booking/Payment tables; bookings = core action |
-| Basktball | ⬜ to do | traffic real, revenue = 0 (report 0, not null) |
-| CFB Social | ⬜ to do | has analytics_events/daily_stats |
-| Jetdale | ⬜ to do | PostHog + product_events; pre-launch fields |
-| Julyu | ⬜ to do | waitlist via Supabase; pre-launch fields |
-| Kamioi | ⬜ to do | target the **kamioi.v.1** Supabase repo |
-| Marble | ⬜ stub | no backend — return mostly null until instrumented |
+Every beacon is written and typechecks in its own repo. To light each one up you must,
+**in that product's repo/hosting**: (a) set `PORTFOLIO_BEACON_SECRET` (the SAME value as
+the dashboard) plus its Supabase service-role env if not already present, (b) deploy that
+repo, then (c) set `BEACON_URL_<PRODUCT>` in the **dashboard** Vercel env to that repo's
+base URL. The agent appends `/api/portfolio/stats` automatically (Kamioi is the exception).
 
-I can write all 11 — each needs ~15 min against its schema. Say the word.
+| Product | File written | DB client | Extra env in that repo | Beacon URL to set in dashboard |
+|---|---|---|---|---|
+| ArguFight | `app/api/portfolio/stats/route.ts` | Prisma | `PORTFOLIO_BEACON_SECRET` | `BEACON_URL_ARGUFIGHT=https://www.argufight.com` |
+| OpticRank | `optic-rank-web/src/app/api/portfolio/stats/route.ts` | Supabase service-role | `PORTFOLIO_BEACON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL` | `BEACON_URL_OPTICRANK=https://opticrank.com` |
+| Top Viso | `apps/web/src/app/api/portfolio/stats/route.ts` | Supabase service-role | same as above | `BEACON_URL_TOPVISO=<topviso url>` |
+| go.viral | `apps/web/app/api/portfolio/stats/route.ts` | Supabase service-role (`@govirall/db/admin`) | same | `BEACON_URL_GOVIRAL=<go.viral url>` |
+| Buildwrk | `src/app/api/portfolio/stats/route.ts` | Supabase service-role | same | `BEACON_URL_BUILDWRK=<buildwrk url>` |
+| Havana | `src/app/api/portfolio/stats/route.ts` | Prisma | `PORTFOLIO_BEACON_SECRET` | `BEACON_URL_HAVANA=<havana url>` |
+| Basktball | `app/api/portfolio/stats/route.ts` | Prisma | `PORTFOLIO_BEACON_SECRET` | `BEACON_URL_BASKTBALL=<basktball url>` (revenue is a real $0) |
+| CFB Social | `apps/web/app/api/portfolio/stats/route.ts` | Supabase service-role | same as OpticRank | `BEACON_URL_CFBSOCIAL=<cfb url>` (revenue real $0) |
+| Jetdale | `apps/admin/src/app/api/portfolio/stats/route.ts` | Supabase service-role (`SUPABASE_SECRET_KEY`) | `PORTFOLIO_BEACON_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SECRET_KEY` | `BEACON_URL_JETDALE=<jetdale admin url>` |
+| Julyu | `app/api/portfolio/stats/route.ts` | Supabase service-role | same as OpticRank | `BEACON_URL_JULYU=<julyu url>` |
+| **Kamioi** | `supabase/functions/portfolio-stats/index.ts` (Edge Function — Vite SPA, no Next.js) | Supabase Edge (service-role auto-injected) | function secret `PORTFOLIO_BEACON_SECRET` | `BEACON_URL_KAMIOI=https://<ref>.supabase.co` (config appends `/functions/v1/portfolio-stats`) |
+| Marble | — none — | — | — | leave unset — no backend; scored from GA4 only |
+
+**Kamioi deploy is different:** `supabase functions deploy portfolio-stats` and
+`supabase secrets set PORTFOLIO_BEACON_SECRET=<value>` (config.toml already sets
+`verify_jwt=false` for it). The dashboard's `config.ts` already routes Kamioi to the
+`/functions/v1/portfolio-stats` path.
+
+**Verify any beacon** before wiring it up:
+`curl -H "x-portfolio-secret: <value>" https://<product>/api/portfolio/stats` → should
+return the JSON contract with real numbers (or `null`s where the schema can't supply them).
+
+Beacons are read-only and fail-soft, so a wrong field name degrades to `null` rather than
+breaking — but check the `errors[]` array in each response after first deploy.
 
 ### 5. Test before trusting the cron
 - **Manual:** open the dashboard → Portfolio Agent → "Run Briefing Now".
