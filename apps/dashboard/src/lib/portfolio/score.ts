@@ -118,15 +118,21 @@ function leverageSignals(m: ProjectMetrics): Signal[] {
   ];
 }
 
-function reasonFor(m: ProjectMetrics, zone: Zone): string {
+function reasonFor(m: ProjectMetrics, zone: Zone, insufficient: boolean): string {
   const u = m.universal;
+  // Missing data is NOT a verdict. Say so plainly and stop.
+  if (insufficient) {
+    const hasBeacon = m.source === 'beacon' || m.source === 'merged';
+    return hasBeacon
+      ? 'Insufficient signal even from its beacon — too early to judge.'
+      : 'No usable data reaching the agent — add its beacon before judging.';
+  }
   const bits: string[] = [];
   if (u.organicShare !== null) bits.push(`${Math.round(u.organicShare * 100)}% organic`);
   if (u.retentionD7 !== null) bits.push(`D7 ${Math.round(u.retentionD7 * 100)}%`);
   if (u.mrr) bits.push(`$${Math.round(u.mrr).toLocaleString()} MRR`);
   if (m.status === 'pre-launch') bits.push('pre-launch');
-  if (m.source === 'unreachable' || m.source === 'dashboard') bits.push('limited data');
-  const detail = bits.length ? bits.join(', ') : 'little signal yet';
+  const detail = bits.length ? bits.join(', ') : 'thin signal';
   const head: Record<Zone, string> = {
     'double-down': 'Concentrate here',
     'small-tests': 'Worth focused tests',
@@ -155,7 +161,18 @@ export function scoreProject(m: ProjectMetrics): ScoredProject {
   const lConf = 0.55 + 0.45 * l.confidence;
   const traction = Math.round(t.score * tConf * 100);
   const leverage = Math.round(l.score * lConf * 100);
-  const zone = zoneFor(traction, leverage);
+
+  // A score built on almost no real traction signal is a BLIND SPOT, not a
+  // verdict. Flag it so the grid, the why-line, and the LLM treat it as
+  // "instrument first" — never as "this product is dead."
+  const insufficientData = t.confidence < 0.15;
+  const dataConfidence = Math.round(Math.max(t.confidence, l.confidence) * 100);
+
+  // Never let a blind spot land in the kill quadrant — that misreads missing
+  // data as a death sentence. Park it in protect-or-partner (hold, don't cut).
+  let zone = zoneFor(traction, leverage);
+  if (insufficientData && zone === 'cut-pause-sell') zone = 'protect-or-partner';
+
   return {
     projectKey: m.projectKey,
     displayName: m.displayName,
@@ -164,7 +181,9 @@ export function scoreProject(m: ProjectMetrics): ScoredProject {
     traction,
     leverage,
     zone,
-    why: reasonFor(m, zone),
+    why: reasonFor(m, zone, insufficientData),
+    dataConfidence,
+    insufficientData,
     metrics: m,
   };
 }
@@ -215,16 +234,17 @@ export function detectQuietlyBroken(scored: ScoredProject[]): QuietlyBroken[] {
         kind: 'no-monetization',
       });
     }
-    if (s.metrics.source === 'unreachable' || (s.traction <= 12 && s.leverage <= 22)) {
-      if (s.metrics.status !== 'live' && (u.mau === null && u.signups28d === null)) {
-        out.push({
-          projectKey: s.projectKey,
-          displayName: s.displayName,
-          title: `${s.displayName} — invisible to the agent`,
-          detail: 'No usable data reaching the agent. Instrument it or park it — you can\'t decide blind.',
-          kind: 'no-data',
-        });
-      }
+    if (s.insufficientData) {
+      const hasBeacon = s.metrics.source === 'beacon' || s.metrics.source === 'merged';
+      out.push({
+        projectKey: s.projectKey,
+        displayName: s.displayName,
+        title: `${s.displayName} — invisible to the agent`,
+        detail: hasBeacon
+          ? 'Beacon is up but reporting almost no signal — verify its queries or it\'s genuinely pre-traction.'
+          : 'No beacon and no GA4 signal — the agent is judging blind. Add its beacon before trusting any call here.',
+        kind: 'no-data',
+      });
     }
   }
   return out;

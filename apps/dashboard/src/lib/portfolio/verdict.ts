@@ -18,7 +18,10 @@ function buildPrompt(
   broken: QuietlyBroken[],
   zones: ZoneCounts,
 ): string {
-  const rows = scored
+  const measurable = scored.filter((s) => !s.insufficientData);
+  const blindSpots = scored.filter((s) => s.insufficientData);
+
+  const rows = measurable
     .map((s) => {
       const u = s.metrics.universal;
       const facts = [
@@ -27,32 +30,41 @@ function buildPrompt(
         u.retentionD7 != null ? `D7 ${Math.round(u.retentionD7 * 100)}%` : null,
         u.signupsTrendPct != null ? `signups ${u.signupsTrendPct > 0 ? '+' : ''}${u.signupsTrendPct}%` : null,
         s.metrics.status !== 'live' ? s.metrics.status : null,
-        s.metrics.source === 'unreachable' ? 'NO DATA (beacon down)' : null,
       ]
         .filter(Boolean)
         .join(', ');
-      return `- ${s.displayName} [${s.archetype}] traction ${s.traction}/100, leverage ${s.leverage}/100 → ${ZONE_LABELS[s.zone]}. ${facts || 'little signal'}`;
+      return `- ${s.displayName} [${s.archetype}] traction ${s.traction}/100, leverage ${s.leverage}/100, confidence ${s.dataConfidence}% → ${ZONE_LABELS[s.zone]}. ${facts || 'thin signal'}`;
     })
     .join('\n');
+
+  const doubleDown = measurable.filter((s) => s.zone === 'double-down').map((s) => s.displayName);
+  const blindList = blindSpots.map((s) => s.displayName).join(', ') || '(none)';
 
   const brokenList = broken.length
     ? broken.map((b) => `- ${b.title}: ${b.detail}`).join('\n')
     : '(none detected)';
 
-  return `You are the allocation strategist for the Donkey Ideas portfolio of ${scored.length} products. The scoring below is already computed by a deterministic engine — do NOT recompute or second-guess the numbers. Your job is to deliver the blunt, investor-grade allocation call a busy solo operator can act on in the next hour.
+  return `You are the allocation strategist for the Donkey Ideas portfolio of ${scored.length} products. The scoring below is computed by a deterministic engine — do NOT recompute or second-guess the numbers.
 
-ZONE TALLY: ${zones.doubleDown} double-down, ${zones.smallTests} small-tests, ${zones.protectPartner} protect/partner, ${zones.cutPauseSell} cut/pause/sell.
+HARD RULES (violating these makes the briefing dangerous and useless):
+1. NEVER recommend cutting, selling, killing, or abandoning a product in the BLIND SPOTS list. Their low scores mean THE AGENT CAN'T SEE THEM (no data feed yet), NOT that they're failing. For these, the only valid recommendation is "instrument it / add its data feed."
+2. Only call a product a "double down" if it is in the DOUBLE-DOWN list below. If that list is empty, say plainly that nothing has earned a double-down yet — do NOT promote a small-tests product to double-down.
+3. Base every claim on the measured products and the evidence shown. Do not invent metrics.
 
-SCORED PRODUCTS (within-archetype):
-${rows}
+DATA COVERAGE: ${measurable.length}/${scored.length} products have real signal; ${blindSpots.length} are blind spots.
+DOUBLE-DOWN products (the ONLY ones you may call double-down): ${doubleDown.length ? doubleDown.join(', ') : 'NONE'}
+BLIND SPOTS (never recommend cutting these — recommend instrumenting): ${blindList}
+
+MEASURED PRODUCTS (within-archetype):
+${rows || '(none have real signal yet)'}
 
 QUIETLY BROKEN (bug/gap, not marketing):
 ${brokenList}
 
-Write the verdict. Be direct and specific — name products, call out dead weight plainly, and separate a broken funnel from an empty one. Do not hedge. Reply with ONLY a JSON object of this exact shape:
+Write the verdict for a busy solo operator. Be direct and evidence-based, but honest about uncertainty: if coverage is thin, say the briefing is provisional until beacons are added. Reply with ONLY a JSON object of this exact shape:
 {
-  "headline": "1-2 sentences: where to point attention now, and what to cut/park. Name names.",
-  "narrative": "1 short paragraph (3-5 sentences) of supporting reasoning grounded in the evidence above."
+  "headline": "1-2 sentences: where to point attention now given what's actually measurable. If nothing is a double-down, say so. Never tell the user to cut a blind-spot product.",
+  "narrative": "1 short paragraph (3-5 sentences): the reasoning, including that blind-spot products need instrumentation before any cut/keep call."
 }`;
 }
 
