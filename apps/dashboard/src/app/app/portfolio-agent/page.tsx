@@ -159,17 +159,22 @@ export default function PortfolioAgentPage() {
         <>
           {/* provisional banner — honest about how little real data is flowing */}
           {(() => {
-            const blind = briefing.products.filter((p) => p.insufficientData).length;
+            const blindList = briefing.products.filter((p) => p.insufficientData);
+            const blind = blindList.length;
             const live = briefing.beaconsReachable;
-            if (live > 0 && blind === 0) return null;
+            if (blind === 0) return null;
+            const noneLive = live === 0;
             return (
-              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-5 py-4">
-                <div className="font-bold text-amber-300">⚠ Provisional briefing — not decision-grade yet</div>
-                <p className="text-amber-200/80 text-sm mt-1">
-                  {live} of {briefing.beaconsTotal || briefing.products.length} product beacons are live.
-                  {blind > 0 && ` ${blind} products are blind spots the agent can't see at all.`} Scores
-                  here are based on Google&nbsp;Analytics traffic only — they are <b>not</b> a real read of
-                  retention, revenue, or engagement. Deploy each product&apos;s beacon to make this trustworthy.
+              <div className={`rounded-xl border px-5 py-4 ${noneLive ? 'border-amber-500/30 bg-amber-500/10' : 'border-white/10 bg-white/[0.03]'}`}>
+                <div className={`font-bold ${noneLive ? 'text-amber-300' : 'text-white/80'}`}>
+                  {noneLive ? '⚠ Provisional — not decision-grade yet' : `${live} of ${briefing.products.length} products on live data`}
+                </div>
+                <p className={`text-sm mt-1 ${noneLive ? 'text-amber-200/80' : 'text-white/50'}`}>
+                  {noneLive ? (
+                    <>No live data feeds — scores are Google&nbsp;Analytics traffic only, <b>not</b> a real read of retention, revenue, or engagement.</>
+                  ) : (
+                    <>The {blind} blind spot{blind > 1 ? 's' : ''} below ({blindList.map((p) => p.displayName).join(', ')}) {blind > 1 ? 'have' : 'has'} no data feed yet and {blind > 1 ? 'are' : 'is'} not scored on real data. Every other product reads its real production database.</>
+                  )}
                 </p>
               </div>
             );

@@ -16,6 +16,7 @@ import type {
   Zone,
   ZoneCounts,
   Archetype,
+  UniversalMetrics,
 } from './types';
 
 // ---- helpers ----
@@ -26,6 +27,23 @@ const target = (v: number | null, good: number) =>
 // map a trend pct (-50%..+50%) onto 0..1 (0.5 = flat).
 const momentum = (pct: number | null) =>
   pct === null ? null : clamp01(0.5 + pct / 100);
+
+// How much to trust traffic-derived signals (organic share) — "100% organic" on
+// 5 users is noise, not strength. Scales in with real volume.
+const trafficConf = (u: UniversalMetrics) => clamp01((u.signups28d ?? u.mau ?? 0) / 20);
+const dampOrganic = (u: UniversalMetrics): number | null =>
+  u.organicShare == null ? null : u.organicShare * trafficConf(u);
+// Revenue traction: real paying customers / MRR. The thing that matters most and
+// was previously almost absent from scoring. ~$1k MRR or ~10 payers = strong here.
+const revenueValue = (u: UniversalMetrics): number | null => {
+  const paying = u.payingUsers != null ? clamp01(u.payingUsers / 10) : null;
+  const mrr = u.mrr != null && u.mrr > 0 ? clamp01(u.mrr / 1000) : null;
+  const rev = u.revenue28d != null && u.revenue28d > 0 ? clamp01(u.revenue28d / 1000) : null;
+  const vals = [paying, mrr, rev].filter((v): v is number => v != null);
+  return vals.length ? Math.max(...vals) : null;
+};
+const hasRevenue = (u: UniversalMetrics) =>
+  (u.payingUsers ?? 0) > 0 || (u.mrr ?? 0) > 0 || (u.revenue28d ?? 0) > 0;
 
 interface Signal {
   value: number | null; // 0..1
@@ -60,26 +78,27 @@ function tractionSignals(m: ProjectMetrics): Signal[] {
   switch (m.archetype) {
     case 'consumer-viral':
       return [
-        { value: target(u.retentionD7 ?? u.retentionProxy, 0.25), weight: 0.3 },
-        { value: u.organicShare, weight: 0.2 },
+        { value: target(u.retentionD7 ?? u.retentionProxy, 0.25), weight: 0.25 },
+        { value: revenueValue(u), weight: 0.15 },
         { value: momentum(u.signupsTrendPct), weight: 0.2 },
-        { value: target(u.stickiness, 0.2), weight: 0.15 },
+        { value: dampOrganic(u), weight: 0.15 },
+        { value: target(u.stickiness, 0.2), weight: 0.1 },
         { value: target(a.inviteRate ?? null, 0.2), weight: 0.15 },
       ];
     case 'b2b-saas':
       return [
-        { value: target(a.trialToPaidRate ?? null, 0.15), weight: 0.2 },
-        { value: a.netChurnRate != null ? clamp01(1 - a.netChurnRate / 0.1) : null, weight: 0.15 },
-        { value: momentum(u.revenueTrendPct ?? u.signupsTrendPct), weight: 0.25 },
-        { value: u.organicShare, weight: 0.2 },
+        { value: revenueValue(u), weight: 0.3 },
+        { value: momentum(u.revenueTrendPct ?? u.signupsTrendPct), weight: 0.2 },
         { value: target(a.signupToActivationRate ?? u.retentionProxy ?? null, 0.5), weight: 0.2 },
+        { value: dampOrganic(u), weight: 0.15 },
+        { value: target(a.trialToPaidRate ?? null, 0.15), weight: 0.15 },
       ];
     case 'regulated-trust':
       return [
-        { value: target(a.activations28d ?? null, 4), weight: 0.35 },
-        { value: target(a.demosBooked28d ?? null, 8), weight: 0.25 },
-        { value: momentum(u.revenueTrendPct), weight: 0.2 },
-        { value: target(a.pipelineValue ?? null, 50000), weight: 0.2 },
+        { value: revenueValue(u), weight: 0.3 },
+        { value: target(a.activations28d ?? null, 4), weight: 0.25 },
+        { value: target(a.demosBooked28d ?? null, 8), weight: 0.2 },
+        { value: momentum(u.revenueTrendPct ?? u.signupsTrendPct), weight: 0.25 },
       ];
     case 'pre-launch':
       return [
@@ -89,10 +108,11 @@ function tractionSignals(m: ProjectMetrics): Signal[] {
       ];
     case 'marketplace':
       return [
-        { value: momentum(u.revenueTrendPct), weight: 0.3 },
-        { value: target(u.retentionProxy, 0.4), weight: 0.25 },
-        { value: u.organicShare, weight: 0.2 },
-        { value: target(u.signups28d, 200), weight: 0.25 },
+        { value: revenueValue(u), weight: 0.3 },
+        { value: momentum(u.revenueTrendPct), weight: 0.2 },
+        { value: target(u.retentionProxy, 0.4), weight: 0.2 },
+        { value: dampOrganic(u), weight: 0.1 },
+        { value: target(u.signups28d, 200), weight: 0.2 },
       ];
   }
 }
@@ -100,7 +120,8 @@ function tractionSignals(m: ProjectMetrics): Signal[] {
 function leverageSignals(m: ProjectMetrics): Signal[] {
   const u = m.universal;
   // Latent organic demand: people arriving without spend = cheap to grow.
-  const latentDemand = u.organicShare;
+  // Dampened by traffic volume so "100% organic" on a handful of users isn't leverage.
+  const latentDemand = dampOrganic(u);
   // Fixable funnel: a low conversion or a high error rate on the critical step,
   // BACKED by real traffic, is a high-leverage fix. No traffic => not leverage.
   const hasTraffic = (u.funnelSampleSize ?? 0) >= 30;
@@ -172,6 +193,8 @@ export function scoreProject(m: ProjectMetrics): ScoredProject {
   // data as a death sentence. Park it in protect-or-partner (hold, don't cut).
   let zone = zoneFor(traction, leverage);
   if (insufficientData && zone === 'cut-pause-sell') zone = 'protect-or-partner';
+  // Never recommend cutting a product that has real paying customers / revenue.
+  if (hasRevenue(m.universal) && zone === 'cut-pause-sell') zone = 'protect-or-partner';
 
   return {
     projectKey: m.projectKey,

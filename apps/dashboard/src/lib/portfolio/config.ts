@@ -51,7 +51,7 @@ export const PRODUCTS: ProductConfig[] = [
   },
   {
     key: 'goviral',
-    displayName: 'go.viral',
+    displayName: 'Go Virall',
     archetype: 'b2b-saas',
     companyNameMatch: 'viral',
     beaconEnvKey: 'BEACON_URL_GOVIRAL',
