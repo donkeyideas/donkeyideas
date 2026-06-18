@@ -14,6 +14,7 @@ import { buildwrkReader } from './buildwrk';
 import { cfbsocialReader } from './cfbsocial';
 import { jetdaleReader } from './jetdale';
 import { julyuReader } from './julyu';
+import { basktballReader } from './basktball';
 
 export interface ProductCredentials {
   type: 'supabase' | 'postgres';
@@ -54,4 +55,5 @@ export const READERS: Record<string, ProductReader | undefined> = {
   cfbsocial: cfbsocialReader,
   jetdale: jetdaleReader,
   julyu: julyuReader,
+  basktball: basktballReader,
 };
