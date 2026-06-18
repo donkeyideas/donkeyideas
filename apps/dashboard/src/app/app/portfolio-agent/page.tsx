@@ -15,6 +15,7 @@ interface ScoredProject {
   leverage: number;
   zone: Zone;
   why: string;
+  summary?: string;
   dataConfidence?: number;
   insufficientData?: boolean;
 }
@@ -299,7 +300,7 @@ export default function PortfolioAgentPage() {
                         ) : (
                           <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ color: m.color, background: m.bg }}>{m.label}</span>
                         )}</td>
-                        <td className="py-3 px-3 text-white/50 text-xs max-w-[360px]">{p.why}</td>
+                        <td className="py-3 px-3 text-white/50 text-xs max-w-[420px]">{p.summary || p.why}</td>
                       </tr>
                     );
                   })}

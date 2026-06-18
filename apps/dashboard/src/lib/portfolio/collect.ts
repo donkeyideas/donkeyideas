@@ -9,6 +9,8 @@
 
 import { prisma } from '@donkey-ideas/database';
 import { fetchRealAnalytics } from '../google-analytics';
+import { fetchAppStoreData } from '../app-store-connect';
+import { fetchPlayStoreData } from '../google-play';
 import { PRODUCTS, beaconUrlFor, BEACON_SECRET, BEACON_TIMEOUT_MS } from './config';
 import { READERS, credsFor } from './readers';
 import type {
@@ -97,6 +99,39 @@ async function fetchBeacon(url: string): Promise<BeaconResponse | null> {
   }
 }
 
+// App store / Play store layer: real installs + ratings (the App Stores page data).
+// Uses the existing ASC/Play service-account env (already in production). Fail-soft
+// (App Store CDN rejects local Node; works on Vercel).
+async function appStoreLayer(bp: { ascBundleId?: string | null; gpPackageName?: string | null }): Promise<{ installs28d: number | null; rating: number | null }> {
+  let installs = 0;
+  let ratingSum = 0;
+  let ratingN = 0;
+  let any = false;
+  if (bp.ascBundleId) {
+    try {
+      const d: any = await fetchAppStoreData(bp.ascBundleId, '28d');
+      const o = d?.overview || {};
+      installs += Number(o.totalInstalls) || 0;
+      if (o.averageRating) { ratingSum += Number(o.averageRating); ratingN++; }
+      any = true;
+    } catch { /* fail-soft */ }
+  }
+  if (bp.gpPackageName) {
+    try {
+      const d: any = await fetchPlayStoreData(bp.gpPackageName, '28d');
+      const o = d?.overview || {};
+      installs += Number(o.totalInstalls) || 0;
+      if (o.averageRating) { ratingSum += Number(o.averageRating); ratingN++; }
+      any = true;
+    } catch { /* fail-soft */ }
+  }
+  if (!any) return { installs28d: null, rating: null };
+  return {
+    installs28d: installs || null,
+    rating: ratingN ? Math.round((ratingSum / ratingN) * 10) / 10 : null,
+  };
+}
+
 interface CollectResult {
   metrics: ProjectMetrics[];
   beaconsReachable: number;
@@ -128,6 +163,7 @@ export async function collectMetrics(userId: string): Promise<CollectResult> {
       let definitions: Record<string, string> = {};
       let status: ProjectStatus = 'live';
       let source: ProjectMetrics['source'] = 'dashboard';
+      let appRating: number | null = null;
 
       // ---- Layer 1: dashboard-centralized data ----
       const company = findCompany(p.companyNameMatch);
@@ -157,6 +193,12 @@ export async function collectMetrics(userId: string): Promise<CollectResult> {
             } catch (e: any) {
               notes.push(`GA4 unavailable: ${e?.message || 'error'}`);
             }
+          }
+          // App store / Play installs + ratings (the App Stores page signal)
+          if (bp.ascBundleId || bp.gpPackageName) {
+            const as = await appStoreLayer(bp);
+            if (as.installs28d != null) layer1.installs28d = as.installs28d;
+            appRating = as.rating;
           }
         }
       } else {
@@ -223,6 +265,9 @@ export async function collectMetrics(userId: string): Promise<CollectResult> {
         Object.assign(universal, layer1);
         notes.push('No data feed configured — Layer-1 (GA4) only.');
       }
+
+      // app-store rating survives the reader/beacon archetype overwrite
+      if (appRating != null) (archetypeSignals as Record<string, unknown>).appStoreRating = appRating;
 
       if (p.note) notes.push(p.note);
 

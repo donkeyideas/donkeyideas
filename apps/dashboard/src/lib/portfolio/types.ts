@@ -97,6 +97,7 @@ export interface ScoredProject {
   leverage: number; // 0-100
   zone: Zone;
   why: string; // one-line rule-based rationale
+  summary?: string; // AI per-account daily summary (1-2 sentences)
   dataConfidence: number; // 0-100, how much real signal backed the score
   insufficientData: boolean; // true = score is "we can't see it", NOT "it's dead"
   metrics: ProjectMetrics;

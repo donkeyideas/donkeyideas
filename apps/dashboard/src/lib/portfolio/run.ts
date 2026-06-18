@@ -5,7 +5,7 @@
 import { prisma } from '@donkey-ideas/database';
 import { collectMetrics } from './collect';
 import { scoreProject, detectQuietlyBroken, countZones, rankProjects } from './score';
-import { generateVerdict } from './verdict';
+import { generateVerdict, generateAccountSummaries } from './verdict';
 import { sendBriefingEmail } from './email';
 import type { Briefing } from './types';
 
@@ -76,6 +76,16 @@ export async function runBriefing(opts: RunOptions): Promise<Briefing> {
     const dd = scored.filter((s) => s.zone === 'double-down').map((s) => s.displayName);
     headline = dd.length ? `Point yourself at ${dd.join(' and ')}.` : 'No double-down product this run.';
     narrative = 'DeepSeek API key not configured — showing rule-based scores without an AI verdict. Add a key in Settings or set DEEPSEEK_API_KEY.';
+  }
+
+  // Per-account daily summaries (one line per product), batched into one call.
+  if (deepSeekKey) {
+    try {
+      const acc = await generateAccountSummaries(deepSeekKey, scored);
+      scored.forEach((s) => { if (acc.summaries[s.projectKey]) s.summary = acc.summaries[s.projectKey]; });
+      tokensUsed += acc.tokensUsed;
+      cost += acc.cost;
+    } catch { /* summaries are best-effort */ }
   }
 
   const { iso, dateOnly } = todayUtcDate();

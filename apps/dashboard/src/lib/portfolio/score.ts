@@ -78,12 +78,14 @@ function tractionSignals(m: ProjectMetrics): Signal[] {
   switch (m.archetype) {
     case 'consumer-viral':
       return [
-        { value: target(u.retentionD7 ?? u.retentionProxy, 0.25), weight: 0.25 },
-        { value: revenueValue(u), weight: 0.15 },
-        { value: momentum(u.signupsTrendPct), weight: 0.2 },
-        { value: dampOrganic(u), weight: 0.15 },
-        { value: target(u.stickiness, 0.2), weight: 0.1 },
-        { value: target(a.inviteRate ?? null, 0.2), weight: 0.15 },
+        { value: target(u.retentionD7 ?? u.retentionProxy, 0.25), weight: 0.22 },
+        { value: revenueValue(u), weight: 0.13 },
+        { value: momentum(u.signupsTrendPct), weight: 0.18 },
+        { value: dampOrganic(u), weight: 0.12 },
+        { value: target(u.installs28d, 1000), weight: 0.1 }, // app-store installs
+        { value: target(a.appStoreRating ?? null, 4.5), weight: 0.1 }, // store rating
+        { value: target(u.stickiness, 0.2), weight: 0.08 },
+        { value: target(a.inviteRate ?? null, 0.2), weight: 0.12 },
       ];
     case 'b2b-saas':
       return [

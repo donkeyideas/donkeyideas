@@ -68,6 +68,64 @@ Write the verdict for a busy solo operator. Be direct and evidence-based, but ho
 }`;
 }
 
+// Per-account daily summaries — one punchy line per product. Batched into a
+// single DeepSeek call. Returns { projectKey: summary } and token usage.
+export async function generateAccountSummaries(
+  apiKey: string,
+  scored: ScoredProject[],
+): Promise<{ summaries: Record<string, string>; tokensUsed: number; cost: number }> {
+  const lines = scored
+    .map((s) => {
+      const u = s.metrics.universal;
+      const facts = [
+        `traction ${s.traction}`,
+        `leverage ${s.leverage}`,
+        ZONE_LABELS[s.zone],
+        u.signups28d != null ? `${u.signups28d} signups/28d` : null,
+        u.signupsTrendPct != null ? `${u.signupsTrendPct > 0 ? '+' : ''}${u.signupsTrendPct}%` : null,
+        u.mau != null ? `${u.mau} MAU` : null,
+        u.mrr ? `$${Math.round(u.mrr)} MRR` : null,
+        u.payingUsers != null ? `${u.payingUsers} paying` : null,
+        u.installs28d != null ? `${u.installs28d} installs` : null,
+        s.insufficientData ? 'NO DATA FEED' : null,
+      ].filter(Boolean).join(', ');
+      return `${s.projectKey} (${s.displayName}, ${s.archetype}): ${facts}`;
+    })
+    .join('\n');
+
+  const prompt = `For EACH product below, write ONE punchy sentence (max ~20 words): its current state and the single most important next action. For products marked NO DATA FEED, the action is "instrument it / add a data feed" — never suggest cutting them. Be specific and blunt.
+
+PRODUCTS:
+${lines}
+
+Reply with ONLY a JSON object mapping each product key to its one-sentence summary: { "argufight": "...", "opticrank": "...", ... }`;
+
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: 'You are a sharp portfolio analyst writing terse daily account summaries. You always return valid JSON.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.4,
+      max_tokens: 1200,
+      response_format: { type: 'json_object' },
+    }),
+  });
+  if (!res.ok) return { summaries: {}, tokensUsed: 0, cost: 0 };
+  const data = await res.json();
+  const usage = data.usage ?? {};
+  let summaries: Record<string, string> = {};
+  try { summaries = JSON.parse(data.choices?.[0]?.message?.content ?? '{}'); } catch { summaries = {}; }
+  return {
+    summaries,
+    tokensUsed: usage.total_tokens ?? 0,
+    cost: calcCost(usage.prompt_tokens ?? 0, usage.completion_tokens ?? 0),
+  };
+}
+
 export async function generateVerdict(
   apiKey: string,
   scored: ScoredProject[],
