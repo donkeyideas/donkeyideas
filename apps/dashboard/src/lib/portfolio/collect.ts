@@ -10,6 +10,7 @@
 import { prisma } from '@donkey-ideas/database';
 import { fetchRealAnalytics } from '../google-analytics';
 import { PRODUCTS, beaconUrlFor, BEACON_SECRET, BEACON_TIMEOUT_MS } from './config';
+import { READERS, credsFor } from './readers';
 import type {
   ProjectMetrics,
   UniversalMetrics,
@@ -162,9 +163,43 @@ export async function collectMetrics(userId: string): Promise<CollectResult> {
         notes.push('No matching company in dashboard DB for Layer-1 data.');
       }
 
-      // ---- Layer 2: beacon ----
+      // merge a data source's universal fields over the Layer-1 (GA4) baseline
+      const mergeUniversal = (src: Record<string, unknown>) => {
+        (Object.keys(universal) as (keyof UniversalMetrics)[]).forEach((k) => {
+          const bv = src[k as string];
+          if (k === 'criticalStep') {
+            universal.criticalStep = (bv as string) ?? layer1.criticalStep;
+          } else {
+            (universal as unknown as Record<string, number | null>)[k] = coalesce(
+              num(bv),
+              (layer1 as unknown as Record<string, number | null>)[k],
+            );
+          }
+        });
+      };
+
+      // ---- Layer 2: direct reader (preferred) → beacon → GA4-only ----
+      const reader = READERS[p.key];
+      const creds = reader ? credsFor(p.key) : null;
       const beaconUrl = beaconUrlFor(p);
-      if (beaconUrl) {
+
+      if (reader && creds) {
+        beaconsTotal += 1;
+        try {
+          const result = await reader(creds);
+          beaconsReachable += 1;
+          source = company ? 'merged' : 'reader';
+          status = result.status ?? status;
+          archetypeSignals = result.archetype ?? {};
+          definitions = result.definitions ?? {};
+          mergeUniversal(result.universal as Record<string, unknown>);
+          if (result.errors?.length) notes.push(...result.errors.map((e) => `reader: ${e}`));
+        } catch (e: any) {
+          source = company ? 'dashboard' : 'unreachable';
+          notes.push(`Direct reader failed: ${e?.message || 'error'} — used Layer-1 data only.`);
+          Object.assign(universal, layer1);
+        }
+      } else if (beaconUrl) {
         beaconsTotal += 1;
         const beacon = await fetchBeacon(beaconUrl);
         if (beacon) {
@@ -173,19 +208,7 @@ export async function collectMetrics(userId: string): Promise<CollectResult> {
           status = beacon.meta?.status ?? status;
           archetypeSignals = beacon.archetype ?? {};
           definitions = beacon.definitions ?? {};
-          const b = beacon.universal ?? {};
-          (Object.keys(universal) as (keyof UniversalMetrics)[]).forEach((k) => {
-            const bv = (b as Record<string, unknown>)[k];
-            // numbers vs the one string field (criticalStep)
-            if (k === 'criticalStep') {
-              universal.criticalStep = (bv as string) ?? layer1.criticalStep;
-            } else {
-              (universal as unknown as Record<string, number | null>)[k] = coalesce(
-                num(bv),
-                (layer1 as unknown as Record<string, number | null>)[k],
-              );
-            }
-          });
+          mergeUniversal((beacon.universal ?? {}) as Record<string, unknown>);
           if (Array.isArray(beacon.errors) && beacon.errors.length) {
             notes.push(...beacon.errors.map((e) => `beacon: ${e}`));
           }
@@ -196,9 +219,9 @@ export async function collectMetrics(userId: string): Promise<CollectResult> {
           Object.assign(universal, layer1);
         }
       } else {
-        // No beacon configured — Layer 1 only.
+        // No direct feed configured — Layer 1 (GA4) only.
         Object.assign(universal, layer1);
-        notes.push('No beacon URL configured — Layer-1 data only.');
+        notes.push('No data feed configured — Layer-1 (GA4) only.');
       }
 
       if (p.note) notes.push(p.note);

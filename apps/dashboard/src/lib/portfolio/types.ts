@@ -79,7 +79,7 @@ export interface ProjectMetrics {
   displayName: string;
   archetype: Archetype;
   status: ProjectStatus;
-  source: 'beacon' | 'dashboard' | 'merged' | 'unreachable';
+  source: 'beacon' | 'reader' | 'dashboard' | 'merged' | 'unreachable';
   universal: UniversalMetrics;
   archetypeSignals: Record<string, unknown>;
   definitions: Record<string, string>;
