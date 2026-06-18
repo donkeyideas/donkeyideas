@@ -112,7 +112,9 @@ export default function PortfolioAgentPage() {
     }
   }, []);
 
-  const byZone = (z: Zone) => (briefing?.products ?? []).filter((p) => p.zone === z);
+  // Blind spots are excluded from the action quadrants — they live in their own
+  // panel. Placing a product we can't see into "small tests" would be dishonest.
+  const byZone = (z: Zone) => (briefing?.products ?? []).filter((p) => p.zone === z && !p.insufficientData);
 
   return (
     <div className="space-y-6">
@@ -287,7 +289,11 @@ export default function PortfolioAgentPage() {
                         <td className="py-3 px-3 text-white/50 text-xs capitalize">{p.archetype.replace(/-/g, ' / ')}</td>
                         <td className="py-3 px-3"><ScoreBar value={p.traction} color={p.traction >= 55 ? '#34d399' : p.traction >= 35 ? '#4d8df6' : '#f87171'} /></td>
                         <td className="py-3 px-3"><ScoreBar value={p.leverage} color={p.leverage >= 55 ? '#34d399' : p.leverage >= 35 ? '#4d8df6' : '#f87171'} /></td>
-                        <td className="py-3 px-3"><span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ color: m.color, background: m.bg }}>{m.label}</span></td>
+                        <td className="py-3 px-3">{p.insufficientData ? (
+                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap text-white/40 bg-white/5">Blind spot</span>
+                        ) : (
+                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ color: m.color, background: m.bg }}>{m.label}</span>
+                        )}</td>
                         <td className="py-3 px-3 text-white/50 text-xs max-w-[360px]">{p.why}</td>
                       </tr>
                     );
