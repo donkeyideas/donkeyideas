@@ -8,6 +8,12 @@
 
 import type { UniversalMetrics, ProjectStatus } from '../types';
 import { opticrankReader } from './opticrank';
+import { topvisoReader } from './topviso';
+import { goviralReader } from './goviral';
+import { buildwrkReader } from './buildwrk';
+import { cfbsocialReader } from './cfbsocial';
+import { jetdaleReader } from './jetdale';
+import { julyuReader } from './julyu';
 
 export interface ProductCredentials {
   type: 'supabase' | 'postgres';
@@ -42,4 +48,10 @@ export function credsFor(productKey: string): ProductCredentials | null {
 // directly; everything else falls back to GA4 (Layer 1).
 export const READERS: Record<string, ProductReader | undefined> = {
   opticrank: opticrankReader,
+  topviso: topvisoReader,
+  goviral: goviralReader,
+  buildwrk: buildwrkReader,
+  cfbsocial: cfbsocialReader,
+  jetdale: jetdaleReader,
+  julyu: julyuReader,
 };
