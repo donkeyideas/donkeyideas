@@ -18,6 +18,21 @@ interface ScoredProject {
   summary?: string;
   dataConfidence?: number;
   insufficientData?: boolean;
+  metrics?: { universal?: Record<string, number | null>; archetypeSignals?: Record<string, number | null> };
+}
+
+function metricLine(p: ScoredProject): string {
+  const u = p.metrics?.universal || {};
+  const a = p.metrics?.archetypeSignals || {};
+  const bits: string[] = [];
+  if (u.signups28d != null) bits.push(`${u.signups28d} signups`);
+  if (u.mau != null) bits.push(`${u.mau} MAU`);
+  if (u.mrr != null && u.mrr > 0) bits.push(`$${Math.round(u.mrr)} MRR`);
+  else if (u.payingUsers != null && u.payingUsers > 0) bits.push(`${u.payingUsers} paying`);
+  if (u.installs28d != null) bits.push(`${u.installs28d} installs`);
+  if (a.appStoreRating != null) bits.push(`★${a.appStoreRating}`);
+  if (u.organicShare != null) bits.push(`${Math.round(u.organicShare * 100)}% organic`);
+  return bits.join(' · ');
 }
 interface QuietlyBroken {
   projectKey: string;
@@ -291,7 +306,10 @@ export default function PortfolioAgentPage() {
                     const m = ZONE_META[p.zone];
                     return (
                       <tr key={p.projectKey} className="border-t border-white/5">
-                        <td className="py-3 px-3 font-semibold">{p.displayName}</td>
+                        <td className="py-3 px-3">
+                          <div className="font-semibold">{p.displayName}</div>
+                          {metricLine(p) && <div className="text-[11px] text-white/40 mt-0.5">{metricLine(p)}</div>}
+                        </td>
                         <td className="py-3 px-3 text-white/50 text-xs capitalize">{p.archetype.replace(/-/g, ' / ')}</td>
                         <td className="py-3 px-3"><ScoreBar value={p.traction} color={p.traction >= 55 ? '#34d399' : p.traction >= 35 ? '#4d8df6' : '#f87171'} /></td>
                         <td className="py-3 px-3"><ScoreBar value={p.leverage} color={p.leverage >= 55 ? '#34d399' : p.leverage >= 35 ? '#4d8df6' : '#f87171'} /></td>
