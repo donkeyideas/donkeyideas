@@ -16,6 +16,7 @@ import { jetdaleReader } from './jetdale';
 import { julyuReader } from './julyu';
 import { basktballReader } from './basktball';
 import { havanaReader } from './havana';
+import { argufightReader } from './argufight';
 
 export interface ProductCredentials {
   type: 'supabase' | 'postgres';
@@ -58,4 +59,5 @@ export const READERS: Record<string, ProductReader | undefined> = {
   julyu: julyuReader,
   basktball: basktballReader,
   havana: havanaReader,
+  argufight: argufightReader,
 };
