@@ -195,3 +195,29 @@ export async function fetchRealAnalytics(propertyId: string, dateRange: string) 
     countries: [], // Would need additional API call
   };
 }
+
+// Resolve a property's primary website hostname from GA4 (the hostName dimension),
+// preferring a real custom domain over preview hosts. Used to auto-discover a
+// product's domain for the deep-dive instead of hardcoding it.
+export async function fetchGa4Hostname(propertyId: string): Promise<string | null> {
+  const client = getAnalyticsClient();
+  if (!client) return null;
+  try {
+    const { startDate, endDate } = getDateRange('28d');
+    const [resp] = await client.runReport({
+      property: `properties/${propertyId}`,
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'hostName' }],
+      metrics: [{ name: 'sessions' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 8,
+    });
+    const hosts = (resp.rows || [])
+      .map((r) => r.dimensionValues?.[0]?.value || '')
+      .filter(Boolean);
+    const custom = hosts.find((h) => !/localhost|127\.0\.0\.1|vercel\.app|netlify\.app|^$/i.test(h));
+    return custom || hosts[0] || null;
+  } catch {
+    return null;
+  }
+}
