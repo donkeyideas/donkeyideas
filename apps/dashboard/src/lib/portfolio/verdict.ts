@@ -110,7 +110,7 @@ Reply with ONLY a JSON object mapping each product key to its one-sentence summa
     body: JSON.stringify({
       model: 'deepseek-chat',
       messages: [
-        { role: 'system', content: 'You are a sharp portfolio analyst writing terse daily account summaries. You always return valid JSON.' },
+        { role: 'system', content: 'You are a sharp portfolio analyst writing terse daily account summaries. Never use emojis. You always return valid JSON.' },
         { role: 'user', content: prompt },
       ],
       temperature: 0.4,
@@ -147,7 +147,7 @@ export async function generateVerdict(
         {
           role: 'system',
           content:
-            'You are a sharp, no-nonsense portfolio allocation strategist. You tell the truth about which products deserve effort and which are dead weight, even when it stings. You always return valid JSON.',
+            'You are a sharp, no-nonsense portfolio allocation strategist. You tell the truth about which products deserve effort and which are dead weight, even when it stings. Never use emojis. You always return valid JSON.',
         },
         { role: 'user', content: prompt },
       ],

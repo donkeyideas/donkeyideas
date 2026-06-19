@@ -117,7 +117,7 @@ Return ONLY JSON: { "summary": "2-sentence blunt verdict on this homepage", "iss
       body: JSON.stringify({
         model: 'deepseek-chat',
         messages: [
-          { role: 'system', content: 'You are a blunt, specific growth/SEO/conversion auditor. You cite the actual page content and always return valid JSON.' },
+          { role: 'system', content: 'You are a blunt, specific growth/SEO/conversion auditor. You cite the actual page content. Never use emojis. You always return valid JSON.' },
           { role: 'user', content: prompt },
         ],
         temperature: 0.3, max_tokens: 1600, response_format: { type: 'json_object' },

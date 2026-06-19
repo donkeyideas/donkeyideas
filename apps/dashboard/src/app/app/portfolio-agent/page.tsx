@@ -30,7 +30,7 @@ function metricLine(p: ScoredProject): string {
   if (u.mrr != null && u.mrr > 0) bits.push(`$${Math.round(u.mrr)} MRR`);
   else if (u.payingUsers != null && u.payingUsers > 0) bits.push(`${u.payingUsers} paying`);
   if (u.installs28d != null) bits.push(`${u.installs28d} installs`);
-  if (a.appStoreRating != null) bits.push(`★${a.appStoreRating}`);
+  if (a.appStoreRating != null) bits.push(`${a.appStoreRating} rating`);
   if (u.organicShare != null) bits.push(`${Math.round(u.organicShare * 100)}% organic`);
   return bits.join(' · ');
 }
@@ -80,7 +80,7 @@ function QuadrantCell({ zone, products }: { zone: Zone; products: ScoredProject[
   return (
     <div className="rounded-xl border border-dashed border-white/10 p-3 flex flex-col gap-2" style={{ background: m.bg }}>
       <div className="text-[11px] font-bold uppercase tracking-wide" style={{ color: m.color }}>
-        {zone === 'double-down' ? '★ ' : ''}{m.label}
+        {m.label}
       </div>
       <div className="flex flex-wrap gap-1.5">
         {products.length === 0 && <span className="text-xs text-white/30">—</span>}
@@ -160,7 +160,7 @@ export default function PortfolioAgentPage() {
             Run &amp; email
           </Button>
           <Button onClick={() => runNow(false)} disabled={running}>
-            {running ? 'Running…' : '⟳ Run Briefing Now'}
+            {running ? 'Running…' : 'Run Briefing Now'}
           </Button>
         </div>
       </div>
@@ -195,7 +195,7 @@ export default function PortfolioAgentPage() {
             return (
               <div className={`rounded-xl border px-5 py-4 ${noneLive ? 'border-amber-500/30 bg-amber-500/10' : 'border-white/10 bg-white/[0.03]'}`}>
                 <div className={`font-bold ${noneLive ? 'text-amber-300' : 'text-white/80'}`}>
-                  {noneLive ? '⚠ Provisional — not decision-grade yet' : `${live} of ${briefing.products.length} products on live data`}
+                  {noneLive ? 'Provisional — not decision-grade yet' : `${live} of ${briefing.products.length} products on live data`}
                 </div>
                 <p className={`text-sm mt-1 ${noneLive ? 'text-amber-200/80' : 'text-white/50'}`}>
                   {noneLive ? (
@@ -235,7 +235,7 @@ export default function PortfolioAgentPage() {
           {/* verdict */}
           <div className="rounded-xl border border-[#20303f] p-6" style={{ background: 'linear-gradient(180deg,#121821,#0f1216)' }}>
             <div className="text-[11px] uppercase tracking-[0.1em] font-bold" style={{ color: ZONE_META['small-tests'].color }}>
-              ● DeepSeek verdict · the headline call
+              DeepSeek verdict · the headline call
             </div>
             <h2 className="text-xl font-extrabold mt-3 leading-snug">{briefing.headline}</h2>
             <p className="text-[#c9ccd2] mt-2.5 max-w-4xl">{briefing.narrative}</p>
@@ -257,7 +257,7 @@ export default function PortfolioAgentPage() {
                 <QuadrantCell zone="cut-pause-sell" products={byZone('cut-pause-sell')} />
                 <QuadrantCell zone="protect-or-partner" products={byZone('protect-or-partner')} />
               </div>
-              <div className="text-[11px] text-white/40 mt-3">↑ rows = higher leverage · → columns = higher traction</div>
+              <div className="text-[11px] text-white/40 mt-3">rows = higher leverage, columns = higher traction</div>
             </CardContent></Card>
 
             <Card><CardContent className="p-6">
@@ -322,7 +322,7 @@ export default function PortfolioAgentPage() {
                           <div className="font-semibold">{p.displayName}</div>
                           {metricLine(p) && <div className="text-[11px] text-white/40 mt-0.5">{metricLine(p)}</div>}
                           <button onClick={() => runDeepDive(p.projectKey, p.displayName)} disabled={ddKey === p.projectKey} className="mt-1 text-[11px] text-blue-400 hover:underline disabled:opacity-50">
-                            {ddKey === p.projectKey ? 'Auditing site…' : '🔍 Deep dive'}
+                            {ddKey === p.projectKey ? 'Auditing site…' : 'Deep dive'}
                           </button>
                         </td>
                         <td className="py-3 px-3 text-white/50 text-xs capitalize">{p.archetype.replace(/-/g, ' / ')}</td>
@@ -353,7 +353,7 @@ export default function PortfolioAgentPage() {
                 <h2 className="text-xl font-extrabold">Deep Dive — {dd.displayName}</h2>
                 {dd.domain && <p className="text-white/50 text-sm mt-0.5">{dd.domain} · HTTP {dd.httpStatus ?? '—'}</p>}
               </div>
-              <button onClick={() => setDd(null)} className="text-white/40 hover:text-white text-lg">✕</button>
+              <button onClick={() => setDd(null)} className="text-white/40 hover:text-white text-sm">Close</button>
             </div>
             {dd.error ? (
               <p className="text-amber-300 mt-4 text-sm">{dd.error}</p>

@@ -84,7 +84,7 @@ export default function PortfolioScreen() {
             disabled={running}
             style={[styles.runBtn, { backgroundColor: c.terracotta, opacity: running ? 0.6 : 1 }]}
           >
-            <Text style={styles.runBtnText}>{running ? 'Running…' : '⟳ Run briefing now'}</Text>
+            <Text style={styles.runBtnText}>{running ? 'Running…' : 'Run briefing now'}</Text>
           </Pressable>
         </View>
 
