@@ -99,6 +99,18 @@ export default function PortfolioAgentPage() {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dd, setDd] = useState<any | null>(null);
+  const [ddKey, setDdKey] = useState<string | null>(null);
+
+  const runDeepDive = useCallback(async (key: string, displayName: string) => {
+    setDdKey(key); setDd(null);
+    try {
+      const res = await api.post('/portfolio/deepdive', { key, displayName });
+      setDd({ ...res.data.result, displayName });
+    } catch (e: any) {
+      setDd({ displayName, error: e?.response?.data?.error?.message || 'Deep dive failed' });
+    } finally { setDdKey(null); }
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -309,6 +321,9 @@ export default function PortfolioAgentPage() {
                         <td className="py-3 px-3">
                           <div className="font-semibold">{p.displayName}</div>
                           {metricLine(p) && <div className="text-[11px] text-white/40 mt-0.5">{metricLine(p)}</div>}
+                          <button onClick={() => runDeepDive(p.projectKey, p.displayName)} disabled={ddKey === p.projectKey} className="mt-1 text-[11px] text-blue-400 hover:underline disabled:opacity-50">
+                            {ddKey === p.projectKey ? 'Auditing site…' : '🔍 Deep dive'}
+                          </button>
                         </td>
                         <td className="py-3 px-3 text-white/50 text-xs capitalize">{p.archetype.replace(/-/g, ' / ')}</td>
                         <td className="py-3 px-3"><ScoreBar value={p.traction} color={p.traction >= 55 ? '#34d399' : p.traction >= 35 ? '#4d8df6' : '#f87171'} /></td>
@@ -327,6 +342,45 @@ export default function PortfolioAgentPage() {
             </div>
           </CardContent></Card>
         </>
+      )}
+
+      {/* Deep-dive audit modal */}
+      {dd && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-6 overflow-y-auto" onClick={() => setDd(null)}>
+          <div className="bg-[#111317] border border-white/10 rounded-xl max-w-2xl w-full my-8 p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start gap-4">
+              <div>
+                <h2 className="text-xl font-extrabold">Deep Dive — {dd.displayName}</h2>
+                {dd.domain && <p className="text-white/50 text-sm mt-0.5">{dd.domain} · HTTP {dd.httpStatus ?? '—'}</p>}
+              </div>
+              <button onClick={() => setDd(null)} className="text-white/40 hover:text-white text-lg">✕</button>
+            </div>
+            {dd.error ? (
+              <p className="text-amber-300 mt-4 text-sm">{dd.error}</p>
+            ) : (
+              <>
+                {dd.summary && <p className="text-white/85 mt-3">{dd.summary}</p>}
+                <div className="mt-4 space-y-2">
+                  {(dd.issues ?? []).length === 0 && <p className="text-white/40 text-sm">No issues returned.</p>}
+                  {(dd.issues ?? []).map((i: any, idx: number) => {
+                    const sevColor = i.severity === 'high' ? '#f87171' : i.severity === 'medium' ? '#eab308' : '#4d8df6';
+                    return (
+                      <div key={idx} className="rounded-lg border border-white/10 p-3 bg-white/[0.02]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase" style={{ color: sevColor, background: sevColor + '22' }}>{i.severity}</span>
+                          <span className="text-[10px] text-white/40 uppercase tracking-wide">{i.category}</span>
+                          <span className="font-semibold text-sm">{i.title}</span>
+                        </div>
+                        <p className="text-white/60 text-xs mt-1.5">{i.detail}</p>
+                        <p className="text-emerald-300/90 text-xs mt-1.5"><b>Fix:</b> {i.fix}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -6,6 +6,7 @@
 
 import type { ScoredProject, QuietlyBroken, Verdict, ZoneCounts } from './types';
 import { ZONE_LABELS } from './types';
+import { contextFor } from './config';
 
 // Same pricing table as /api/ai/chat (deepseek-chat).
 const PRICING = { input: 0.14, output: 0.28 }; // USD per 1M tokens
@@ -33,7 +34,8 @@ function buildPrompt(
       ]
         .filter(Boolean)
         .join(', ');
-      return `- ${s.displayName} [${s.archetype}] traction ${s.traction}/100, leverage ${s.leverage}/100, confidence ${s.dataConfidence}% → ${ZONE_LABELS[s.zone]}. ${facts || 'thin signal'}`;
+      const ctx = contextFor(s.projectKey);
+      return `- ${s.displayName} [${s.archetype}] → ${ZONE_LABELS[s.zone]} (traction ${s.traction}, leverage ${s.leverage}, confidence ${s.dataConfidence}%)\n    what it is: ${ctx?.thesis || 'n/a'}\n    metrics: ${facts || 'thin signal'}`;
     })
     .join('\n');
 
@@ -50,6 +52,7 @@ HARD RULES (violating these makes the briefing dangerous and useless):
 1. NEVER recommend cutting, selling, killing, or abandoning a product in the BLIND SPOTS list. Their low scores mean THE AGENT CAN'T SEE THEM (no data feed yet), NOT that they're failing. For these, the only valid recommendation is "instrument it / add its data feed."
 2. Only call a product a "double down" if it is in the DOUBLE-DOWN list below. If that list is empty, say plainly that nothing has earned a double-down yet — do NOT promote a small-tests product to double-down.
 3. Base every claim on the measured products and the evidence shown. Do not invent metrics.
+4. JUDGE EACH PRODUCT ON ITS OWN TERMS (see "what it is"). An app-first product (e.g. a mobile game/app) is judged on INSTALLS + engagement, NOT website signups — do not call it failing or recommend cutting it for low web signups if installs are healthy. A product with no revenue model is not "zero revenue = cut" if its installs/engagement are strong. A seasonal product's off-season lull is expected. An early fintech's low volume is expected.
 
 DATA COVERAGE: ${measurable.length}/${scored.length} products have real signal; ${blindSpots.length} are blind spots.
 DOUBLE-DOWN products (the ONLY ones you may call double-down): ${doubleDown.length ? doubleDown.join(', ') : 'NONE'}
@@ -89,11 +92,12 @@ export async function generateAccountSummaries(
         u.installs28d != null ? `${u.installs28d} installs` : null,
         s.insufficientData ? 'NO DATA FEED' : null,
       ].filter(Boolean).join(', ');
-      return `${s.projectKey} (${s.displayName}, ${s.archetype}): ${facts}`;
+      const ctx = contextFor(s.projectKey);
+      return `${s.projectKey} — ${s.displayName} [${s.archetype}]: ${ctx?.thesis || ''} | metrics: ${facts}`;
     })
     .join('\n');
 
-  const prompt = `For EACH product below, write ONE punchy sentence (max ~20 words): its current state and the single most important next action. For products marked NO DATA FEED, the action is "instrument it / add a data feed" — never suggest cutting them. Be specific and blunt.
+  const prompt = `For EACH product below, write ONE punchy sentence (max ~22 words): its current state and the single most important next action. Judge each product on ITS OWN primary metric described in its line — an app-first/mobile product on INSTALLS (not website signups), a SaaS on revenue, a seasonal product allowing for off-season, an early fintech allowing for low volume. Never suggest cutting an app-first product for low web signups, and for NO DATA FEED products the action is "instrument it / add a data feed." Be specific and blunt.
 
 PRODUCTS:
 ${lines}

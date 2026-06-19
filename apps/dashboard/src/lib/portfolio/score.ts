@@ -18,6 +18,7 @@ import type {
   Archetype,
   UniversalMetrics,
 } from './types';
+import { contextFor } from './config';
 
 // ---- helpers ----
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
@@ -76,7 +77,20 @@ function tractionSignals(m: ProjectMetrics): Signal[] {
   const u = m.universal;
   const a = m.archetypeSignals as Record<string, number | undefined>;
   switch (m.archetype) {
-    case 'consumer-viral':
+    case 'consumer-viral': {
+      // App-first products (Basktball, Marble, CFB Social) are judged on
+      // DOWNLOADS + engagement, not website signups. Installs dominate traction.
+      const appFirst = contextFor(m.projectKey)?.primaryMetric === 'installs';
+      if (appFirst) {
+        return [
+          { value: target(u.installs28d, 300), weight: 0.45 }, // installs lead
+          { value: target(u.mau, 200), weight: 0.15 },
+          { value: target(u.retentionD7 ?? u.retentionProxy, 0.25), weight: 0.15 },
+          { value: target(a.appStoreRating ?? null, 4.5), weight: 0.1 },
+          { value: revenueValue(u), weight: 0.05 },
+          { value: dampOrganic(u), weight: 0.1 },
+        ];
+      }
       return [
         { value: target(u.retentionD7 ?? u.retentionProxy, 0.25), weight: 0.22 },
         { value: revenueValue(u), weight: 0.13 },
@@ -87,6 +101,7 @@ function tractionSignals(m: ProjectMetrics): Signal[] {
         { value: target(u.stickiness, 0.2), weight: 0.08 },
         { value: target(a.inviteRate ?? null, 0.2), weight: 0.12 },
       ];
+    }
     case 'b2b-saas':
       return [
         { value: revenueValue(u), weight: 0.3 },
