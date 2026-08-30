@@ -1,20 +1,32 @@
+/* eslint-disable react/no-unescaped-entities */
+// Blog post — new studio UI (matches donkeyideas-blog-post mock). Data loading,
+// related posts, and SEO metadata unchanged. Post content is stored HTML and
+// rendered into the scoped .dk-post article styles.
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Metadata } from 'next';
 import { prisma } from '@donkey-ideas/database';
-import ScrollHeader from '@/components/scroll-header';
+import { Gabarito } from 'next/font/google';
 import { ArticleStructuredData } from '@/components/seo/structured-data';
+import PostProgress from '@/components/home/PostProgress';
+import { enhancePostHtml, stripMarks, renderTitle } from '@/lib/blog-content';
+import './post.css';
+
+const gabarito = Gabarito({ subsets: ['latin'], weight: ['400', '500', '600', '800', '900'], display: 'swap' });
 
 export const dynamic = 'force-dynamic';
 
+function fmtDate(d: Date | null): string {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+
 async function getPostBySlug(slug: string) {
   try {
-    const post = await prisma.blogPost.findUnique({
+    return await prisma.blogPost.findUnique({
       where: { slug },
       include: { author: { select: { name: true, email: true } } },
     });
-    return post;
   } catch {
     return null;
   }
@@ -22,17 +34,12 @@ async function getPostBySlug(slug: string) {
 
 async function getRelatedPosts(currentSlug: string, category: string | null) {
   try {
-    const posts = await prisma.blogPost.findMany({
-      where: {
-        published: true,
-        slug: { not: currentSlug },
-        ...(category ? { category } : {}),
-      },
+    return await prisma.blogPost.findMany({
+      where: { published: true, slug: { not: currentSlug }, ...(category ? { category } : {}) },
       orderBy: { publishedAt: 'desc' },
       take: 3,
       select: { title: true, slug: true, excerpt: true, category: true, publishedAt: true, readTime: true },
     });
-    return posts;
   } catch {
     return [];
   }
@@ -41,21 +48,14 @@ async function getRelatedPosts(currentSlug: string, category: string | null) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
-
-  if (!post) {
-    return { title: 'Post Not Found' };
-  }
-
-  const title = post.seoTitle || post.title;
+  if (!post) return { title: 'Post Not Found' };
+  const title = stripMarks(post.seoTitle || post.title);
   const description = post.seoDescription || post.excerpt || '';
-
   return {
     title,
     description,
     keywords: post.seoKeywords.length > 0 ? post.seoKeywords : undefined,
-    alternates: {
-      canonical: `https://www.donkeyideas.com/blog/${post.slug}`,
-    },
+    alternates: { canonical: `https://www.donkeyideas.com/blog/${post.slug}` },
     openGraph: {
       title: `${title} | Donkey Ideas`,
       description,
@@ -78,172 +78,130 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
+  if (!post || !post.published) notFound();
 
-  if (!post || !post.published) {
-    notFound();
-  }
+  const related = await getRelatedPosts(slug, post.category);
 
-  const relatedPosts = await getRelatedPosts(slug, post.category);
-  const authorName = 'Donkey Ideas';
+  // Contextual internal link to /fractional-cfo on finance-relevant posts (SEO).
+  const financeRe = /\b(cfo|finance|financial|fundrais|funding|runway|cash[\s-]?flow|budget|revenue|unit economics|investor|valuation|burn|forecast|financial model|capital|profit|margin)\b/i;
+  const isFinance = financeRe.test(`${post.title} ${post.excerpt || ''} ${post.category || ''} ${post.tags.join(' ')}`);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className={`dk-post ${gabarito.className}`}>
       <ArticleStructuredData
         data={{
-          title: post.title,
-          description: post.seoDescription || post.excerpt || '',
-          url: `https://www.donkeyideas.com/blog/${post.slug}`,
-          image: post.featuredImage || 'https://www.donkeyideas.com/og-image.png',
+          title: stripMarks(post.title),
+          description: post.excerpt || '',
           datePublished: post.publishedAt?.toISOString() || post.createdAt.toISOString(),
           dateModified: post.updatedAt.toISOString(),
-          authorName: authorName,
+          authorName: 'Donkey Ideas',
+          image: post.featuredImage || 'https://www.donkeyideas.com/og-image.png',
+          url: `https://www.donkeyideas.com/blog/${post.slug}`,
         }}
       />
+      <div className="progress" aria-hidden="true" />
+      <PostProgress />
 
-      <ScrollHeader />
+      <header>
+        <div className="nav">
+          <Link className="logo" href="/">Donkey Ideas<span className="dumb">yes, it means what you think</span></Link>
+          <nav aria-label="Main">
+            <Link href="/#services">What we do</Link>
+            <Link href="/#ledger">Portfolio</Link>
+            <Link href="/fractional-cfo">CFO services</Link>
+            <Link className="active" href="/blog">Blog</Link>
+          </nav>
+          <Link className="btn" href="/#contact">Pitch your idea</Link>
+        </div>
+      </header>
 
-      {/* Article */}
-      <article className="pt-24 md:pt-32 pb-12 md:pb-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          {/* Category & Meta */}
-          <div className="flex items-center gap-3 mb-6">
-            {post.category && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
-                {post.category}
-              </span>
-            )}
-            <span className="text-sm text-slate-500">
-              {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}
-            </span>
-            <span className="text-sm text-slate-500">&bull; {post.readTime} min read</span>
-          </div>
-
-          {/* Title */}
-          <h1 className="text-2xl sm:text-3xl md:text-5xl font-light leading-tight mb-6 md:mb-8">
-            {post.title}
-          </h1>
-
-          {/* Author */}
-          <div className="flex items-center gap-4 mb-10 pb-10 border-b border-slate-700/50">
-            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-semibold text-lg">
-              {authorName.charAt(0)}
+      <main>
+        <div className="post-hero">
+          <div className="article-wrap">
+            <div className="crumb">
+              <Link href="/">Donkey Ideas</Link> / <Link href="/blog">Blog</Link> / {stripMarks(post.title)}
             </div>
-            <div>
-              <div className="text-base font-medium text-white">{authorName}</div>
-              <div className="text-sm text-slate-400">Creative Consultant & Strategist at Donkey Ideas</div>
+            <div className="meta">
+              {post.category && <span className="cat">{post.category}</span>}
+              <span>{fmtDate(post.publishedAt)}</span>
+              <span>{post.readTime} min read</span>
             </div>
-          </div>
-
-          {/* Featured Image */}
-          {post.featuredImage && (
-            <div className="mb-10 rounded-xl overflow-hidden">
-              <Image
-                src={post.featuredImage}
-                alt={post.title}
-                width={1200}
-                height={630}
-                className="w-full h-auto"
-                sizes="(max-width: 768px) 100vw, 768px"
-                priority
-              />
-            </div>
-          )}
-
-          {/* Content */}
-          <div
-            className="prose prose-invert prose-lg max-w-none
-              prose-headings:font-light prose-headings:text-white
-              prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4
-              prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-              prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-6
-              prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-300
-              prose-strong:text-white prose-strong:font-medium
-              prose-ul:text-slate-300 prose-ol:text-slate-300
-              prose-li:mb-2"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-
-          {/* Tags */}
-          {post.tags.length > 0 && (
-            <div className="mt-12 pt-8 border-t border-slate-700/50">
-              <div className="flex flex-wrap gap-2">
-                {post.tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 rounded-full text-xs bg-slate-800 text-slate-400 border border-slate-700"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Author Bio */}
-          <div className="mt-12 p-6 bg-slate-800/30 border border-slate-700/50 rounded-xl">
-            <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-semibold text-xl flex-shrink-0">
-                {authorName.charAt(0)}
-              </div>
+            <h1>{renderTitle(post.title)}</h1>
+            <div className="byline">
+              <div className="avatar">D</div>
               <div>
-                <div className="text-base font-medium text-white mb-1">
-                  Written by {authorName}
-                </div>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Donkey Ideas is a creative consulting studio that helps entrepreneurs and businesses turn bold ideas into reality. We share insights on business strategy, financial modeling, and project management — and partner with clients to take ideas from concept to launch.
-                </p>
+                <b>Donkey Ideas</b>
+                <span>The one-person venture studio behind 11+ products</span>
               </div>
             </div>
           </div>
         </div>
-      </article>
 
-      {/* Related Posts */}
-      {relatedPosts.length > 0 && (
-        <section className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
-          <div className="max-w-[1200px] mx-auto">
-            <h2 className="text-2xl font-light mb-8">Related Posts</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {relatedPosts.map(related => (
-                <Link
-                  key={related.slug}
-                  href={`/blog/${related.slug}`}
-                  className="group block bg-slate-800/30 border border-slate-700/50 rounded-xl p-6 hover:border-slate-600/50 transition-all"
-                >
-                  <h3 className="font-medium text-white mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
-                    {related.title}
-                  </h3>
-                  {related.excerpt && (
-                    <p className="text-slate-400 text-sm line-clamp-2 mb-3">{related.excerpt}</p>
-                  )}
-                  <div className="text-xs text-slate-500">
-                    {related.publishedAt ? new Date(related.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''} &bull; {related.readTime} min read
+        {post.featuredImage && (
+          <div className="post-figure">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={post.featuredImage} alt={post.title} />
+          </div>
+        )}
+
+        <article>
+          <div className="article-wrap post-body" dangerouslySetInnerHTML={{ __html: enhancePostHtml(post.content) }} />
+          <div className="article-wrap">
+            {isFinance && (
+              <div className="cfo-callout">
+                <b>Running the numbers yourself?</b> Donkey Ideas offers <Link href="/fractional-cfo">fractional CFO services</Link> — financial modeling, forecasting, runway, and fundraising support for startups, at a fraction of a full-time hire. <Link href="/fractional-cfo">See how it works →</Link>
+              </div>
+            )}
+            {post.tags.length > 0 && (
+              <div className="tags">
+                {post.tags.map((t) => <span className="tag" key={t}>{t}</span>)}
+              </div>
+            )}
+            <div className="author-box">
+              <div className="avatar">D</div>
+              <div>
+                <b>Written by Donkey Ideas</b>
+                <p>Donkey Ideas is a one-person venture studio in New York that turns dumb-sounding ideas into real digital businesses — 11+ ventures validated, built, and operated with 20 years of CFO discipline underneath.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {related.length > 0 && (
+          <section className="related">
+            <div className="article-wrap">
+              <h2>Related reading</h2>
+              {related.map((r) => (
+                <Link className="rel-card" href={`/blog/${r.slug}`} key={r.slug} style={{ marginBottom: '14px' }}>
+                  <div className="meta">
+                    {r.category && <span className="cat">{r.category}</span>}
+                    <span>{fmtDate(r.publishedAt)}</span>
+                    <span>{r.readTime} min read</span>
                   </div>
+                  <h3>{stripMarks(r.title)}</h3>
+                  {r.excerpt && <p>{r.excerpt}</p>}
                 </Link>
               ))}
             </div>
+          </section>
+        )}
+
+        <section className="cta">
+          <div className="wrap cta-grid">
+            <div>
+              <h2>Got a dumb idea of your own<span style={{ color: 'var(--yellow)' }}>?</span></h2>
+              <p>We turn dumb-sounding ideas into real businesses — validated, built, and run like one. Pitch us yours.</p>
+            </div>
+            <Link className="btn" href="/#contact">Pitch your idea</Link>
           </div>
         </section>
-      )}
+      </main>
 
-      {/* Footer */}
-      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
-            <div className="text-xl font-semibold tracking-tight">
-              <span className="font-light">DONKEY</span> IDEAS
-            </div>
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
-              <Link href="/ventures" className="hover:text-white transition-colors">Ventures</Link>
-              <Link href="/services" className="hover:text-white transition-colors">Services</Link>
-              <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
-              <Link href="/about" className="hover:text-white transition-colors">About</Link>
-              <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
-            </div>
-            <div className="text-slate-500 text-sm">
-              &copy; {new Date().getFullYear()} Donkey Ideas
-            </div>
-          </div>
+      <footer>
+        <div className="wrap foot">
+          <Link href="/blog" style={{ borderColor: 'var(--rule)' }}>← Back to the blog</Link>
+          <a href="mailto:info@donkeyideas.com">info@donkeyideas.com</a>
+          <span className="copy">© {new Date().getFullYear()} Donkey Ideas · Venture Studio · New York, NY</span>
         </div>
       </footer>
     </div>

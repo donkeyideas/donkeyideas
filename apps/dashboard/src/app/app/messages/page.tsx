@@ -114,6 +114,7 @@ export default function MessagesPage() {
       platform: 'Platform',
       services: 'Services',
       partnership: 'Partnership',
+      'fractional-cfo': 'Fractional CFO',
     };
     return labels[interest] || interest;
   };

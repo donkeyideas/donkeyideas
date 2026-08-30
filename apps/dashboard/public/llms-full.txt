@@ -1,70 +1,64 @@
-# Donkey Ideas - Full Documentation
+# Donkey Ideas — Full Reference
 
-> Donkey Ideas is a comprehensive venture builder platform and operating system that helps entrepreneurs build, manage, and scale ventures from idea to exit.
+> Donkey Ideas is a New York–based, one-person venture studio that turns early-stage, "dumb-sounding" ideas into real digital businesses, and offers fractional CFO services to startups and small businesses across the US. Every idea is validated with market research and a real financial model — backed by 20 years of controller and CFO experience — then designed, built, and launched with an AI-native process.
 
-## Company Overview
-Donkey Ideas is a venture builder and operating system designed for entrepreneurs, startup founders, and venture builders. The platform consolidates financial management, project tracking, analytics, pitch decks, whitepapers, team management, and AI-powered insights into a single unified dashboard.
+## Company facts
+- Type: Venture studio (creates and operates its own startups) + fractional CFO practice
+- Location: New York, NY; works remotely with companies across the United States
+- Founder background: 20 years as a controller and CFO across SaaS, financial services, and public companies
+- Portfolio: 12 ventures across consumer apps, B2B SaaS, fintech, media, and gaming
+- Contact: info@donkeyideas.com — Book a call: https://calendar.app.google/bTGoJDjxDWSHijKZ7
 
-## Platform Features
+## Fractional CFO services
+Donkey Ideas provides remote, part-time (fractional) CFO leadership for startups and small businesses:
+- Financial modeling and forecasting: unit economics, three-statement models, scenario planning you can defend in a board meeting
+- Budgeting, cash flow, and runway: know how much cash you have, how fast it moves, and when decisions are due
+- Fundraising preparation: investor-ready projections, data-room assembly, pitch financials that survive diligence
+- Investor reporting and board support: the monthly update investors actually read
+- Monthly close oversight, KPIs, and dashboards: run the business on numbers instead of vibes
+- Systems and process: accounting stack setup, dashboards, and financial hygiene that scales
+Page: https://www.donkeyideas.com/fractional-cfo
 
-### Financial Management
-- **P&L Statements**: Track revenue (product, service, other) and expenses (direct costs, infrastructure, sales/marketing, R&D, admin) by period
-- **Balance Sheets**: Monitor assets (cash, receivables, fixed assets) and liabilities (payables, short-term and long-term debt)
-- **Cash Flow Analysis**: Operating, investing, and financing cash flows with beginning/ending balances
-- **Budget & Forecast**: Category-based budgeting with income/expense tracking, period management (monthly/quarterly), and budget vs actuals comparison
-- **Consolidated View**: Multi-company financial aggregation with intercompany transaction handling
+### Fractional CFO — frequently asked questions
+Q: What is a fractional CFO?
+A: A senior finance executive who works with your company part-time — typically a set number of days per month — providing CFO-level leadership (financial modeling, forecasting, cash-flow management, fundraising support) at a fraction of the cost of a full-time hire.
 
-### Analytics & Intelligence
-- **Google Analytics Integration**: Real GA4 data including sessions, pageviews, bounce rate, traffic sources, top pages, and device breakdown
-- **AI-Powered Recommendations**: DeepSeek-driven analytics insights with daily cached recommendations including pros, cons, and actionable suggestions
-- **Consolidated Analytics**: Portfolio-wide analytics aggregation across all companies
-- **SEO & GEO Analytics**: Search engine optimization and generative engine optimization monitoring
+Q: Do fractional CFOs work remotely?
+A: Yes — it's now the standard model. Modeling, forecasting, close review, and board reporting all run on cloud accounting and shared dashboards. Donkey Ideas works fully remotely with companies across the US from a New York base.
 
-### Venture Management
-- **Business Profile**: Mission, target market, competitive advantage, key achievements, and operational metrics
-- **Valuation Engine**: Multiple valuation methods (revenue multiples, DCF, market comparables) with AI scoring
-- **Project Management**: Kanban-style boards with columns and cards, drag-and-drop task management
-- **Document Library**: Version-controlled document storage with file type support
+Q: When should a startup hire a fractional CFO?
+A: Common triggers: preparing to raise, revenue passing roughly $500K–$1M, cash decisions getting consequential, investors asking for reporting you can't produce, or a bookkeeper handling transactions while nobody owns the forward-looking numbers.
 
-### Content & Communications
-- **Pitch Deck Builder**: AI-generated investor, sales, and partnership presentations with slide-by-slide editing
-- **Whitepaper Generator**: Comprehensive business documentation including executive summary, technology stack, market analysis, financial projections, and roadmap
-- **Website Manager**: CMS for managing public website content, SEO settings, and domain configuration
-- **Contact Management**: Form submission tracking with read/unread status
+Q: What's the difference between a fractional CFO, a controller, and a bookkeeper?
+A: A bookkeeper records transactions; a controller makes sure the books close accurately; a CFO looks forward — scenarios, runway, budgets, fundraises. Donkey Ideas has 20 years across all three layers.
 
-### Team & Access
-- **Team Management**: Role-based access (owner, admin, member, viewer) with granular permissions
-- **Investor Portal**: Investor access management with investment tracking and update notifications
-- **Activity Logs**: Comprehensive audit trail of all actions across the platform
-- **Two-Factor Authentication**: TOTP-based 2FA support for enhanced security
+Q: How much does a fractional CFO cost?
+A: A monthly retainer scoped to fixed deliverables and cadence — a small fraction of a full-time CFO's salary and equity. The first diagnostic call is free.
 
-### AI Integration
-- **AI Assistant**: Conversational AI for business guidance, analysis, and strategic planning
-- **Multiple AI Providers**: Support for DeepSeek, OpenAI, Anthropic, and Google AI APIs
-- **Smart Recommendations**: AI-driven insights across analytics, financials, and business strategy
+## The venture studio
+Donkey Ideas validates every idea the same way — market and competitor research, a real financial model with unit economics, and a small, fast prototype to test demand — before serious time or money is committed. Winners get doubled down on; experiments get honest reviews.
 
-## Technology
-- Built with Next.js 14, React 18, TypeScript, and Tailwind CSS
-- PostgreSQL database with Prisma ORM
-- Real-time Google Analytics Data API integration
-- Multi-theme support (dark, light, blue)
-- Responsive design for desktop and mobile
+### Portfolio ventures (with status)
+- ArguFight (Live) — AI-judged debate platform with ELO rankings and championship belts — https://www.argufight.com
+- basketball.com (Live) — basketball news, media, and stat tools
+- Go Virall (Live) — social intelligence that tells creators what actually works — https://govirall.com
+- OpticRank (Live) — tracks whether app stores and AI chatbots can find your app — https://opticrank.com
+- Top Viso (Live) — app store optimization intelligence — https://topviso.com
+- Donkey Marble Racing (Live) — physics marble-racing mobile game
+- Buildwrk (Beta) — ERP built for construction crews, not accountants — https://buildwrk.com
+- Julyu (In build) — scan receipts, compare grocery prices — https://julyu.com
+- Kamioi (Alpha) — round-up micro-investing that puts spare change to work — https://kamioi.com
+- Jetdale (In build) — AI product scoping and project planning — https://jetdale.com
+- CFB Social (Live) — the social home for college football fans — https://cfbsocial.com
+- Reprezentative (Concept) — an apparel line about where you're from
 
-## Target Audience
-- Entrepreneurs and startup founders
-- Venture builders managing multiple companies
-- Small business owners seeking comprehensive management tools
-- Investors looking for portfolio oversight capabilities
+## Content
+The Donkey Ideas blog publishes field notes on venture building, product strategy, engineering, and startup finance: https://www.donkeyideas.com/blog
 
-## Key Pages
+## Key pages
 - Home: https://www.donkeyideas.com/
-- Ventures: https://www.donkeyideas.com/ventures
-- Services: https://www.donkeyideas.com/services
-- Process: https://www.donkeyideas.com/process
+- Fractional CFO services: https://www.donkeyideas.com/fractional-cfo
+- Portfolio / ventures: https://www.donkeyideas.com/ventures
+- Blog: https://www.donkeyideas.com/blog
 - About: https://www.donkeyideas.com/about
 - Contact: https://www.donkeyideas.com/contact
-- Privacy Policy: https://www.donkeyideas.com/privacy
-
-## Contact
-- Website: https://www.donkeyideas.com
-- Contact Form: https://www.donkeyideas.com/contact

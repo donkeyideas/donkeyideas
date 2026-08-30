@@ -1,420 +1,348 @@
+/* eslint-disable react/no-unescaped-entities */
+// Donkey Ideas — venture-studio homepage (Path B: the "dumb-serious" mock as a
+// real Next route, with a LIVE portfolio ledger + admin-editable copy).
+//
+// This file is intentionally named `page.studio.tsx` so it is NOT yet a route.
+// To go live, rename it to `page.tsx` (back up the current one first). Nothing
+// about /app (admin) or /api (backend) changes.
 import Link from 'next/link';
-import Image from 'next/image';
-import { prisma } from '@donkey-ideas/database';
-import ScrollHeader from '@/components/scroll-header';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Metadata } from 'next';
-import { OrganizationStructuredData, WebsiteStructuredData, ServiceStructuredData, BreadcrumbStructuredData, FAQStructuredData } from '@/components/seo/structured-data';
+import { prisma } from '@donkey-ideas/database';
+import { Gabarito } from 'next/font/google';
+import HomeMotion from '@/components/home/HomeMotion';
+import { getVentureCounts, getPortfolio } from '@/lib/public-portfolio';
+import './home-studio.css';
+
+const gabarito = Gabarito({ subsets: ['latin'], weight: ['400', '500', '600', '800', '900'], display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Donkey Ideas — Creative Consulting Studio | Turn Bold Ideas Into Real Businesses',
-  description: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs and founders turn bold ideas into real businesses. Strategy, business planning, financial modeling, and hands-on project management.',
-  alternates: {
-    canonical: 'https://www.donkeyideas.com',
-  },
-  keywords: [
-    'creative consulting',
-    'business consulting',
-    'startup consulting',
-    'business planning',
-    'financial modeling',
-    'project management',
-    'idea development',
-    'innovation consulting',
-    'concept development',
-    'business strategy',
-  ],
+  title: 'Donkey Ideas | New York Venture Studio — We Turn Ideas Into Real Businesses',
+  description:
+    'Donkey Ideas is a New York venture studio that validates, builds, and launches digital products. Idea validation, business planning, financial modeling, and AI-native product development, plus fractional CFO services for startups — from napkin sketch to live business.',
+  alternates: { canonical: 'https://www.donkeyideas.com/' },
   openGraph: {
-    title: 'Donkey Ideas — Creative Consulting Studio',
-    description: 'We help entrepreneurs and founders turn bold ideas into real businesses. Strategy, planning, financials, and execution — all under one roof.',
-    url: 'https://www.donkeyideas.com',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Donkey Ideas - Creative Consulting Studio',
-      },
-    ],
+    type: 'website',
+    title: 'Donkey Ideas | Venture Studio — Dumb Ideas, Taken Seriously',
+    description:
+      'A one-person venture studio building a portfolio of real digital products: idea validation, financial modeling, and AI-native development from concept to launch.',
+    url: 'https://www.donkeyideas.com/',
+    images: [{ url: 'https://www.donkeyideas.com/og-home.png', width: 1200, height: 630, alt: 'Donkey Ideas — Dumb ideas, taken seriously.' }],
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Donkey Ideas — Creative Consulting Studio',
-    description: 'We help entrepreneurs and founders turn bold ideas into real businesses. Strategy, planning, financials, and execution — all under one roof.',
-    images: ['/og-image.png'],
-  },
+  twitter: { card: 'summary_large_image', images: ['https://www.donkeyideas.com/og-home.png'] },
 };
 
-async function getWebsiteContent() {
+// --- Portfolio ledger — fully admin-driven (websiteContent['ventures-page']).
+// Rows come from getPortfolio(); add / edit / reorder a venture in the admin and
+// the homepage follows automatically. These maps translate admin values into the
+// ledger's labels + colors.
+type Status = { label: string; cls: string };
+
+const STATUS_MAP: Record<string, Status> = {
+  PRODUCTION: { label: 'Live', cls: 'live' },
+  BETA: { label: 'Beta', cls: 'build' },
+  ALPHA: { label: 'Alpha', cls: 'build' },
+  DEVELOPMENT: { label: 'In build', cls: 'build' },
+  IDEA: { label: 'Concept', cls: 'exp' },
+};
+const DEFAULT_STATUS: Status = { label: 'In build', cls: 'build' };
+
+const DUMB_MAP: Record<string, { label: string; cls: string }> = {
+  SEVERE: { label: 'Severe', cls: 'd3' },
+  ELEVATED: { label: 'Elevated', cls: 'd2' },
+  MODERATE: { label: 'Moderate', cls: 'd1' },
+};
+
+const HERO_TILES = ['argufight', 'basketball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial'];
+
+const DEFAULT_FAQ = [
+  { q: 'What is Donkey Ideas?', a: 'Donkey Ideas is a venture studio based in New York that turns early-stage ideas into real digital businesses. It validates concepts with market research and financial modeling, then designs, builds, and launches the product — operating a portfolio of 11+ ventures across consumer apps, SaaS, fintech, media, and gaming.' },
+  { q: 'What is a venture studio?', a: 'A venture studio creates and operates its own startups — taking ideas from validation through build and launch under one roof. Unlike an agency, it does not build for clients; unlike a VC fund, it does not just invest. It builds and owns.' },
+  { q: 'How do you validate a business idea?', a: 'The same way every time: market and competitor research, a real financial model with unit economics, and a small, fast prototype to test actual demand — before serious time or money is committed. Most ideas fail this gauntlet. That is the point.' },
+  { q: 'Why is it called Donkey Ideas?', a: 'Because every good idea looks dumb before it wins the race. The name filters for concepts that sound a little dumb at first — which is where the opportunities nobody serious is chasing tend to live.' },
+  { q: 'Do you offer fractional CFO services?', a: 'Yes. Alongside the venture studio, Donkey Ideas provides fractional CFO services for startups and small businesses: financial modeling and forecasting, budgeting and cash-flow management, fundraising preparation, investor reporting, and monthly close oversight — senior finance leadership on a part-time basis, backed by 20 years as a controller and CFO.' },
+  { q: 'Have an idea you want pressure-tested?', a: 'Send it over: info@donkeyideas.com. Worst case, you get an honest read on the numbers from a 20-year CFO. Best case, it stops being just an idea.' },
+];
+
+async function getWebsiteContent(): Promise<Record<string, any>> {
   try {
-    const content = await prisma.websiteContent.findMany({
-      where: { published: true },
-      orderBy: { section: 'asc' },
-    });
-    return content.reduce((acc: Record<string, any>, item: any) => {
-      acc[item.section] = item.content;
+    const rows = await prisma.websiteContent.findMany({ where: { published: true } });
+    return rows.reduce((acc: Record<string, any>, r: any) => {
+      acc[r.section] = r.content;
       return acc;
-    }, {} as Record<string, any>);
-  } catch (error) {
-    console.error('Failed to load website content:', error);
+    }, {});
+  } catch {
     return {};
   }
 }
 
-export default async function HomePage() {
-  // Check if user is logged in
+function fmt(n: number): string {
+  return n.toLocaleString('en-US');
+}
+
+export default async function StudioHomePage() {
+  // Preserve existing behavior: logged-in owner goes straight to the admin.
   const cookieStore = await cookies();
-  const token = cookieStore.get('auth-token');
-  
-  // If logged in, go to dashboard
-  if (token) {
-    redirect('/app/dashboard');
-  }
-  
-  // Otherwise, show public home page with dynamic content
-  const content = await getWebsiteContent();
-  
-  // Default content if not in database
-  const heroContent = content.hero || {
-    label: 'Creative Consulting Studio',
-    headline: 'Got a Wild Idea?\nWe\'ll Help You\nBuild It',
-    description: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs, founders, and dreamers turn bold concepts into real businesses. From strategy and planning to financials and execution — we make ideas happen.',
-    backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop',
-    cta: {
-      primary: { text: "LET'S TALK", link: '/contact' },
-      secondary: { text: 'OUR SERVICES', link: '/services' },
-    },
-  };
+  if (cookieStore.get('auth-token')) redirect('/app/dashboard');
 
-  const aboutContent = content.about || {
-    title: 'Where Crazy Ideas Meet Smart Execution',
-    text: 'Most people with big ideas don\'t need more advice — they need a partner who rolls up their sleeves and builds alongside them. That\'s Donkey Ideas. We\'re a creative consulting studio founded by a project manager who\'s spent years helping entrepreneurs, small businesses, and dreamers turn their wildest concepts into real, functioning ventures.\n\nWe\'re not a traditional consultancy that hands you a deck and disappears. We\'re a think tank that actually builds things. We plan it, model the financials, map out the strategy, prototype it, and help you launch it. From restaurant concepts to tech startups to nonprofit overhauls — if you\'ve got an idea that keeps you up at night, we\'ll help you figure out how to make it work.\n\nOur approach is simple: understand your vision, pressure-test it with real research and financial modeling, then build a clear roadmap to get it done. No jargon, no fluff — just hands-on creative consulting that moves your idea from napkin sketch to reality.',
-  };
+  // Live member counts + real admin statuses (both cached hourly, degrade
+  // gracefully) + editable copy.
+  const [{ counts }, portfolio, content] = await Promise.all([
+    getVentureCounts(),
+    getPortfolio(),
+    getWebsiteContent(),
+  ]);
+  const hero = content.studio_hero || {};
+  const faq: { q: string; a: string }[] = content.studio_faq?.items || DEFAULT_FAQ;
 
-  const statsContent = content.stats || {
-    items: [
-      { value: '50+', label: 'Projects Delivered' },
-      { value: '6-12 weeks', label: 'Average Project Timeline' },
-      { value: '15+', label: 'Industries Served' },
-      { value: '92%', label: 'Client Retention Rate' },
+  const kicker: string = hero.kicker || 'A one-person venture studio with a dumb name. On purpose.';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      { '@type': 'Organization', '@id': 'https://www.donkeyideas.com/#org', name: 'Donkey Ideas', url: 'https://www.donkeyideas.com/', email: 'info@donkeyideas.com', logo: 'https://www.donkeyideas.com/og-home.png', founder: { '@id': 'https://www.donkeyideas.com/#founder' }, address: { '@type': 'PostalAddress', addressLocality: 'New York', addressRegion: 'NY', addressCountry: 'US' }, description: 'A New York venture studio that validates, builds, and launches digital products, plus fractional CFO services.' },
+      { '@type': 'Person', '@id': 'https://www.donkeyideas.com/#founder', name: 'Alain Beltran', jobTitle: 'Founder & Fractional CFO', worksFor: { '@id': 'https://www.donkeyideas.com/#org' }, address: { '@type': 'PostalAddress', addressLocality: 'New York', addressRegion: 'NY', addressCountry: 'US' }, knowsAbout: ['Fractional CFO services', 'Financial modeling', 'Fundraising', 'Cash flow management', 'FP&A', 'M&A integration', 'Venture building'], description: 'A finance executive with 20 years as a controller and CFO across SaaS, financial services, and public companies, and the founder of the Donkey Ideas venture studio.' },
+      { '@type': 'WebSite', url: 'https://www.donkeyideas.com/', name: 'Donkey Ideas', publisher: { '@id': 'https://www.donkeyideas.com/#org' } },
+      { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
     ],
-  };
-
-  const engageContent = content['engage-excellence'] || {
-    badge: { text: 'Hands-On Approach', color: 'yellow' },
-    title: 'Engage with\nexcellence',
-    features: [
-      {
-        title: 'Strategy-First Thinking',
-        description: 'Every project starts with deep research, market analysis, and a clear strategic roadmap tailored to your vision',
-      },
-      {
-        title: 'Full-Service Execution',
-        description: 'From business plans and financial models to branding and launch strategy — we handle it all',
-      },
-      {
-        title: 'Real Partnership',
-        description: 'We work alongside you as hands-on collaborators, not distant advisors watching from the sidelines',
-      },
-    ],
-    ventureCanvas: {
-      title: 'Project Canvas',
-      text1: 'Ready to turn your idea into something real? Our team of strategists, project managers, and creative problem-solvers is ready to dig into your concept and build a plan that works.',
-      text2: 'We move fast — most engagements kick off within a week of first contact. From building your business plan and financial projections to designing your go-to-market strategy and helping you pitch investors, we\'re with you every step of the way. Let\'s build something worth talking about.',
-      ctaText: 'Start Your Project',
-      imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop',
-    },
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
-      {/* Structured Data for SEO */}
-      <OrganizationStructuredData
-        data={{
-          name: 'Donkey Ideas',
-          url: 'https://www.donkeyideas.com',
-          logo: 'https://www.donkeyideas.com/logo.png',
-          description: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs and founders turn bold ideas into real businesses through strategic planning, financial modeling, and hands-on project management.',
-          sameAs: [
-            'https://twitter.com/donkeyideas',
-            'https://linkedin.com/company/donkeyideas',
-          ],
-        }}
-      />
-      <WebsiteStructuredData />
-      <ServiceStructuredData />
-      <BreadcrumbStructuredData items={[
-        { name: 'Home', url: 'https://www.donkeyideas.com' },
-      ]} />
-      <FAQStructuredData items={[
-        { question: 'What is Donkey Ideas?', answer: 'Donkey Ideas is a creative consulting studio that helps entrepreneurs, founders, and businesses turn bold ideas into reality. We provide hands-on support with business planning, financial modeling, strategy, and project management — from napkin sketch to launch day.' },
-        { question: 'What services does Donkey Ideas offer?', answer: 'We offer creative consulting, business planning, financial modeling, go-to-market strategy, project management, and launch execution. Whether you need a full business plan, investor-ready financial projections, or a hands-on partner to manage the build — we do it all.' },
-        { question: 'How long does a typical project take?', answer: 'Most projects run 6 to 12 weeks from kickoff to delivery. Timelines depend on scope and complexity, but we pride ourselves on moving fast without cutting corners.' },
-        { question: 'Where is Donkey Ideas located?', answer: 'Donkey Ideas operates out of New York and Miami. We work with clients globally through a mix of in-person and remote collaboration.' },
-        { question: 'How can I work with Donkey Ideas?', answer: 'Reach out through our contact page or schedule a call. We respond within 48 hours and most engagements kick off within a week. Whether you have a napkin sketch or a fully formed concept, we are ready to help you build it.' },
-      ]} />
+    <div className={`dk-home ${gabarito.className}`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      {/* Navigation - Giga.ai style with scroll behavior */}
-      <ScrollHeader />
+      <HomeMotion />
 
-      {/* Hero Section - Giga.ai inspired with background image */}
-      <section className="relative min-h-[85vh] md:h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src={heroContent.backgroundImage}
-            alt="Hero background"
-            fill
-            className="object-cover object-center"
-            priority
-            sizes="100vw"
-            quality={80}
-          />
-          {/* Gradient overlays for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/40 to-slate-900/80" />
+      <header>
+        <div className="nav">
+          <a className="logo" href="#top">
+            Donkey Ideas<span className="dumb">yes, it means what you think</span>
+          </a>
+          <nav aria-label="Main">
+            <a href="#services">What we do</a>
+            <a href="#ledger">Portfolio</a>
+            <a href="#manual">Process</a>
+            <a href="#cfo">CFO services</a>
+            <a href="#faq">FAQ</a>
+            <Link href="/blog">Blog</Link>
+          </nav>
+          <a className="btn" href="#contact">Pitch your idea</a>
         </div>
+      </header>
 
-        {/* Content */}
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-24 md:pt-0">
-          {/* Label Badge */}
-          <div className="inline-flex items-center gap-2 mb-6 md:mb-8 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-            <span className="text-xs uppercase tracking-widest text-white/90 font-medium">
-              {heroContent.label}
-            </span>
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-light leading-[1.1] mb-6 md:mb-8 tracking-tight">
-            {heroContent.headline.split('\n').map((line: string, i: number) => (
-              <div key={i}>{line}</div>
+      <main id="top">
+        {/* HERO */}
+        <section className="hero">
+          <div className="bouncer" aria-hidden="true">
+            {HERO_TILES.map((t, i) => (
+              <span className="b-tile" data-b="" key={i}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/ventures/${t}.png`} alt="" />
+              </span>
             ))}
-          </h1>
-
-          {/* Subheadline */}
-          <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed font-light">
-            {heroContent.description}
-          </p>
-
-          {/* CTA Button */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link
-              href="/contact"
-              className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white text-slate-900 rounded-full hover:bg-white/90 transition-all text-base font-medium shadow-xl hover:shadow-2xl hover:scale-105 transform"
-            >
-              Talk to us
-            </Link>
           </div>
-        </div>
-      </section>
+          <div className="wrap">
+            <div className="kicker">{kicker}</div>
+            <h1>
+              <span className="strike">Smart</span> <span className="hl">Dumb</span> ideas, taken seriously.
+            </h1>
+            {hero.sub ? (
+              <p className="hero-sub">{hero.sub}</p>
+            ) : (
+              <p className="hero-sub">
+                <b>Donkey Ideas is a New York venture studio</b> that turns early-stage ideas into real digital
+                businesses. Every concept gets validated with market research and a real financial model —{' '}
+                <b>twenty years of CFO discipline</b> — then designed, built, and launched with an AI-native process.
+                11+ ventures and counting.
+              </p>
+            )}
+            <div className="hero-cta">
+              <a className="btn big" href="#contact">Pitch your idea</a>
+              <a className="btn big ghost" href="#ledger">See the portfolio</a>
+            </div>
+            <div className="stamp" aria-hidden="true">
+              CFO Approved<small>against his better judgment</small>
+            </div>
+            <div className="definition">
+              <span className="term">don·key i·de·as</span>
+              <span className="pos">noun, plural</span>
+              <p>
+                Polite corporate English for <b>dumb ideas</b> — the early-stage, easy-to-dismiss concepts a venture
+                studio exists to validate, build, and launch. See also: every venture listed below.
+              </p>
+            </div>
+          </div>
+        </section>
 
-      {/* Stats Section */}
-      <section className="py-12 md:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12">
-            {statsContent.items?.map((stat: any, index: number) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl sm:text-4xl md:text-6xl font-light mb-2 md:mb-3 text-white">
-                  {stat.value}
-                </div>
-                <div className="text-slate-400 uppercase text-[10px] sm:text-xs tracking-widest font-medium">
-                  {stat.label}
-                </div>
+        {/* SERVICES */}
+        <section className="services" id="services">
+          <div className="wrap">
+            <div className="sec-head">
+              <h2>What a venture studio actually does<span style={{ color: 'var(--red)' }}>.</span></h2>
+              <span className="sec-note">Idea in, business out.</span>
+            </div>
+            <div className="svc-grid">
+              <div className="svc-card">
+                <h3>Idea validation</h3>
+                <p>Market research, competitor analysis, and a fast prototype to test real demand — so you find out an idea is wrong for hundreds of dollars, not hundreds of thousands.</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Philosophy Section */}
-      <section id="about" className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="text-xs uppercase tracking-widest text-blue-400 mb-4 md:mb-6 font-medium">
-            Our Philosophy
-          </div>
-          <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-6 md:mb-8 leading-tight text-white">
-            {aboutContent.title}
-          </h2>
-          <div className="space-y-4 md:space-y-6 text-base md:text-lg text-slate-300 leading-relaxed font-light text-left">
-            {aboutContent.text.split('\n\n').map((paragraph: string, index: number) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Engage with Excellence Section */}
-      <section className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-[1400px] mx-auto">
-          {/* Top Section - Title and Features */}
-          <div className="grid md:grid-cols-2 gap-10 md:gap-20 items-start mb-12 md:mb-24">
-            {/* Left - Title */}
-            <div>
-              <div className="inline-flex items-center gap-2 mb-6 md:mb-8 px-3 py-1.5 rounded-full bg-yellow-500/10">
-                <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
-                <span className="text-xs uppercase tracking-widest text-yellow-400 font-medium">
-                  {engageContent.badge?.text || 'Innovation First'}
-                </span>
+              <div className="svc-card">
+                <h3>Business planning and financial modeling</h3>
+                <p>Unit economics, projections, and a plan built by a 20-year controller and CFO. If the model does not work on paper, the product does not get built.</p>
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-6xl font-light leading-tight text-white">
-                {engageContent.title?.split('\n').map((line: string, i: number) => (
-                  <div key={i}>{line}</div>
-                ))}
-              </h2>
+              <div className="svc-card">
+                <h3>AI-native product development</h3>
+                <p>Design, code, and content shipped by one operator using modern AI tooling — team-level output at solo-founder speed, from consumer apps to B2B SaaS and fintech.</p>
+              </div>
+              <div className="svc-card">
+                <h3>Launch and growth</h3>
+                <p>Go-to-market, app store optimization, and organic growth loops. Every launch feeds a portfolio that compounds: winners get doubled down on, experiments get honest reviews.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* LEDGER — live member counts */}
+        <section className="ledger" id="ledger">
+          <div className="wrap">
+            <div className="sec-head">
+              <h2>The portfolio: {portfolio.length} ventures, built in-house<span style={{ color: 'var(--red)' }}>.</span></h2>
+              <span className="sec-note">All real. All shipped or shipping.</span>
+            </div>
+            <div className="cols">
+              <span>No.</span><span></span><span>Venture</span><span>What it is</span><span>Dumbness*</span><span>Status</span>
             </div>
 
-            {/* Right - Feature Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-              {engageContent.features?.map((feature: any, index: number) => (
-                <div key={index}>
-                  <div className="w-12 h-12 rounded-lg bg-slate-800/50 flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {index === 0 && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />}
-                      {index === 1 && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />}
-                      {index === 2 && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />}
-                    </svg>
-                  </div>
-                  <h3 className="text-base font-medium mb-2 text-white">{feature.title}</h3>
-                  <p className="text-slate-400 text-xs leading-relaxed">
-                    {feature.description}
-                  </p>
+            {portfolio.map((v, i) => {
+              const count = v.extSlug ? counts[v.extSlug] : undefined;
+              const status = STATUS_MAP[v.status] || DEFAULT_STATUS;
+              const dumb = v.dumbness ? DUMB_MAP[v.dumbness.toUpperCase()] : null;
+              return (
+                <Link className="row" href={`/ventures/${v.slug}`} key={v.slug || i}>
+                  <span className="no">{String(i + 1).padStart(2, '0')}</span>
+                  <span className={`tile${v.logo ? '' : ' letter'}`}>
+                    {v.logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={v.logo} alt={`${v.name} logo`} />
+                    ) : (
+                      v.letter
+                    )}
+                  </span>
+                  <span className="name">
+                    {v.name}
+                    {typeof count === 'number' && count > 0 && (
+                      <span className="members">{fmt(count)} members</span>
+                    )}
+                  </span>
+                  <span className="desc">{v.tagline}</span>
+                  <span className={`dumb ${dumb?.cls ?? ''}`}>{dumb?.label ?? ''}</span>
+                  <span className={`status ${status.cls}`}>{status.label}</span>
+                </Link>
+              );
+            })}
+
+            <p className="footnote">
+              * Dumbness assessed at inception using a proprietary methodology (gut feel). Past dumbness is not indicative
+              of future results. Several &quot;Severe&quot; ratings are currently outperforming.
+            </p>
+          </div>
+        </section>
+
+        {/* MANUAL */}
+        <section className="manual" id="manual">
+          <div className="wrap">
+            <div className="sec-head">
+              <h2>How we turn an idea into a business<span style={{ color: 'var(--yellow)' }}>.</span></h2>
+              <span className="sec-note">Playful in, serious out.</span>
+            </div>
+            <div className="manual-grid">
+              <div className="m-item">
+                <span className="rule-no">Rule 01</span>
+                <h3>If it sounds dumb, investigate.</h3>
+                <p>Every crowded market started as somebody&apos;s dumb idea. &quot;Sounds dumb&quot; means nobody serious is looking — which is exactly the opening.</p>
+              </div>
+              <div className="m-item">
+                <span className="rule-no">Rule 02</span>
+                <h3>Then model it like a CFO.</h3>
+                <p>Twenty years as controller and CFO means the joke stops at the spreadsheet. Every idea gets real unit economics before it gets a logo.</p>
+              </div>
+              <div className="m-item">
+                <span className="rule-no">Rule 03</span>
+                <h3>Ship small, ship fast.</h3>
+                <p>One person with AI-native tooling builds what used to take a team. Launch lean, let the market vote, spend real money only on what earns it.</p>
+              </div>
+              <div className="m-item">
+                <span className="rule-no">Rule 04</span>
+                <h3>Keep the winners, retire the rest.</h3>
+                <p>The portfolio compounds. Winners get doubled down on, experiments get honest reviews, and sunsets happen without a funeral.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CFO */}
+        <section className="cfo" id="cfo">
+          <div className="wrap">
+            <div className="cfo-grid">
+              <div>
+                <div className="cfo-label">The serious half, for hire</div>
+                <h2>Fractional CFO services<span style={{ color: 'var(--red)' }}>.</span></h2>
+                <p className="cfo-lede">The financial discipline behind every venture on this page is available to your company. Twenty years as a controller and CFO across SaaS, financial services, and public companies — fractional, so you get senior finance leadership without the full-time salary.</p>
+                <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                  <Link className="btn big" href="/fractional-cfo">Full CFO services page</Link>
+                  <a className="btn big" style={{ background: 'transparent', color: 'var(--ink)' }} href="https://calendar.app.google/bTGoJDjxDWSHijKZ7" target="_blank" rel="noopener noreferrer">Book a CFO call</a>
+                </div>
+              </div>
+              <ul className="cfo-list">
+                <li><b>Financial modeling and forecasting</b><span>Unit economics, projections, and scenario planning you can defend in a board meeting.</span></li>
+                <li><b>Budgeting, cash flow, and runway</b><span>Know exactly how much you have, how fast it moves, and when decisions are due.</span></li>
+                <li><b>Fundraising preparation and investor reporting</b><span>Data rooms, pitch financials, and the monthly updates investors actually read.</span></li>
+                <li><b>Monthly close, KPIs, and dashboards</b><span>Clean books and a scoreboard, so you run the business on numbers instead of vibes.</span></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ — editable via websiteContent.studio_faq */}
+        <section className="faq" id="faq">
+          <div className="wrap">
+            <div className="sec-head">
+              <h2>Questions people actually ask<span style={{ color: 'var(--red)' }}>.</span></h2>
+            </div>
+            <div className="faq-list">
+              {faq.map((f, i) => (
+                <div className="faq-item" key={i}>
+                  <h3>{f.q}</h3>
+                  <p>{f.a}</p>
                 </div>
               ))}
             </div>
           </div>
+        </section>
 
-          {/* Bottom Section - Venture Canvas with Image */}
-          <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
-            {/* Left - Description */}
-            <div>
-              <div className="flex items-center gap-3 mb-6 md:mb-8">
-                <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl md:text-2xl font-medium text-white">{engageContent.ventureCanvas?.title || 'Venture Canvas'}</h3>
-              </div>
-
-              <p className="text-slate-300 text-base md:text-lg leading-relaxed mb-6 md:mb-8">
-                {engageContent.ventureCanvas?.text1}
-              </p>
-
-              <p className="text-slate-400 text-sm md:text-base leading-relaxed mb-8 md:mb-10">
-                {engageContent.ventureCanvas?.text2}
-              </p>
-
-              <Link
-                href="/contact"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-all text-sm font-medium"
-              >
-                {engageContent.ventureCanvas?.ctaText || 'Explore Venture Canvas'}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-
-            {/* Right - Large Image */}
-            <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-[4/5]">
-              <Image
-                src={engageContent.ventureCanvas?.imageUrl || 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2070&auto=format&fit=crop'}
-                alt="Venture Canvas Platform"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
-                quality={80}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-            </div>
+        {/* NAME */}
+        <section className="name-sec" id="name">
+          <div className="wrap">
+            <span className="label">Why &quot;Donkey&quot;?</span>
+            <blockquote>Every good idea looks dumb before it wins the race.</blockquote>
+            <p>The donkey is stubborn, unglamorous, and easy to laugh at — and it carries the load up the hill every single day. Name chosen accordingly.</p>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-16 md:py-32 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-xs uppercase tracking-widest text-blue-400 mb-4 md:mb-6 font-medium text-center">
-            Common Questions
+      <footer id="contact">
+        <div className="wrap">
+          <div className="foot">
+            <h2>Got a <span className="hl">dumb</span> idea? Good — pitch it.</h2>
+            <a className="mail" href="mailto:info@donkeyideas.com">info@donkeyideas.com</a>
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-6xl font-light mb-8 md:mb-16 leading-tight text-white text-center">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-8">
-            <div className="border-b border-slate-700/50 pb-8">
-              <h3 className="text-xl font-medium text-white mb-3">What is Donkey Ideas?</h3>
-              <p className="text-slate-300 leading-relaxed">
-                Donkey Ideas is a creative consulting studio that helps entrepreneurs, founders, and businesses turn bold ideas into reality. We provide hands-on support with business planning, financial modeling, strategy, and project management — taking you from napkin sketch to launch day.
-              </p>
-            </div>
-            <div className="border-b border-slate-700/50 pb-8">
-              <h3 className="text-xl font-medium text-white mb-3">What services does Donkey Ideas offer?</h3>
-              <p className="text-slate-300 leading-relaxed">
-                We offer creative consulting, business planning, financial modeling, go-to-market strategy, project management, and launch execution. Whether you need a full business plan, investor-ready financial projections, or a hands-on partner to manage the build — we tailor our engagement to your needs.
-              </p>
-            </div>
-            <div className="border-b border-slate-700/50 pb-8">
-              <h3 className="text-xl font-medium text-white mb-3">How long does a typical project take?</h3>
-              <p className="text-slate-300 leading-relaxed">
-                Most projects run 6 to 12 weeks from kickoff to delivery. Timelines depend on scope and complexity, but we pride ourselves on moving fast without cutting corners. We prioritize speed while maintaining the quality your project deserves.
-              </p>
-            </div>
-            <div className="border-b border-slate-700/50 pb-8">
-              <h3 className="text-xl font-medium text-white mb-3">Where is Donkey Ideas located?</h3>
-              <p className="text-slate-300 leading-relaxed">
-                Donkey Ideas operates out of New York and Miami. We work with clients globally through a mix of in-person collaboration and remote partnership models.
-              </p>
-            </div>
-            <div className="pb-8">
-              <h3 className="text-xl font-medium text-white mb-3">How can I work with Donkey Ideas?</h3>
-              <p className="text-slate-300 leading-relaxed">
-                You can get started by reaching out through our{' '}
-                <Link href="/contact" className="text-blue-400 hover:text-blue-300 transition-colors">
-                  contact page
-                </Link>{' '}
-                or{' '}
-                <a href="https://calendar.app.google/uAubRuERACDqXYTU6" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
-                  scheduling a call
-                </a>
-                . We respond within 48 hours and most engagements kick off within a week. Whether you have a napkin sketch or a fully formed concept, we are ready to help you build it.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
-            <div className="text-xl font-semibold tracking-tight">
-              <span className="font-light">DONKEY</span> IDEAS
-            </div>
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
-              <Link href="/ventures" className="hover:text-white transition-colors">
-                Ventures
-              </Link>
-              <Link href="/services" className="hover:text-white transition-colors">
-                Services
-              </Link>
-              <Link href="/process" className="hover:text-white transition-colors">
-                Approach
-              </Link>
-              <Link href="/about" className="hover:text-white transition-colors">
-                About
-              </Link>
-              <Link href="/login" className="hover:text-white transition-colors">
-                Login
-              </Link>
-            </div>
-            <div className="text-slate-500 text-sm">
-              © {new Date().getFullYear()} Donkey Ideas
-            </div>
+          <div className="copy">
+            © {new Date().getFullYear()} Donkey Ideas · Venture Studio · New York, NY ·{' '}
+            <Link className="foot-login" href="/login">Login</Link>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-

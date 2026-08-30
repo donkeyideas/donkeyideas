@@ -1,31 +1,43 @@
 # Donkey Ideas
 
-> Donkey Ideas is a comprehensive venture builder platform and operating system that helps entrepreneurs build, manage, and scale ventures.
+> Donkey Ideas is a New York–based, one-person venture studio that turns early-stage, "dumb-sounding" ideas into real digital businesses — validating each concept with market research and a real financial model, then designing, building, and launching it with an AI-native process. It also offers fractional CFO services to startups and small businesses across the US.
 
-## About
-Donkey Ideas provides an all-in-one operating system for venture builders. The platform includes financial management, project tracking, pitch deck generation, business analytics, AI-powered insights, and strategic tools for entrepreneurs and startups.
+## What Donkey Ideas is
+- A venture studio — not an agency, not a VC fund. It creates and OWNS its own startups, taking ideas from validation through build and launch under one roof.
+- Founded and run by a finance executive with 20 years as a controller and CFO across SaaS, financial services, and public companies.
+- Operates a portfolio of 12 ventures across consumer apps, B2B SaaS, fintech, media, and gaming.
 
-## Services
-- Venture Building: End-to-end venture creation and management
-- Financial Hub: P&L statements, balance sheets, cash flow analysis, budgeting and forecasting
-- Analytics: Google Analytics integration with AI-powered recommendations
-- Pitch Deck Builder: AI-generated investor presentations
-- Whitepaper Generator: Professional documentation for ventures
-- Team Management: Collaboration, access control, and activity tracking
-- Investor Portal: Investor updates, access management, and reporting
-- Valuation Engine: Revenue multiples, DCF, and market comparables
-- Project Management: Kanban boards, task tracking, and document library
-- AI Assistant: Intelligent business guidance and analysis
+## Fractional CFO services (available for hire)
+Remote fractional CFO services for startups and small businesses, based in New York and working across the US:
+- Financial modeling and forecasting — unit economics, three-statement models, scenario planning
+- Budgeting, cash flow, and runway management
+- Fundraising preparation and investor reporting — data rooms, pitch financials, board updates
+- Monthly close oversight, KPIs, and dashboards
+- Senior finance leadership on a part-time basis, at a fraction of the cost of a full-time CFO
+- Page: https://www.donkeyideas.com/fractional-cfo
+- Book a free CFO call: https://calendar.app.google/bTGoJDjxDWSHijKZ7
 
-## Key Pages
+## Portfolio (ventures)
+- ArguFight — AI-judged debate platform with ELO rankings (Live) — https://www.argufight.com
+- basketball.com — basketball news, media, and stat tools (Live)
+- Go Virall — social intelligence that tells creators what works (Live) — https://govirall.com
+- OpticRank — tracks whether app stores and AI chatbots can find your app (Live) — https://opticrank.com
+- Top Viso — app store optimization intelligence (Live) — https://topviso.com
+- Donkey Marble Racing — physics marble-racing mobile game (Live)
+- Buildwrk — ERP built for construction crews (Beta) — https://buildwrk.com
+- Julyu — scan receipts and compare grocery prices (In build) — https://julyu.com
+- Kamioi — round-up micro-investing (Alpha) — https://kamioi.com
+- Jetdale — AI product scoping and project planning (In build) — https://jetdale.com
+- CFB Social — the social home for college football fans (Live) — https://cfbsocial.com
+- Reprezentative — an apparel line about where you're from (Concept)
+
+## Key pages
 - Home: https://www.donkeyideas.com/
-- Ventures: https://www.donkeyideas.com/ventures
-- Services: https://www.donkeyideas.com/services
-- Process: https://www.donkeyideas.com/process
-- About: https://www.donkeyideas.com/about
-- Contact: https://www.donkeyideas.com/contact
-- Privacy: https://www.donkeyideas.com/privacy
+- Fractional CFO services: https://www.donkeyideas.com/fractional-cfo
+- Portfolio / ventures: https://www.donkeyideas.com/ventures
+- Blog (field notes on venture building, product strategy, and startup finance): https://www.donkeyideas.com/blog
 
 ## Contact
-- Website: https://www.donkeyideas.com
-- Email: Available via contact form at https://www.donkeyideas.com/contact
+- Email: info@donkeyideas.com
+- Book a call: https://calendar.app.google/bTGoJDjxDWSHijKZ7
+- Location: New York, NY (works remotely with companies across the US)

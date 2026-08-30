@@ -1,20 +1,33 @@
+/* eslint-disable react/no-unescaped-entities, @next/next/no-img-element */
+// Blog index — new studio UI (matches donkeyideas-blog mock). Data + pagination
+// unchanged (published BlogPosts, newest first). Category filter is client-side
+// over the visible page (BlogListMotion).
 import Link from 'next/link';
-import Image from 'next/image';
 import { Metadata } from 'next';
 import { prisma } from '@donkey-ideas/database';
-import ScrollHeader from '@/components/scroll-header';
+import { Gabarito } from 'next/font/google';
+import BlogListMotion from '@/components/home/BlogListMotion';
+import { stripMarks } from '@/lib/blog-content';
+import './blog.css';
+
+const gabarito = Gabarito({ subsets: ['latin'], weight: ['400', '500', '600', '800', '900'], display: 'swap' });
 
 export const dynamic = 'force-dynamic';
-
 const POSTS_PER_PAGE = 9;
 
 export const metadata: Metadata = {
   title: 'Blog | Donkey Ideas',
-  description: 'Insights on creative consulting, business strategy, and turning bold ideas into real businesses from Donkey Ideas.',
-  alternates: {
-    canonical: 'https://www.donkeyideas.com/blog',
-  },
+  description: 'Field notes from a venture studio building 11+ products — venture building, product strategy, startup finance, and the occasional dumb idea that turned out right.',
+  alternates: { canonical: 'https://www.donkeyideas.com/blog' },
 };
+
+function fmtDate(d: Date | null): string {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+function catSlug(c?: string | null): string {
+  return (c || 'general').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
 
 async function getPaginatedPosts(page: number) {
   try {
@@ -24,7 +37,6 @@ async function getPaginatedPosts(page: number) {
         orderBy: { publishedAt: 'desc' },
         skip: (page - 1) * POSTS_PER_PAGE,
         take: POSTS_PER_PAGE,
-        include: { author: { select: { name: true } } },
       }),
       prisma.blogPost.count({ where: { published: true } }),
     ]);
@@ -39,145 +51,129 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
   const params = await searchParams;
   const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1);
   const { posts, total } = await getPaginatedPosts(currentPage);
-  const totalPages = Math.ceil(total / POSTS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(total / POSTS_PER_PAGE));
+
+  // On page 1, the newest post is the featured card; the rest are rows.
+  const featured = currentPage === 1 ? posts[0] : undefined;
+  const rows = featured ? posts.slice(1) : posts;
+
+  const categories = Array.from(new Set(posts.map((p) => p.category).filter(Boolean))) as string[];
+  const startN = (currentPage - 1) * POSTS_PER_PAGE + 1;
+  const endN = Math.min(currentPage * POSTS_PER_PAGE, total);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white">
-      <ScrollHeader />
+    <div className={`dk-blog ${gabarito.className}`}>
+      <BlogListMotion />
 
-      {/* Hero */}
-      <section className="pt-24 pb-10 md:pt-32 md:pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-light leading-tight mb-6">
-            Blog
-          </h1>
-          <p className="text-base md:text-xl text-slate-300 max-w-2xl mx-auto">
-            Insights on creative consulting, business strategy, and turning bold ideas into real businesses.
-          </p>
+      <header>
+        <div className="nav">
+          <Link className="logo" href="/">Donkey Ideas<span className="dumb">yes, it means what you think</span></Link>
+          <nav aria-label="Main">
+            <Link href="/#services">What we do</Link>
+            <Link href="/#ledger">Portfolio</Link>
+            <Link href="/fractional-cfo">CFO services</Link>
+            <Link className="active" href="/blog">Blog</Link>
+          </nav>
+          <Link className="btn" href="/#contact">Pitch your idea</Link>
         </div>
-      </section>
+      </header>
 
-      {/* Posts Grid */}
-      <section className="pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-[1200px] mx-auto">
-          {posts.length === 0 ? (
-            <div className="text-center py-24">
-              <p className="text-slate-400 text-lg">No posts published yet. Check back soon.</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {posts.map((post) => (
-                <Link
-                  key={post.id}
-                  href={`/blog/${post.slug}`}
-                  className="group block bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/50 transition-all hover:translate-y-[-2px]"
-                >
-                  <div className="aspect-video overflow-hidden relative">
-                    {post.featuredImage ? (
-                      <Image
-                        src={post.featuredImage}
-                        alt={post.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                        <span className="text-4xl font-light text-slate-500">{post.title.charAt(0)}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    {post.category && (
-                      <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 mb-3">
-                        {post.category}
-                      </span>
-                    )}
-                    <h2 className="text-xl font-medium text-white mb-2 group-hover:text-blue-400 transition-colors line-clamp-2">
-                      {post.title}
-                    </h2>
-                    {post.excerpt && (
-                      <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 mb-4">
-                        {post.excerpt}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
-                      <span>Donkey Ideas</span>
-                      <span>&bull;</span>
-                      <span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}</span>
-                      <span>&bull;</span>
-                      <span>{post.readTime} min read</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <section className="pb-32 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-[1200px] mx-auto">
-            <nav aria-label="Blog pagination" className="flex items-center justify-center gap-2">
-              {currentPage > 1 && (
-                <Link
-                  href={currentPage === 2 ? '/blog' : `/blog?page=${currentPage - 1}`}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 hover:text-white transition-all"
-                >
-                  Previous
-                </Link>
-              )}
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Link
-                  key={page}
-                  href={page === 1 ? '/blog' : `/blog?page=${page}`}
-                  className={`w-10 h-10 rounded-lg text-sm font-medium flex items-center justify-center transition-all ${
-                    page === currentPage
-                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
-                      : 'text-slate-400 bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 hover:text-white'
-                  }`}
-                >
-                  {page}
-                </Link>
-              ))}
-
-              {currentPage < totalPages && (
-                <Link
-                  href={`/blog?page=${currentPage + 1}`}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 hover:text-white transition-all"
-                >
-                  Next
-                </Link>
-              )}
-            </nav>
-            <p className="text-center text-xs text-slate-500 mt-4">
-              Showing {(currentPage - 1) * POSTS_PER_PAGE + 1}–{Math.min(currentPage * POSTS_PER_PAGE, total)} of {total} posts
-            </p>
+      <main>
+        <section className="hero">
+          <div className="wrap">
+            <h1>Field notes from the <span className="hl">workshop.</span></h1>
+            <p className="hero-sub">What we learn building <b>11+ ventures</b>, written down — venture building, product strategy, startup finance, and the occasional dumb idea that turned out to be right.</p>
+            {categories.length > 0 && (
+              <div className="filters" role="group" aria-label="Filter posts by category">
+                <button className="filter on" data-cat="all">All posts</button>
+                {categories.map((c) => (
+                  <button className="filter" data-cat={catSlug(c)} key={c}>{c}</button>
+                ))}
+              </div>
+            )}
           </div>
         </section>
-      )}
 
-      {/* Footer */}
-      <footer className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-8">
-            <div className="text-xl font-semibold tracking-tight">
-              <span className="font-light">DONKEY</span> IDEAS
+        {posts.length === 0 ? (
+          <div className="wrap" style={{ padding: '80px 24px', textAlign: 'center', color: 'var(--mid)' }}>
+            No posts published yet. Check back soon.
+          </div>
+        ) : (
+          <>
+            {featured && (
+              <div className="wrap">
+                <Link className="featured" href={`/blog/${featured.slug}`}>
+                  <div className="feat-visual">
+                    {featured.featuredImage
+                      ? <img src={featured.featuredImage} alt={featured.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <span>{featured.category || 'Field\nnotes.'}</span>}
+                  </div>
+                  <div className="feat-body">
+                    <div className="meta">
+                      {featured.category && <span className="cat">{featured.category}</span>}
+                      <span>{fmtDate(featured.publishedAt)}</span>
+                      <span>{featured.readTime} min read</span>
+                    </div>
+                    <h2>{stripMarks(featured.title)}</h2>
+                    {featured.excerpt && <p>{featured.excerpt}</p>}
+                    <span className="read">Read the post</span>
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            <section className="posts">
+              <div className="wrap">
+                {rows.map((post) => (
+                  <div className="row" data-cat={catSlug(post.category)} key={post.id}>
+                    <span className="date">{fmtDate(post.publishedAt)}</span>
+                    <Link href={`/blog/${post.slug}`}>
+                      {post.category && <span className="cat">{post.category}</span>}
+                      <h3>{stripMarks(post.title)}</h3>
+                      {post.excerpt && <p>{post.excerpt}</p>}
+                    </Link>
+                    <span className="mins">{post.readTime} min</span>
+                  </div>
+                ))}
+
+                {totalPages > 1 && (
+                  <div className="pager" aria-label="Pagination">
+                    {currentPage > 1 && (
+                      <Link href={currentPage === 2 ? '/blog' : `/blog?page=${currentPage - 1}`}>Prev</Link>
+                    )}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                      <Link className={p === currentPage ? 'on' : ''} href={p === 1 ? '/blog' : `/blog?page=${p}`} key={p}>{p}</Link>
+                    ))}
+                    {currentPage < totalPages && (
+                      <Link href={`/blog?page=${currentPage + 1}`}>Next</Link>
+                    )}
+                    <span className="count">Showing {startN}–{endN} of {total} posts</span>
+                  </div>
+                )}
+              </div>
+            </section>
+          </>
+        )}
+
+        <section className="cta">
+          <div className="wrap cta-grid">
+            <div>
+              <h2>Reading about it is the easy part.</h2>
+              <p>See the ventures these lessons came from — or pitch us the dumb idea you've been sitting on.</p>
             </div>
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm text-slate-400">
-              <Link href="/ventures" className="hover:text-white transition-colors">Ventures</Link>
-              <Link href="/services" className="hover:text-white transition-colors">Services</Link>
-              <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
-              <Link href="/about" className="hover:text-white transition-colors">About</Link>
-              <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
-            </div>
-            <div className="text-slate-500 text-sm">
-              &copy; {new Date().getFullYear()} Donkey Ideas
+            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+              <Link className="btn" style={{ fontSize: '15px', padding: '14px 26px', borderRadius: '8px' }} href="/#ledger">See the portfolio</Link>
+              <Link className="btn" style={{ fontSize: '15px', padding: '14px 26px', borderRadius: '8px', background: 'transparent', color: 'var(--ink)' }} href="/#contact">Pitch your idea</Link>
             </div>
           </div>
+        </section>
+      </main>
+
+      <footer>
+        <div className="wrap foot">
+          <span style={{ fontWeight: 800 }}>Donkey Ideas</span>
+          <a href="mailto:info@donkeyideas.com">info@donkeyideas.com</a>
+          <span className="copy">© {new Date().getFullYear()} Donkey Ideas · Venture Studio · New York, NY</span>
         </div>
       </footer>
     </div>

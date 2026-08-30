@@ -1,91 +1,50 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@donkey-ideas/database';
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://www.donkeyideas.com';
+const baseUrl = 'https://www.donkeyideas.com';
 
-  // Static pages
+function slugify(title: string): string {
+  return String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').replace(/-+/g, '-');
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
+
+  // Static public pages (login/register intentionally excluded — they're
+  // disallowed in robots.ts, so listing them here would send mixed signals).
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/ventures`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/services`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/process`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/login`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/register`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
+    { url: baseUrl, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
+    { url: `${baseUrl}/fractional-cfo`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${baseUrl}/ventures`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/blog`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${baseUrl}/services`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${baseUrl}/process`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
   ];
 
-  // Dynamic venture pages
+  // Venture detail pages — derived from the SAME source the pages render from
+  // (websiteContent['ventures-page'] → slugified title), not the Page table.
   let venturePages: MetadataRoute.Sitemap = [];
   try {
-    const pages = await prisma.page.findMany({
-      where: { published: true, companyId: null },
-      select: { slug: true, updatedAt: true },
-    });
-    venturePages = pages.map((page) => ({
-      url: `${baseUrl}/ventures/${page.slug}`,
-      lastModified: page.updatedAt,
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }));
+    const row = await prisma.websiteContent.findFirst({ where: { section: 'ventures-page', published: true } });
+    let content: any = row?.content;
+    if (typeof content === 'string') content = JSON.parse(content);
+    const ventures: any[] = content?.ventures || content?.sections || [];
+    venturePages = ventures
+      .filter((v) => v?.title)
+      .map((v) => ({
+        url: `${baseUrl}/ventures/${slugify(v.title)}`,
+        lastModified: row?.updatedAt || now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }));
   } catch {
-    // Pages table might not have data yet
+    // ventures-page not populated yet
   }
 
-  // Dynamic blog pages
+  // Blog posts
   let blogPages: MetadataRoute.Sitemap = [];
   try {
     const posts = await prisma.blogPost.findMany({
@@ -95,8 +54,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     blogPages = posts.map((post) => ({
       url: `${baseUrl}/blog/${post.slug}`,
       lastModified: post.updatedAt,
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
     }));
   } catch {
     // BlogPost table might not have data yet

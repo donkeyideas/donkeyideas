@@ -5,7 +5,9 @@ export default function robots(): MetadataRoute.Robots {
 
   const publicPages = [
     '/',
+    '/fractional-cfo',
     '/ventures',
+    '/blog',
     '/services',
     '/process',
     '/about',

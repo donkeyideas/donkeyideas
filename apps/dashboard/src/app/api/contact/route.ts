@@ -58,6 +58,16 @@ export async function POST(request: NextRequest) {
       body = await request.json();
     }
 
+    // Honeypot anti-spam: `_hp` is a hidden field real users never see or fill.
+    // Bots that auto-fill every input will populate it. Return a success-looking
+    // response so the bot moves on, but never store the submission.
+    if (typeof body._hp === 'string' && body._hp.trim() !== '') {
+      return NextResponse.json(
+        { message: 'Thank you! We will get back to you soon.' },
+        { status: 200, headers: corsHeaders }
+      );
+    }
+
     // Flexible field mapping - accepts name OR firstName+lastName
     const name = body.name || `${body.firstName || ''} ${body.lastName || ''}`.trim();
     const email = body.email;
@@ -79,6 +89,19 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: 'Invalid email format' },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // Length caps — reject oversized spam payloads before they hit the DB.
+    if (
+      String(name).length > 200 ||
+      String(email).length > 254 ||
+      (company && String(company).length > 200) ||
+      String(message).length > 5000
+    ) {
+      return NextResponse.json(
+        { error: 'One or more fields exceed the maximum length.' },
         { status: 400, headers: corsHeaders }
       );
     }
