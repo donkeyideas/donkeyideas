@@ -12,6 +12,7 @@ import { Metadata } from 'next';
 import { prisma } from '@donkey-ideas/database';
 import { Gabarito } from 'next/font/google';
 import HomeMotion from '@/components/home/HomeMotion';
+import PitchLeadForm from '@/components/home/PitchLeadForm';
 import { getVentureCounts, getPortfolio } from '@/lib/public-portfolio';
 import './home-studio.css';
 
@@ -329,12 +330,23 @@ export default async function StudioHomePage() {
             <p>The donkey is stubborn, unglamorous, and easy to laugh at — and it carries the load up the hill every single day. Name chosen accordingly.</p>
           </div>
         </section>
+        <section className="pitch" id="contact">
+          <div className="wrap">
+            <h2>Got a <span className="hl">dumb</span> idea? Good — pitch it.</h2>
+            <p className="pitch-lede">
+              <b>Heads up: we&apos;re a venture studio, not a fund.</b> We don&apos;t write checks or take pitch decks
+              for money — we <b>validate, design, build, and launch</b> the thing ourselves. If your idea is a fit,
+              you get a builder and a CFO in your corner, not a term sheet.
+            </p>
+            <PitchLeadForm />
+          </div>
+        </section>
       </main>
 
-      <footer id="contact">
+      <footer>
         <div className="wrap">
           <div className="foot">
-            <h2>Got a <span className="hl">dumb</span> idea? Good — pitch it.</h2>
+            <h2>Prefer email? <span className="hl">That works too.</span></h2>
             <a className="mail" href="mailto:info@donkeyideas.com">info@donkeyideas.com</a>
           </div>
           <div className="copy">

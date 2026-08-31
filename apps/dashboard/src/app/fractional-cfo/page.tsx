@@ -152,6 +152,21 @@ export default function FractionalCfoPage() {
           </div>
         </section>
 
+        <section className="midcta">
+          <div className="wrap">
+            <div className="midcta-box">
+              <div>
+                <h3>Ready for an honest read on your numbers?</h3>
+                <p>Free 30-minute diagnostic. Book a time, or send the details and I&apos;ll come to you.</p>
+              </div>
+              <div className="midcta-btns">
+                <a className="btn big" href="https://calendar.app.google/bTGoJDjxDWSHijKZ7" target="_blank" rel="noopener noreferrer">Book a free call</a>
+                <a className="btn big ghost" href="#contact">Send the details</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="how">
           <div className="wrap">
             <h2>How an engagement works<span style={{ color: 'var(--red)' }}>.</span></h2>

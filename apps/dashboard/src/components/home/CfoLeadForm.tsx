@@ -31,9 +31,21 @@ export default function CfoLeadForm() {
     const detail = String(fd.get('message') || '').trim();
     const hp = String(fd.get('_hp') || '');
 
+    // All fields are mandatory — cuts down on low-effort spam.
+    if (!name || !email || !company || !stage || !detail) {
+      setStatus('error');
+      setError('Please fill in every field so I can give you a useful read.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setStatus('error');
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     // Compose a single message body that preserves the revenue stage (the
     // ContactSubmission model has no dedicated stage column).
-    const message = [stage ? `Revenue stage: ${stage}` : '', detail].filter(Boolean).join('\n\n');
+    const message = [`Revenue stage: ${stage}`, detail].filter(Boolean).join('\n\n');
 
     try {
       const res = await fetch('/api/contact', {
@@ -85,11 +97,11 @@ export default function CfoLeadForm() {
       <div className="row2">
         <div className="field">
           <label htmlFor="cfo-company">Company</label>
-          <input id="cfo-company" name="company" type="text" autoComplete="organization" placeholder="Company name (optional)" />
+          <input id="cfo-company" name="company" type="text" required autoComplete="organization" placeholder="Company name" />
         </div>
         <div className="field">
           <label htmlFor="cfo-stage">Revenue stage</label>
-          <select id="cfo-stage" name="stage" defaultValue="">
+          <select id="cfo-stage" name="stage" required defaultValue="">
             <option value="" disabled>Select…</option>
             {STAGES.map((s) => (
               <option key={s} value={s}>{s}</option>
@@ -114,7 +126,7 @@ export default function CfoLeadForm() {
       <button type="submit" disabled={status === 'sending'}>
         {status === 'sending' ? 'Sending…' : 'Request a free CFO call'}
       </button>
-      <p className="form-note">Free 30-minute diagnostic. No pressure, no obligation.</p>
+      <p className="form-note">All fields required. Free 30-minute diagnostic — no pressure, no obligation.</p>
     </form>
   );
 }

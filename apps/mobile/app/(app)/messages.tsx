@@ -26,6 +26,7 @@ function formatRelative(s: string | null): string {
 
 const INTEREST_LABELS: Record<string, string> = {
   'fractional-cfo': 'Fractional CFO',
+  'venture-pitch': 'Venture pitch',
   services: 'Services',
   platform: 'Platform',
   partnership: 'Partnership',
