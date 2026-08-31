@@ -22,6 +22,17 @@ const nextConfig = {
       sizeLimit: '50mb',
     },
   },
+  // Retired legacy consulting pages -> new-brand destinations. Edge-level 308s
+  // (with a proper Location header) so search engines pass equity correctly.
+  // The /ventures rule is exact; /ventures/:slug detail pages are unaffected.
+  async redirects() {
+    return [
+      { source: '/services', destination: '/fractional-cfo', permanent: true },
+      { source: '/process', destination: '/#manual', permanent: true },
+      { source: '/contact', destination: '/#contact', permanent: true },
+      { source: '/ventures', destination: '/#ledger', permanent: true },
+    ];
+  },
   // Allow external images from any domain
   images: {
     remotePatterns: [
