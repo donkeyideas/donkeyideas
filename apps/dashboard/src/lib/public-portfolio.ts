@@ -32,7 +32,7 @@ async function fetchCounts(): Promise<VentureCounts> {
   }
 }
 
-export const getVentureCounts = unstable_cache(fetchCounts, ['public-venture-counts-v2'], {
+export const getVentureCounts = unstable_cache(fetchCounts, ['public-venture-counts-v3'], {
   revalidate: 3600,
   tags: ['venture-counts'],
 });
@@ -80,7 +80,7 @@ async function fetchStatuses(): Promise<VentureStatus[]> {
   }
 }
 
-export const getVentureStatuses = unstable_cache(fetchStatuses, ['public-venture-statuses-v1'], {
+export const getVentureStatuses = unstable_cache(fetchStatuses, ['public-venture-statuses-v2'], {
   revalidate: 3600,
   tags: ['venture-statuses'],
 });
@@ -154,7 +154,7 @@ async function fetchPortfolio(): Promise<PortfolioRow[]> {
   }
 }
 
-export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v1'], {
+export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v2'], {
   revalidate: 3600,
   tags: ['venture-statuses'],
 });
