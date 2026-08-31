@@ -152,7 +152,10 @@ async function fetchPortfolio(): Promise<PortfolioRow[]> {
   return rows;
 }
 
-export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v4'], {
-  revalidate: 3600,
+// Short revalidate so admin edits (esp. title changes, which change the detail
+// slug the ledger links to) show up on the homepage within ~a minute instead of
+// up to an hour — avoids the ledger linking to a stale, now-404 slug.
+export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v5'], {
+  revalidate: 60,
   tags: ['venture-statuses'],
 });
