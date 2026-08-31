@@ -47,7 +47,7 @@ const jsonLd = {
         'New York venture studio that validates, builds, and launches real digital businesses, plus fractional CFO services for startups and small businesses.',
       address: { '@type': 'PostalAddress', addressLocality: 'New York', addressRegion: 'NY', addressCountry: 'US' },
       founder: { '@type': 'Person', name: 'Alain Beltran' },
-      sameAs: ['https://github.com/donkeyideas'],
+      sameAs: ['https://www.linkedin.com/company/donkey-ideas/', 'https://github.com/donkeyideas'],
     },
     {
       '@type': 'Person',

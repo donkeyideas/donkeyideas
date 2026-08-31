@@ -13,7 +13,7 @@ import { prisma } from '@donkey-ideas/database';
 import { Gabarito } from 'next/font/google';
 import HomeMotion from '@/components/home/HomeMotion';
 import PitchLeadForm from '@/components/home/PitchLeadForm';
-import { getVentureCounts, getPortfolio } from '@/lib/public-portfolio';
+import { getPortfolio } from '@/lib/public-portfolio';
 import './home-studio.css';
 
 const gabarito = Gabarito({ subsets: ['latin'], weight: ['400', '500', '600', '800', '900'], display: 'swap' });
@@ -78,22 +78,24 @@ async function getWebsiteContent(): Promise<Record<string, any>> {
   }
 }
 
-function fmt(n: number): string {
-  return n.toLocaleString('en-US');
-}
-
 export default async function StudioHomePage() {
   // Preserve existing behavior: logged-in owner goes straight to the admin.
   const cookieStore = await cookies();
   if (cookieStore.get('auth-token')) redirect('/app/dashboard');
 
-  // Live member counts + real admin statuses (both cached hourly, degrade
-  // gracefully) + editable copy.
-  const [{ counts }, portfolio, content] = await Promise.all([
-    getVentureCounts().catch(() => ({ counts: {} as Record<string, number>, total: 0 })),
+  // Real admin statuses (cached hourly, degrade gracefully) + editable copy.
+  const [rawPortfolio, content] = await Promise.all([
     getPortfolio().catch(() => [] as Awaited<ReturnType<typeof getPortfolio>>),
     getWebsiteContent(),
   ]);
+
+  // Pin ArguFight #1 and Go Virall #2 (the two flagships); keep the rest in the
+  // admin-defined order behind them.
+  const ventureToken = (v: (typeof rawPortfolio)[number]) =>
+    `${v.name ?? ''} ${v.slug ?? ''} ${v.extSlug ?? ''}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const PINNED = ['argufight', 'govirall'];
+  const pinned = PINNED.map((tok) => rawPortfolio.find((v) => ventureToken(v).includes(tok))).filter(Boolean) as typeof rawPortfolio;
+  const portfolio = [...pinned, ...rawPortfolio.filter((v) => !pinned.includes(v))];
   const hero = content.studio_hero || {};
   const faq: { q: string; a: string }[] = content.studio_faq?.items || DEFAULT_FAQ;
 
@@ -102,7 +104,7 @@ export default async function StudioHomePage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'Organization', '@id': 'https://www.donkeyideas.com/#org', name: 'Donkey Ideas', url: 'https://www.donkeyideas.com/', email: 'info@donkeyideas.com', logo: 'https://www.donkeyideas.com/og-home.png', founder: { '@id': 'https://www.donkeyideas.com/#founder' }, address: { '@type': 'PostalAddress', addressLocality: 'New York', addressRegion: 'NY', addressCountry: 'US' }, description: 'A New York venture studio that validates, builds, and launches digital products, plus fractional CFO services.' },
+      { '@type': 'Organization', '@id': 'https://www.donkeyideas.com/#org', name: 'Donkey Ideas', url: 'https://www.donkeyideas.com/', email: 'info@donkeyideas.com', logo: 'https://www.donkeyideas.com/og-home.png', founder: { '@id': 'https://www.donkeyideas.com/#founder' }, address: { '@type': 'PostalAddress', addressLocality: 'New York', addressRegion: 'NY', addressCountry: 'US' }, sameAs: ['https://www.linkedin.com/company/donkey-ideas/', 'https://github.com/donkeyideas'], description: 'A New York venture studio that validates, builds, and launches digital products, plus fractional CFO services.' },
       { '@type': 'Person', '@id': 'https://www.donkeyideas.com/#founder', name: 'Alain Beltran', jobTitle: 'Founder & Fractional CFO', worksFor: { '@id': 'https://www.donkeyideas.com/#org' }, address: { '@type': 'PostalAddress', addressLocality: 'New York', addressRegion: 'NY', addressCountry: 'US' }, knowsAbout: ['Fractional CFO services', 'Financial modeling', 'Fundraising', 'Cash flow management', 'FP&A', 'M&A integration', 'Venture building'], description: 'A finance executive with 20 years as a controller and CFO across SaaS, financial services, and public companies, and the founder of the Donkey Ideas venture studio.' },
       { '@type': 'WebSite', url: 'https://www.donkeyideas.com/', name: 'Donkey Ideas', publisher: { '@id': 'https://www.donkeyideas.com/#org' } },
       { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
@@ -216,7 +218,6 @@ export default async function StudioHomePage() {
             </div>
 
             {portfolio.map((v, i) => {
-              const count = v.extSlug ? counts[v.extSlug] : undefined;
               const status = STATUS_MAP[v.status] || DEFAULT_STATUS;
               const dumb = v.dumbness ? DUMB_MAP[v.dumbness.toUpperCase()] : null;
               return (
@@ -232,11 +233,6 @@ export default async function StudioHomePage() {
                   </span>
                   <span className="name">
                     {v.name}
-                    {/* Only surface member counts that read as social proof (>= 50).
-                        Single/double-digit counts on a flagship page do the opposite. */}
-                    {typeof count === 'number' && count >= 50 && (
-                      <span className="members">{fmt(count)} members</span>
-                    )}
                   </span>
                   <span className="desc">{v.tagline}</span>
                   <span className={`dumb ${dumb?.cls ?? ''}`}>{dumb?.label ?? ''}</span>

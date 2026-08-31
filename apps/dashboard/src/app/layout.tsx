@@ -96,6 +96,7 @@ export default function RootLayout({
           logo: 'https://www.donkeyideas.com/logo.png',
           description: 'New York venture studio that validates, builds, and launches real digital businesses, plus fractional CFO services for startups and small businesses.',
           sameAs: [
+            'https://www.linkedin.com/company/donkey-ideas/',
             'https://github.com/donkeyideas',
           ],
         }} />
