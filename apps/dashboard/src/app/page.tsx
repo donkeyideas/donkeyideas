@@ -89,8 +89,8 @@ export default async function StudioHomePage() {
   // Live member counts + real admin statuses (both cached hourly, degrade
   // gracefully) + editable copy.
   const [{ counts }, portfolio, content] = await Promise.all([
-    getVentureCounts(),
-    getPortfolio(),
+    getVentureCounts().catch(() => ({ counts: {} as Record<string, number>, total: 0 })),
+    getPortfolio().catch(() => [] as Awaited<ReturnType<typeof getPortfolio>>),
     getWebsiteContent(),
   ]);
   const hero = content.studio_hero || {};

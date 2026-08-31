@@ -15,24 +15,22 @@ import { fetchAllProjectOverview } from './external-users';
  */
 export type VentureCounts = { counts: Record<string, number>; total: number };
 
+// NOTE: this must NOT swallow errors and return an empty result — unstable_cache
+// would then persist that empty result (poisoning the cache for `revalidate`
+// seconds). Let errors throw so nothing is cached; the caller catches + retries.
 async function fetchCounts(): Promise<VentureCounts> {
-  try {
-    const overview = await fetchAllProjectOverview();
-    const counts: Record<string, number> = {};
-    let total = 0;
-    for (const p of overview.projects) {
-      if (p.error || typeof p.total !== 'number') continue;
-      counts[p.slug] = p.total;
-      total += p.total;
-    }
-    return { counts, total };
-  } catch (err) {
-    console.error('[public-portfolio] live member counts unavailable; rendering without numbers', err);
-    return { counts: {}, total: 0 };
+  const overview = await fetchAllProjectOverview();
+  const counts: Record<string, number> = {};
+  let total = 0;
+  for (const p of overview.projects) {
+    if (p.error || typeof p.total !== 'number') continue;
+    counts[p.slug] = p.total;
+    total += p.total;
   }
+  return { counts, total };
 }
 
-export const getVentureCounts = unstable_cache(fetchCounts, ['public-venture-counts-v3'], {
+export const getVentureCounts = unstable_cache(fetchCounts, ['public-venture-counts-v4'], {
   revalidate: 3600,
   tags: ['venture-counts'],
 });
@@ -123,38 +121,38 @@ function firstSentence(text?: string): string {
   return (m ? m[0] : String(text)).trim();
 }
 
+// Errors (and an empty result) THROW so unstable_cache never persists a broken
+// state — the homepage catches and renders an empty ledger until the next
+// successful fetch repopulates + caches it.
 async function fetchPortfolio(): Promise<PortfolioRow[]> {
-  try {
-    const row = await prisma.websiteContent.findFirst({ where: { section: 'ventures-page', published: true } });
-    let content: any = row?.content;
-    if (typeof content === 'string') content = JSON.parse(content);
-    const ventures: any[] = content?.ventures || content?.sections || [];
-    return ventures
-      .filter((v) => v && v.title)
-      .map((v) => {
-        const hay = `${v.title ?? ''} ${v.websiteUrl ?? ''}`.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const logoKey = LEDGER_LOGO_KEYS.find((k) => hay.includes(k)) || null;
-        const ext = EXT_SLUGS.find(([tok]) => hay.includes(tok));
-        const name = (v.name && String(v.name).trim()) || shortNameFrom(v.title);
-        return {
-          name,
-          tagline: (v.tagline && String(v.tagline).trim()) || firstSentence(v.description),
-          dumbness: v.dumbness ? String(v.dumbness) : null,
-          status: String(v.status || '').toUpperCase().trim(),
-          slug: slugifyTitleForLedger(v.title),
-          logo: logoKey ? `/ventures/${logoKey}.png` : null,
-          letter: name.charAt(0).toUpperCase(),
-          extSlug: ext ? ext[1] : null,
-          hasDetail: true,
-        };
-      });
-  } catch (err) {
-    console.error('[public-portfolio] portfolio unavailable', err);
-    return [];
-  }
+  const row = await prisma.websiteContent.findFirst({ where: { section: 'ventures-page', published: true } });
+  let content: any = row?.content;
+  if (typeof content === 'string') content = JSON.parse(content);
+  const ventures: any[] = content?.ventures || content?.sections || [];
+  const rows = ventures
+    .filter((v) => v && v.title)
+    .map((v) => {
+      const hay = `${v.title ?? ''} ${v.websiteUrl ?? ''}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const logoKey = LEDGER_LOGO_KEYS.find((k) => hay.includes(k)) || null;
+      const ext = EXT_SLUGS.find(([tok]) => hay.includes(tok));
+      const name = (v.name && String(v.name).trim()) || shortNameFrom(v.title);
+      return {
+        name,
+        tagline: (v.tagline && String(v.tagline).trim()) || firstSentence(v.description),
+        dumbness: v.dumbness ? String(v.dumbness) : null,
+        status: String(v.status || '').toUpperCase().trim(),
+        slug: slugifyTitleForLedger(v.title),
+        logo: logoKey ? `/ventures/${logoKey}.png` : null,
+        letter: name.charAt(0).toUpperCase(),
+        extSlug: ext ? ext[1] : null,
+        hasDetail: true,
+      };
+    });
+  if (rows.length === 0) throw new Error('empty portfolio — not caching');
+  return rows;
 }
 
-export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v2'], {
+export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v3'], {
   revalidate: 3600,
   tags: ['venture-statuses'],
 });
