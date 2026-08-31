@@ -100,7 +100,7 @@ export type PortfolioRow = {
 };
 
 // Logos extracted to /public/ventures, matched to a venture by token.
-const LEDGER_LOGO_KEYS = ['argufight', 'basketball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial', 'topviso'];
+const LEDGER_LOGO_KEYS = ['argufight', 'basktball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial', 'topviso'];
 // Map a venture to its external-users member-count slug.
 const EXT_SLUGS: [string, string][] = [
   ['argufight', 'argufight'], ['basketball', 'basketball'], ['opticrank', 'opticrank'],
@@ -155,7 +155,7 @@ async function fetchPortfolio(): Promise<PortfolioRow[]> {
 // Short revalidate so admin edits (esp. title changes, which change the detail
 // slug the ledger links to) show up on the homepage within ~a minute instead of
 // up to an hour — avoids the ledger linking to a stale, now-404 slug.
-export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v5'], {
+export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v6'], {
   revalidate: 60,
   tags: ['venture-statuses'],
 });

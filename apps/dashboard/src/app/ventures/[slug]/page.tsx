@@ -30,7 +30,7 @@ function slugify(title: string): string {
 }
 
 // Extracted logos in /public/ventures — matched to a venture by token.
-const LOGO_KEYS = ['argufight', 'basketball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial', 'topviso'];
+const LOGO_KEYS = ['argufight', 'basktball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial', 'topviso'];
 function findLogo(v: Venture): string | undefined {
   const hay = `${v.title ?? ''} ${v.websiteUrl ?? ''}`.toLowerCase().replace(/[^a-z0-9]/g, '');
   const key = LOGO_KEYS.find((k) => hay.includes(k));

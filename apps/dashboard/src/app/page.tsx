@@ -55,7 +55,7 @@ const DUMB_MAP: Record<string, { label: string; cls: string }> = {
   MODERATE: { label: 'Moderate', cls: 'd1' },
 };
 
-const HERO_TILES = ['argufight', 'basketball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial', 'topviso'];
+const HERO_TILES = ['argufight', 'basktball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial', 'topviso'];
 
 const DEFAULT_FAQ = [
   { q: 'What is Donkey Ideas?', a: 'Donkey Ideas is a venture studio based in New York that turns early-stage ideas into real digital businesses. It validates concepts with market research and financial modeling, then designs, builds, and launches the product — operating a portfolio of a dozen ventures across consumer apps, SaaS, fintech, media, and gaming.' },
