@@ -5,6 +5,8 @@ export interface Message {
   name: string;
   email: string;
   subject?: string;
+  company?: string | null;
+  interest?: string;
   message: string;
   source?: string;
   read: boolean;

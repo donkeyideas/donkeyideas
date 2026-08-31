@@ -57,6 +57,7 @@ export default function AppLayout() {
       <Drawer.Screen name="portfolio" options={{ title: 'Portfolio Agent', drawerLabel: 'Portfolio Agent' }} />
       <Drawer.Screen name="analytics" options={{ title: 'Analytics', drawerLabel: 'Analytics' }} />
       <Drawer.Screen name="appstore" options={{ title: 'App Store', drawerLabel: 'App Store' }} />
+      <Drawer.Screen name="messages" options={{ title: 'Messages', drawerLabel: 'Messages' }} />
     </Drawer>
   );
 }

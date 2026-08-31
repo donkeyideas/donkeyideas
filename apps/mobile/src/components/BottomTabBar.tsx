@@ -55,6 +55,23 @@ function MoonIcon({ color }: { color: string }) {
     </Svg>
   );
 }
+function DollarIcon({ color }: { color: string }) {
+  return (
+    <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8} strokeLinecap="round">
+      <Line x1="12" y1="1" x2="12" y2="23" />
+      <Path d="M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6" />
+    </Svg>
+  );
+}
+
+function MailIcon({ color }: { color: string }) {
+  return (
+    <Svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8} strokeLinejoin="round">
+      <Rect x="3" y="5" width="18" height="14" rx="2" />
+      <Path d="M3 7l9 6 9-6" />
+    </Svg>
+  );
+}
 
 export function BottomTabBar() {
   const { theme, themeKey, setThemeKey } = useTheme();
@@ -65,6 +82,8 @@ export function BottomTabBar() {
   const isUsers = pathname.endsWith('/users');
   const isAnalytics = pathname.endsWith('/analytics');
   const isApps = pathname.endsWith('/appstore');
+  const isFinancials = pathname.endsWith('/financials');
+  const isMessages = pathname.endsWith('/messages');
   const isDark = themeKey === 'dark';
 
   // Inverted bar: render the toolbar in the OPPOSITE theme so the floating
@@ -98,6 +117,20 @@ export function BottomTabBar() {
         activeOpacity={0.7}
       >
         <GridIcon color={isApps ? activeIcon : inactiveIcon} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.tab, isFinancials && { backgroundColor: activeBg }]}
+        onPress={() => router.replace('/financials')}
+        activeOpacity={0.7}
+      >
+        <DollarIcon color={isFinancials ? activeIcon : inactiveIcon} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.tab, isMessages && { backgroundColor: activeBg }]}
+        onPress={() => router.replace('/messages')}
+        activeOpacity={0.7}
+      >
+        <MailIcon color={isMessages ? activeIcon : inactiveIcon} />
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.tab}
