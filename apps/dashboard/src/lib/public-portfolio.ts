@@ -100,7 +100,7 @@ export type PortfolioRow = {
 };
 
 // Logos extracted to /public/ventures, matched to a venture by token.
-const LEDGER_LOGO_KEYS = ['argufight', 'basketball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial'];
+const LEDGER_LOGO_KEYS = ['argufight', 'basketball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial', 'topviso'];
 // Map a venture to its external-users member-count slug.
 const EXT_SLUGS: [string, string][] = [
   ['argufight', 'argufight'], ['basketball', 'basketball'], ['opticrank', 'opticrank'],
@@ -152,7 +152,7 @@ async function fetchPortfolio(): Promise<PortfolioRow[]> {
   return rows;
 }
 
-export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v3'], {
+export const getPortfolio = unstable_cache(fetchPortfolio, ['public-portfolio-v4'], {
   revalidate: 3600,
   tags: ['venture-statuses'],
 });
