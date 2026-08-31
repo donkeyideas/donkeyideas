@@ -11,7 +11,7 @@ import './cfo.css';
 const gabarito = Gabarito({ subsets: ['latin'], weight: ['400', '500', '600', '800', '900'], display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Fractional CFO Services — Remote CFO for Startups & Small Businesses | Donkey Ideas',
+  title: 'Fractional CFO Services — Remote CFO for Startups & Small Businesses',
   description:
     'Remote fractional CFO services for startups and small businesses: financial modeling, forecasting, cash-flow and runway management, fundraising preparation, and investor reporting. 20 years as a controller and CFO. New York-based, working with companies across the US.',
   alternates: { canonical: 'https://www.donkeyideas.com/fractional-cfo' },
@@ -98,7 +98,7 @@ export default function FractionalCfoPage() {
         <div className="trustline">
           <div className="trust-grid">
             <div className="trust"><b>20 years</b><span>Controller and CFO experience — startup to public company</span></div>
-            <div className="trust"><b>11+ ventures</b><span>Built and operated with the same financial discipline</span></div>
+            <div className="trust"><b>A dozen ventures</b><span>Built and operated with the same financial discipline</span></div>
             <div className="trust"><b>NYC-based</b><span>Working remotely with companies across the US</span></div>
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function FractionalCfoPage() {
               <div className="pstat"><b>20 yrs</b><span>As a controller &amp; CFO across SaaS, financial services, and public companies</span></div>
               <div className="pstat"><b>$1B+</b><span>In daily liquidity managed at an asset-management firm</span></div>
               <div className="pstat"><b>9 countries</b><span>Multi-entity M&amp;A consolidation led at a high-growth SaaS company</span></div>
-              <div className="pstat"><b>11+</b><span>Ventures built and operated with the same financial discipline</span></div>
+              <div className="pstat"><b>12</b><span>Ventures built and operated with the same financial discipline</span></div>
             </div>
             <div className="pricing">
               <p><b>Simple, fixed pricing.</b> Monthly retainers scoped to your stage — a fraction of a full-time CFO&apos;s salary and equity. No hourly meters, no surprises. The first diagnostic call is free.</p>

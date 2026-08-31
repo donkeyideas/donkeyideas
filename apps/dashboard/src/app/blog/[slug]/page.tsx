@@ -64,13 +64,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       publishedTime: post.publishedAt?.toISOString(),
       modifiedTime: post.updatedAt.toISOString(),
       authors: ['Donkey Ideas'],
-      images: post.featuredImage ? [{ url: post.featuredImage, width: 1200, height: 630, alt: post.title }] : [{ url: '/og-image.png', width: 1200, height: 630 }],
+      images: post.featuredImage ? [{ url: post.featuredImage, width: 1200, height: 630, alt: post.title }] : [{ url: '/og-home.png', width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: post.featuredImage ? [post.featuredImage] : ['/og-image.png'],
+      images: post.featuredImage ? [post.featuredImage] : ['/og-home.png'],
     },
   };
 }
@@ -95,7 +95,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           datePublished: post.publishedAt?.toISOString() || post.createdAt.toISOString(),
           dateModified: post.updatedAt.toISOString(),
           authorName: 'Donkey Ideas',
-          image: post.featuredImage || 'https://www.donkeyideas.com/og-image.png',
+          image: post.featuredImage || 'https://www.donkeyideas.com/og-home.png',
           url: `https://www.donkeyideas.com/blog/${post.slug}`,
         }}
       />
@@ -131,7 +131,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <div className="avatar">D</div>
               <div>
                 <b>Donkey Ideas</b>
-                <span>The one-person venture studio behind 11+ products</span>
+                <span>The one-person venture studio behind a dozen products</span>
               </div>
             </div>
           </div>
@@ -161,7 +161,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <div className="avatar">D</div>
               <div>
                 <b>Written by Donkey Ideas</b>
-                <p>Donkey Ideas is a one-person venture studio in New York that turns dumb-sounding ideas into real digital businesses — 11+ ventures validated, built, and operated with 20 years of CFO discipline underneath.</p>
+                <p>Donkey Ideas is a one-person venture studio in New York that turns dumb-sounding ideas into real digital businesses — a dozen ventures validated, built, and operated with 20 years of CFO discipline underneath.</p>
               </div>
             </div>
           </div>

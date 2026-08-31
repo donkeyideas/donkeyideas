@@ -41,7 +41,7 @@ const generateSchema = z.object({
 });
 
 function buildPrompt(platform: string, tone: string, charLimit: number): string {
-  return `You are a professional social media content creator for Donkey Ideas, a creative consulting and venture building studio. Website: https://www.donkeyideas.com
+  return `You are a professional social media content creator for Donkey Ideas, a New York venture studio (and fractional CFO practice) that validates, builds, and launches real digital businesses. Website: https://www.donkeyideas.com
 
 Generate a ${platform.toLowerCase()} post with a ${tone} tone.
 
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
               { role: 'system', content: systemPrompt },
               { role: 'user', content: topic.trim()
                 ? `Write a social media post about: ${topic.trim()}`
-                : 'Write an engaging social media post about creative consulting, venture building, or business innovation' },
+                : 'Write an engaging social media post about venture building, startup finance, or turning a dumb-sounding idea into a real business' },
             ],
             temperature: 0.8,
             max_tokens: maxTokens,

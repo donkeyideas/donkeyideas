@@ -19,7 +19,7 @@ import './home-studio.css';
 const gabarito = Gabarito({ subsets: ['latin'], weight: ['400', '500', '600', '800', '900'], display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Donkey Ideas | New York Venture Studio — We Turn Ideas Into Real Businesses',
+  title: { absolute: 'Donkey Ideas | New York Venture Studio — We Turn Ideas Into Real Businesses' },
   description:
     'Donkey Ideas is a New York venture studio that validates, builds, and launches digital products. Idea validation, business planning, financial modeling, and AI-native product development, plus fractional CFO services for startups — from napkin sketch to live business.',
   alternates: { canonical: 'https://www.donkeyideas.com/' },
@@ -58,7 +58,7 @@ const DUMB_MAP: Record<string, { label: string; cls: string }> = {
 const HERO_TILES = ['argufight', 'basketball', 'govirall', 'jetdale', 'kamioi', 'julyu', 'buildwrk', 'opticrank', 'marble', 'cfbsocial'];
 
 const DEFAULT_FAQ = [
-  { q: 'What is Donkey Ideas?', a: 'Donkey Ideas is a venture studio based in New York that turns early-stage ideas into real digital businesses. It validates concepts with market research and financial modeling, then designs, builds, and launches the product — operating a portfolio of 11+ ventures across consumer apps, SaaS, fintech, media, and gaming.' },
+  { q: 'What is Donkey Ideas?', a: 'Donkey Ideas is a venture studio based in New York that turns early-stage ideas into real digital businesses. It validates concepts with market research and financial modeling, then designs, builds, and launches the product — operating a portfolio of a dozen ventures across consumer apps, SaaS, fintech, media, and gaming.' },
   { q: 'What is a venture studio?', a: 'A venture studio creates and operates its own startups — taking ideas from validation through build and launch under one roof. Unlike an agency, it does not build for clients; unlike a VC fund, it does not just invest. It builds and owns.' },
   { q: 'How do you validate a business idea?', a: 'The same way every time: market and competitor research, a real financial model with unit economics, and a small, fast prototype to test actual demand — before serious time or money is committed. Most ideas fail this gauntlet. That is the point.' },
   { q: 'Why is it called Donkey Ideas?', a: 'Because every good idea looks dumb before it wins the race. The name filters for concepts that sound a little dumb at first — which is where the opportunities nobody serious is chasing tend to live.' },
@@ -155,7 +155,7 @@ export default async function StudioHomePage() {
                 <b>Donkey Ideas is a New York venture studio</b> that turns early-stage ideas into real digital
                 businesses. Every concept gets validated with market research and a real financial model —{' '}
                 <b>twenty years of CFO discipline</b> — then designed, built, and launched with an AI-native process.
-                11+ ventures and counting.
+                {' '}{portfolio.length} ventures and counting.
               </p>
             )}
             <div className="hero-cta">
@@ -232,7 +232,9 @@ export default async function StudioHomePage() {
                   </span>
                   <span className="name">
                     {v.name}
-                    {typeof count === 'number' && count > 0 && (
+                    {/* Only surface member counts that read as social proof (>= 50).
+                        Single/double-digit counts on a flagship page do the opposite. */}
+                    {typeof count === 'number' && count >= 50 && (
                       <span className="members">{fmt(count)} members</span>
                     )}
                   </span>

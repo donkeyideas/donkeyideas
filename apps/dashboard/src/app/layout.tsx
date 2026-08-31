@@ -16,20 +16,10 @@ const GA_MEASUREMENT_ID = 'G-N12TK3KWF4';
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.donkeyideas.com'),
   title: {
-    default: 'Donkey Ideas — Creative Consulting Studio',
+    default: 'Donkey Ideas | New York Venture Studio & Fractional CFO',
     template: '%s | Donkey Ideas',
   },
-  description: 'Donkey Ideas is a creative consulting studio helping entrepreneurs turn bold ideas into real businesses. Strategy, business planning, financial modeling, and hands-on project management.',
-  keywords: [
-    'creative consulting',
-    'business consulting',
-    'startup consulting',
-    'project management',
-    'business planning',
-    'financial modeling',
-    'entrepreneur tools',
-    'idea development',
-  ],
+  description: 'Donkey Ideas is a New York venture studio that validates, builds, and launches real digital businesses — plus fractional CFO services for startups and small businesses. Idea validation, financial modeling, and AI-native product development, from concept to launch.',
   authors: [{ name: 'Donkey Ideas' }],
   creator: 'Donkey Ideas',
   publisher: 'Donkey Ideas',
@@ -42,23 +32,23 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://www.donkeyideas.com',
-    title: 'Donkey Ideas — Creative Consulting Studio',
-    description: 'A creative consulting studio helping entrepreneurs turn bold ideas into real businesses.',
+    title: 'Donkey Ideas | New York Venture Studio & Fractional CFO',
+    description: 'A one-person venture studio building a portfolio of real digital products — plus fractional CFO services for startups. Dumb ideas, taken seriously.',
     siteName: 'Donkey Ideas',
     images: [
       {
-        url: '/og-image.png',
+        url: '/og-home.png',
         width: 1200,
         height: 630,
-        alt: 'Donkey Ideas - Creative Consulting Studio',
+        alt: 'Donkey Ideas — Dumb ideas, taken seriously.',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Donkey Ideas — Creative Consulting Studio',
-    description: 'A creative consulting studio helping entrepreneurs turn bold ideas into real businesses.',
-    images: ['/og-image.png'],
+    title: 'Donkey Ideas | New York Venture Studio & Fractional CFO',
+    description: 'A venture studio building real digital products, plus fractional CFO services for startups. Dumb ideas, taken seriously.',
+    images: ['/og-home.png'],
     creator: '@donkeyideas',
   },
   alternates: {
@@ -104,7 +94,10 @@ export default function RootLayout({
           name: 'Donkey Ideas',
           url: 'https://www.donkeyideas.com',
           logo: 'https://www.donkeyideas.com/logo.png',
-          description: 'Creative consulting studio helping entrepreneurs turn bold ideas into real businesses through strategy, planning, and hands-on project management.',
+          description: 'New York venture studio that validates, builds, and launches real digital businesses, plus fractional CFO services for startups and small businesses.',
+          sameAs: [
+            'https://github.com/donkeyideas',
+          ],
         }} />
         <WebsiteStructuredData />
         <ServiceStructuredData />

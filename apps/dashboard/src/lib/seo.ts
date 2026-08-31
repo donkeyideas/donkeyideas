@@ -20,10 +20,10 @@ interface SEOSettings {
 
 const defaultSEOSettings: SEOSettings = {
   seo: {
-    title: 'Donkey Ideas — Transform Your Vision Into Reality',
-    description: 'Build and scale your ventures with Donkey Ideas. Comprehensive tools for financial management, project tracking, pitch decks, and strategic planning.',
-    keywords: 'venture builder, startup platform, financial management, pitch deck builder, business planning',
-    ogImage: '/og-image.png',
+    title: 'Donkey Ideas — New York Venture Studio & Fractional CFO',
+    description: 'A New York venture studio that validates, builds, and launches real digital businesses, plus fractional CFO services for startups and small businesses.',
+    keywords: '',
+    ogImage: '/og-home.png',
   },
   domain: {
     customDomain: '',
@@ -84,7 +84,7 @@ export async function generatePageMetadata(
       url: `${baseUrl}${pageUrl}`,
       images: [
         {
-          url: settings.seo.ogImage || '/og-image.png',
+          url: settings.seo.ogImage || '/og-home.png',
           width: 1200,
           height: 630,
           alt: pageTitle,
@@ -95,7 +95,7 @@ export async function generatePageMetadata(
       card: 'summary_large_image',
       title: pageTitle,
       description: pageDescription,
-      images: [settings.seo.ogImage || '/og-image.png'],
+      images: [settings.seo.ogImage || '/og-home.png'],
     },
   };
 }

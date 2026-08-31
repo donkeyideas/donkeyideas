@@ -36,7 +36,7 @@ export function WebsiteStructuredData() {
     '@type': 'WebSite',
     name: 'Donkey Ideas',
     url: 'https://www.donkeyideas.com',
-    description: 'Donkey Ideas is a creative consulting studio helping entrepreneurs and founders turn bold ideas into real businesses through strategy, planning, and hands-on project management.',
+    description: 'Donkey Ideas is a New York venture studio that validates, builds, and launches real digital businesses, plus fractional CFO services for startups and small businesses.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -101,17 +101,17 @@ export function ServiceStructuredData() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    serviceType: 'Creative Consulting Services',
+    serviceType: 'Venture Studio & Fractional CFO Services',
     provider: {
       '@type': 'Organization',
       name: 'Donkey Ideas',
       url: 'https://www.donkeyideas.com',
     },
     areaServed: {
-      '@type': 'Place',
-      name: 'Worldwide',
+      '@type': 'Country',
+      name: 'United States',
     },
-    description: 'Creative consulting, business planning, financial modeling, and project management for entrepreneurs and businesses',
+    description: 'Venture building — idea validation, financial modeling, and AI-native product development from concept to launch — plus fractional CFO services for startups and small businesses.',
     offers: {
       '@type': 'Offer',
       availability: 'https://schema.org/InStock',

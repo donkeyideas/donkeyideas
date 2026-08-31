@@ -16,8 +16,8 @@ export const dynamic = 'force-dynamic';
 const POSTS_PER_PAGE = 9;
 
 export const metadata: Metadata = {
-  title: 'Blog | Donkey Ideas',
-  description: 'Field notes from a venture studio building 11+ products — venture building, product strategy, startup finance, and the occasional dumb idea that turned out right.',
+  title: 'Blog — Venture Building & Startup Finance Notes',
+  description: 'Field notes from a venture studio building a dozen products — venture building, product strategy, startup finance, and the occasional dumb idea that turned out right.',
   alternates: { canonical: 'https://www.donkeyideas.com/blog' },
 };
 
@@ -27,6 +27,18 @@ function fmtDate(d: Date | null): string {
 }
 function catSlug(c?: string | null): string {
   return (c || 'general').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// Collapse the free-form DB category strings (which have drifted into variants
+// like "Finance" vs "Finance & Strategy") into a small, canonical set so the
+// filter bar stays at four buckets instead of seven.
+const CANON_ORDER = ['Finance', 'Building', 'Growth', 'Strategy'];
+function canonicalCategory(raw?: string | null): string {
+  const c = (raw || '').toLowerCase();
+  if (/financ|cfo|account|fundrais|capital|cash|runway|budget|revenue|invest|valuation|profit|econ|\btax\b/.test(c)) return 'Finance';
+  if (/build|develop|engineer|\btech|\bai\b|\bml\b|product|launch|ship|design|\bcode|stack|infra|data/.test(c)) return 'Building';
+  if (/market|growth|brand|\bseo\b|acqui|sales|audience|content|social|\buser|traffic/.test(c)) return 'Growth';
+  return 'Strategy';
 }
 
 async function getPaginatedPosts(page: number) {
@@ -57,7 +69,9 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
   const featured = currentPage === 1 ? posts[0] : undefined;
   const rows = featured ? posts.slice(1) : posts;
 
-  const categories = Array.from(new Set(posts.map((p) => p.category).filter(Boolean))) as string[];
+  // Canonical categories present on this page, in a fixed display order.
+  const present = new Set(posts.map((p) => canonicalCategory(p.category)));
+  const categories = CANON_ORDER.filter((c) => present.has(c));
   const startN = (currentPage - 1) * POSTS_PER_PAGE + 1;
   const endN = Math.min(currentPage * POSTS_PER_PAGE, total);
 
@@ -82,13 +96,14 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
         <section className="hero">
           <div className="wrap">
             <h1>Field notes from the <span className="hl">workshop.</span></h1>
-            <p className="hero-sub">What we learn building <b>11+ ventures</b>, written down — venture building, product strategy, startup finance, and the occasional dumb idea that turned out to be right.</p>
+            <p className="hero-sub">What we learn building <b>a dozen ventures</b>, written down — venture building, product strategy, startup finance, and the occasional dumb idea that turned out to be right.</p>
             {categories.length > 0 && (
               <div className="filters" role="group" aria-label="Filter posts by category">
                 <button className="filter on" data-cat="all">All posts</button>
                 {categories.map((c) => (
                   <button className="filter" data-cat={catSlug(c)} key={c}>{c}</button>
                 ))}
+                {/* data-cat on rows below uses the same canonical slugs */}
               </div>
             )}
           </div>
@@ -106,11 +121,11 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
                   <div className="feat-visual">
                     {featured.featuredImage
                       ? <img src={featured.featuredImage} alt={featured.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <span>{featured.category || 'Field\nnotes.'}</span>}
+                      : <span>{canonicalCategory(featured.category)}</span>}
                   </div>
                   <div className="feat-body">
                     <div className="meta">
-                      {featured.category && <span className="cat">{featured.category}</span>}
+                      <span className="cat">{canonicalCategory(featured.category)}</span>
                       <span>{fmtDate(featured.publishedAt)}</span>
                       <span>{featured.readTime} min read</span>
                     </div>
@@ -125,10 +140,10 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
             <section className="posts">
               <div className="wrap">
                 {rows.map((post) => (
-                  <div className="row" data-cat={catSlug(post.category)} key={post.id}>
+                  <div className="row" data-cat={catSlug(canonicalCategory(post.category))} key={post.id}>
                     <span className="date">{fmtDate(post.publishedAt)}</span>
                     <Link href={`/blog/${post.slug}`}>
-                      {post.category && <span className="cat">{post.category}</span>}
+                      <span className="cat">{canonicalCategory(post.category)}</span>
                       <h3>{stripMarks(post.title)}</h3>
                       {post.excerpt && <p>{post.excerpt}</p>}
                     </Link>

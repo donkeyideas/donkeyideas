@@ -69,11 +69,22 @@ async function getVentureBySlug(slug: string): Promise<Venture | null> {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const venture = await getVentureBySlug(params.slug);
-  if (!venture) return { title: 'Venture — Donkey Ideas' };
+  if (!venture) return { title: 'Venture' };
+  const url = `https://www.donkeyideas.com/ventures/${params.slug}`;
+  const description = venture.description?.slice(0, 160) || `${venture.title} — a venture built and operated by Donkey Ideas.`;
+  const ogImage = findLogo(venture) || '/og-home.png';
   return {
-    title: `${venture.title} | Donkey Ideas`,
-    description: venture.description?.slice(0, 160),
-    alternates: { canonical: `https://www.donkeyideas.com/ventures/${params.slug}` },
+    title: venture.title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      title: `${venture.title} | Donkey Ideas`,
+      description,
+      url,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: `${venture.title} — Donkey Ideas venture` }],
+    },
+    twitter: { card: 'summary_large_image', title: `${venture.title} | Donkey Ideas`, description, images: [ogImage] },
   };
 }
 
@@ -89,9 +100,35 @@ export default async function VenturePage({ params }: { params: { slug: string }
   const name = shortName(venture.title);
   const chip = statusChip(venture.status);
   const site = venture.websiteUrl?.trim();
+  const url = `https://www.donkeyideas.com/ventures/${params.slug}`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CreativeWork',
+        '@id': `${url}#venture`,
+        name: venture.title,
+        url,
+        ...(venture.description ? { description: venture.description } : {}),
+        ...(site ? { sameAs: [site] } : {}),
+        creator: { '@type': 'Organization', name: 'Donkey Ideas', url: 'https://www.donkeyideas.com' },
+        publisher: { '@type': 'Organization', name: 'Donkey Ideas', url: 'https://www.donkeyideas.com' },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.donkeyideas.com/' },
+          { '@type': 'ListItem', position: 2, name: 'Ventures', item: 'https://www.donkeyideas.com/#ledger' },
+          { '@type': 'ListItem', position: 3, name: venture.title, item: url },
+        ],
+      },
+    ],
+  };
 
   return (
     <div className={`dk-detail ${gabarito.className}`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <DetailMotion />
 
       <header>

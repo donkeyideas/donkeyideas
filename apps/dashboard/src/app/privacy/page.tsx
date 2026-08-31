@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     url: 'https://www.donkeyideas.com/privacy',
     images: [
       {
-        url: '/og-image.png',
+        url: '/og-home.png',
         width: 1200,
         height: 630,
         alt: 'Donkey Ideas Privacy Policy',
